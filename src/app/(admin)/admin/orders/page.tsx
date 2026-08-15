@@ -158,24 +158,30 @@ export default function AdminOrdersPage() {
     safeCurrentPage * pageSize
   );
 
-  const handleApproveOrder = (id: string) => {
-    updateOrderStatus(id, "processing");
-    setOrders(getAllOrders());
+  const handleApproveOrder = async (id: string) => {
+    setLoading(true);
+    await updateAdminOrderStatus(id, "processing");
+    await loadData();
   };
 
-  const handleShipOrder = (id: string) => {
-    updateOrderStatus(id, "shipping");
-    setOrders(getAllOrders());
+  const handleShipOrder = async (id: string) => {
+    setLoading(true);
+    await updateAdminOrderStatus(id, "shipping");
+    await loadData();
   };
 
-  const handleCompleteOrder = (id: string) => {
-    updateOrderStatus(id, "completed");
-    setOrders(getAllOrders());
+  const handleCompleteOrder = async (id: string) => {
+    setLoading(true);
+    await updateAdminOrderStatus(id, "completed");
+    await loadData();
   };
 
-  const handleCancelOrder = (id: string) => {
-    updateOrderStatus(id, "cancelled");
-    setOrders(getAllOrders());
+  const handleCancelOrder = async (id: string) => {
+    if (confirm("⚠️ Bạn có chắc chắn muốn hủy đơn hàng này không?")) {
+      setLoading(true);
+      await updateAdminOrderStatus(id, "cancelled");
+      await loadData();
+    }
   };
 
   return (

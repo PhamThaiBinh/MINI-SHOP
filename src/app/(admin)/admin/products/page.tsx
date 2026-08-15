@@ -82,9 +82,33 @@ export default function AdminProductsPage() {
     setFormDesc(prod.desc);
   };
 
-  const handleDeleteClick = (id: number) => {
-    if (confirm("Bạn có chắc chắn muốn xóa sản phẩm này?")) {
-      setProducts((prev) => prev.filter((p) => p.id !== id));
+  const loadProductData = async () => {
+    setLoading(true);
+    const list = await fetchProductsFromSupabase();
+    const mapped = list.map((p) => ({
+      id: p.id,
+      name: p.name,
+      category: p.category,
+      categoryName: p.categoryName || p.category,
+      price: p.price,
+      image: p.image,
+      status: (p.status === "Hidden" ? "Hidden" : "Active") as any,
+      desc: p.description || "",
+    }));
+    setProducts(mapped);
+    setLoading(false);
+  };
+
+  const handleDeleteClick = async (id: number) => {
+    if (confirm("⚠️ Bạn có chắc chắn muốn xóa sản phẩm này khỏi kho Supabase không?")) {
+      setLoading(true);
+      const success = await deleteAdminProduct(id);
+      if (success) {
+        await loadProductData();
+      } else {
+        alert("Xóa thất bại!");
+        setLoading(false);
+      }
     }
   };
 
@@ -98,7 +122,7 @@ export default function AdminProductsPage() {
     setFormDesc("");
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formName.trim() || !formPrice) return;
 
@@ -110,43 +134,28 @@ export default function AdminProductsPage() {
       Storage: "Lưu trữ",
     };
 
-    if (editingProduct) {
-      // Update product
-      setProducts((prev) =>
-        prev.map((p) =>
-          p.id === editingProduct.id
-            ? {
-                ...p,
-                name: formName,
-                category: formCategory,
-                categoryName: catMap[formCategory] || formCategory,
-                price: Number(formPrice),
-                image:
-                  formImageUrl ||
-                  p.image,
-                status: formStatus,
-                desc: formDesc,
-              }
-            : p
-        )
-      );
+    const finalImage = formImageUrl.trim() || "/assets/images/products/noi-that-gia-dung/sofa-phong-khach.webp";
+
+    const prodData = {
+      id: editingProduct ? editingProduct.id : undefined,
+      name: formName.trim(),
+      category: formCategory,
+      categoryName: catMap[formCategory] || formCategory,
+      price: Number(formPrice),
+      image: finalImage,
+      status: formStatus,
+      description: formDesc,
+    };
+
+    setLoading(true);
+    const success = await saveAdminProduct(prodData);
+    if (success) {
+      await loadProductData();
+      handleResetForm();
     } else {
-      // Add product
-      const newProd: ProductItem = {
-        id: Date.now(),
-        name: formName,
-        category: formCategory,
-        categoryName: catMap[formCategory] || formCategory,
-        price: Number(formPrice),
-        image:
-          formImageUrl ||
-          "/assets/images/products/noi-that-gia-dung/sofa-phong-khach.webp",
-        status: formStatus,
-        desc: formDesc,
-      };
-      setProducts((prev) => [...prev, newProd]);
+      alert("Lưu sản phẩm thất bại!");
+      setLoading(false);
     }
-    handleResetForm();
   };
 
   const getCategoryBadgeClass = (category: string) => {
