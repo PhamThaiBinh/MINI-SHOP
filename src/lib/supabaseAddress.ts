@@ -109,7 +109,11 @@ export const deleteUserAddressFromSupabase = async (
 ): Promise<boolean> => {
   try {
     const currentAddresses = await fetchUserAddressesFromSupabase(username);
-    const updatedAddresses = currentAddresses.filter((a) => a.id !== id);
+    let updatedAddresses = currentAddresses.filter((a) => a.id !== id);
+
+    if (updatedAddresses.length > 0 && !updatedAddresses.some((a) => a.isDefault)) {
+      updatedAddresses[0].isDefault = true;
+    }
 
     const supabase = createClient();
     const cleanUser = username.trim().replace(/^@/, "");

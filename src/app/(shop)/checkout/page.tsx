@@ -176,12 +176,32 @@ export default function CheckoutPage() {
     }
   };
 
+  // Re-validate applied voucher when cart subtotal changes
+  React.useEffect(() => {
+    if (appliedVoucher && appliedVoucher.minOrder && subtotal < appliedVoucher.minOrder) {
+      setAppliedVoucher(null);
+      setVoucherCode("");
+      try {
+        localStorage.removeItem("mini_shop_applied_coupon");
+      } catch (e) {
+        console.error(e);
+      }
+      setVoucherMsg(
+        `⚠️ Mã ${appliedVoucher.code} đã bị hủy do tổng tiền đơn hàng (${subtotal.toLocaleString("vi-VN")}đ) chưa đạt mức tối thiểu ${appliedVoucher.minOrder.toLocaleString("vi-VN")}đ!`
+      );
+    }
+  }, [subtotal, appliedVoucher]);
+
   React.useEffect(() => {
     try {
       const savedCode = localStorage.getItem("mini_shop_applied_coupon");
       if (savedCode) {
         const found = allAvailableCoupons.find((c) => c.code === savedCode);
         if (found) {
+          if (found.minOrder && subtotal < found.minOrder) {
+            localStorage.removeItem("mini_shop_applied_coupon");
+            return;
+          }
           setAppliedVoucher(found);
           setVoucherCode(found.code);
           const label = found.fixedDiscount
@@ -193,7 +213,7 @@ export default function CheckoutPage() {
     } catch (e) {
       console.error(e);
     }
-  }, [systemCoupons, user]);
+  }, [allAvailableCoupons, subtotal]);
 
   const handleCompleteOrder = async () => {
     const finalCode = orderCode || ("#MS-" + Math.floor(10000 + Math.random() * 90000));
@@ -252,8 +272,18 @@ export default function CheckoutPage() {
     clearCart();
   };
 
+  const isValidVnPhone = (p: string) => {
+    const cleanPhone = p.replace(/\s+/g, "").replace(/\./g, "");
+    return /^(03|05|07|08|09)\d{8}$/.test(cleanPhone);
+  };
+
   const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isValidVnPhone(phone)) {
+      alert("⚠️ Số điện thoại không hợp lệ! Vui lòng nhập số điện thoại Việt Nam chuẩn 10 chữ số (đầu 03, 05, 07, 08, 09).");
+      return;
+    }
+
     const newCode = "#MS-" + Math.floor(10000 + Math.random() * 90000);
     setOrderCode(newCode);
 

@@ -7,6 +7,7 @@ import "@/styles/auth.css";
 import { useAuth } from "@/context/AuthContext";
 import { LOCATION_DATA, PROVINCES_LIST } from "@/data/locationData";
 import { fixImagePath } from "@/lib/utils";
+import { createClient } from "@/utils/supabase/client";
 import { getAllOrders, getOrdersForUser, cancelOrderWithReason, UnifiedOrder } from "@/utils/orderStorage";
 import {
   fetchUserAddressesFromSupabase,
@@ -344,13 +345,30 @@ export default function AuthPage() {
   const [liveOrders, setLiveOrders] = useState<UnifiedOrder[]>([]);
 
   useEffect(() => {
+    const supabase = createClient();
     const updateOrders = () => {
       const userOrds = getOrdersForUser(user?.username || user?.phone || "binh");
       setLiveOrders(userOrds.length > 0 ? userOrds : getAllOrders());
     };
     updateOrders();
     window.addEventListener("ordersUpdated", updateOrders);
-    return () => window.removeEventListener("ordersUpdated", updateOrders);
+
+    // Supabase Realtime Cross-Device Subscription
+    const channel = supabase
+      .channel("orders_realtime_changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "orders" },
+        () => {
+          updateOrders();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      window.removeEventListener("ordersUpdated", updateOrders);
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   React.useEffect(() => {
@@ -666,6 +684,13 @@ export default function AuthPage() {
   const handleAddAddressSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!addrName.trim() || !addrPhone.trim() || !addrDetail.trim() || !user) return;
+
+    const cleanPhone = addrPhone.trim().replace(/\s+/g, "").replace(/\./g, "");
+    const isValidVnPhone = /^(03|05|07|08|09)\d{8}$/.test(cleanPhone);
+    if (!isValidVnPhone) {
+      alert("⚠️ Số điện thoại không hợp lệ! Vui lòng nhập số điện thoại Việt Nam chuẩn 10 chữ số (đầu 03, 05, 07, 08, 09).");
+      return;
+    }
 
     const shouldDefault = addresses.length === 0 || addrSetDefault;
 
