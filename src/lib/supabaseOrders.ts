@@ -88,6 +88,30 @@ export const createOrderInSupabase = async (orderData: UnifiedOrder): Promise<bo
       return false;
     }
 
+    // Deduct stock for ordered items
+    if (orderData.items && orderData.items.length > 0) {
+      for (const item of orderData.items) {
+        try {
+          const { data: prodRows } = await supabase
+            .from("products")
+            .select("id, stock")
+            .ilike("name", item.name)
+            .limit(1);
+
+          if (prodRows && prodRows.length > 0) {
+            const p = prodRows[0];
+            const newStock = Math.max(0, (p.stock ?? 50) - item.qty);
+            await supabase
+              .from("products")
+              .update({ stock: newStock, status: newStock === 0 ? "Out of stock" : "In stock" })
+              .eq("id", p.id);
+          }
+        } catch (e) {
+          console.error("Error deducting stock:", e);
+        }
+      }
+    }
+
     return true;
   } catch (err) {
     console.error("Error creating order in Supabase:", err);

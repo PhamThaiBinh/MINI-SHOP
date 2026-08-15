@@ -9,6 +9,18 @@ interface BlogDetailPageProps {
   params: Promise<{ id: string }>;
 }
 
+export async function generateMetadata({ params }: BlogDetailPageProps) {
+  const resolvedParams = await params;
+  const articleId = parseInt(resolvedParams.id, 10);
+  const article = await fetchBlogByIdFromSupabase(articleId);
+  if (!article) return { title: "Bài viết không tồn tại - Mini Shop" };
+
+  return {
+    title: `${article.title} - Mini Shop`,
+    description: article.excerpt,
+  };
+}
+
 export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
   const resolvedParams = await params;
   const articleId = parseInt(resolvedParams.id, 10);

@@ -126,6 +126,12 @@ export default function AdminProductsPage() {
     e.preventDefault();
     if (!formName.trim() || !formPrice) return;
 
+    const numPrice = Number(formPrice);
+    if (isNaN(numPrice) || numPrice <= 0) {
+      alert("⚠️ Giá bán sản phẩm phải là một số dương lớn hơn 0!");
+      return;
+    }
+
     const catMap: Record<string, string> = {
       Furniture: "Nội thất",
       Decor: "Trang trí",

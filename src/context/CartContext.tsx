@@ -14,6 +14,7 @@ interface CartContextType {
   updateQuantity: (productId: number, quantity: number) => void;
   clearCart: () => void;
   totalItems: number;
+  showToast?: (msg: string) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -25,13 +26,23 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isMounted, setIsMounted] = useState(false);
   const { user } = useAuth();
 
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMsg(msg);
+    setTimeout(() => {
+      setToastMsg((current) => (current === msg ? null : current));
+    }, 3000);
+  };
+
   useEffect(() => {
     setIsMounted(true);
     async function loadCartData() {
+      const allProducts = await fetchProductsFromSupabase();
+
       if (user?.username) {
         const sbCartItems = await fetchUserCartFromSupabase(user.username);
         if (sbCartItems.length > 0) {
-          const allProducts = await fetchProductsFromSupabase();
           const mappedCart: CartItem[] = [];
           for (const item of sbCartItems) {
             const prod = allProducts.find((p) => p.id === item.productId);
@@ -39,17 +50,19 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
               mappedCart.push({ product: prod, quantity: item.quantity });
             }
           }
-          if (mappedCart.length > 0) {
-            setCart(mappedCart);
-            return;
-          }
+          setCart(mappedCart);
+          return;
         }
       }
 
       try {
         const saved = localStorage.getItem(CART_STORAGE_KEY);
         if (saved) {
-          setCart(JSON.parse(saved));
+          const parsedCart: CartItem[] = JSON.parse(saved);
+          const validCart = parsedCart.filter((item) =>
+            allProducts.some((p) => p.id === item.product.id)
+          );
+          setCart(validCart);
         }
       } catch (e) {
         console.error("Error reading cart from localStorage:", e);
@@ -89,6 +102,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       return [...prev, { product, quantity }];
     });
+    showToast(`🛒 Đã thêm "${product.name}" vào giỏ hàng!`);
   };
 
   const removeFromCart = (productId: number) => {
@@ -118,9 +132,34 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updateQuantity,
         clearCart,
         totalItems,
+        showToast,
       }}
     >
       {children}
+      {toastMsg && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: "24px",
+            right: "24px",
+            backgroundColor: "#1e293b",
+            color: "#ffffff",
+            padding: "12px 20px",
+            borderRadius: "8px",
+            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.3)",
+            zIndex: 9999,
+            fontWeight: 600,
+            fontSize: "14px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            borderLeft: "4px solid var(--primary-color, #2e7d32)",
+            animation: "fadeIn 0.3s ease",
+          }}
+        >
+          {toastMsg}
+        </div>
+      )}
     </CartContext.Provider>
   );
 };

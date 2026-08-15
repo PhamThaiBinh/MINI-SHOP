@@ -9,6 +9,7 @@ export interface Product {
   categoryName: string;
   price: number;
   oldPrice?: number;
+  stock?: number;
   status: string;
   badge?: string | null;
   badgeType?: string | null;

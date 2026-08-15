@@ -29,14 +29,22 @@ export default function ProductDetailPage({
   useEffect(() => {
     async function loadData() {
       setLoading(true);
-      const [singleProduct, list] = await Promise.all([
+      const [fetchedProduct, fetchedList] = await Promise.all([
         fetchProductByIdFromSupabase(productId),
         fetchProductsFromSupabase(),
       ]);
-      setProduct(singleProduct || PRODUCTS_DATA.find((p) => p.id === productId) || PRODUCTS_DATA[0]);
-      setAllProducts(list);
+      if (fetchedProduct) {
+        setProduct(fetchedProduct);
+        if (typeof document !== "undefined") {
+          document.title = `${fetchedProduct.name} - Mini Shop`;
+        }
+      }
+      if (fetchedList && fetchedList.length > 0) {
+        setAllProducts(fetchedList);
+      }
       setLoading(false);
     }
+
     loadData();
   }, [productId]);
 
