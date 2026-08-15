@@ -1,0 +1,147 @@
+"use client";
+
+import React from "react";
+import Link from "next/link";
+import "@/styles/product-list.css";
+import "@/styles/cart.css";
+import { PRODUCTS_DATA } from "@/data/products";
+import { formatVND, fixImagePath } from "@/lib/utils";
+import { useWishlist } from "@/context/WishlistContext";
+import { useCart } from "@/context/CartContext";
+
+export default function WishlistPage() {
+  const { wishlistIds, toggleWishlist } = useWishlist();
+  const { addToCart } = useCart();
+
+  const wishlistProducts = PRODUCTS_DATA.filter((p) =>
+    wishlistIds.includes(p.id)
+  );
+
+  return (
+    <>
+      {/* 2. Breadcrumb Navigation Section */}
+      <div className="breadcrumb-section">
+        <div className="container">
+          <ul className="breadcrumb">
+            <li>
+              <Link href="/">Trang chủ</Link>
+            </li>
+            <li className="breadcrumb-separator">&rsaquo;</li>
+            <li className="breadcrumb-current">Sản phẩm yêu thích</li>
+          </ul>
+        </div>
+      </div>
+
+      {/* 3. Main Wishlist Content */}
+      <main className="main-content">
+        <div className="container">
+          <div className="cart-page-section">
+            <h1 className="cart-title-heading">Sản phẩm yêu thích của bạn</h1>
+
+            {/* Empty State */}
+            {wishlistProducts.length === 0 ? (
+              <div className="cart-empty-box" id="wishlist-empty-state">
+                <div className="cart-empty-icon">❤️</div>
+                <h2 className="cart-empty-title">
+                  Chưa có sản phẩm yêu thích nào!
+                </h2>
+                <p className="cart-empty-desc">
+                  Hãy bấm nút thả tim ♥ trên các sản phẩm bạn thích để lưu trữ
+                  tại đây nhé.
+                </p>
+                <Link
+                  href="/products"
+                  className="btn-checkout"
+                  style={{
+                    display: "inline-block",
+                    width: "auto",
+                    padding: "12px 28px",
+                  }}
+                >
+                  Khám phá sản phẩm ngay &rarr;
+                </Link>
+              </div>
+            ) : (
+              /* Wishlist Grid Layout */
+              <div id="wishlist-main-layout">
+                <div
+                  className="catalog-grid"
+                  id="wishlist-products-grid"
+                  style={{ gridTemplateColumns: "repeat(4, 1fr)" }}
+                >
+                  {wishlistProducts.map((product) => (
+                    <div key={product.id} className="catalog-card">
+                      {product.badge && (
+                        <span
+                          className={`card-badge ${product.badgeType || ""}`}
+                        >
+                          {product.badge}
+                        </span>
+                      )}
+                      <button
+                        className="btn-wishlist active"
+                        onClick={() => toggleWishlist(product.id)}
+                        title="Bỏ yêu thích"
+                        style={{ color: "#ef4444" }}
+                      >
+                        ♥
+                      </button>
+                      <div className="catalog-img-wrapper">
+                        <img
+                          src={fixImagePath(product.image)}
+                          alt={product.name}
+                        />
+                      </div>
+                      <div className="catalog-card-body">
+                        <h3 className="catalog-title">{product.name}</h3>
+                        <div className="price-box">
+                          <span className="price-current">
+                            {formatVND(product.price)}
+                          </span>
+                          {product.oldPrice && (
+                            <span className="price-old">
+                              {formatVND(product.oldPrice)}
+                            </span>
+                          )}
+                        </div>
+                        <span className="status-badge">Còn hàng</span>
+                        <div
+                          className="catalog-card-footer"
+                          style={{ display: "flex", gap: "6px" }}
+                        >
+                          <button
+                            onClick={() => addToCart(product)}
+                            className="btn-add-cart-sm"
+                            style={{
+                              flex: 1,
+                              padding: "6px 10px",
+                              background: "var(--primary-color)",
+                              color: "#fff",
+                              border: "none",
+                              borderRadius: "4px",
+                              fontSize: "12px",
+                              fontWeight: 700,
+                              cursor: "pointer",
+                            }}
+                          >
+                            + Giỏ hàng
+                          </button>
+                          <Link
+                            href={`/products/${product.id}`}
+                            className="btn-detail-link"
+                          >
+                            Chi tiết &rsaquo;
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
+    </>
+  );
+}
