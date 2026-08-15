@@ -90,6 +90,11 @@ export default function AdminVouchersPage() {
     const valNum = Number(formDiscountValue) || 0;
     const minOrderNum = Number(formMinOrder) || 0;
 
+    if (minOrderNum < 0 || valNum < 0) {
+      alert("⚠️ Số tiền giảm giá và giá trị đơn tối thiểu phải lớn hơn hoặc bằng 0!");
+      return;
+    }
+
     const newVoucherItem: SystemVoucher = {
       code: formattedCode,
       desc: formDesc || `Ưu đãi ${formattedCode}`,

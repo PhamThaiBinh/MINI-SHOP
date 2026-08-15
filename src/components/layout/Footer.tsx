@@ -1,11 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 export const Footer: React.FC = () => {
   const pathname = usePathname();
+  const [emailInput, setEmailInput] = useState("");
+  const [subscribeMsg, setSubscribeMsg] = useState("");
 
   if (pathname.startsWith("/admin")) {
     return null;
@@ -98,7 +100,7 @@ export const Footer: React.FC = () => {
             </ul>
           </div>
 
-          {/* Col 4: Contact */}
+          {/* Col 4: Contact & Newsletter */}
           <div className="footer-col">
             <h4>Thông Tin Liên Hệ</h4>
             <ul className="contact-info">
@@ -107,6 +109,56 @@ export const Footer: React.FC = () => {
               <li>✉️ support@minishop.vn</li>
               <li>⏰ 8:00 AM - 21:30 PM (Tất cả các ngày trong tuần)</li>
             </ul>
+            <div style={{ marginTop: "16px" }}>
+              <h4 style={{ fontSize: "14px", marginBottom: "8px" }}>📩 Đăng ký nhận bản tin ưu đãi</h4>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (emailInput.trim()) {
+                    setSubscribeMsg("✅ Cảm ơn bạn đã đăng ký nhận bản tin ưu đãi!");
+                    setEmailInput("");
+                    setTimeout(() => setSubscribeMsg(""), 4000);
+                  }
+                }}
+                style={{ display: "flex", gap: "6px" }}
+              >
+                <input
+                  type="email"
+                  placeholder="Nhập email của bạn..."
+                  value={emailInput}
+                  onChange={(e) => setEmailInput(e.target.value)}
+                  required
+                  style={{
+                    padding: "6px 10px",
+                    fontSize: "12px",
+                    borderRadius: "4px",
+                    border: "1px solid var(--border-color)",
+                    width: "100%",
+                  }}
+                />
+                <button
+                  type="submit"
+                  style={{
+                    padding: "6px 12px",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    backgroundColor: "var(--primary-color)",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  Đăng ký
+                </button>
+              </form>
+              {subscribeMsg && (
+                <div style={{ fontSize: "11px", color: "#166534", fontWeight: 700, marginTop: "6px" }}>
+                  {subscribeMsg}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

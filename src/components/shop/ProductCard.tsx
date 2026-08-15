@@ -14,7 +14,32 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { addToCart } = useCart();
 
   return (
-    <div className="product-card">
+    <div className="product-card" style={{ position: "relative" }}>
+      {product.badge && (
+        <span
+          className={`card-badge ${product.badgeType || ""}`}
+          style={{
+            position: "absolute",
+            top: "10px",
+            left: "10px",
+            zIndex: 3,
+            backgroundColor:
+              product.badgeType === "badge-sale"
+                ? "#dc2626"
+                : product.badgeType === "badge-hot"
+                ? "#ea580c"
+                : "var(--primary-color)",
+            color: "#ffffff",
+            padding: "3px 8px",
+            borderRadius: "4px",
+            fontSize: "11px",
+            fontWeight: 800,
+            boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+          }}
+        >
+          {product.badge}
+        </span>
+      )}
       <div className="product-img-wrapper">
         <Link href={`/products/${product.id}`}>
           <img src={fixImagePath(product.image)} alt={product.name} loading="lazy" />

@@ -17,6 +17,7 @@ export default function WishlistPage() {
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [toastMsg, setToastMsg] = useState("");
 
   useEffect(() => {
     async function loadData() {
@@ -33,6 +34,11 @@ export default function WishlistPage() {
     wishlistIds.includes(p.id)
   );
 
+  const handleRemoveWishlist = (id: number) => {
+    toggleWishlist(id);
+    setToastMsg("💔 Đã xóa sản phẩm khỏi danh sách yêu thích!");
+    setTimeout(() => setToastMsg(""), 3000);
+  };
 
   return (
     <>
@@ -52,6 +58,25 @@ export default function WishlistPage() {
       {/* 3. Main Wishlist Content */}
       <main className="main-content">
         <div className="container">
+          {toastMsg && (
+            <div
+              style={{
+                padding: "10px 16px",
+                background: "#fef2f2",
+                color: "#991b1b",
+                border: "1px solid #fecaca",
+                borderRadius: "8px",
+                fontSize: "13px",
+                fontWeight: 700,
+                marginBottom: "16px",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
+              {toastMsg}
+            </div>
+          )}
           <div className="cart-page-section">
             <h1 className="cart-title-heading">Sản phẩm yêu thích của bạn</h1>
 
@@ -97,7 +122,7 @@ export default function WishlistPage() {
                       )}
                       <button
                         className="btn-wishlist active"
-                        onClick={() => toggleWishlist(product.id)}
+                        onClick={() => handleRemoveWishlist(product.id)}
                         title="Bỏ yêu thích"
                         style={{ color: "#ef4444" }}
                       >
