@@ -325,10 +325,29 @@ export default function ProductsPage() {
                   <p style={{ fontSize: "16px", fontWeight: 600 }}>
                     Không tìm thấy sản phẩm phù hợp!
                   </p>
-                  <p style={{ fontSize: "13px", marginTop: "4px" }}>
-                    Vui lòng thử tìm kiếm bằng từ khóa khác hoặc chọn danh mục
-                    &quot;Tất cả&quot;.
+                  <p style={{ fontSize: "13px", marginTop: "4px", marginBottom: "16px" }}>
+                    Vui lòng thử tìm kiếm bằng từ khóa khác hoặc bấm nút bên dưới để xem lại tất cả sản phẩm.
                   </p>
+                  <button
+                    onClick={() => {
+                      setSearchQuery("");
+                      setCurrentCategory("All");
+                      setCurrentPriceRange("all");
+                      window.history.pushState({}, "", "/products");
+                    }}
+                    style={{
+                      backgroundColor: "var(--primary-color)",
+                      color: "#ffffff",
+                      border: "none",
+                      padding: "10px 22px",
+                      borderRadius: "var(--radius-md)",
+                      fontSize: "13px",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                    }}
+                  >
+                    Xem tất cả sản phẩm &rarr;
+                  </button>
                 </div>
               ) : (
                 paginatedProducts.map((product) => {

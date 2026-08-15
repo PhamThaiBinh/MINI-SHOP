@@ -769,6 +769,34 @@ export default function AdminOrdersPage() {
               <div>
                 <strong>Địa chỉ giao hàng:</strong> {selectedOrder.address}
               </div>
+              <div style={{ marginTop: "4px" }}>
+                <strong>📌 Ghi chú vận chuyển / Mã vận đơn:</strong>
+                <input
+                  type="text"
+                  placeholder="Nhập mã vận đơn hoặc ghi chú kho (VD: GHTK-882910)..."
+                  defaultValue={selectedOrder.cancelReason && !selectedOrder.cancelReason.startsWith("Khách") ? selectedOrder.cancelReason : ""}
+                  onBlur={(e) => {
+                    const note = e.target.value.trim();
+                    if (note) {
+                      setOrders((prev) =>
+                        prev.map((o) =>
+                          o.id === selectedOrder.id ? { ...o, cancelReason: `[Ghi chú kho]: ${note}` } : o
+                        )
+                      );
+                    }
+                  }}
+                  style={{
+                    width: "100%",
+                    marginTop: "4px",
+                    padding: "6px 10px",
+                    fontSize: "12px",
+                    borderRadius: "6px",
+                    border: "1px solid var(--border-color)",
+                    fontFamily: "inherit",
+                    boxSizing: "border-box",
+                  }}
+                />
+              </div>
               <div>
                 <strong>Sản phẩm đặt mua:</strong>
                 <div

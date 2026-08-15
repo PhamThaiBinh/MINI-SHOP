@@ -25,7 +25,7 @@ const AVAILABLE_COUPONS: Coupon[] = [
 ];
 
 export default function CartPage() {
-  const { cart, updateQuantity, removeFromCart } = useCart();
+  const { cart, updateQuantity, removeFromCart, clearCart } = useCart();
   const { user } = useAuth();
 
   const [couponCode, setCouponCode] = useState("");
@@ -302,6 +302,28 @@ export default function CartPage() {
                       ))}
                     </tbody>
                   </table>
+                  <div style={{ padding: "12px 16px", borderTop: "1px solid var(--border-color)", textAlign: "right" }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (confirm("⚠️ Bạn có chắc chắn muốn xóa toàn bộ sản phẩm khỏi giỏ hàng?")) {
+                          clearCart();
+                        }
+                      }}
+                      style={{
+                        background: "none",
+                        border: "1px solid #fca5a5",
+                        color: "#dc2626",
+                        padding: "6px 12px",
+                        fontSize: "12px",
+                        fontWeight: 700,
+                        borderRadius: "6px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      🗑️ Xóa tất cả giỏ hàng
+                    </button>
+                  </div>
                 </div>
 
                 {/* Right Summary Card */}

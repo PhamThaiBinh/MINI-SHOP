@@ -165,8 +165,8 @@ export default function ContactPage() {
                   ></textarea>
                 </div>
 
-                <button type="submit" className="btn-submit-green">
-                  ✉️ Gửi Tin Nhắn
+                <button type="submit" className="btn-submit-green" disabled={submitting} style={{ opacity: submitting ? 0.6 : 1 }}>
+                  {submitting ? "⏳ Đang gửi tin nhắn..." : "✉️ Gửi Tin Nhắn"}
                 </button>
               </form>
             </div>
