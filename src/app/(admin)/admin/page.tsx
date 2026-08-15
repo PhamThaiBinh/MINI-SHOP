@@ -1,16 +1,40 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import "@/styles/admin.css";
 
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
+import { fetchAdminOrders, fetchAdminProducts, fetchAdminUsers } from "@/lib/supabaseAdmin";
+import { formatVND } from "@/lib/utils";
 
 export default function AdminDashboardPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [salesPeriod, setSalesPeriod] = useState("7days");
   const [hoverPointIndex, setHoverPointIndex] = useState<number | null>(null);
+
+  const [dbOrders, setDbOrders] = useState<any[]>([]);
+  const [dbProductsCount, setDbProductsCount] = useState<number>(18);
+  const [dbUsersCount, setDbUsersCount] = useState<number>(5);
+
+  useEffect(() => {
+    async function loadData() {
+      const [orders, products, users] = await Promise.all([
+        fetchAdminOrders(),
+        fetchAdminProducts(),
+        fetchAdminUsers(),
+      ]);
+      setDbOrders(orders);
+      if (products.length > 0) setDbProductsCount(products.length);
+      if (users.length > 0) setDbUsersCount(users.length);
+    }
+    loadData();
+  }, []);
+
+  const totalRevenue = dbOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+  const totalOrdersCount = dbOrders.length;
+
 
   const SALES_DATA: Record<
     string,

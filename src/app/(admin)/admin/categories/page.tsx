@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import "@/styles/admin.css";
 
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
+import { fetchAdminCategories, saveAdminCategory, deleteAdminCategory } from "@/lib/supabaseAdmin";
 
 interface Category {
   id: number;
@@ -17,66 +18,10 @@ interface Category {
   desc?: string;
 }
 
-const INITIAL_CATEGORIES: Category[] = [
-  {
-    id: 1,
-    icon: "🛋️",
-    name: "Nội thất & Phòng khách",
-    slug: "living-room",
-    productCount: 1,
-    status: "Active",
-    desc: "Các sản phẩm bàn ghế, sofa cho phòng khách.",
-  },
-  {
-    id: 2,
-    icon: "🛏️",
-    name: "Phòng ngủ",
-    slug: "bedroom",
-    productCount: 2,
-    status: "Active",
-    desc: "Giường ngủ, nệm, tủ quần áo.",
-  },
-  {
-    id: 3,
-    icon: "🍳",
-    name: "Nhà bếp & Bàn ăn",
-    slug: "kitchen",
-    productCount: 6,
-    status: "Active",
-    desc: "Bàn ăn, dụng cụ nhà bếp cao cấp.",
-  },
-  {
-    id: 4,
-    icon: "🪴",
-    name: "Trang trí & Décor",
-    slug: "decor",
-    productCount: 6,
-    status: "Active",
-    desc: "Bình gốm, tranh treo tường, đồ trang trí.",
-  },
-  {
-    id: 5,
-    icon: "🧺",
-    name: "Lưu trữ & Tủ kệ",
-    slug: "storage",
-    productCount: 2,
-    status: "Active",
-    desc: "Kệ gỗ, giỏ mây đan.",
-  },
-  {
-    id: 6,
-    icon: "💡",
-    name: "Đèn trang trí & chiếu sáng",
-    slug: "lighting",
-    productCount: 2,
-    status: "Active",
-    desc: "Đèn thả trần, đèn bàn.",
-  },
-];
-
 export default function AdminCategoriesPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [categories, setCategories] = useState<Category[]>(INITIAL_CATEGORIES);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
 
   // Form inputs state

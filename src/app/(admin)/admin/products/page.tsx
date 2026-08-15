@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import "@/styles/admin.css";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { fixImagePath } from "@/lib/utils";
+import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
+import { saveAdminProduct, deleteAdminProduct } from "@/lib/supabaseAdmin";
 
 interface ProductItem {
   id: number;
@@ -18,78 +20,32 @@ interface ProductItem {
   desc: string;
 }
 
-const INITIAL_ADMIN_PRODUCTS: ProductItem[] = [
-  {
-    id: 1,
-    name: "Sofa 2 chỗ Nordic",
-    category: "Furniture",
-    categoryName: "Nội thất",
-    price: 2990000,
-    image: "/assets/images/products/noi-that-gia-dung/sofa-phong-khach.webp",
-    status: "Active",
-    desc: "Sofa khung gỗ sồi bọc vải nỉ cao cấp phong cách Bắc Âu.",
-  },
-  {
-    id: 2,
-    name: "Bàn ăn gỗ Sồi",
-    category: "Furniture",
-    categoryName: "Nội thất",
-    price: 3490000,
-    image: "/assets/images/products/noi-that-gia-dung/bo-ban-an-go.webp",
-    status: "Active",
-    desc: "Bàn ăn gỗ sồi tự nhiên 4 ghế tiện lợi.",
-  },
-  {
-    id: 3,
-    name: "Đèn thả trần Minimal",
-    category: "Lighting",
-    categoryName: "Đèn trang trí",
-    price: 599000,
-    image: "/assets/images/products/do-my-nghe/den-tre-thu-cong.webp",
-    status: "Active",
-    desc: "Đèn chao tre đan thủ công ấm cúng.",
-  },
-  {
-    id: 4,
-    name: "Bình gốm Decor",
-    category: "Decor",
-    categoryName: "Trang trí",
-    price: 290000,
-    image: "/assets/images/products/do-my-nghe/binh-gom-trang-tri.webp",
-    status: "Active",
-    desc: "Bộ bình gốm mờ nghệ thuật trang trí bàn làm việc.",
-  },
-  {
-    id: 5,
-    name: "Kệ gỗ đa năng",
-    category: "Storage",
-    categoryName: "Lưu trữ",
-    price: 1293000,
-    image: "/assets/images/products/noi-that-gia-dung/ke-go-trang-tri.webp",
-    status: "Active",
-    desc: "Kệ gỗ nhiều tầng lắp ráp linh hoạt.",
-  },
-  {
-    id: 6,
-    name: "Giỏ mây lưu trữ",
-    category: "Storage",
-    categoryName: "Lưu trữ",
-    price: 199000,
-    image: "/assets/images/products/do-thu-cong/gio-may-dan.webp",
-    status: "Active",
-    desc: "Giỏ đan mây tre đựng đồ đạc ngăn nắp.",
-  },
-];
-
 export default function AdminProductsPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [products, setProducts] = useState<ProductItem[]>(
-    INITIAL_ADMIN_PRODUCTS
-  );
+  const [products, setProducts] = useState<ProductItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [editingProduct, setEditingProduct] = useState<ProductItem | null>(
-    null
-  );
+  const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null);
+
+  useEffect(() => {
+    async function loadData() {
+      setLoading(true);
+      const list = await fetchProductsFromSupabase();
+      const mapped = list.map((p) => ({
+        id: p.id,
+        name: p.name,
+        category: p.category,
+        categoryName: p.categoryName || p.category,
+        price: p.price,
+        image: p.image,
+        status: (p.status === "Hidden" ? "Hidden" : "Active") as any,
+        desc: p.description || "",
+      }));
+      setProducts(mapped);
+      setLoading(false);
+    }
+    loadData();
+  }, []);
 
   // Form state
   const [formName, setFormName] = useState("");
@@ -101,6 +57,7 @@ export default function AdminProductsPage() {
   const [formDesc, setFormDesc] = useState("");
   const [pageSize, setPageSize] = useState<number>(10);
   const [currentPage, setCurrentPage] = useState<number>(1);
+
 
   const filteredProducts = products.filter(
     (p) =>

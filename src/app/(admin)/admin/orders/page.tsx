@@ -7,6 +7,7 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { fixImagePath } from "@/lib/utils";
 import { getAllOrders, updateOrderStatus, UnifiedOrder } from "@/utils/orderStorage";
+import { fetchAdminOrders, updateAdminOrderStatus } from "@/lib/supabaseAdmin";
 
 interface OrderItem {
   id: string;
@@ -104,17 +105,24 @@ const INITIAL_ORDERS: OrderItem[] = [
 export default function AdminOrdersPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [orders, setOrders] = useState<UnifiedOrder[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<UnifiedOrder | null>(null);
   const [pageSize, setPageSize] = useState<number>(10);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
+  const loadData = async () => {
+    setLoading(true);
+    const data = await fetchAdminOrders();
+    setOrders(data);
+    setLoading(false);
+  };
+
   useEffect(() => {
-    setOrders(getAllOrders());
-    const handleUpdate = () => setOrders(getAllOrders());
-    window.addEventListener("ordersUpdated", handleUpdate);
-    return () => window.removeEventListener("ordersUpdated", handleUpdate);
+    loadData();
+    window.addEventListener("ordersUpdated", loadData);
+    return () => window.removeEventListener("ordersUpdated", loadData);
   }, []);
 
   const getStatusPill = (status: UnifiedOrder["status"]) => {

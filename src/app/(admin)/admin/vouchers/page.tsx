@@ -5,32 +5,25 @@ import Link from "next/link";
 import "@/styles/admin.css";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
-import {
-  SystemVoucher,
-  getSystemVouchers,
-  saveSystemVouchers,
-} from "@/utils/voucherStorage";
+import { SystemVoucher, getSystemVouchers, saveSystemVouchers } from "@/utils/voucherStorage";
+import { fetchAdminVouchers, saveAdminVoucher, deleteAdminVoucher } from "@/lib/supabaseAdmin";
 
 export default function AdminVouchersPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [vouchers, setVouchers] = useState<SystemVoucher[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [editingVoucher, setEditingVoucher] = useState<SystemVoucher | null>(null);
 
-  // Pagination states
-  const [pageSize, setPageSize] = useState<number>(10);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-
-  // Form states
-  const [formCode, setFormCode] = useState("");
-  const [formDesc, setFormDesc] = useState("");
-  const [formDiscountType, setFormDiscountType] = useState<"percent" | "fixed">("fixed");
-  const [formDiscountValue, setFormDiscountValue] = useState("");
-  const [formMinOrder, setFormMinOrder] = useState("");
-  const [formIsActive, setFormIsActive] = useState<boolean>(true);
+  const loadData = async () => {
+    setLoading(true);
+    const data = await fetchAdminVouchers();
+    setVouchers(data);
+    setLoading(false);
+  };
 
   useEffect(() => {
-    setVouchers(getSystemVouchers());
+    loadData();
   }, []);
 
   const handleEditClick = (v: SystemVoucher) => {
@@ -55,26 +48,29 @@ export default function AdminVouchersPage() {
     setFormIsActive(true);
   };
 
-  const handleToggleStatus = (targetCode: string) => {
-    const updated = vouchers.map((v) =>
-      v.code === targetCode ? { ...v, isActive: !v.isActive } : v
-    );
+  const handleToggleStatus = async (targetCode: string) => {
+    const target = vouchers.find((v) => v.code === targetCode);
+    if (!target) return;
+    const updatedV = { ...target, isActive: !target.isActive };
+    const updated = vouchers.map((v) => (v.code === targetCode ? updatedV : v));
     setVouchers(updated);
     saveSystemVouchers(updated);
+    await saveAdminVoucher(updatedV);
   };
 
-  const handleDeleteVoucher = (targetCode: string) => {
+  const handleDeleteVoucher = async (targetCode: string) => {
     if (confirm(`Bạn có chắc muốn xóa mã voucher ${targetCode}?`)) {
       const updated = vouchers.filter((v) => v.code !== targetCode);
       setVouchers(updated);
       saveSystemVouchers(updated);
+      await deleteAdminVoucher(targetCode);
       if (editingVoucher?.code === targetCode) {
         handleResetForm();
       }
     }
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const formattedCode = formCode.trim().toUpperCase();
     if (!formattedCode) return;
@@ -106,6 +102,7 @@ export default function AdminVouchersPage() {
 
     setVouchers(updated);
     saveSystemVouchers(updated);
+    await saveAdminVoucher(newVoucherItem);
     handleResetForm();
   };
 

@@ -1,100 +1,31 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import "@/styles/admin.css";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
-
-interface UserItem {
-  id: number;
-  avatarText: string;
-  avatarBg: string;
-  name: string;
-  username: string;
-  email: string;
-  phone: string;
-  role: string;
-  roleType: "admin" | "customer";
-  registeredDate: string;
-  status: "Active" | "Blocked";
-}
-
-const INITIAL_USERS: UserItem[] = [
-  {
-    id: 1,
-    avatarText: "A",
-    avatarBg: "#2e7d32",
-    name: "Admin Hệ Thống",
-    username: "@admin_minishop",
-    email: "admin@minishop.vn",
-    phone: "0987.654.321",
-    role: "👑 Administrator",
-    roleType: "admin",
-    registeredDate: "01/01/2026",
-    status: "Active",
-  },
-  {
-    id: 2,
-    avatarText: "N",
-    avatarBg: "#2563eb",
-    name: "Nguyễn Văn An",
-    username: "@nguyenvanan",
-    email: "an.nguyen@gmail.com",
-    phone: "0901.234.567",
-    role: "🛍️ Khách hàng",
-    roleType: "customer",
-    registeredDate: "10/08/2026",
-    status: "Active",
-  },
-  {
-    id: 3,
-    avatarText: "T",
-    avatarBg: "#7c3aed",
-    name: "Trần Thị Mai",
-    username: "@tranmai88",
-    email: "mai.tran@gmail.com",
-    phone: "0988.765.432",
-    role: "🛍️ Khách hàng",
-    roleType: "customer",
-    registeredDate: "09/08/2026",
-    status: "Active",
-  },
-  {
-    id: 4,
-    avatarText: "L",
-    avatarBg: "#059669",
-    name: "Lê Hoàng Nam",
-    username: "@namle_design",
-    email: "nam.le@gmail.com",
-    phone: "0933.112.233",
-    role: "🛍️ Khách hàng",
-    roleType: "customer",
-    registeredDate: "05/08/2026",
-    status: "Active",
-  },
-  {
-    id: 5,
-    avatarText: "B",
-    avatarBg: "#e11d48",
-    name: "Bình Nguyễn",
-    username: "@binh_nguyen",
-    email: "binh.nguyen@minishop.vn",
-    phone: "0988.123.456",
-    role: "🛍️ Khách hàng VIP",
-    roleType: "customer",
-    registeredDate: "12/08/2026",
-    status: "Active",
-  },
-];
+import { fetchAdminUsers, saveAdminUser, toggleAdminUserStatus, AdminUserItem as UserItem } from "@/lib/supabaseAdmin";
 
 export default function AdminUsersPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [users, setUsers] = useState<UserItem[]>(INITIAL_USERS);
+  const [users, setUsers] = useState<UserItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [pageSize, setPageSize] = useState<number>(10);
   const [currentPage, setCurrentPage] = useState<number>(1);
+
+  const loadData = async () => {
+    setLoading(true);
+    const data = await fetchAdminUsers();
+    setUsers(data);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   // Form State for Add Admin/Staff Modal
   const [staffName, setStaffName] = useState("");
@@ -120,7 +51,9 @@ export default function AdminUsersPage() {
     safeCurrentPage * pageSize
   );
 
-  const handleToggleBlockUser = (id: number) => {
+  const handleToggleBlockUser = async (id: number) => {
+    const target = users.find((u) => u.id === id);
+    if (!target) return;
     setUsers((prev) =>
       prev.map((u) => {
         if (u.id === id) {
@@ -130,9 +63,10 @@ export default function AdminUsersPage() {
         return u;
       })
     );
+    await toggleAdminUserStatus(id, target.status);
   };
 
-  const handleSaveNewAdmin = (e: React.FormEvent) => {
+  const handleSaveNewAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!staffName.trim() || !staffEmail.trim() || !staffPhone.trim()) return;
 
@@ -151,6 +85,7 @@ export default function AdminUsersPage() {
     };
 
     setUsers((prev) => [newUser, ...prev]);
+    await saveAdminUser(newUser);
     setShowAddModal(false);
     setStaffName("");
     setStaffEmail("");
