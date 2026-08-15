@@ -304,6 +304,27 @@ export default function AdminOrdersPage() {
           background-color: #fee2e2;
           color: #b91c1c;
         }
+        @media print {
+          body * {
+            visibility: hidden !important;
+          }
+          #printable-invoice-card, #printable-invoice-card * {
+            visibility: visible !important;
+          }
+          #printable-invoice-card {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            box-shadow: none !important;
+            border: 1px solid #cbd5e1 !important;
+            padding: 30px !important;
+          }
+          .btn-print-hide {
+            display: none !important;
+          }
+        }
       `}</style>
 
       <div className="admin-wrapper">
@@ -688,6 +709,7 @@ export default function AdminOrdersPage() {
           }}
         >
           <div
+            id="printable-invoice-card"
             style={{
               background: "#fff",
               borderRadius: "var(--radius-lg)",
@@ -861,6 +883,7 @@ export default function AdminOrdersPage() {
             </div>
 
             <div
+              className="btn-print-hide"
               style={{
                 display: "flex",
                 justifyContent: "flex-end",

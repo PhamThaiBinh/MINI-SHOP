@@ -57,6 +57,7 @@ export default function ProductDetailPage({
   const { isWishlisted, toggleWishlist } = useWishlist();
 
   const [quantity, setQuantity] = useState(1);
+  const [copied, setCopied] = useState(false);
 
   // Gallery Images (Primary image + thumbnail variations)
   const galleryImages = [
@@ -306,6 +307,23 @@ export default function ProductDetailPage({
                   }}
                 >
                   <span>{isWishlisted(product.id) ? "♥" : "♡"}</span> Yêu thích
+                </button>
+                <button
+                  className="btn-detail-wishlist"
+                  onClick={() => {
+                    if (typeof window !== "undefined") {
+                      navigator.clipboard.writeText(window.location.href);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 3000);
+                    }
+                  }}
+                  title="Sao chép liên kết chia sẻ"
+                  style={{
+                    borderColor: copied ? "#166534" : "var(--border-color)",
+                    color: copied ? "#166534" : "inherit",
+                  }}
+                >
+                  <span>{copied ? "✅" : "🔗"}</span> {copied ? "Đã chép link!" : "Chia sẻ"}
                 </button>
               </div>
 
