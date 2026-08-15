@@ -195,7 +195,7 @@ export default function CheckoutPage() {
     }
   }, [systemCoupons, user]);
 
-  const handleCompleteOrder = () => {
+  const handleCompleteOrder = async () => {
     const finalCode = orderCode || ("#MS-" + Math.floor(10000 + Math.random() * 90000));
     setOrderCode(finalCode);
     const fullDateStr = formatFullTimestamp(new Date());
@@ -233,10 +233,12 @@ export default function CheckoutPage() {
     addPlacedOrder(placedOrderRecord);
     addUnifiedPlacedOrder(unifiedRecord);
     
-    // Save order asynchronously to Supabase
-    createOrderInSupabase(unifiedRecord).catch((err) => {
+    // Save order synchronously to Supabase
+    try {
+      await createOrderInSupabase(unifiedRecord);
+    } catch (err) {
       console.error("Failed to save order to Supabase:", err);
-    });
+    }
 
     if (appliedVoucher) {
       consumeVoucher(appliedVoucher.code);
@@ -250,7 +252,7 @@ export default function CheckoutPage() {
     clearCart();
   };
 
-  const handleSubmitOrder = (e: React.FormEvent) => {
+  const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     const newCode = "#MS-" + Math.floor(10000 + Math.random() * 90000);
     setOrderCode(newCode);
@@ -259,17 +261,17 @@ export default function CheckoutPage() {
       setShowQrModal(true);
       setQrCountdown(10);
       let count = 10;
-      const timer = setInterval(() => {
+      const timer = setInterval(async () => {
         count--;
         setQrCountdown(count);
         if (count <= 0) {
           clearInterval(timer);
           setShowQrModal(false);
-          handleCompleteOrder();
+          await handleCompleteOrder();
         }
       }, 1000);
     } else {
-      handleCompleteOrder();
+      await handleCompleteOrder();
     }
   };
 
