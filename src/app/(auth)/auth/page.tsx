@@ -514,7 +514,11 @@ export default function AuthPage() {
     } else {
       setAuthSuccess("✅ Đăng nhập thành công!");
       setTimeout(() => {
-        router.push("/");
+        if (loginEmail.trim().toLowerCase().includes("admin")) {
+          router.push("/admin");
+        } else {
+          router.push("/");
+        }
       }, 500);
     }
   };
