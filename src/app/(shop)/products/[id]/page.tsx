@@ -2,7 +2,7 @@
 
 import React, { useState, use, useEffect } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import "@/styles/product-detail.css";
 import { PRODUCTS_DATA } from "@/data/products";
 import { formatVND, fixImagePath } from "@/lib/utils";
@@ -16,6 +16,7 @@ export default function ProductDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const router = useRouter();
   const resolvedParams = use(params);
   const productId = parseInt(resolvedParams.id, 10) || 1;
   const searchParams = useSearchParams();
@@ -143,7 +144,15 @@ export default function ProductDetailPage({
             {/* Column 2: Product Info & Purchase Actions */}
             <div className="product-info-col">
               <div className="product-meta-tags">
-                <span className="badge-stock">✓ Còn hàng</span>
+                {(product.stock ?? 50) === 0 ? (
+                  <span className="badge-stock" style={{ background: "#fee2e2", color: "#b91c1c" }}>
+                    ❌ Hết hàng trong kho
+                  </span>
+                ) : (
+                  <span className="badge-stock">
+                    🔥 Chỉ còn {product.stock ?? 50} sản phẩm trong kho
+                  </span>
+                )}
                 <span className="tag-category">{product.categoryName}</span>
               </div>
 
@@ -260,11 +269,27 @@ export default function ProductDetailPage({
               <div className="action-buttons-group">
                 <button
                   className="btn-add-cart"
+                  disabled={(product.stock ?? 50) === 0}
                   onClick={() =>
                     addToCart({ ...product, price: effectivePrice }, quantity)
                   }
+                  style={{ opacity: (product.stock ?? 50) === 0 ? 0.5 : 1 }}
                 >
                   <span>🛒</span> Thêm vào giỏ hàng
+                </button>
+                <button
+                  className="btn-add-cart"
+                  disabled={(product.stock ?? 50) === 0}
+                  onClick={() => {
+                    addToCart({ ...product, price: effectivePrice }, quantity);
+                    router.push("/checkout");
+                  }}
+                  style={{
+                    backgroundColor: "#ef4444",
+                    opacity: (product.stock ?? 50) === 0 ? 0.5 : 1,
+                  }}
+                >
+                  <span>⚡</span> Mua ngay
                 </button>
                 <button
                   className="btn-detail-wishlist"

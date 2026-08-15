@@ -579,6 +579,18 @@ export default function CartPage() {
                         >
                           {coupon.desc}
                         </div>
+                        {coupon.minOrder && (
+                          <div
+                            style={{
+                              fontSize: "11px",
+                              color: subtotal >= coupon.minOrder ? "#166534" : "#dc2626",
+                              fontWeight: 700,
+                              marginTop: "2px",
+                            }}
+                          >
+                            📌 Đơn tối thiểu {formatVND(coupon.minOrder)} {subtotal < coupon.minOrder ? "(Chưa đủ điều kiện)" : "(Đủ điều kiện)"}
+                          </div>
+                        )}
                       </div>
                     </div>
                     <button

@@ -149,12 +149,31 @@ export default function AdminUsersPage() {
                 <h2 className="card-header-title">
                   Danh Sách Người Dùng Hệ Thống ({users.length})
                 </h2>
-                <button
-                  className="btn-add-product-green"
-                  onClick={() => setShowAddModal(true)}
-                >
-                  + Thêm Quản Trị Viên
-                </button>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+                  <input
+                    type="text"
+                    placeholder="🔍 Tìm tên, email, sđt, username..."
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    style={{
+                      padding: "6px 12px",
+                      fontSize: "13px",
+                      borderRadius: "6px",
+                      border: "1px solid var(--border-color)",
+                      width: "240px",
+                      fontFamily: "inherit",
+                    }}
+                  />
+                  <button
+                    className="btn-add-product-green"
+                    onClick={() => setShowAddModal(true)}
+                  >
+                    + Thêm Quản Trị Viên
+                  </button>
+                </div>
               </div>
 
               <table className="admin-table">
