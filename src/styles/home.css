@@ -13,11 +13,11 @@
     background: linear-gradient(135deg, #f8fafc 0%, #f0fdf4 100%);
     border: 1px solid rgba(46, 125, 50, 0.12);
     border-radius: 20px;
-    padding: 44px 36px;
+    padding: 52px 56px;
     display: grid;
-    grid-template-columns: 1.45fr 0.55fr;
+    grid-template-columns: 1fr 1fr;
     align-items: center;
-    gap: 24px;
+    gap: 48px;
     overflow: hidden;
     position: relative;
     box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
