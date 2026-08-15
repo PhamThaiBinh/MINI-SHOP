@@ -814,9 +814,24 @@ export default function AdminOrdersPage() {
               style={{
                 display: "flex",
                 justifyContent: "flex-end",
+                gap: "10px",
                 marginTop: "18px",
               }}
             >
+              <button
+                onClick={() => window.print()}
+                style={{
+                  padding: "8px 16px",
+                  fontSize: "13px",
+                  fontWeight: 700,
+                  border: "1px solid #cbd5e1",
+                  background: "#f8fafc",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                }}
+              >
+                🖨️ In Hóa Đơn A4
+              </button>
               <button
                 onClick={() => setSelectedOrder(null)}
                 className="btn-save-green"

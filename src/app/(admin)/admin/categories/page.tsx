@@ -7,6 +7,7 @@ import "@/styles/admin.css";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { fetchAdminCategories, saveAdminCategory, deleteAdminCategory } from "@/lib/supabaseAdmin";
+import { createClient } from "@/utils/supabase/client";
 
 interface Category {
   id: number;
@@ -40,8 +41,10 @@ export default function AdminCategoriesPage() {
     setFormDesc(cat.desc || "");
   };
 
-  const handleDeleteClick = (id: number) => {
-    if (confirm("Bạn có chắc chắn muốn xóa danh mục này?")) {
+  const handleDeleteClick = async (id: number) => {
+    if (confirm("⚠️ Bạn có chắc chắn muốn xóa danh mục này khỏi kho Supabase không?")) {
+      const supabase = createClient();
+      await supabase.from("categories").delete().eq("id", id);
       setCategories((prev) => prev.filter((c) => c.id !== id));
     }
   };
@@ -55,36 +58,63 @@ export default function AdminCategoriesPage() {
     setFormDesc("");
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formName.trim()) return;
 
+    const supabase = createClient();
+    const cleanSlug = formSlug || formName.toLowerCase().replace(/\s+/g, "-");
+    const cleanIcon = formIcon || "📁";
+
     if (editingCategory) {
-      // Update
+      // Update Supabase
+      await supabase
+        .from("categories")
+        .update({
+          name: formName.trim(),
+          slug: cleanSlug,
+          icon: cleanIcon,
+          description: formDesc.trim(),
+        })
+        .eq("id", editingCategory.id);
+
       setCategories((prev) =>
         prev.map((c) =>
           c.id === editingCategory.id
             ? {
                 ...c,
-                name: formName,
-                slug: formSlug || formName.toLowerCase().replace(/\s+/g, "-"),
-                icon: formIcon || "📁",
+                name: formName.trim(),
+                slug: cleanSlug,
+                icon: cleanIcon,
                 status: formStatus,
-                desc: formDesc,
+                desc: formDesc.trim(),
               }
             : c
         )
       );
     } else {
-      // Add new
+      // Add new to Supabase
+      const { data } = await supabase
+        .from("categories")
+        .insert({
+          category_id: formName.trim(),
+          name: formName.trim(),
+          slug: cleanSlug,
+          icon: cleanIcon,
+          description: formDesc.trim(),
+        })
+        .select();
+
+      const newId = data && data.length > 0 ? Number(data[0].id) : Date.now();
+
       const newCat: Category = {
-        id: Date.now(),
-        name: formName,
-        slug: formSlug || formName.toLowerCase().replace(/\s+/g, "-"),
-        icon: formIcon || "📁",
+        id: newId,
+        name: formName.trim(),
+        slug: cleanSlug,
+        icon: cleanIcon,
         productCount: 0,
         status: formStatus,
-        desc: formDesc,
+        desc: formDesc.trim(),
       };
       setCategories((prev) => [...prev, newCat]);
     }
