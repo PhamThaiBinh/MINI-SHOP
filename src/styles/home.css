@@ -24,7 +24,7 @@
 }
 
 .hero-content {
-    max-width: 500px;
+    max-width: 550px;
 }
 
 .hero-title {
@@ -74,28 +74,26 @@
 .hero-badges {
     display: flex;
     align-items: stretch;
-    gap: 8px;
+    gap: 10px;
     margin-top: 32px;
     padding-top: 20px;
     border-top: 1px solid rgba(0, 0, 0, 0.07);
-    flex-wrap: wrap;
 }
 
 .badge-item {
-    flex: 1 1 0%;
-    min-width: 140px;
+    flex: 1;
+    min-width: 0;
     min-height: 60px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     background-color: #ffffff;
-    padding: 8px 10px;
+    padding: 10px 12px;
     border-radius: 12px;
     border: 1px solid var(--border-color);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
     transition: var(--transition);
     box-sizing: border-box;
-    overflow: hidden;
 }
 
 .badge-item:hover {
@@ -105,8 +103,8 @@
 }
 
 .badge-icon {
-    width: 34px;
-    height: 34px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     background-color: var(--primary-light);
     display: flex;
@@ -121,30 +119,24 @@
     flex-direction: column;
     justify-content: center;
     gap: 2px;
-    min-width: 0;
-    overflow: hidden;
 }
 
 .badge-text strong {
     display: block;
-    font-size: clamp(11.5px, 0.95vw, 13px);
+    font-size: 13px;
     font-weight: 800;
     color: #0f172a;
     line-height: 1.25;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .badge-text span {
     display: block;
-    font-size: clamp(10.5px, 0.85vw, 12px);
+    font-size: 12px;
     font-weight: 600;
     color: #475569;
     line-height: 1.25;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .hero-image-wrapper {
