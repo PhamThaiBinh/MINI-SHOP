@@ -10,6 +10,20 @@ export const metadata: Metadata = {
   title: "Mini Shop - Sống đẹp mỗi ngày | Đồ dùng & Trang trí nhà cửa",
   description:
     "Mini Shop cung cấp các sản phẩm nội thất, đồ trang trí, gia dụng thủ công cao cấp cho tổ ấm của bạn.",
+  openGraph: {
+    title: "Mini Shop - Sống đẹp mỗi ngày",
+    description:
+      "Nội thất, trang trí & đồ dùng nhà cửa thủ công tinh tế, hiện đại.",
+    type: "website",
+    locale: "vi_VN",
+    siteName: "Mini Shop",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Mini Shop - Sống đẹp mỗi ngày",
+    description:
+      "Nội thất, trang trí & đồ dùng nhà cửa thủ công tinh tế, hiện đại.",
+  },
 };
 
 export default function RootLayout({

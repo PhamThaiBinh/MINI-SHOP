@@ -14,6 +14,19 @@ export default function AdminDashboardPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [salesPeriod, setSalesPeriod] = useState("7days");
   const [hoverPointIndex, setHoverPointIndex] = useState<number | null>(null);
+  const [completedRevenue, setCompletedRevenue] = useState<number>(0);
+  const [completedOrdersCount, setCompletedOrdersCount] = useState<number>(0);
+
+  useEffect(() => {
+    async function loadStats() {
+      const orders = await fetchAdminOrders();
+      const completed = orders.filter((o) => o.status === "completed");
+      const rev = completed.reduce((sum, o) => sum + (o.total || 0), 0);
+      setCompletedRevenue(rev);
+      setCompletedOrdersCount(completed.length);
+    }
+    loadStats();
+  }, []);
 
   const [dbOrders, setDbOrders] = useState<any[]>([]);
   const [dbProductsCount, setDbProductsCount] = useState<number>(18);

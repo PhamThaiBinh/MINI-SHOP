@@ -17,7 +17,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     <div className="product-card">
       <div className="product-img-wrapper">
         <Link href={`/products/${product.id}`}>
-          <img src={fixImagePath(product.image)} alt={product.name} />
+          <img src={fixImagePath(product.image)} alt={product.name} loading="lazy" />
         </Link>
       </div>
       <div className="product-info">

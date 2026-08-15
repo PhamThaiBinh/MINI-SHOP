@@ -257,9 +257,20 @@ export default function CartPage() {
                                 -
                               </button>
                               <input
-                                type="text"
+                                type="number"
+                                min="1"
                                 value={item.quantity}
-                                readOnly
+                                onChange={(e) => {
+                                  const val = parseInt(e.target.value, 10);
+                                  updateQuantity(item.product.id, isNaN(val) ? 1 : val);
+                                }}
+                                onBlur={(e) => {
+                                  const val = parseInt(e.target.value, 10);
+                                  if (isNaN(val) || val <= 0) {
+                                    updateQuantity(item.product.id, 1);
+                                  }
+                                }}
+                                style={{ width: "45px", textAlign: "center" }}
                               />
                               <button
                                 type="button"
