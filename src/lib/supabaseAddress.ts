@@ -18,12 +18,12 @@ export const fetchUserAddressesFromSupabase = async (
     const cleanUser = username.trim().replace(/^@/, "");
 
     const { data, error } = await supabase
-      .from("user_addresses")
-      .select("*")
-      .or(`username.eq.${cleanUser},username.eq.@${cleanUser}`)
-      .order("id", { ascending: true });
+      .from("users")
+      .select("addresses")
+      .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${cleanUser}`)
+      .limit(1);
 
-    if (error || !data || data.length === 0) {
+    if (error || !data || data.length === 0 || !Array.isArray(data[0].addresses) || data[0].addresses.length === 0) {
       return [
         {
           id: 101,
@@ -37,15 +37,7 @@ export const fetchUserAddressesFromSupabase = async (
       ];
     }
 
-    return data.map((a: any) => ({
-      id: Number(a.id),
-      name: String(a.name),
-      phone: String(a.phone),
-      province: String(a.province),
-      ward: String(a.ward),
-      detail: String(a.detail),
-      isDefault: Boolean(a.is_default),
-    }));
+    return data[0].addresses;
   } catch (err) {
     console.error("Error fetching user addresses:", err);
     return [];
@@ -57,34 +49,30 @@ export const addUserAddressToSupabase = async (
   username: string
 ): Promise<boolean> => {
   try {
+    const currentAddresses = await fetchUserAddressesFromSupabase(username);
+    let updatedAddresses = [...currentAddresses];
+
+    if (addr.isDefault) {
+      updatedAddresses = updatedAddresses.map((a) => ({ ...a, isDefault: false }));
+    }
+
+    const newAddressItem: UserAddressItem = {
+      id: Date.now(),
+      ...addr,
+    };
+    updatedAddresses.push(newAddressItem);
+
     const supabase = createClient();
     const cleanUser = username.trim().replace(/^@/, "");
 
-    if (addr.isDefault) {
-      await supabase
-        .from("user_addresses")
-        .update({ is_default: false })
-        .or(`username.eq.${cleanUser},username.eq.@${cleanUser}`);
-    }
+    const { error } = await supabase
+      .from("users")
+      .update({ addresses: updatedAddresses })
+      .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${cleanUser}`);
 
-    const { error } = await supabase.from("user_addresses").insert({
-      username: cleanUser,
-      name: addr.name,
-      phone: addr.phone,
-      province: addr.province,
-      ward: addr.ward,
-      detail: addr.detail,
-      is_default: addr.isDefault,
-    });
-
-    if (error) {
-      console.error("Error inserting address to Supabase:", error.message);
-      return false;
-    }
-
-    return true;
+    return !error;
   } catch (err) {
-    console.error("Error adding address to Supabase:", err);
+    console.error("Error adding address:", err);
     return false;
   }
 };
@@ -94,20 +82,19 @@ export const setDefaultUserAddressInSupabase = async (
   username: string
 ): Promise<boolean> => {
   try {
+    const currentAddresses = await fetchUserAddressesFromSupabase(username);
+    const updatedAddresses = currentAddresses.map((a) => ({
+      ...a,
+      isDefault: a.id === id,
+    }));
+
     const supabase = createClient();
     const cleanUser = username.trim().replace(/^@/, "");
 
-    // 1. Reset all addresses for user to non-default
-    await supabase
-      .from("user_addresses")
-      .update({ is_default: false })
-      .or(`username.eq.${cleanUser},username.eq.@${cleanUser}`);
-
-    // 2. Set chosen address to default
     const { error } = await supabase
-      .from("user_addresses")
-      .update({ is_default: true })
-      .eq("id", id);
+      .from("users")
+      .update({ addresses: updatedAddresses })
+      .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${cleanUser}`);
 
     return !error;
   } catch (err) {
@@ -117,14 +104,20 @@ export const setDefaultUserAddressInSupabase = async (
 };
 
 export const deleteUserAddressFromSupabase = async (
-  id: number
+  id: number,
+  username: string = "binh"
 ): Promise<boolean> => {
   try {
+    const currentAddresses = await fetchUserAddressesFromSupabase(username);
+    const updatedAddresses = currentAddresses.filter((a) => a.id !== id);
+
     const supabase = createClient();
+    const cleanUser = username.trim().replace(/^@/, "");
+
     const { error } = await supabase
-      .from("user_addresses")
-      .delete()
-      .eq("id", id);
+      .from("users")
+      .update({ addresses: updatedAddresses })
+      .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${cleanUser}`);
 
     return !error;
   } catch (err) {

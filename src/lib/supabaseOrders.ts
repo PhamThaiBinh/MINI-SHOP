@@ -37,18 +37,7 @@ export const lookupOrderFromSupabase = async (
       return lookupOrderLocal(code, phone);
     }
 
-    // Fetch order items for matched order
-    const { data: itemRows } = await supabase
-      .from("order_items")
-      .select("*")
-      .eq("order_id", matched.id);
-
-    const items = (itemRows || []).map((it: any) => ({
-      name: String(it.product_name),
-      image: String(it.image),
-      qty: Number(it.qty),
-      price: Number(it.price),
-    }));
+    const items = Array.isArray(matched.items) ? matched.items : [];
 
     return {
       id: String(matched.id),
@@ -59,7 +48,7 @@ export const lookupOrderFromSupabase = async (
       recipientPhone: String(matched.recipient_phone),
       address: String(matched.address),
       paymentMethod: String(matched.payment_method),
-      items: items.length > 0 ? items : [],
+      items: items,
       subtotal: Number(matched.subtotal || 0),
       discount: Number(matched.discount || 0),
       total: Number(matched.total || 0),
@@ -76,7 +65,7 @@ export const createOrderInSupabase = async (orderData: UnifiedOrder): Promise<bo
   try {
     const supabase = createClient();
 
-    // 1. Insert Order Record
+    // Insert Order Record with items JSONB
     const { error: orderErr } = await supabase.from("orders").insert({
       id: orderData.id,
       date: orderData.date,
@@ -86,6 +75,7 @@ export const createOrderInSupabase = async (orderData: UnifiedOrder): Promise<bo
       recipient_phone: orderData.recipientPhone,
       address: orderData.address,
       payment_method: orderData.paymentMethod,
+      items: orderData.items || [],
       subtotal: orderData.subtotal,
       discount: orderData.discount,
       total: orderData.total,
@@ -96,23 +86,6 @@ export const createOrderInSupabase = async (orderData: UnifiedOrder): Promise<bo
     if (orderErr) {
       console.error("Error inserting order to Supabase:", orderErr.message);
       return false;
-    }
-
-    // 2. Insert Order Items
-    if (orderData.items && orderData.items.length > 0) {
-      const itemsToInsert = orderData.items.map((it) => ({
-        order_id: orderData.id,
-        product_name: it.name,
-        image: it.image,
-        qty: it.qty,
-        price: it.price,
-      }));
-
-      const { error: itemsErr } = await supabase.from("order_items").insert(itemsToInsert);
-
-      if (itemsErr) {
-        console.error("Error inserting order items to Supabase:", itemsErr.message);
-      }
     }
 
     return true;

@@ -1,6 +1,6 @@
 import { createClient } from "@/utils/supabase/client";
 
-// ==================== 1. CART SUPABASE INTEGRATION ====================
+// ==================== 1. CART SUPABASE INTEGRATION (UNIFIED USERS TABLE) ====================
 export interface SupabaseCartItem {
   productId: number;
   quantity: number;
@@ -12,16 +12,14 @@ export const fetchUserCartFromSupabase = async (username: string): Promise<Supab
     const cleanUser = username.trim().replace(/^@/, "");
 
     const { data, error } = await supabase
-      .from("user_carts")
-      .select("product_id, quantity")
-      .or(`username.eq.${cleanUser},username.eq.@${cleanUser}`);
+      .from("users")
+      .select("cart")
+      .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${cleanUser}`)
+      .limit(1);
 
-    if (error || !data) return [];
+    if (error || !data || data.length === 0 || !Array.isArray(data[0].cart)) return [];
 
-    return data.map((item: any) => ({
-      productId: Number(item.product_id),
-      quantity: Number(item.quantity || 1),
-    }));
+    return data[0].cart;
   } catch (err) {
     console.error("Error fetching user cart from Supabase:", err);
     return [];
@@ -36,45 +34,33 @@ export const syncUserCartToSupabase = async (
     const supabase = createClient();
     const cleanUser = username.trim().replace(/^@/, "");
 
-    // 1. Clear old cart items for user
-    await supabase
-      .from("user_carts")
-      .delete()
-      .or(`username.eq.${cleanUser},username.eq.@${cleanUser}`);
+    const { error } = await supabase
+      .from("users")
+      .update({ cart: items })
+      .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${cleanUser}`);
 
-    // 2. Insert new cart items if available
-    if (items.length > 0) {
-      const rowsToInsert = items.map((it) => ({
-        username: cleanUser,
-        product_id: it.productId,
-        quantity: it.quantity,
-      }));
-
-      const { error } = await supabase.from("user_carts").insert(rowsToInsert);
-      if (error) console.error("Error syncing cart items to Supabase:", error.message);
-    }
-
-    return true;
+    return !error;
   } catch (err) {
     console.error("Error syncing cart to Supabase:", err);
     return false;
   }
 };
 
-// ==================== 2. WISHLIST SUPABASE INTEGRATION ====================
+// ==================== 2. WISHLIST SUPABASE INTEGRATION (UNIFIED USERS TABLE) ====================
 export const fetchUserWishlistFromSupabase = async (username: string): Promise<number[]> => {
   try {
     const supabase = createClient();
     const cleanUser = username.trim().replace(/^@/, "");
 
     const { data, error } = await supabase
-      .from("user_wishlists")
-      .select("product_id")
-      .or(`username.eq.${cleanUser},username.eq.@${cleanUser}`);
+      .from("users")
+      .select("wishlist")
+      .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${cleanUser}`)
+      .limit(1);
 
-    if (error || !data) return [];
+    if (error || !data || data.length === 0 || !Array.isArray(data[0].wishlist)) return [];
 
-    return data.map((item: any) => Number(item.product_id));
+    return data[0].wishlist;
   } catch (err) {
     console.error("Error fetching wishlist from Supabase:", err);
     return [];
@@ -89,31 +75,19 @@ export const syncUserWishlistToSupabase = async (
     const supabase = createClient();
     const cleanUser = username.trim().replace(/^@/, "");
 
-    // 1. Clear old wishlist items for user
-    await supabase
-      .from("user_wishlists")
-      .delete()
-      .or(`username.eq.${cleanUser},username.eq.@${cleanUser}`);
+    const { error } = await supabase
+      .from("users")
+      .update({ wishlist: productIds })
+      .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${cleanUser}`);
 
-    // 2. Insert new wishlist items
-    if (productIds.length > 0) {
-      const rowsToInsert = productIds.map((pid) => ({
-        username: cleanUser,
-        product_id: pid,
-      }));
-
-      const { error } = await supabase.from("user_wishlists").insert(rowsToInsert);
-      if (error) console.error("Error syncing wishlist to Supabase:", error.message);
-    }
-
-    return true;
+    return !error;
   } catch (err) {
     console.error("Error syncing wishlist to Supabase:", err);
     return false;
   }
 };
 
-// ==================== 3. REWARDS & POINTS SUPABASE INTEGRATION ====================
+// ==================== 3. REWARDS & POINTS SUPABASE INTEGRATION (UNIFIED USERS TABLE) ====================
 export interface UserRewardData {
   points: number;
   history: any[];
@@ -126,20 +100,20 @@ export const fetchUserRewardsFromSupabase = async (username: string): Promise<Us
     const cleanUser = username.trim().replace(/^@/, "");
 
     const { data, error } = await supabase
-      .from("user_rewards")
-      .select("*")
-      .or(`username.eq.${cleanUser},username.eq.@${cleanUser}`)
+      .from("users")
+      .select("rewards")
+      .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${cleanUser}`)
       .limit(1);
 
-    if (error || !data || data.length === 0) {
+    if (error || !data || data.length === 0 || !data[0].rewards) {
       return { points: 500, history: [], lastCheckin: undefined };
     }
 
-    const row = data[0];
+    const rw = data[0].rewards;
     return {
-      points: Number(row.points || 500),
-      history: Array.isArray(row.history) ? row.history : [],
-      lastCheckin: row.last_checkin ? String(row.last_checkin) : undefined,
+      points: Number(rw.points || 500),
+      history: Array.isArray(rw.history) ? rw.history : [],
+      lastCheckin: rw.lastCheckin ? String(rw.lastCheckin) : undefined,
     };
   } catch (err) {
     console.error("Error fetching rewards from Supabase:", err);
@@ -155,12 +129,10 @@ export const syncUserRewardsToSupabase = async (
     const supabase = createClient();
     const cleanUser = username.trim().replace(/^@/, "");
 
-    const { error } = await supabase.from("user_rewards").upsert({
-      username: cleanUser,
-      points: rewardData.points,
-      history: rewardData.history,
-      last_checkin: rewardData.lastCheckin || null,
-    }, { onConflict: "username" });
+    const { error } = await supabase
+      .from("users")
+      .update({ rewards: rewardData })
+      .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${cleanUser}`);
 
     return !error;
   } catch (err) {
