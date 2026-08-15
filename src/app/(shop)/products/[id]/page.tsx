@@ -61,7 +61,7 @@ export default function ProductDetailPage({
   const galleryImages = [
     currentProduct.image,
     "/assets/images/products/do-my-nghe/binh-gom-trang-tri.webp",
-    "/assets/images/products/do-my-nghe/bo-binh-gom-thu-cong.webp",
+    "/assets/images/products/do-my-nghe/bo-binh-gom-minimal.webp",
     "/assets/images/products/noi-that-gia-dung/chau-cay-de-ban.webp",
     "/assets/images/products/do-thu-cong/khay-go-trang-tri.webp",
   ];
@@ -116,7 +116,13 @@ export default function ProductDetailPage({
                     }`}
                     onClick={() => setActiveImageIndex(idx)}
                   >
-                    <img src={fixImagePath(imgSrc)} alt={`Thumb ${idx + 1}`} />
+                    <img
+                      src={fixImagePath(imgSrc)}
+                      alt={`Thumb ${idx + 1}`}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = fixImagePath(currentProduct.image);
+                      }}
+                    />
                   </div>
                 ))}
               </div>
@@ -127,6 +133,9 @@ export default function ProductDetailPage({
                   id="main-detail-image"
                   src={fixImagePath(galleryImages[activeImageIndex])}
                   alt={product.name}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = fixImagePath(currentProduct.image);
+                  }}
                 />
               </div>
             </div>
