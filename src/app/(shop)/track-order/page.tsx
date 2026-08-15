@@ -3,20 +3,25 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { formatVND, fixImagePath } from "@/lib/utils";
-import { lookupOrder, UnifiedOrder } from "@/utils/orderStorage";
+import { UnifiedOrder } from "@/utils/orderStorage";
+import { lookupOrderFromSupabase } from "@/lib/supabaseOrders";
 
 export default function TrackOrderPage() {
   const [searchCode, setSearchCode] = useState("");
   const [searchPhone, setSearchPhone] = useState("");
   const [searched, setSearched] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [orderResult, setOrderResult] = useState<UnifiedOrder | null>(null);
 
-  const handleSearchOrder = (e: React.FormEvent) => {
+  const handleSearchOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     setSearched(true);
-    const found = lookupOrder(searchCode, searchPhone);
+    setLoading(true);
+    const found = await lookupOrderFromSupabase(searchCode, searchPhone);
     setOrderResult(found);
+    setLoading(false);
   };
+
 
   return (
     <main className="container" style={{ padding: "40px 15px", maxWidth: "800px" }}>

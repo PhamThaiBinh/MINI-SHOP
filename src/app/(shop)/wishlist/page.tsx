@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import "@/styles/product-list.css";
 import "@/styles/cart.css";
@@ -8,14 +8,31 @@ import { PRODUCTS_DATA } from "@/data/products";
 import { formatVND, fixImagePath } from "@/lib/utils";
 import { useWishlist } from "@/context/WishlistContext";
 import { useCart } from "@/context/CartContext";
+import { Product } from "@/types/product";
+import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
 
 export default function WishlistPage() {
   const { wishlistIds, toggleWishlist } = useWishlist();
   const { addToCart } = useCart();
 
-  const wishlistProducts = PRODUCTS_DATA.filter((p) =>
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    async function loadData() {
+      setLoading(true);
+      const data = await fetchProductsFromSupabase();
+      setProducts(data);
+      setLoading(false);
+    }
+    loadData();
+  }, []);
+
+  const sourceProducts = products.length > 0 ? products : PRODUCTS_DATA;
+  const wishlistProducts = sourceProducts.filter((p) =>
     wishlistIds.includes(p.id)
   );
+
 
   return (
     <>

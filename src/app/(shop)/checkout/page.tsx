@@ -9,6 +9,7 @@ import { useAuth, PlacedOrder } from "@/context/AuthContext";
 import { formatVND, fixImagePath } from "@/lib/utils";
 import { getSystemVouchers } from "@/utils/voucherStorage";
 import { addPlacedOrder as addUnifiedPlacedOrder, formatFullTimestamp, UnifiedOrder } from "@/utils/orderStorage";
+import { createOrderInSupabase } from "@/lib/supabaseOrders";
 
 interface Coupon {
   code: string;
@@ -224,10 +225,17 @@ export default function CheckoutPage() {
       total: grandTotal,
     };
 
-    addPlacedOrder(placedOrderRecord);
-    addUnifiedPlacedOrder({
+    const unifiedRecord: UnifiedOrder = {
       ...placedOrderRecord,
       username: user?.username || "binh",
+    };
+
+    addPlacedOrder(placedOrderRecord);
+    addUnifiedPlacedOrder(unifiedRecord);
+    
+    // Save order asynchronously to Supabase
+    createOrderInSupabase(unifiedRecord).catch((err) => {
+      console.error("Failed to save order to Supabase:", err);
     });
 
     if (appliedVoucher) {
