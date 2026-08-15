@@ -69,6 +69,12 @@ export const fetchCategoriesFromSupabase = async (): Promise<SupabaseCategory[]>
       label: String(row.name),
       icon: String(row.icon || "📁"),
     }));
+  } catch (err) {
+    console.error("Error fetching categories from Supabase:", err);
+    return defaultCategories;
+  }
+};
+
 export const fetchProductByIdFromSupabase = async (id: number): Promise<Product | null> => {
   try {
     const supabase = createClient();

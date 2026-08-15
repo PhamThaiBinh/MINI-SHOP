@@ -6,7 +6,8 @@ import "@/styles/admin.css";
 
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
-import { fetchAdminOrders, fetchAdminProducts, fetchAdminUsers } from "@/lib/supabaseAdmin";
+import { fetchAdminOrders, fetchAdminUsers } from "@/lib/supabaseAdmin";
+import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
 import { formatVND } from "@/lib/utils";
 
 export default function AdminDashboardPage() {
@@ -22,7 +23,7 @@ export default function AdminDashboardPage() {
     async function loadData() {
       const [orders, products, users] = await Promise.all([
         fetchAdminOrders(),
-        fetchAdminProducts(),
+        fetchProductsFromSupabase(),
         fetchAdminUsers(),
       ]);
       setDbOrders(orders);

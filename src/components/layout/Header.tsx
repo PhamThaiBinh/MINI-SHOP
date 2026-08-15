@@ -14,8 +14,8 @@ export const Header: React.FC = () => {
   const { totalWishlistItems } = useWishlist();
   const { user, logout } = useAuth();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     router.push("/auth");
   };
 

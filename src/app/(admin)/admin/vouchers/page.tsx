@@ -22,6 +22,18 @@ export default function AdminVouchersPage() {
     setLoading(false);
   };
 
+  // Pagination states
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+
+  // Form states
+  const [formCode, setFormCode] = useState("");
+  const [formDesc, setFormDesc] = useState("");
+  const [formDiscountType, setFormDiscountType] = useState<"percent" | "fixed">("fixed");
+  const [formDiscountValue, setFormDiscountValue] = useState("");
+  const [formMinOrder, setFormMinOrder] = useState("");
+  const [formIsActive, setFormIsActive] = useState<boolean>(true);
+
   useEffect(() => {
     loadData();
   }, []);

@@ -22,7 +22,7 @@ export default function ProductDetailPage({
   const flashParam = searchParams.get("flashSalePrice");
   const flashSalePrice = flashParam ? parseInt(flashParam, 10) : null;
 
-  const [product, setProduct] = useState<Product | null>(null);
+  const [product, setProduct] = useState<Product>(PRODUCTS_DATA[0]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 

@@ -290,9 +290,12 @@ const MOCK_ORDERS: CustomerOrder[] = [
 
 export default function AuthPage() {
   const router = useRouter();
-  const { user, loginUser, logout, redeemGift } = useAuth();
+  const { user, signUp, signIn, logout, redeemGift } = useAuth();
 
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
+  const [authError, setAuthError] = useState("");
+  const [authSuccess, setAuthSuccess] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   React.useEffect(() => {
     if (user && user.role === "admin") {
@@ -497,27 +500,56 @@ export default function AuthPage() {
     setAddrWard(wards[0] || "");
   };
 
-  const executeLogin = (identifier: string) => {
-    const loggedUser = loginUser(identifier);
-    if (loggedUser.role === "admin") {
-      router.push("/admin");
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError("");
+    setAuthSuccess("");
+    setIsSubmitting(true);
+
+    const res = await signIn(loginEmail, loginPassword);
+    setIsSubmitting(false);
+
+    if (!res.success) {
+      setAuthError(`⚠️ Đăng nhập thất bại: ${res.error || "Sai email hoặc mật khẩu!"}`);
     } else {
-      router.push("/");
+      setAuthSuccess("✅ Đăng nhập thành công!");
+      setTimeout(() => {
+        router.push("/");
+      }, 500);
     }
   };
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    executeLogin(loginEmail);
+    setAuthError("");
+    setAuthSuccess("");
+
+    if (!regEmail || !regPassword || !regName) {
+      setAuthError("⚠️ Vui lòng điền đầy đủ Tên, Email và Mật khẩu!");
+      return;
+    }
+
+    if (regPassword.length < 6) {
+      setAuthError("⚠️ Mật khẩu phải có tối thiểu 6 ký tự!");
+      return;
+    }
+
+    setIsSubmitting(true);
+    const res = await signUp(regEmail, regPassword, regName);
+    setIsSubmitting(false);
+
+    if (!res.success) {
+      setAuthError(`⚠️ Đăng ký thất bại: ${res.error}`);
+    } else {
+      setAuthSuccess("✅ Đăng ký tài khoản Supabase thành công! Hệ thống đang tự động đăng nhập...");
+      setTimeout(() => {
+        router.push("/");
+      }, 1000);
+    }
   };
 
-  const handleRegisterSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    executeLogin(regName || regEmail || "binh");
-  };
-
-  const handleLogoutClick = () => {
-    logout();
+  const handleLogoutClick = async () => {
+    await logout();
     router.push("/auth");
   };
 
@@ -659,6 +691,17 @@ export default function AuthPage() {
               </div>
 
               <div className="auth-card-body">
+                {authError && (
+                  <div style={{ padding: "10px 14px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "6px", color: "#991b1b", fontSize: "13px", fontWeight: 700, marginBottom: "16px" }}>
+                    {authError}
+                  </div>
+                )}
+                {authSuccess && (
+                  <div style={{ padding: "10px 14px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "6px", color: "#166534", fontSize: "13px", fontWeight: 700, marginBottom: "16px" }}>
+                    {authSuccess}
+                  </div>
+                )}
+
                 {activeTab === "login" ? (
                   <form className="auth-form" onSubmit={handleLoginSubmit}>
                     <h1 className="auth-form-title">Đăng Nhập Hệ Thống</h1>
