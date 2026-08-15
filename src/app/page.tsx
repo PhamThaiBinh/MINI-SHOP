@@ -1,14 +1,27 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import "@/styles/home.css";
-import { PRODUCTS_DATA } from "@/data/products";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { fixImagePath } from "@/lib/utils";
+import { Product } from "@/types/product";
+import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
 
 export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    async function loadData() {
+      setLoading(true);
+      const data = await fetchProductsFromSupabase();
+      setProducts(data);
+      setLoading(false);
+    }
+    loadData();
+  }, []);
 
   const categories = [
     {
@@ -78,8 +91,8 @@ export default function Home() {
 
   const filteredProducts =
     selectedCategory === "All"
-      ? PRODUCTS_DATA
-      : PRODUCTS_DATA.filter((p) => p.category === selectedCategory);
+      ? products
+      : products.filter((p) => p.category === selectedCategory);
 
   return (
     <>
@@ -169,13 +182,20 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="products-grid" id="home-featured-products-grid">
-            {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          {loading ? (
+            <div style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)", fontWeight: 600 }}>
+              Đang tải sản phẩm từ Supabase...
+            </div>
+          ) : (
+            <div className="products-grid" id="home-featured-products-grid">
+              {filteredProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </>
   );
 }
+

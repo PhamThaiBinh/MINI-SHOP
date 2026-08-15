@@ -1,16 +1,20 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import "@/styles/product-list.css";
-import { PRODUCTS_DATA } from "@/data/products";
 import { formatVND, fixImagePath } from "@/lib/utils";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
+import { Product } from "@/types/product";
+import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
 
 export default function ProductsPage() {
   const { addToCart } = useCart();
   const { toggleWishlist, isWishlisted } = useWishlist();
+
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
   const [currentCategory, setCurrentCategory] = useState<string>("All");
   const [currentPriceRange, setCurrentPriceRange] = useState<string>("all");
@@ -19,6 +23,16 @@ export default function ProductsPage() {
   const [inStockOnly, setInStockOnly] = useState<boolean>(true);
   const [pageSize, setPageSize] = useState<number>(10);
   const [currentPage, setCurrentPage] = useState<number>(1);
+
+  useEffect(() => {
+    async function loadData() {
+      setLoading(true);
+      const data = await fetchProductsFromSupabase();
+      setProducts(data);
+      setLoading(false);
+    }
+    loadData();
+  }, []);
 
   const categories = [
     { id: "All", label: "Tất cả sản phẩm", icon: "📦" },
@@ -53,7 +67,7 @@ export default function ProductsPage() {
 
   // Helper count for category items
   const getCategoryCount = (catId: string) => {
-    return PRODUCTS_DATA.filter(
+    return products.filter(
       (p) =>
         matchesCategory(p.category, catId) &&
         matchesPriceRange(p.price, currentPriceRange) &&
@@ -63,7 +77,7 @@ export default function ProductsPage() {
 
   // Helper count for price items
   const getPriceCount = (rangeId: string) => {
-    return PRODUCTS_DATA.filter(
+    return products.filter(
       (p) =>
         matchesCategory(p.category, currentCategory) &&
         matchesPriceRange(p.price, rangeId) &&
@@ -72,7 +86,7 @@ export default function ProductsPage() {
   };
 
   const filteredProducts = useMemo(() => {
-    let result = PRODUCTS_DATA.filter((product) => {
+    let result = products.filter((product) => {
       const matchCat = matchesCategory(product.category, currentCategory);
       const matchSearch = product.name
         .toLowerCase()
@@ -88,7 +102,7 @@ export default function ProductsPage() {
     }
 
     return result;
-  }, [currentCategory, currentPriceRange, searchQuery, sortBy]);
+  }, [products, currentCategory, currentPriceRange, searchQuery, sortBy]);
 
   const currentCategoryLabel =
     categories.find((c) => c.id === currentCategory)?.label || "Tất cả sản phẩm";
@@ -262,7 +276,11 @@ export default function ProductsPage() {
 
             {/* 4-Column Product Catalog Grid */}
             <div className="catalog-grid" id="product-catalog-grid">
-              {filteredProducts.length === 0 ? (
+              {loading ? (
+                <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "48px 0", color: "var(--text-muted)", fontWeight: 600 }}>
+                  Đang tải danh sách sản phẩm từ Supabase...
+                </div>
+              ) : filteredProducts.length === 0 ? (
                 <div
                   style={{
                     gridColumn: "1 / -1",
@@ -433,3 +451,4 @@ export default function ProductsPage() {
     </>
   );
 }
+
