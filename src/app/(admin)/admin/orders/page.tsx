@@ -8,6 +8,7 @@ import { AdminHeader } from "@/components/admin/AdminHeader";
 import { fixImagePath } from "@/lib/utils";
 import { getAllOrders, updateOrderStatus, UnifiedOrder } from "@/utils/orderStorage";
 import { fetchAdminOrders, updateAdminOrderStatus } from "@/lib/supabaseAdmin";
+import { createClient } from "@/utils/supabase/client";
 
 interface OrderItem {
   id: string;
@@ -142,13 +143,54 @@ export default function AdminOrdersPage() {
     }
   };
 
+  const [paymentFilter, setPaymentFilter] = useState<string>("all");
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelOrderId, setCancelOrderId] = useState<string | null>(null);
+  const [cancelReasonPreset, setCancelReasonPreset] = useState("📦 Hết hàng trong kho");
+  const [cancelReasonCustom, setCancelReasonCustom] = useState("");
+
+  const handleOpenCancelModal = (id: string) => {
+    setCancelOrderId(id);
+    setCancelReasonPreset("📦 Hết hàng trong kho");
+    setCancelReasonCustom("");
+    setShowCancelModal(true);
+  };
+
+  const handleConfirmCancelOrder = async () => {
+    if (!cancelOrderId) return;
+    const finalReason = cancelReasonPreset.includes("Lý do khác")
+      ? cancelReasonCustom.trim() || "Admin hủy đơn"
+      : cancelReasonPreset;
+
+    setLoading(true);
+    const supabase = createClient();
+    await supabase
+      .from("orders")
+      .update({ status: "cancelled", status_text: "❌ Đã hủy đơn", cancel_reason: finalReason })
+      .eq("id", cancelOrderId);
+
+    setShowCancelModal(false);
+    setCancelOrderId(null);
+    await loadData();
+  };
+
   const filteredOrders = orders.filter((order) => {
     const matchesTab = activeTab === "all" || order.status === activeTab;
     const matchesSearch =
       order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.recipientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.recipientPhone.includes(searchQuery);
-    return matchesTab && matchesSearch;
+
+    let matchesPayment = true;
+    if (paymentFilter === "cod") {
+      matchesPayment = order.paymentMethod.includes("COD");
+    } else if (paymentFilter === "bank") {
+      matchesPayment = order.paymentMethod.includes("VietQR") || order.paymentMethod.includes("Ngân hàng");
+    } else if (paymentFilter === "wallet") {
+      matchesPayment = order.paymentMethod.includes("MoMo") || order.paymentMethod.includes("ZaloPay") || order.paymentMethod.includes("Ví");
+    }
+
+    return matchesTab && matchesSearch && matchesPayment;
   });
 
   const totalPages = Math.max(1, Math.ceil(filteredOrders.length / pageSize));
@@ -537,12 +579,13 @@ export default function AdminOrdersPage() {
                             ✅ Đã giao
                           </button>
                         )}
-                        {order.status === "cancelled" && (
+                        {order.status !== "completed" && order.status !== "cancelled" && (
                           <button
                             className="btn-action-delete"
-                            onClick={() => handleCancelOrder(order.id)}
+                            onClick={() => handleOpenCancelModal(order.id)}
+                            style={{ marginLeft: "4px" }}
                           >
-                            🗑️ Đã hủy
+                            ❌ Hủy đơn
                           </button>
                         )}
                         <button
@@ -780,6 +823,120 @@ export default function AdminOrdersPage() {
                 style={{ padding: "8px 20px" }}
               >
                 Đóng Window
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Modal Hủy Đơn Admin Ghi Nhận Lý Do */}
+      {showCancelModal && (
+        <div
+          style={{
+            display: "flex",
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.5)",
+            zIndex: 3000,
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
+          }}
+        >
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: "var(--radius-lg)",
+              width: "100%",
+              maxWidth: "480px",
+              padding: "24px",
+              boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+            }}
+          >
+            <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", marginBottom: "12px" }}>
+              ❌ Ghi Nhận Lý Do Hủy Đơn Hàng
+            </h3>
+            <p style={{ fontSize: "13px", color: "#64748b", marginBottom: "16px" }}>
+              Vui lòng chọn hoặc nhập lý do hủy đơn để thông báo cho khách hàng:
+            </p>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
+              {[
+                "📦 Hết hàng trong kho",
+                "📞 Không liên lạc được với khách hàng",
+                "👤 Khách hàng yêu cầu hủy đơn",
+                "📍 Địa chỉ giao hàng không hợp lệ",
+                "❓ Lý do khác",
+              ].map((reason) => (
+                <label
+                  key={reason}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    fontSize: "13px",
+                    cursor: "pointer",
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="admin_cancel_reason"
+                    value={reason}
+                    checked={cancelReasonPreset === reason}
+                    onChange={(e) => setCancelReasonPreset(e.target.value)}
+                  />
+                  {reason}
+                </label>
+              ))}
+            </div>
+
+            {cancelReasonPreset.includes("Lý do khác") && (
+              <textarea
+                placeholder="Nhập lý do cụ thể..."
+                value={cancelReasonCustom}
+                onChange={(e) => setCancelReasonCustom(e.target.value)}
+                style={{
+                  width: "100%",
+                  height: "70px",
+                  padding: "8px",
+                  fontSize: "13px",
+                  borderRadius: "6px",
+                  border: "1px solid #cbd5e1",
+                  marginBottom: "16px",
+                  fontFamily: "inherit",
+                }}
+              />
+            )}
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+              <button
+                onClick={() => setShowCancelModal(false)}
+                style={{
+                  padding: "8px 16px",
+                  fontSize: "13px",
+                  fontWeight: 700,
+                  border: "1px solid #cbd5e1",
+                  background: "#fff",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                }}
+              >
+                Hủy Bỏ
+              </button>
+              <button
+                onClick={handleConfirmCancelOrder}
+                style={{
+                  padding: "8px 16px",
+                  fontSize: "13px",
+                  fontWeight: 700,
+                  border: "none",
+                  background: "#ef4444",
+                  color: "#fff",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                }}
+              >
+                Xác Nhận Hủy Đơn
               </button>
             </div>
           </div>

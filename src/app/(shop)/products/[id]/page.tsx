@@ -345,16 +345,75 @@ export default function ProductDetailPage({
 
               {/* Delivery Spec Card */}
               <div className="spec-card">
-                <div className="spec-card-title">GIAO HÀNG</div>
+                <div className="spec-card-title">GIAO HÀNG & BẢO HÀNH</div>
                 <ul className="delivery-info-list">
                   <li>Thời gian giao hàng tiêu chuẩn: 2–5 ngày làm việc</li>
                   <li>Giao hàng hỏa tốc: 1–2 ngày làm việc</li>
                   <li>Phí vận chuyển: 30.000đ</li>
                 </ul>
-                <Link href="#" className="link-delivery-more">
+                <Link href="/policy" className="link-delivery-more">
                   Xem thêm chính sách giao hàng
                 </Link>
               </div>
+            </div>
+
+            {/* Interactive Product Reviews Form Section */}
+            <div style={{ marginTop: "32px", padding: "24px", background: "#f8fafc", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+              <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", marginBottom: "12px" }}>
+                ⭐ Đánh Giá & Nhận Xét Từ Khách Hàng
+              </h3>
+              <p style={{ fontSize: "13px", color: "#64748b", marginBottom: "16px" }}>
+                Hãy chia sẻ cảm nhận của bạn về sản phẩm này:
+              </p>
+
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  alert("✅ Cảm ơn bạn đã gửi đánh giá! Nhận xét của bạn đã được ghi nhận.");
+                  setProduct((prev) => ({
+                    ...prev,
+                    reviews: (prev.reviews || 0) + 1,
+                  }));
+                }}
+                style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ fontSize: "14px", fontWeight: 700, color: "#334155" }}>Chọn số sao:</span>
+                  <select
+                    defaultValue="5"
+                    style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "14px", fontFamily: "inherit" }}
+                  >
+                    <option value="5">⭐⭐⭐⭐⭐ (5/5 sao - Rất tốt)</option>
+                    <option value="4">⭐⭐⭐⭐ (4/5 sao - Tốt)</option>
+                    <option value="3">⭐⭐⭐ (3/5 sao - Bình thường)</option>
+                    <option value="2">⭐⭐ (2/5 sao - Tạm được)</option>
+                    <option value="1">⭐ (1/5 sao - Cần cải thiện)</option>
+                  </select>
+                </div>
+                <textarea
+                  placeholder="Nhập cảm nhận của bạn về chất lượng sản phẩm..."
+                  required
+                  rows={3}
+                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "14px", fontFamily: "inherit" }}
+                />
+                <div>
+                  <button
+                    type="submit"
+                    style={{
+                      padding: "10px 24px",
+                      backgroundColor: "var(--primary-color, #2e7d32)",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: "6px",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      fontSize: "14px",
+                    }}
+                  >
+                    ✍️ Gửi Đánh Giá Ngay
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
 
