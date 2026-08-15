@@ -5,18 +5,21 @@ import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 import { formatVND, fixImagePath } from "@/lib/utils";
 import { PRODUCTS_DATA } from "@/data/products";
+import { Product } from "@/types/product";
+import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
 import "@/styles/product-list.css";
 
 // Generate 10 Flash Sale items per time slot guaranteed to be lower than original price
-const getSlotProducts = (slotIndex: number) => {
-  const startIndex = (slotIndex * 4) % PRODUCTS_DATA.length;
+const getSlotProducts = (productsList: Product[], slotIndex: number) => {
+  const list = productsList.length > 0 ? productsList : PRODUCTS_DATA;
+  const startIndex = (slotIndex * 4) % list.length;
   const items = [];
 
   const discountPattern = [30, 35, 25, 40, 32, 28, 45, 33, 27, 38];
 
   for (let i = 0; i < 10; i++) {
-    const pIndex = (startIndex + i) % PRODUCTS_DATA.length;
-    const p = PRODUCTS_DATA[pIndex];
+    const pIndex = (startIndex + i) % list.length;
+    const p = list[pIndex];
     const discountPercent = discountPattern[(i + slotIndex) % discountPattern.length];
     
     // Calculate flashPrice strictly lower than original price (at least 10,000 VND lower)
@@ -45,8 +48,22 @@ export default function FlashSalePage() {
   const { addToCart } = useCart();
   const [addedId, setAddedId] = useState<number | null>(null);
 
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    async function loadData() {
+      setLoading(true);
+      const data = await fetchProductsFromSupabase();
+      setProducts(data);
+      setLoading(false);
+    }
+    loadData();
+  }, []);
+
   // Timezone VN Calculation & Slots
   const [activeSlot, setActiveSlot] = useState<"slot1" | "slot2" | "slot3" | "slot4">("slot1");
+
   const [currentVnSlot, setCurrentVnSlot] = useState<"slot1" | "slot2" | "slot3" | "slot4">("slot1");
   const isSlotInitRef = React.useRef(false);
   const [vnHour, setVnHour] = useState<number>(0);
@@ -115,7 +132,7 @@ export default function FlashSalePage() {
   const slotStartHours = { slot1: 0, slot2: 9, slot3: 15, slot4: 21 };
   
   const currentSlotIndex = slotMap[activeSlot];
-  const slotProducts = getSlotProducts(currentSlotIndex);
+  const slotProducts = getSlotProducts(products, currentSlotIndex);
 
   // Is active slot available for purchase based on VN time?
   const isSlotAvailableToBuy = vnHour >= slotStartHours[activeSlot];

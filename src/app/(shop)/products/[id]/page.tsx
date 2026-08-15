@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, use } from "react";
+import React, { useState, use, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import "@/styles/product-detail.css";
@@ -8,6 +8,8 @@ import { PRODUCTS_DATA } from "@/data/products";
 import { formatVND, fixImagePath } from "@/lib/utils";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
+import { Product } from "@/types/product";
+import { fetchProductByIdFromSupabase, fetchProductsFromSupabase } from "@/lib/supabaseProducts";
 
 export default function ProductDetailPage({
   params,
@@ -20,10 +22,27 @@ export default function ProductDetailPage({
   const flashParam = searchParams.get("flashSalePrice");
   const flashSalePrice = flashParam ? parseInt(flashParam, 10) : null;
 
-  const product =
-    PRODUCTS_DATA.find((p) => p.id === productId) || PRODUCTS_DATA[0];
+  const [product, setProduct] = useState<Product | null>(null);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  const effectivePrice = flashSalePrice || product.price;
+  useEffect(() => {
+    async function loadData() {
+      setLoading(true);
+      const [singleProduct, list] = await Promise.all([
+        fetchProductByIdFromSupabase(productId),
+        fetchProductsFromSupabase(),
+      ]);
+      setProduct(singleProduct || PRODUCTS_DATA.find((p) => p.id === productId) || PRODUCTS_DATA[0]);
+      setAllProducts(list);
+      setLoading(false);
+    }
+    loadData();
+  }, [productId]);
+
+  const currentProduct = product || PRODUCTS_DATA[0];
+
+  const effectivePrice = flashSalePrice || currentProduct.price;
 
   const { addToCart } = useCart();
   const { isWishlisted, toggleWishlist } = useWishlist();
@@ -32,7 +51,7 @@ export default function ProductDetailPage({
 
   // Gallery Images (Primary image + thumbnail variations)
   const galleryImages = [
-    product.image,
+    currentProduct.image,
     "/assets/images/products/do-my-nghe/binh-gom-trang-tri.webp",
     "/assets/images/products/do-my-nghe/bo-binh-gom-thu-cong.webp",
     "/assets/images/products/noi-that-gia-dung/chau-cay-de-ban.webp",
@@ -41,17 +60,18 @@ export default function ProductDetailPage({
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
-  const discountPercent = product.oldPrice
-    ? Math.round((1 - product.price / product.oldPrice) * 100)
+  const discountPercent = currentProduct.oldPrice
+    ? Math.round((1 - currentProduct.price / currentProduct.oldPrice) * 100)
     : 0;
 
   const effectiveDiscount = flashSalePrice
-    ? Math.round((1 - effectivePrice / (product.oldPrice || product.price)) * 100)
+    ? Math.round((1 - effectivePrice / (currentProduct.oldPrice || currentProduct.price)) * 100)
     : discountPercent;
 
-  const relatedProducts = PRODUCTS_DATA.filter(
-    (p) => p.id !== product.id
-  ).slice(0, 5);
+  const relatedProducts = allProducts
+    .filter((p) => p.id !== currentProduct.id)
+    .slice(0, 5);
+
 
   return (
     <>

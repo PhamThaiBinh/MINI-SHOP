@@ -1,10 +1,12 @@
 import React from "react";
 import Link from "next/link";
 import "@/styles/blog.css";
-import { BLOG_ARTICLES } from "@/data/blogs";
 import { fixImagePath } from "@/lib/utils";
+import { fetchBlogsFromSupabase } from "@/lib/supabaseBlogs";
 
-export default function BlogListPage() {
+export default async function BlogListPage() {
+  const articles = await fetchBlogsFromSupabase();
+
   return (
     <>
       {/* 2. Breadcrumb & Blog Hero */}
@@ -29,7 +31,7 @@ export default function BlogListPage() {
       <main className="main-content">
         <div className="container">
           <div className="blog-grid">
-            {BLOG_ARTICLES.map((article) => (
+            {articles.map((article) => (
               <article key={article.id} className="blog-card">
                 <Link href={`/blog/${article.id}`}>
                   <img
@@ -66,3 +68,4 @@ export default function BlogListPage() {
     </>
   );
 }
+

@@ -2,8 +2,8 @@ import React from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import "@/styles/blog.css";
-import { BLOG_ARTICLES } from "@/data/blogs";
 import { fixImagePath } from "@/lib/utils";
+import { fetchBlogByIdFromSupabase } from "@/lib/supabaseBlogs";
 
 interface BlogDetailPageProps {
   params: Promise<{ id: string }>;
@@ -12,7 +12,7 @@ interface BlogDetailPageProps {
 export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
   const resolvedParams = await params;
   const articleId = parseInt(resolvedParams.id, 10);
-  const article = BLOG_ARTICLES.find((a) => a.id === articleId);
+  const article = await fetchBlogByIdFromSupabase(articleId);
 
   if (!article) {
     notFound();
@@ -49,3 +49,4 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
     </main>
   );
 }
+

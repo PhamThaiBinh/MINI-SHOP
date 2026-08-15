@@ -69,8 +69,39 @@ export const fetchCategoriesFromSupabase = async (): Promise<SupabaseCategory[]>
       label: String(row.name),
       icon: String(row.icon || "📁"),
     }));
+export const fetchProductByIdFromSupabase = async (id: number): Promise<Product | null> => {
+  try {
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .or(`original_id.eq.${id},id.eq.${id}`)
+      .limit(1);
+
+    if (error || !data || data.length === 0) {
+      const fallback = PRODUCTS_DATA.find((p) => p.id === id) || null;
+      return fallback;
+    }
+
+    const row = data[0];
+    return {
+      id: Number(row.original_id || row.id),
+      name: String(row.name),
+      category: String(row.category),
+      categoryName: String(row.category_name || row.category),
+      price: Number(row.price),
+      oldPrice: row.old_price ? Number(row.old_price) : undefined,
+      status: String(row.status || "In stock"),
+      badge: row.badge ? String(row.badge) : null,
+      badgeType: row.badge_type ? String(row.badge_type) : null,
+      image: String(row.image),
+      description: String(row.description || ""),
+      fullDesc: String(row.full_desc || row.description || ""),
+      specs: typeof row.specs === "object" && row.specs ? row.specs : {},
+    };
   } catch (err) {
-    console.error("Error fetching categories from Supabase:", err);
-    return defaultCategories;
+    console.error(`Error fetching product ${id} from Supabase:`, err);
+    return PRODUCTS_DATA.find((p) => p.id === id) || null;
   }
 };
+
