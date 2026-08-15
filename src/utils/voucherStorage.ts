@@ -4,6 +4,7 @@ export interface SystemVoucher {
   percent?: number;
   fixedDiscount?: number;
   minOrder?: number;
+  expiryDate?: string;
   isActive: boolean;
 }
 

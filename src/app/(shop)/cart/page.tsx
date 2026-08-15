@@ -118,17 +118,18 @@ export default function CartPage() {
     )
       .trim()
       .toUpperCase();
+    setCouponCode(targetCode);
     if (!targetCode) {
       handleRemoveCoupon();
       return;
     }
 
-    if (appliedCoupon?.code === targetCode) {
+    if (appliedCoupon?.code.toUpperCase() === targetCode) {
       handleRemoveCoupon();
       return;
     }
 
-    const found = allAvailableCoupons.find((c) => c.code === targetCode);
+    const found = allAvailableCoupons.find((c) => c.code.trim().toUpperCase() === targetCode);
     if (found) {
       // REQUIREMENT 1: Check minOrder
       if (found.minOrder && subtotal < found.minOrder) {

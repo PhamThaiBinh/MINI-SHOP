@@ -38,6 +38,7 @@ export default async function BlogListPage() {
                     src={fixImagePath(article.img)}
                     alt={article.title}
                     className="blog-card-img"
+                    loading="lazy"
                   />
                 </Link>
                 <div className="blog-card-body">

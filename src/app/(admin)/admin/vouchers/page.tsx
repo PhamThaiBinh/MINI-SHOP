@@ -236,14 +236,31 @@ export default function AdminVouchersPage() {
                               : "Không giới hạn"}
                           </td>
                           <td style={{ whiteSpace: "nowrap" }}>
-                            <span
-                              className={
-                                v.isActive ? "badge-visible" : "badge-lowstock"
-                              }
-                              style={{ whiteSpace: "nowrap", display: "inline-block" }}
-                            >
-                              {v.isActive ? "● Hoạt động" : "○ Tạm dừng"}
-                            </span>
+                            {v.expiryDate && new Date(v.expiryDate) < new Date() ? (
+                              <span
+                                style={{
+                                  background: "#fee2e2",
+                                  color: "#b91c1c",
+                                  padding: "4px 8px",
+                                  borderRadius: "4px",
+                                  fontWeight: 800,
+                                  fontSize: "12px",
+                                  display: "inline-block",
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                ⏰ Đã hết hạn
+                              </span>
+                            ) : (
+                              <span
+                                className={
+                                  v.isActive ? "badge-visible" : "badge-lowstock"
+                                }
+                                style={{ whiteSpace: "nowrap", display: "inline-block" }}
+                              >
+                                {v.isActive ? "● Hoạt động" : "○ Tạm dừng"}
+                              </span>
+                            )}
                           </td>
                           <td style={{ textAlign: "center", whiteSpace: "nowrap" }}>
                             <div style={{ display: "inline-flex", gap: "4px", alignItems: "center", whiteSpace: "nowrap" }}>
