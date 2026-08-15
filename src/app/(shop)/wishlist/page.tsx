@@ -100,7 +100,7 @@ export default function WishlistPage() {
                     padding: "12px 28px",
                   }}
                 >
-                  Khám phá sản phẩm ngay &rarr;
+                  🔥 Khám phá sản phẩm HOT ngay &rarr;
                 </Link>
               </div>
             ) : (

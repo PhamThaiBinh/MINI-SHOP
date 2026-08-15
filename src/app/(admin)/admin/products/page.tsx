@@ -57,12 +57,14 @@ export default function AdminProductsPage() {
   const [formDesc, setFormDesc] = useState("");
   const [pageSize, setPageSize] = useState<number>(10);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [onlyLowStock, setOnlyLowStock] = useState<boolean>(false);
 
 
   const filteredProducts = products.filter(
     (p) =>
-      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.categoryName.toLowerCase().includes(searchQuery.toLowerCase())
+      (p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.categoryName.toLowerCase().includes(searchQuery.toLowerCase())) &&
+      (!onlyLowStock || ((p as any).stock !== undefined && (p as any).stock <= 5))
   );
 
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize));
@@ -208,10 +210,19 @@ export default function AdminProductsPage() {
                   <h2 className="card-header-title">Quản Lý Sản Phẩm</h2>
                   <div style={{ display: "flex", gap: "8px" }}>
                     <button
-                      className="select-filter-sm"
-                      style={{ cursor: "pointer" }}
+                      onClick={() => setOnlyLowStock(!onlyLowStock)}
+                      style={{
+                        padding: "6px 12px",
+                        fontSize: "12px",
+                        fontWeight: 700,
+                        border: "1px solid var(--border-color)",
+                        borderRadius: "6px",
+                        background: onlyLowStock ? "#fee2e2" : "#f8fafc",
+                        color: onlyLowStock ? "#b91c1c" : "inherit",
+                        cursor: "pointer",
+                      }}
                     >
-                      🔍 Bộ lọc
+                      {onlyLowStock ? "🔥 Đang lọc: Sắp hết hàng" : "🔥 Sắp hết hàng"}
                     </button>
                     <button
                       className="btn-add-product-green"

@@ -162,7 +162,7 @@ export const Footer: React.FC = () => {
           </div>
         </div>
 
-        <div className="footer-bottom">&copy; 2025 Mini Shop. All rights reserved.</div>
+        <div className="footer-bottom">&copy; {new Date().getFullYear()} Mini Shop. All rights reserved.</div>
       </div>
     </footer>
   );
