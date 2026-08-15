@@ -1,6 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { syncUserWishlistToSupabase, fetchUserWishlistFromSupabase } from "@/lib/supabaseUserFeatures";
 
 interface WishlistContextType {
   wishlistIds: number[];
@@ -16,18 +18,31 @@ const WISHLIST_STORAGE_KEY = "mini_shop_wishlist";
 export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [wishlistIds, setWishlistIds] = useState<number[]>([]);
   const [isMounted, setIsMounted] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     setIsMounted(true);
-    try {
-      const saved = localStorage.getItem(WISHLIST_STORAGE_KEY);
-      if (saved) {
-        setWishlistIds(JSON.parse(saved));
+    async function loadWishlistData() {
+      if (user?.username) {
+        const sbIds = await fetchUserWishlistFromSupabase(user.username);
+        if (sbIds.length > 0) {
+          setWishlistIds(sbIds);
+          return;
+        }
       }
-    } catch (e) {
-      console.error("Error reading wishlist from localStorage:", e);
+
+      try {
+        const saved = localStorage.getItem(WISHLIST_STORAGE_KEY);
+        if (saved) {
+          setWishlistIds(JSON.parse(saved));
+        }
+      } catch (e) {
+        console.error("Error reading wishlist from localStorage:", e);
+      }
     }
-  }, []);
+
+    loadWishlistData();
+  }, [user]);
 
   useEffect(() => {
     if (isMounted) {
@@ -36,8 +51,12 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       } catch (e) {
         console.error("Error saving wishlist to localStorage:", e);
       }
+
+      if (user?.username) {
+        syncUserWishlistToSupabase(user.username, wishlistIds);
+      }
     }
-  }, [wishlistIds, isMounted]);
+  }, [wishlistIds, isMounted, user]);
 
   const toggleWishlist = (productId: number) => {
     setWishlistIds((prev) =>

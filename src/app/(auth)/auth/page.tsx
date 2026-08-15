@@ -14,6 +14,10 @@ import {
   setDefaultUserAddressInSupabase,
   deleteUserAddressFromSupabase,
 } from "@/lib/supabaseAddress";
+import {
+  fetchUserRewardsFromSupabase,
+  syncUserRewardsToSupabase,
+} from "@/lib/supabaseUserFeatures";
 
 interface AddressItem {
   id: number;
@@ -359,33 +363,64 @@ export default function AuthPage() {
     }
   }, []);
 
-  const handleCheckIn = () => {
+
+
+  useEffect(() => {
+    async function loadRewards() {
+      if (user?.username) {
+        const rewardData = await fetchUserRewardsFromSupabase(user.username);
+        user.points = rewardData.points;
+        if (rewardData.lastCheckin) {
+          const todayStr = getVnTodayStr();
+          if (rewardData.lastCheckin === todayStr) {
+            setHasCheckedIn(true);
+          }
+        }
+      }
+    }
+    loadRewards();
+  }, [user]);
+
+  const handleCheckIn = async () => {
     const todayStr = getVnTodayStr();
     if (hasCheckedIn) return;
     setHasCheckedIn(true);
     localStorage.setItem("minishop_task_checkin", todayStr);
     if (user) {
       user.points += 50;
+      await syncUserRewardsToSupabase(user.username, {
+        points: user.points,
+        history: user.history,
+        lastCheckin: todayStr,
+      });
     }
   };
 
-  const handleShareTask = () => {
+  const handleShareTask = async () => {
     const todayStr = getVnTodayStr();
     if (hasShared) return;
     setHasShared(true);
     localStorage.setItem("minishop_task_share", todayStr);
     if (user) {
       user.points += 100;
+      await syncUserRewardsToSupabase(user.username, {
+        points: user.points,
+        history: user.history,
+      });
     }
   };
 
-  const handleReviewTask = () => {
+  const handleReviewTask = async () => {
     const todayStr = getVnTodayStr();
     if (hasReviewed) return;
     setHasReviewed(true);
     localStorage.setItem("minishop_task_review", todayStr);
     if (user) {
       user.points += 80;
+      await syncUserRewardsToSupabase(user.username, {
+        points: user.points,
+        history: user.history,
+      });
     }
   };
 
@@ -400,7 +435,7 @@ export default function AuthPage() {
     const newDeg = spinDeg + extraRounds + randomAngle;
     setSpinDeg(newDeg);
 
-    setTimeout(() => {
+    setTimeout(async () => {
       setIsSpinning(false);
       setHasSpunWheelToday(true);
       localStorage.setItem("minishop_wheel_spin", todayStr);
@@ -422,14 +457,8 @@ export default function AuthPage() {
         else if (win.includes("Voucher Giảm 50.000đ")) {
           const exist = user.vouchers.find((v) => v.code === "MINISHOP50");
           if (exist) exist.quantity += 1;
-          else
-            user.vouchers.push({
-              code: "MINISHOP50",
-              label: "Voucher Giảm 50.000đ",
-              discount: 50000,
-              quantity: 1,
-            });
-        } else if (win.includes("Freeship 30.000đ")) {
+          else user.vouchers.push({ code: "MINISHOP50", label: "Voucher Giảm 50.000đ", discount: 50000, quantity: 1 });
+        } else if (win.includes("Voucher Freeship 30.000đ")) {
           const exist = user.vouchers.find((v) => v.code === "FREESHIP30");
           if (exist) exist.quantity += 1;
           else
@@ -440,6 +469,10 @@ export default function AuthPage() {
               quantity: 1,
             });
         }
+        await syncUserRewardsToSupabase(user.username, {
+          points: user.points,
+          history: user.history,
+        });
       }
     }, 3500);
   };

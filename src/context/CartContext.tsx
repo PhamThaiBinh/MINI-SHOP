@@ -3,6 +3,9 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { CartItem } from "@/types/cart";
 import { Product } from "@/types/product";
+import { useAuth } from "@/context/AuthContext";
+import { syncUserCartToSupabase, fetchUserCartFromSupabase } from "@/lib/supabaseUserFeatures";
+import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
 
 interface CartContextType {
   cart: CartItem[];
@@ -20,18 +23,41 @@ const CART_STORAGE_KEY = "mini_shop_cart";
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isMounted, setIsMounted] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     setIsMounted(true);
-    try {
-      const saved = localStorage.getItem(CART_STORAGE_KEY);
-      if (saved) {
-        setCart(JSON.parse(saved));
+    async function loadCartData() {
+      if (user?.username) {
+        const sbCartItems = await fetchUserCartFromSupabase(user.username);
+        if (sbCartItems.length > 0) {
+          const allProducts = await fetchProductsFromSupabase();
+          const mappedCart: CartItem[] = [];
+          for (const item of sbCartItems) {
+            const prod = allProducts.find((p) => p.id === item.productId);
+            if (prod) {
+              mappedCart.push({ product: prod, quantity: item.quantity });
+            }
+          }
+          if (mappedCart.length > 0) {
+            setCart(mappedCart);
+            return;
+          }
+        }
       }
-    } catch (e) {
-      console.error("Error reading cart from localStorage:", e);
+
+      try {
+        const saved = localStorage.getItem(CART_STORAGE_KEY);
+        if (saved) {
+          setCart(JSON.parse(saved));
+        }
+      } catch (e) {
+        console.error("Error reading cart from localStorage:", e);
+      }
     }
-  }, []);
+
+    loadCartData();
+  }, [user]);
 
   useEffect(() => {
     if (isMounted) {
@@ -40,8 +66,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (e) {
         console.error("Error saving cart to localStorage:", e);
       }
+
+      if (user?.username) {
+        const supabaseCartItems = cart.map((it) => ({
+          productId: it.product.id,
+          quantity: it.quantity,
+        }));
+        syncUserCartToSupabase(user.username, supabaseCartItems);
+      }
     }
-  }, [cart, isMounted]);
+  }, [cart, isMounted, user]);
 
   const addToCart = (product: Product, quantity = 1) => {
     setCart((prev) => {
