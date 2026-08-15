@@ -15,16 +15,16 @@
     border-radius: 20px;
     padding: 52px 56px;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1.15fr 0.85fr;
     align-items: center;
-    gap: 48px;
+    gap: 40px;
     overflow: hidden;
     position: relative;
     box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
 }
 
 .hero-content {
-    max-width: 550px;
+    max-width: 100%;
 }
 
 .hero-title {
@@ -74,7 +74,7 @@
 .hero-badges {
     display: flex;
     align-items: stretch;
-    gap: 10px;
+    gap: 8px;
     margin-top: 32px;
     padding-top: 20px;
     border-top: 1px solid rgba(0, 0, 0, 0.07);
@@ -83,12 +83,12 @@
 .badge-item {
     flex: 1;
     min-width: 0;
-    min-height: 60px;
+    min-height: 58px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 6px;
     background-color: #ffffff;
-    padding: 10px 12px;
+    padding: 8px 10px;
     border-radius: 12px;
     border: 1px solid var(--border-color);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
@@ -103,8 +103,8 @@
 }
 
 .badge-icon {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     background-color: var(--primary-light);
     display: flex;
@@ -119,23 +119,25 @@
     flex-direction: column;
     justify-content: center;
     gap: 2px;
+    min-width: 0;
 }
 
 .badge-text strong {
     display: block;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 800;
     color: #0f172a;
-    line-height: 1.25;
+    line-height: 1.2;
     white-space: nowrap;
+    letter-spacing: -0.01em;
 }
 
 .badge-text span {
     display: block;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     color: #475569;
-    line-height: 1.25;
+    line-height: 1.2;
     white-space: nowrap;
 }
 
