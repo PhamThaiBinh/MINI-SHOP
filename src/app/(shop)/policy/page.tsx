@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { fetchFaqsFromSupabase, FaqItem } from "@/lib/supabasePolicy";
 
-export default function PolicyPage() {
+function PolicyContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -373,5 +373,13 @@ export default function PolicyPage() {
         )}
       </div>
     </main>
+  );
+}
+
+export default function PolicyPage() {
+  return (
+    <Suspense fallback={<div style={{ textAlign: "center", padding: "60px 15px" }}>⏳ Đang tải trung tâm chính sách...</div>}>
+      <PolicyContent />
+    </Suspense>
   );
 }

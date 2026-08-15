@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, use, useEffect } from "react";
+import React, { useState, use, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import "@/styles/product-detail.css";
@@ -11,7 +11,7 @@ import { useWishlist } from "@/context/WishlistContext";
 import { Product } from "@/types/product";
 import { fetchProductByIdFromSupabase, fetchProductsFromSupabase } from "@/lib/supabaseProducts";
 
-export default function ProductDetailPage({
+function ProductDetailPageContent({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -516,5 +516,13 @@ export default function ProductDetailPage({
         </div>
       </main>
     </>
+  );
+}
+
+export default function ProductDetailPage(props: { params: Promise<{ id: string }> }) {
+  return (
+    <Suspense fallback={<div style={{ textAlign: "center", padding: "60px 15px" }}>⏳ Đang tải thông tin sản phẩm...</div>}>
+      <ProductDetailPageContent {...props} />
+    </Suspense>
   );
 }
