@@ -230,7 +230,7 @@ export default function AdminDashboardPage() {
               </div>
 
               {/* SVG Dynamic Line Chart với Data Labels & Snapping Hover */}
-              <div className="sales-chart-wrapper" style={{ position: "relative" }}>
+              <div className="sales-chart-wrapper" style={{ position: "relative", overflow: "hidden", borderRadius: "8px" }}>
                 <svg
                   className="sales-chart-svg"
                   viewBox="0 0 500 180"

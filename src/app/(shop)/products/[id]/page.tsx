@@ -338,7 +338,7 @@ export default function ProductDetailPage({
                 <div className="spec-card-title">THÔNG SỐ CHI TIẾT</div>
                 <table className="spec-table">
                   <tbody>
-                    {product.specs ? (
+                    {product.specs && typeof product.specs === "object" && Object.keys(product.specs).length > 0 ? (
                       Object.entries(product.specs).map(([key, val]) => (
                         <tr key={key}>
                           <td className="spec-label">{key}</td>

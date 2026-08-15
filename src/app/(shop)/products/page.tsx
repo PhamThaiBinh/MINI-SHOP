@@ -60,16 +60,25 @@ export default function ProductsPage() {
     return true;
   };
 
-  const matchesCategory = (category: string, activeCategory: string) => {
-    if (activeCategory === "All") return true;
-    return category === activeCategory;
+  const matchesCategory = (category: string, activeCategory: string, categoryName?: string) => {
+    if (!activeCategory || activeCategory === "All" || activeCategory === "all") return true;
+    const catLower = activeCategory.toLowerCase();
+    const prodCatLower = (category || "").toLowerCase();
+    const prodNameLower = (categoryName || "").toLowerCase();
+
+    return (
+      prodCatLower === catLower ||
+      prodNameLower === catLower ||
+      prodNameLower.includes(catLower) ||
+      (prodCatLower !== "" && catLower.includes(prodCatLower))
+    );
   };
 
   // Helper count for category items
   const getCategoryCount = (catId: string) => {
     return products.filter(
       (p) =>
-        matchesCategory(p.category, catId) &&
+        matchesCategory(p.category, catId, p.categoryName) &&
         matchesPriceRange(p.price, currentPriceRange) &&
         p.name.toLowerCase().includes(searchQuery.toLowerCase())
     ).length;
@@ -79,7 +88,7 @@ export default function ProductsPage() {
   const getPriceCount = (rangeId: string) => {
     return products.filter(
       (p) =>
-        matchesCategory(p.category, currentCategory) &&
+        matchesCategory(p.category, currentCategory, p.categoryName) &&
         matchesPriceRange(p.price, rangeId) &&
         p.name.toLowerCase().includes(searchQuery.toLowerCase())
     ).length;
@@ -87,7 +96,7 @@ export default function ProductsPage() {
 
   const filteredProducts = useMemo(() => {
     let result = products.filter((product) => {
-      const matchCat = matchesCategory(product.category, currentCategory);
+      const matchCat = matchesCategory(product.category, currentCategory, product.categoryName);
       const matchSearch = product.name
         .toLowerCase()
         .includes(searchQuery.toLowerCase());
