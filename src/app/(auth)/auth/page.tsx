@@ -8,6 +8,12 @@ import { useAuth } from "@/context/AuthContext";
 import { LOCATION_DATA, PROVINCES_LIST } from "@/data/locationData";
 import { fixImagePath } from "@/lib/utils";
 import { getAllOrders, getOrdersForUser, cancelOrderWithReason, UnifiedOrder } from "@/utils/orderStorage";
+import {
+  fetchUserAddressesFromSupabase,
+  addUserAddressToSupabase,
+  setDefaultUserAddressInSupabase,
+  deleteUserAddressFromSupabase,
+} from "@/lib/supabaseAddress";
 
 interface AddressItem {
   id: number;
@@ -472,18 +478,18 @@ export default function AuthPage() {
     setLiveOrders(userOrds.length > 0 ? userOrds : getAllOrders());
   };
 
-  // Address Book State
-  const [addresses, setAddresses] = useState<AddressItem[]>([
-    {
-      id: 1,
-      name: user?.name || "Bình Nguyễn",
-      phone: user?.phone || "0988.123.456",
-      province: "TP. Hồ Chí Minh",
-      ward: "Phường Bến Thành (Quận 1)",
-      detail: "123 Đường Nguyễn Trãi",
-      isDefault: true,
-    },
-  ]);
+  const [addresses, setAddresses] = useState<AddressItem[]>([]);
+
+  const loadAddresses = async () => {
+    if (user) {
+      const data = await fetchUserAddressesFromSupabase(user.username || user.email || "binh");
+      setAddresses(data);
+    }
+  };
+
+  useEffect(() => {
+    loadAddresses();
+  }, [user]);
 
   const [showAddAddressModal, setShowAddAddressModal] = useState(false);
   const [addrName, setAddrName] = useState("");
@@ -611,49 +617,38 @@ export default function AuthPage() {
   };
 
   // Address Handlers
-  const handleSetDefaultAddress = (id: number) => {
-    setAddresses((prev) =>
-      prev.map((a) => ({
-        ...a,
-        isDefault: a.id === id,
-      }))
-    );
+  const handleSetDefaultAddress = async (id: number) => {
+    if (!user) return;
+    await setDefaultUserAddressInSupabase(id, user.username || user.email || "binh");
+    await loadAddresses();
   };
 
-  const handleDeleteAddress = (id: number) => {
-    setAddresses((prev) => {
-      const filtered = prev.filter((a) => a.id !== id);
-      if (filtered.length > 0 && !filtered.some((a) => a.isDefault)) {
-        filtered[0].isDefault = true;
-      }
-      return filtered;
-    });
+  const handleDeleteAddress = async (id: number) => {
+    if (confirm("⚠️ Bạn có chắc chắn muốn xóa địa chỉ này không?")) {
+      await deleteUserAddressFromSupabase(id);
+      await loadAddresses();
+    }
   };
 
-  const handleAddAddressSubmit = (e: React.FormEvent) => {
+  const handleAddAddressSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!addrName.trim() || !addrPhone.trim() || !addrDetail.trim()) return;
+    if (!addrName.trim() || !addrPhone.trim() || !addrDetail.trim() || !user) return;
 
     const shouldDefault = addresses.length === 0 || addrSetDefault;
 
-    const newAddr: AddressItem = {
-      id: Date.now(),
-      name: addrName,
-      phone: addrPhone,
-      province: addrProvince,
-      ward: addrWard,
-      detail: addrDetail,
-      isDefault: shouldDefault,
-    };
+    await addUserAddressToSupabase(
+      {
+        name: addrName.trim(),
+        phone: addrPhone.trim(),
+        province: addrProvince,
+        ward: addrWard,
+        detail: addrDetail.trim(),
+        isDefault: shouldDefault,
+      },
+      user.username || user.email || "binh"
+    );
 
-    setAddresses((prev) => {
-      let updated = [...prev];
-      if (shouldDefault) {
-        updated = updated.map((a) => ({ ...a, isDefault: false }));
-      }
-      return [...updated, newAddr];
-    });
-
+    await loadAddresses();
     setShowAddAddressModal(false);
     setAddrName("");
     setAddrPhone("");
