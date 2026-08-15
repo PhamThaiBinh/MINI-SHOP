@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import Link from "next/link";
 import "@/styles/contact.css";
 
+import { sendContactMessageToSupabase } from "@/lib/supabaseContact";
+
 export default function ContactPage() {
   const [formData, setFormData] = useState({
     name: "",
@@ -12,11 +14,23 @@ export default function ContactPage() {
     message: "",
   });
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
-    setFormData({ name: "", email: "", phone: "", message: "" });
+    if (!formData.name || !formData.email || !formData.message) return;
+
+    setSubmitting(true);
+    const success = await sendContactMessageToSupabase(formData);
+    setSubmitting(false);
+
+    if (success) {
+      setSubmitted(true);
+      setFormData({ name: "", email: "", phone: "", message: "" });
+      setTimeout(() => setSubmitted(false), 5000);
+    } else {
+      alert("Không thể gửi tin nhắn. Vui lòng thử lại sau!");
+    }
   };
 
   return (
@@ -86,6 +100,11 @@ export default function ContactPage() {
             {/* Right: Contact Form */}
             <div className="contact-form-card">
               <h2 className="contact-info-title">Gửi Tin Nhắn Cho Chúng Tôi</h2>
+              {submitted && (
+                <div style={{ padding: "12px 16px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "6px", color: "#166534", fontSize: "14px", fontWeight: 700, marginBottom: "16px" }}>
+                  ✅ Cảm ơn bạn! Tin nhắn đã được gửi và lưu trực tiếp vào hệ thống Supabase. Bộ phận CSKH sẽ phản hồi trong 2 giờ.
+                </div>
+              )}
               <form className="contact-form" onSubmit={handleSubmit}>
                 <div className="form-group">
                   <label htmlFor="contact-name">Họ và tên *</label>

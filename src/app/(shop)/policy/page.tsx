@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { fetchFaqsFromSupabase, FaqItem } from "@/lib/supabasePolicy";
 
 export default function PolicyPage() {
   const searchParams = useSearchParams();
@@ -19,6 +20,16 @@ export default function PolicyPage() {
     "returns" | "shipping" | "privacy" | "terms" | "faq"
   >(tabParam || "returns");
 
+  const [faqs, setFaqs] = useState<FaqItem[]>([]);
+
+  useEffect(() => {
+    async function loadFaqs() {
+      const data = await fetchFaqsFromSupabase();
+      setFaqs(data);
+    }
+    loadFaqs();
+  }, []);
+
   useEffect(() => {
     if (tabParam && ["returns", "shipping", "privacy", "terms", "faq"].includes(tabParam)) {
       setActiveTab(tabParam);
@@ -33,25 +44,6 @@ export default function PolicyPage() {
   };
 
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
-
-  const FAQS = [
-    {
-      q: "Tôi có thể kiểm tra hàng trước khi thanh toán không?",
-      a: "Hoàn toàn ĐƯỢC! Tất cả đơn hàng của MINI-SHOP đều áp dụng chương trình Đồng Kiểm tận nhà. Quý khách được quyền mở hộp kiểm tra sản phẩm trước khi thanh toán tiền cho shipper.",
-    },
-    {
-      q: "Thời gian giao hàng mất bao lâu?",
-      a: "Nội thành TP.HCM và Hà Nội: Giao siêu tốc từ 1 - 2 ngày làm việc. Các tỉnh thành khác trên toàn quốc: Giao tận nơi từ 2 - 4 ngày làm việc.",
-    },
-    {
-      q: "Quy trình đổi trả sản phẩm bị lỗi như thế nào?",
-      a: "Nếu sản phẩm có lỗi từ nhà sản xuất hoặc bị bể vỡ trong quá trình vận chuyển, quý khách chỉ cần chụp ảnh/quay video và liên hệ Hotline 0987.654.321 trong vòng 7 ngày để được hỗ trợ đổi mới 100% hoàn toàn miễn phí.",
-    },
-    {
-      q: "Tôi làm thế nào để tích điểm và nâng hạng thẻ thành viên?",
-      a: "Quý khách đăng nhập tài khoản khi mua hàng. Tổng tiền các đơn hàng hoàn tất sẽ tự động tích lũy để thăng hạng Thẻ Bạc (từ 2trđ), Thẻ Vàng (từ 5trđ) và Thẻ Kim Cương (từ 15trđ) kèm các đặc quyền giảm giá độc quyền.",
-    },
-  ];
 
   return (
     <main className="container" style={{ padding: "40px 15px", maxWidth: "980px" }}>
@@ -328,7 +320,7 @@ export default function PolicyPage() {
             </h2>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              {FAQS.map((faq, idx) => {
+              {faqs.map((faq, idx) => {
                 const isOpen = openFaqIndex === idx;
                 return (
                   <div
