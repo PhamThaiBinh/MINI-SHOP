@@ -77,9 +77,13 @@ export default function ProductDetailPage({
     ? Math.round((1 - effectivePrice / (currentProduct.oldPrice || currentProduct.price)) * 100)
     : discountPercent;
 
-  const relatedProducts = allProducts
-    .filter((p) => p.id !== currentProduct.id)
-    .slice(0, 5);
+  const sameCatProducts = allProducts.filter(
+    (p) => p.id !== currentProduct.id && (p.category === currentProduct.category || p.categoryName === currentProduct.categoryName)
+  );
+  const otherProducts = allProducts.filter(
+    (p) => p.id !== currentProduct.id && p.category !== currentProduct.category && p.categoryName !== currentProduct.categoryName
+  );
+  const relatedProducts = [...sameCatProducts, ...otherProducts].slice(0, 4);
 
 
   return (

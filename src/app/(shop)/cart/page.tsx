@@ -241,7 +241,14 @@ export default function CartPage() {
                             </div>
                           </td>
                           <td className="cart-price-cell">
-                            {formatVND(item.product.price)}
+                            {item.product.oldPrice && item.product.oldPrice > item.product.price && (
+                              <div style={{ fontSize: "11px", color: "var(--text-muted)", textDecoration: "line-through" }}>
+                                {formatVND(item.product.oldPrice)}
+                              </div>
+                            )}
+                            <div style={{ fontWeight: 800, color: "var(--primary-color)" }}>
+                              {formatVND(item.product.price)}
+                            </div>
                           </td>
                           <td>
                             <div className="cart-qty-control">

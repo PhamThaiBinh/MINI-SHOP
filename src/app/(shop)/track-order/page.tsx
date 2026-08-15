@@ -59,13 +59,12 @@ export default function TrackOrderPage() {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
             <div>
               <label style={{ fontSize: "13px", fontWeight: 700, marginBottom: "6px", display: "block" }}>
-                Mã Đơn Hàng *
+                Mã Đơn Hàng (hoặc Số Điện Thoại)
               </label>
               <input
                 type="text"
                 className="form-control"
                 placeholder="Ví dụ: #MS-9824"
-                required
                 style={{
                   width: "100%",
                   padding: "10px 14px",

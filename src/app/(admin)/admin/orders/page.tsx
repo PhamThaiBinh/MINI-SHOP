@@ -696,8 +696,30 @@ export default function AdminOrdersPage() {
               padding: "24px",
               boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
               fontFamily: "'Plus Jakarta Sans', sans-serif",
+              position: "relative",
             }}
           >
+            {/* Watermark Official Seal Stamp for A4 Print */}
+            <div
+              style={{
+                position: "absolute",
+                top: "24px",
+                right: "60px",
+                border: selectedOrder.status === "completed" || selectedOrder.status === "shipping" ? "3px double #166534" : "3px double #1e40af",
+                color: selectedOrder.status === "completed" || selectedOrder.status === "shipping" ? "#166534" : "#1e40af",
+                borderRadius: "8px",
+                padding: "4px 12px",
+                fontSize: "12px",
+                fontWeight: 900,
+                letterSpacing: "1px",
+                transform: "rotate(-12deg)",
+                opacity: 0.85,
+                pointerEvents: "none",
+                textTransform: "uppercase",
+              }}
+            >
+              {selectedOrder.status === "completed" ? "✔ ĐÃ THANH TOÁN" : selectedOrder.status === "cancelled" ? "✖ ĐÃ HỦY ĐƠN" : "✔ ĐÃ DUYỆT ĐƠN"}
+            </div>
             <div
               style={{
                 display: "flex",
