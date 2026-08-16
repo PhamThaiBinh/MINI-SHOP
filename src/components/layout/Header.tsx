@@ -272,7 +272,10 @@ export const Header: React.FC = () => {
                     }}
                   >
                     <span className="btn-stacked-icon">👋</span>
-                    <span className="btn-stacked-label">Chào Admin</span>
+                    <span className="nav-two-lines">
+                      <span>Chào</span>
+                      <span>Admin</span>
+                    </span>
                   </Link>
                   <button
                     onClick={handleLogout}
@@ -304,8 +307,9 @@ export const Header: React.FC = () => {
                     }}
                   >
                     <span className="btn-stacked-icon">👋</span>
-                    <span className="btn-stacked-label">
-                      Chào, {user.name}
+                    <span className="nav-two-lines">
+                      <span>Chào,</span>
+                      <span>{user.name.split(" ")[0]}</span>
                     </span>
                   </Link>
                   <button
@@ -334,7 +338,10 @@ export const Header: React.FC = () => {
                   style={{ color: "var(--text-main)" }}
                 >
                   <span className="btn-stacked-icon">🔑</span>
-                  <span className="btn-stacked-label">Đăng nhập</span>
+                  <span className="nav-two-lines">
+                    <span>Đăng</span>
+                    <span>nhập</span>
+                  </span>
                 </Link>
 
                 <Link
@@ -347,7 +354,10 @@ export const Header: React.FC = () => {
                   }}
                 >
                   <span className="btn-stacked-icon">✨</span>
-                  <span className="btn-stacked-label">Đăng ký</span>
+                  <span className="nav-two-lines">
+                    <span>Đăng</span>
+                    <span>ký</span>
+                  </span>
                 </Link>
               </>
             )}
