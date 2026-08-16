@@ -269,11 +269,11 @@ export const Header: React.FC = () => {
                       color: "#ffffff",
                       borderColor: "var(--primary-color)",
                       fontWeight: 700,
+                      padding: "4px 10px",
                     }}
                   >
-                    <span className="btn-stacked-icon">👋</span>
                     <span className="nav-two-lines">
-                      <span>Chào</span>
+                      <span>Chào,</span>
                       <span>Admin</span>
                     </span>
                   </Link>
@@ -284,11 +284,11 @@ export const Header: React.FC = () => {
                       background: "none",
                       border: "1px solid var(--border-color)",
                       borderRadius: "var(--radius-md)",
-                      padding: "6px 8px",
+                      padding: "4px 6px",
                       cursor: "pointer",
                       fontSize: "12px",
                       color: "var(--text-muted)",
-                      height: "40px",
+                      height: "36px",
                     }}
                   >
                     🚪
@@ -304,12 +304,12 @@ export const Header: React.FC = () => {
                       color: "var(--primary-color)",
                       borderColor: "var(--primary-color)",
                       fontWeight: 700,
+                      padding: "4px 10px",
                     }}
                   >
-                    <span className="btn-stacked-icon">👋</span>
                     <span className="nav-two-lines">
                       <span>Chào,</span>
-                      <span>{user.name.split(" ")[0]}</span>
+                      <span>{user.name}</span>
                     </span>
                   </Link>
                   <button
@@ -319,11 +319,11 @@ export const Header: React.FC = () => {
                       background: "none",
                       border: "1px solid var(--border-color)",
                       borderRadius: "var(--radius-md)",
-                      padding: "6px 8px",
+                      padding: "4px 6px",
                       cursor: "pointer",
                       fontSize: "12px",
                       color: "var(--text-muted)",
-                      height: "40px",
+                      height: "36px",
                     }}
                   >
                     🚪
@@ -335,9 +335,8 @@ export const Header: React.FC = () => {
                 <Link
                   href="/auth"
                   className="btn-stacked"
-                  style={{ color: "var(--text-main)" }}
+                  style={{ color: "var(--text-main)", padding: "4px 8px" }}
                 >
-                  <span className="btn-stacked-icon">🔑</span>
                   <span className="nav-two-lines">
                     <span>Đăng</span>
                     <span>nhập</span>
@@ -351,9 +350,9 @@ export const Header: React.FC = () => {
                     backgroundColor: "var(--primary-color)",
                     color: "#ffffff",
                     borderColor: "var(--primary-color)",
+                    padding: "4px 10px",
                   }}
                 >
-                  <span className="btn-stacked-icon">✨</span>
                   <span className="nav-two-lines">
                     <span>Đăng</span>
                     <span>ký</span>
