@@ -263,17 +263,16 @@ export const Header: React.FC = () => {
                 <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                   <Link
                     href="/admin"
-                    className="btn-stacked"
+                    className="btn-stacked nav-link"
                     style={{
                       backgroundColor: "var(--primary-color)",
                       color: "#ffffff",
                       borderColor: "var(--primary-color)",
                       fontWeight: 700,
-                      padding: "4px 10px",
                     }}
                   >
                     <span className="nav-two-lines">
-                      <span>Chào,</span>
+                      <span>Chào</span>
                       <span>Admin</span>
                     </span>
                   </Link>
@@ -284,11 +283,11 @@ export const Header: React.FC = () => {
                       background: "none",
                       border: "1px solid var(--border-color)",
                       borderRadius: "var(--radius-md)",
-                      padding: "4px 6px",
+                      padding: "6px 8px",
                       cursor: "pointer",
                       fontSize: "12px",
                       color: "var(--text-muted)",
-                      height: "36px",
+                      height: "40px",
                     }}
                   >
                     🚪
@@ -298,13 +297,12 @@ export const Header: React.FC = () => {
                 <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                   <Link
                     href="/auth"
-                    className="btn-stacked"
+                    className="btn-stacked nav-link"
                     style={{
                       backgroundColor: "var(--primary-light)",
                       color: "var(--primary-color)",
                       borderColor: "var(--primary-color)",
                       fontWeight: 700,
-                      padding: "4px 10px",
                     }}
                   >
                     <span className="nav-two-lines">
@@ -319,11 +317,11 @@ export const Header: React.FC = () => {
                       background: "none",
                       border: "1px solid var(--border-color)",
                       borderRadius: "var(--radius-md)",
-                      padding: "4px 6px",
+                      padding: "6px 8px",
                       cursor: "pointer",
                       fontSize: "12px",
                       color: "var(--text-muted)",
-                      height: "36px",
+                      height: "40px",
                     }}
                   >
                     🚪
@@ -334,8 +332,8 @@ export const Header: React.FC = () => {
               <>
                 <Link
                   href="/auth"
-                  className="btn-stacked"
-                  style={{ color: "var(--text-main)", padding: "4px 8px" }}
+                  className="btn-stacked nav-link"
+                  style={{ color: "var(--text-main)" }}
                 >
                   <span className="nav-two-lines">
                     <span>Đăng</span>
@@ -345,12 +343,11 @@ export const Header: React.FC = () => {
 
                 <Link
                   href="/auth"
-                  className="btn-stacked"
+                  className="btn-stacked nav-link"
                   style={{
                     backgroundColor: "var(--primary-color)",
                     color: "#ffffff",
                     borderColor: "var(--primary-color)",
-                    padding: "4px 10px",
                   }}
                 >
                   <span className="nav-two-lines">
