@@ -251,10 +251,14 @@ export default function ProductsPage() {
                           setCurrentPage(1);
                         }}
                       />
-                      {searchQuery && (
+                      {(searchQuery || currentCategory !== "all" || currentPriceRange !== "all" || inStockOnly) && (
                         <button
                           onClick={() => {
                             setSearchQuery("");
+                            setCurrentCategory("all");
+                            setCurrentPriceRange("all");
+                            setInStockOnly(false);
+                            setCurrentPage(1);
                             window.history.pushState({}, "", "/products");
                           }}
                           style={{
@@ -269,7 +273,7 @@ export default function ProductsPage() {
                             whiteSpace: "nowrap",
                           }}
                         >
-                          ❌ Xóa tìm kiếm
+                          ❌ Đặt lại bộ lọc
                         </button>
                       )}
                       <svg viewBox="0 0 24 24">

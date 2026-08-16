@@ -431,6 +431,45 @@ export default function AdminOrdersPage() {
                     flexWrap: "wrap",
                   }}
                 >
+                  <button
+                    onClick={() => {
+                      if (!orders || orders.length === 0) {
+                        alert("Không có đơn hàng nào để xuất!");
+                        return;
+                      }
+                      const headers = ["Mã Đơn", "Ngày Đặt", "Trạng Thái", "Người Nhận", "SĐT", "Địa Chỉ", "Tổng Tiền (VND)"];
+                      const rows = orders.map((o) => [
+                        `"${o.id}"`,
+                        `"${o.date}"`,
+                        `"${o.statusText}"`,
+                        `"${o.recipientName}"`,
+                        `"${o.recipientPhone}"`,
+                        `"${(o.address || "").replace(/"/g, '""')}"`,
+                        o.total,
+                      ]);
+                      const csvContent = "\uFEFF" + [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+                      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+                      const url = URL.createObjectURL(blob);
+                      const link = document.createElement("a");
+                      link.setAttribute("href", url);
+                      link.setAttribute("download", `Bao_Cao_Don_Hang_${new Date().toISOString().slice(0, 10)}.csv`);
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                    }}
+                    style={{
+                      padding: "6px 12px",
+                      fontSize: "12px",
+                      fontWeight: 700,
+                      border: "1px solid #166534",
+                      background: "#f0fdf4",
+                      color: "#166534",
+                      borderRadius: "6px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    📊 Xuất Excel/CSV
+                  </button>
                   <div
                     style={{
                       display: "flex",

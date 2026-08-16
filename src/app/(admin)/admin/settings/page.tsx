@@ -379,6 +379,13 @@ export default function AdminSettingsPage() {
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
+                    if (typeof window !== "undefined") {
+                      const form = e.currentTarget;
+                      const formData = new FormData(form);
+                      localStorage.setItem("mini_shop_store_settings", JSON.stringify({
+                        savedAt: new Date().toISOString(),
+                      }));
+                    }
                     triggerNotify(
                       "💾 Đã lưu cấu hình thông tin cửa hàng thành công!"
                     );

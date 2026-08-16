@@ -164,6 +164,36 @@ export const Footer: React.FC = () => {
 
         <div className="footer-bottom">&copy; {new Date().getFullYear()} Mini Shop. All rights reserved.</div>
       </div>
+
+      {/* Floating Scroll-To-Top Button */}
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        title="Cuộn lên đầu trang"
+        style={{
+          position: "fixed",
+          bottom: "24px",
+          right: "24px",
+          width: "42px",
+          height: "42px",
+          borderRadius: "50%",
+          background: "var(--primary-color)",
+          color: "#ffffff",
+          border: "none",
+          boxShadow: "0 6px 16px rgba(0,0,0,0.25)",
+          cursor: "pointer",
+          zIndex: 1000,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: "18px",
+          fontWeight: 900,
+          transition: "transform 0.2s ease",
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.1)")}
+        onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1.0)")}
+      >
+        ▲
+      </button>
     </footer>
   );
 };

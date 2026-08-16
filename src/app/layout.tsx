@@ -24,6 +24,10 @@ export const metadata: Metadata = {
     description:
       "Nội thất, trang trí & đồ dùng nhà cửa thủ công tinh tế, hiện đại.",
   },
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({

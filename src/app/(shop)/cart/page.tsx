@@ -319,9 +319,15 @@ export default function CartPage() {
                               <input
                                 type="number"
                                 min="1"
+                                max={item.product.stock ?? 50}
                                 value={item.quantity}
                                 onChange={(e) => {
-                                  const val = parseInt(e.target.value, 10);
+                                  let val = parseInt(e.target.value, 10);
+                                  const maxStock = item.product.stock ?? 50;
+                                  if (val > maxStock) {
+                                    alert(`⚠️ Sản phẩm này chỉ còn ${maxStock} trong kho!`);
+                                    val = maxStock;
+                                  }
                                   updateQuantity(item.product.id, isNaN(val) ? 1 : val);
                                 }}
                                 onBlur={(e) => {
@@ -334,12 +340,16 @@ export default function CartPage() {
                               />
                               <button
                                 type="button"
-                                onClick={() =>
-                                  updateQuantity(
-                                    item.product.id,
-                                    item.quantity + 1
-                                  )
-                                }
+                                disabled={item.quantity >= (item.product.stock ?? 50)}
+                                onClick={() => {
+                                  const maxStock = item.product.stock ?? 50;
+                                  if (item.quantity < maxStock) {
+                                    updateQuantity(item.product.id, item.quantity + 1);
+                                  } else {
+                                    alert(`⚠️ Sản phẩm này chỉ còn ${maxStock} trong kho!`);
+                                  }
+                                }}
+                                style={{ opacity: item.quantity >= (item.product.stock ?? 50) ? 0.4 : 1 }}
                               >
                                 +
                               </button>
