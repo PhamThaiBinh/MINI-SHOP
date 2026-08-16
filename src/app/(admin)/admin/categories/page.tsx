@@ -60,7 +60,15 @@ export default function AdminCategoriesPage() {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formName.trim()) return;
+    const isDuplicate = categories.some(
+      (c) =>
+        c.name.trim().toLowerCase() === formName.trim().toLowerCase() &&
+        (!editingCategory || c.id !== editingCategory.id)
+    );
+    if (isDuplicate) {
+      alert(`⚠️ Danh mục tên "${formName.trim()}" đã tồn tại trong hệ thống! Vui lòng chọn tên khác.`);
+      return;
+    }
 
     const supabase = createClient();
     const cleanSlug = formSlug || formName.toLowerCase().replace(/\s+/g, "-");

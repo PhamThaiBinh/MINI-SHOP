@@ -581,6 +581,13 @@ export default function CheckoutPage() {
                   <strong id="checkout-subtotal">{formatVND(subtotal)}</strong>
                 </div>
 
+                <div className="summary-row">
+                  <span className="summary-label">Phí vận chuyển:</span>
+                  <strong style={{ color: subtotal >= 500000 ? "var(--primary-color)" : "#334155" }}>
+                    {subtotal >= 500000 ? "🎉 Miễn phí (Đơn từ 500.000đ)" : "30.000đ"}
+                  </strong>
+                </div>
+
                 {appliedVoucher && (
                   <div className="summary-row">
                     <span className="summary-label">

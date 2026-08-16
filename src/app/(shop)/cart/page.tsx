@@ -278,6 +278,10 @@ export default function CartPage() {
                               <img
                                 src={fixImagePath(item.product.image)}
                                 alt={item.product.name}
+                                loading="lazy"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = "/assets/images/products/noi-that-gia-dung/sofa-phong-khach.webp";
+                                }}
                               />
                               <div>
                                 <h3 className="cart-product-title">

@@ -58,6 +58,8 @@ function ProductDetailPageContent({
 
   const [quantity, setQuantity] = useState(1);
   const [copied, setCopied] = useState(false);
+  const [notifyEmail, setNotifyEmail] = useState("");
+  const [subscribed, setSubscribed] = useState(false);
 
   // Gallery Images (Primary image + thumbnail variations)
   const galleryImages = [
@@ -326,6 +328,73 @@ function ProductDetailPageContent({
                   <span>{copied ? "✅" : "🔗"}</span> {copied ? "Đã chép link!" : "Chia sẻ"}
                 </button>
               </div>
+
+              {/* Back-In-Stock Email Notification Box (When stock is 0) */}
+              {(product.stock ?? 50) === 0 && (
+                <div
+                  style={{
+                    marginTop: "20px",
+                    padding: "16px",
+                    background: "#fff7ed",
+                    border: "1px solid #fed7aa",
+                    borderRadius: "var(--radius-md)",
+                  }}
+                >
+                  <div style={{ fontWeight: 800, fontSize: "14px", color: "#c2410c", marginBottom: "6px" }}>
+                    🔔 Nhận thông báo ngay khi có hàng trở lại
+                  </div>
+                  <p style={{ fontSize: "13px", color: "#7c2d12", margin: "0 0 10px 0" }}>
+                    Sản phẩm hiện đang tạm hết hàng. Nhập email của bạn để hệ thống tự động gửi tin nhắn ngay khi hàng vừa xuất kho lại:
+                  </p>
+                  {subscribed ? (
+                    <div style={{ color: "#166534", fontWeight: 800, fontSize: "13px" }}>
+                      ✅ Cảm ơn bạn! Chúng tôi sẽ gửi email thông báo ngay khi sản phẩm có hàng.
+                    </div>
+                  ) : (
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        if (notifyEmail.trim()) {
+                          setSubscribed(true);
+                        }
+                      }}
+                      style={{ display: "flex", gap: "8px" }}
+                    >
+                      <input
+                        type="email"
+                        placeholder="Nhập địa chỉ email của bạn..."
+                        required
+                        value={notifyEmail}
+                        onChange={(e) => setNotifyEmail(e.target.value)}
+                        style={{
+                          flex: 1,
+                          padding: "8px 12px",
+                          borderRadius: "6px",
+                          border: "1px solid #fdba74",
+                          fontSize: "13px",
+                          outline: "none",
+                        }}
+                      />
+                      <button
+                        type="submit"
+                        style={{
+                          padding: "8px 16px",
+                          background: "#ea580c",
+                          color: "#fff",
+                          border: "none",
+                          borderRadius: "6px",
+                          fontWeight: 700,
+                          fontSize: "13px",
+                          cursor: "pointer",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        Đăng Ký Thông Báo
+                      </button>
+                    </form>
+                  )}
+                </div>
+              )}
 
               {/* Trust Commitments */}
               <div className="trust-commitments">
