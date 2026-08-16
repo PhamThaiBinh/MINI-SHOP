@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { IconChevronUp } from "@/components/common/Icons";
 
 export const Footer: React.FC = () => {
   const pathname = usePathname();
@@ -192,7 +193,7 @@ export const Footer: React.FC = () => {
         onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.1)")}
         onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1.0)")}
       >
-        ▲
+        <IconChevronUp size={20} color="#ffffff" />
       </button>
     </footer>
   );

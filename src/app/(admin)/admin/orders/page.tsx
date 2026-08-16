@@ -1,5 +1,7 @@
 "use client";
 
+import { IconDownload, IconPrinter } from "@/components/common/Icons";
+
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import "@/styles/admin.css";
@@ -466,9 +468,12 @@ export default function AdminOrdersPage() {
                       color: "#166534",
                       borderRadius: "6px",
                       cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "5px",
                     }}
                   >
-                    📊 Xuất Excel/CSV
+                    <IconDownload size={14} color="#166534" /> Xuất Excel/CSV
                   </button>
                   <div
                     style={{
@@ -814,7 +819,7 @@ export default function AdminOrdersPage() {
                     gap: "4px",
                   }}
                 >
-                  🖨️ In hóa đơn ngay
+                  <IconPrinter size={14} color="#ffffff" /> In hóa đơn ngay
                 </button>
                 <button
                   onClick={() => setSelectedOrder(null)}

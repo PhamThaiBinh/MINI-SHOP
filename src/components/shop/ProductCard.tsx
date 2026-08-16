@@ -10,6 +10,8 @@ interface ProductCardProps {
   product: Product;
 }
 
+import { IconEye } from "@/components/common/Icons";
+
 export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { addToCart } = useCart();
   const [showQuickView, setShowQuickView] = React.useState(false);
@@ -65,9 +67,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             cursor: "pointer",
             backdropFilter: "blur(4px)",
             transition: "all 0.2s ease",
+            display: "flex",
+            alignItems: "center",
+            gap: "5px",
           }}
         >
-          👁️ Xem nhanh
+          <IconEye size={14} color="#ffffff" /> Xem nhanh
         </button>
       </div>
       <div className="product-info">
