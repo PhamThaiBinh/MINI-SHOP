@@ -796,18 +796,39 @@ export default function AdminOrdersPage() {
               >
                 Chi Tiết Đơn Hàng #{selectedOrder.id}
               </h3>
-              <button
-                onClick={() => setSelectedOrder(null)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  fontSize: "22px",
-                  cursor: "pointer",
-                  color: "var(--text-muted)",
-                }}
-              >
-                &times;
-              </button>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  style={{
+                    padding: "6px 12px",
+                    background: "var(--primary-color)",
+                    color: "#ffffff",
+                    border: "none",
+                    borderRadius: "6px",
+                    fontWeight: 700,
+                    fontSize: "12px",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                  }}
+                >
+                  🖨️ In hóa đơn ngay
+                </button>
+                <button
+                  onClick={() => setSelectedOrder(null)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    fontSize: "22px",
+                    cursor: "pointer",
+                    color: "var(--text-muted)",
+                  }}
+                >
+                  &times;
+                </button>
+              </div>
             </div>
 
             <div

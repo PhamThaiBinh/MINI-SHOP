@@ -44,6 +44,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
             <span>📅 Ngày đăng: {article.date}</span>
             <span>✍️ Tác giả: {article.author}</span>
             <span>⏱️ {article.readTime}</span>
+            <span>👁️ 1.2k lượt xem</span>
           </div>
         </div>
 
