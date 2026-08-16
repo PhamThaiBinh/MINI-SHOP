@@ -66,7 +66,10 @@ export const Header: React.FC = () => {
                   href="/"
                   className={`nav-link ${pathname === "/" ? "active" : ""}`}
                 >
-                  Trang chủ
+                  <span className="nav-two-lines">
+                    <span>Trang</span>
+                    <span>chủ</span>
+                  </span>
                 </Link>
               </li>
               <li>
@@ -76,7 +79,10 @@ export const Header: React.FC = () => {
                     pathname.startsWith("/products") ? "active" : ""
                   }`}
                 >
-                  Sản phẩm
+                  <span className="nav-two-lines">
+                    <span>Sản</span>
+                    <span>phẩm</span>
+                  </span>
                 </Link>
               </li>
               <li>
@@ -86,7 +92,10 @@ export const Header: React.FC = () => {
                     pathname.startsWith("/blog") ? "active" : ""
                   }`}
                 >
-                  Bài viết
+                  <span className="nav-two-lines">
+                    <span>Bài</span>
+                    <span>viết</span>
+                  </span>
                 </Link>
               </li>
               <li>
@@ -97,7 +106,10 @@ export const Header: React.FC = () => {
                   }`}
                   style={{ color: "#ef4444", fontWeight: 800 }}
                 >
-                  ⚡ Flash Sale
+                  <span className="nav-two-lines">
+                    <span>⚡ Flash</span>
+                    <span>Sale</span>
+                  </span>
                 </Link>
               </li>
               <li>
@@ -107,7 +119,10 @@ export const Header: React.FC = () => {
                     pathname === "/track-order" ? "active" : ""
                   }`}
                 >
-                  🔍 Tra cứu đơn
+                  <span className="nav-two-lines">
+                    <span>🔍 Tra cứu</span>
+                    <span>đơn</span>
+                  </span>
                 </Link>
               </li>
               <li>
@@ -117,7 +132,10 @@ export const Header: React.FC = () => {
                     pathname === "/contact" ? "active" : ""
                   }`}
                 >
-                  Liên hệ
+                  <span className="nav-two-lines">
+                    <span>Liên</span>
+                    <span>hệ</span>
+                  </span>
                 </Link>
               </li>
             </ul>
