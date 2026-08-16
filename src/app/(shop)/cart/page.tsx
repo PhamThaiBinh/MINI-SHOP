@@ -412,9 +412,16 @@ export default function CartPage() {
                       <span className="summary-label">
                         Giảm giá ({appliedCoupon.code}):
                       </span>
-                      <strong style={{ color: "#ef4444" }}>
-                        -{formatVND(discountAmount)}
-                      </strong>
+                      <div style={{ textAlign: "right" }}>
+                        <strong style={{ color: "#ef4444" }}>
+                          -{formatVND(discountAmount)}
+                        </strong>
+                        {appliedCoupon.percent && (
+                          <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+                            (Ưu đãi giảm {appliedCoupon.percent}%)
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
 
