@@ -1004,3 +1004,15 @@ textarea.form-control-auth {
         font-size: 18px;
     }
 }
+
+/* Responsive Split-Screen Table Container Rules */
+.dashboard-card {
+    overflow-x: auto !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.admin-table {
+    width: 100% !important;
+    min-width: 600px;
+}
