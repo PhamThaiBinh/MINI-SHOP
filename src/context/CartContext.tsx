@@ -70,6 +70,22 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     loadCartData();
+
+    // Cross-tab Synchronization
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === CART_STORAGE_KEY && e.newValue) {
+        try {
+          const updated = JSON.parse(e.newValue);
+          if (Array.isArray(updated)) {
+            setCart(updated);
+          }
+        } catch (err) {
+          console.error("Error syncing cart from storage:", err);
+        }
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, [user]);
 
   useEffect(() => {
@@ -91,18 +107,39 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [cart, isMounted, user]);
 
   const addToCart = (product: Product, quantity = 1) => {
+    const maxStock = product.stock !== undefined ? product.stock : 99;
+    if (maxStock <= 0) {
+      showToast(`⚠️ Sản phẩm "${product.name}" hiện đã hết hàng trong kho!`);
+      return;
+    }
+
+    let isExceeded = false;
     setCart((prev) => {
       const existingIndex = prev.findIndex((item) => item.product.id === product.id);
       if (existingIndex > -1) {
+        const currentQty = prev[existingIndex].quantity;
+        if (currentQty + quantity > maxStock) {
+          isExceeded = true;
+          return prev.map((item, idx) =>
+            idx === existingIndex ? { ...item, quantity: maxStock } : item
+          );
+        }
         return prev.map((item, idx) =>
           idx === existingIndex
             ? { ...item, quantity: item.quantity + quantity }
             : item
         );
       }
-      return [...prev, { product, quantity }];
+      const initialQty = Math.min(quantity, maxStock);
+      if (quantity > maxStock) isExceeded = true;
+      return [...prev, { product, quantity: initialQty }];
     });
-    showToast(`🛒 Đã thêm "${product.name}" vào giỏ hàng!`);
+
+    if (isExceeded) {
+      showToast(`⚠️ Kho chỉ còn tối đa ${maxStock} món cho sản phẩm "${product.name}"!`);
+    } else {
+      showToast(`🛒 Đã thêm "${product.name}" vào giỏ hàng!`);
+    }
   };
 
   const removeFromCart = (productId: number) => {
@@ -115,7 +152,17 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
     setCart((prev) =>
-      prev.map((item) => (item.product.id === productId ? { ...item, quantity } : item))
+      prev.map((item) => {
+        if (item.product.id === productId) {
+          const maxStock = item.product.stock !== undefined ? item.product.stock : 99;
+          if (quantity > maxStock) {
+            showToast(`⚠️ Kho chỉ còn tối đa ${maxStock} món!`);
+            return { ...item, quantity: maxStock };
+          }
+          return { ...item, quantity };
+        }
+        return item;
+      })
     );
   };
 
@@ -142,6 +189,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
             position: "fixed",
             bottom: "24px",
             right: "24px",
+            left: "auto",
+            maxWidth: "calc(100vw - 32px)",
+            boxSizing: "border-box",
             backgroundColor: "#1e293b",
             color: "#ffffff",
             padding: "12px 20px",
@@ -152,8 +202,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
             fontSize: "14px",
             display: "flex",
             alignItems: "center",
-            gap: "8px",
-            borderLeft: "4px solid var(--primary-color, #2e7d32)",
             animation: "fadeIn 0.3s ease",
           }}
         >

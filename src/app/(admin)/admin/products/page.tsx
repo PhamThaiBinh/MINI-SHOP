@@ -18,6 +18,7 @@ interface ProductItem {
   image: string;
   status: "Active" | "Hidden";
   desc: string;
+  stock?: number;
 }
 
 export default function AdminProductsPage() {
@@ -40,6 +41,7 @@ export default function AdminProductsPage() {
         image: p.image,
         status: (p.status === "Hidden" ? "Hidden" : "Active") as any,
         desc: p.description || "",
+        stock: p.stock !== undefined ? p.stock : 10,
       }));
       setProducts(mapped);
       setLoading(false);
@@ -241,6 +243,7 @@ export default function AdminProductsPage() {
                       <th>Tên Sản Phẩm</th>
                       <th>Danh mục</th>
                       <th>Giá bán</th>
+                      <th>Tồn kho</th>
                       <th>Trạng thái</th>
                       <th style={{ textAlign: "center" }}>Thao tác</th>
                     </tr>
@@ -263,6 +266,21 @@ export default function AdminProductsPage() {
                           </span>
                         </td>
                         <td>{prod.price.toLocaleString("vi-VN")}đ</td>
+                        <td>
+                          {(prod.stock ?? 10) === 0 ? (
+                            <span style={{ padding: "3px 8px", borderRadius: "12px", fontSize: "11px", fontWeight: 800, background: "#fee2e2", color: "#dc2626" }}>
+                              ❌ Hết hàng (0)
+                            </span>
+                          ) : (prod.stock ?? 10) <= 5 ? (
+                            <span style={{ padding: "3px 8px", borderRadius: "12px", fontSize: "11px", fontWeight: 800, background: "#fef3c7", color: "#d97706" }}>
+                              ⚠️ Sắp hết ({prod.stock})
+                            </span>
+                          ) : (
+                            <span style={{ padding: "3px 8px", borderRadius: "12px", fontSize: "11px", fontWeight: 800, background: "#dcfce7", color: "#15803d" }}>
+                              ● Còn hàng ({prod.stock})
+                            </span>
+                          )}
+                        </td>
                         <td>
                           <span
                             className={

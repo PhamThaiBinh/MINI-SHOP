@@ -115,6 +115,10 @@ export default function AdminOrdersPage() {
   const [pageSize, setPageSize] = useState<number>(10);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
+  // BUG 5 FIX: Date Range Filter States
+  const [fromDate, setFromDate] = useState<string>("");
+  const [toDate, setToDate] = useState<string>("");
+
   const loadData = async () => {
     setLoading(true);
     const data = await fetchAdminOrders();
@@ -139,9 +143,9 @@ export default function AdminOrdersPage() {
       case "completed":
         return <span className="status-pill status-completed">✅ Đã hoàn thành</span>;
       case "cancelled":
-        return <span className="status-pill status-cancelled">❌ Đã hủy đơn</span>;
+        return <span className="status-pill status-cancelled">❌ Đã hủy</span>;
       default:
-        return null;
+        return <span className="status-pill status-pending">⏳ {status}</span>;
     }
   };
 
@@ -192,7 +196,14 @@ export default function AdminOrdersPage() {
       matchesPayment = order.paymentMethod.includes("MoMo") || order.paymentMethod.includes("ZaloPay") || order.paymentMethod.includes("Ví");
     }
 
-    return matchesTab && matchesSearch && matchesPayment;
+    let matchesDate = true;
+    if (fromDate || toDate) {
+      const orderDateStr = order.date || "";
+      if (fromDate && orderDateStr && orderDateStr < fromDate) matchesDate = false;
+      if (toDate && orderDateStr && orderDateStr > toDate) matchesDate = false;
+    }
+
+    return matchesTab && matchesSearch && matchesPayment && matchesDate;
   });
 
   const totalPages = Math.max(1, Math.ceil(filteredOrders.length / pageSize));
@@ -220,12 +231,33 @@ export default function AdminOrdersPage() {
     await loadData();
   };
 
-  const handleCancelOrder = async (id: string) => {
-    if (confirm("⚠️ Bạn có chắc chắn muốn hủy đơn hàng này không?")) {
-      setLoading(true);
-      await updateAdminOrderStatus(id, "cancelled");
-      await loadData();
+  const handleExportCSV = () => {
+    if (filteredOrders.length === 0) {
+      alert("Không có đơn hàng nào phù hợp để xuất file!");
+      return;
     }
+
+    const headers = ["Mã Đơn Hàng", "Người Nhận", "Số Điện Thoại", "Địa Chỉ", "Tổng Tiền (VND)", "Thanh Toán", "Trạng Thái", "Ngày Đặt"];
+    const rows = filteredOrders.map((o) => [
+      `"${o.id}"`,
+      `"${o.recipientName}"`,
+      `"${o.recipientPhone}"`,
+      `"${o.address ? o.address.replace(/"/g, '""') : ""}"`,
+      o.total,
+      `"${o.paymentMethod}"`,
+      `"${o.statusText}"`,
+      `"${o.date || ""}"`,
+    ]);
+
+    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Don_Hang_MINI_SHOP_${new Date().toISOString().split("T")[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -492,6 +524,8 @@ export default function AdminOrdersPage() {
                     </label>
                     <input
                       type="date"
+                      value={fromDate}
+                      onChange={(e) => setFromDate(e.target.value)}
                       style={{
                         border: "none",
                         background: "transparent",
@@ -504,6 +538,8 @@ export default function AdminOrdersPage() {
                     </label>
                     <input
                       type="date"
+                      value={toDate}
+                      onChange={(e) => setToDate(e.target.value)}
                       style={{
                         border: "none",
                         background: "transparent",
@@ -513,6 +549,7 @@ export default function AdminOrdersPage() {
                     />
                   </div>
                   <button
+                    onClick={handleExportCSV}
                     className="select-filter-sm"
                     style={{
                       cursor: "pointer",
@@ -801,9 +838,10 @@ export default function AdminOrdersPage() {
               >
                 Chi Tiết Đơn Hàng #{selectedOrder.id}
               </h3>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }} className="btn-print-hide">
                 <button
                   type="button"
+                  className="btn-print-hide"
                   onClick={() => window.print()}
                   style={{
                     padding: "6px 12px",
@@ -822,6 +860,7 @@ export default function AdminOrdersPage() {
                   <IconPrinter size={14} color="#ffffff" /> In hóa đơn ngay
                 </button>
                 <button
+                  className="btn-print-hide"
                   onClick={() => setSelectedOrder(null)}
                   style={{
                     background: "none",

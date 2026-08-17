@@ -123,6 +123,16 @@ function ProductDetailPageContent({
                       activeImageIndex === idx ? "active" : ""
                     }`}
                     onClick={() => setActiveImageIndex(idx)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setActiveImageIndex(idx);
+                      }
+                    }}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`Xem hình ảnh ${idx + 1}`}
+                    style={{ cursor: "pointer" }}
                   >
                     <img
                       src={fixImagePath(imgSrc)}

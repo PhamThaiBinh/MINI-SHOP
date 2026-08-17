@@ -42,6 +42,22 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
 
     loadWishlistData();
+
+    // Cross-tab Synchronization
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === WISHLIST_STORAGE_KEY && e.newValue) {
+        try {
+          const updated = JSON.parse(e.newValue);
+          if (Array.isArray(updated)) {
+            setWishlistIds(updated);
+          }
+        } catch (err) {
+          console.error("Error syncing wishlist from storage:", err);
+        }
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, [user]);
 
   useEffect(() => {
@@ -59,9 +75,14 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [wishlistIds, isMounted, user]);
 
   const toggleWishlist = (productId: number) => {
-    setWishlistIds((prev) =>
-      prev.includes(productId) ? prev.filter((id) => id !== productId) : [...prev, productId]
-    );
+    setWishlistIds((prev) => {
+      const isAlreadyIn = prev.includes(productId);
+      if (isAlreadyIn) {
+        return prev.filter((id) => id !== productId);
+      } else {
+        return [...prev, productId];
+      }
+    });
   };
 
   const isWishlisted = (productId: number) => wishlistIds.includes(productId);

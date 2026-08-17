@@ -184,6 +184,35 @@ export default function WishlistPage() {
           </div>
         </div>
       </main>
+
+      {/* Toast Notification */}
+      {toastMsg && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: "24px",
+            right: "24px",
+            left: "auto",
+            maxWidth: "calc(100vw - 32px)",
+            boxSizing: "border-box",
+            backgroundColor: "#1e293b",
+            color: "#ffffff",
+            padding: "12px 20px",
+            borderRadius: "8px",
+            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.3)",
+            zIndex: 9999,
+            fontWeight: 600,
+            fontSize: "14px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            borderLeft: "4px solid #ef4444",
+            animation: "fadeIn 0.3s ease",
+          }}
+        >
+          {toastMsg}
+        </div>
+      )}
     </>
   );
 }
