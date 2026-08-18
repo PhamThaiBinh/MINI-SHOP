@@ -33,14 +33,14 @@ export function formatProvinceName(rawName: string): string {
   if (isCentralCity) {
     return `Thành phố ${clean}`;
   }
-  return `Tỉnh ${clean}`;
+  return clean;
 }
 
 /**
- * Fetch 34 post-merger Vietnam Provinces, prefixed with "Thành phố" / "Tỉnh" and sorted A-Z
+ * Fetch 34 post-merger Vietnam Provinces, prefixed with "Thành phố" for central cities and sorted A-Z
  */
 export async function fetchProvincesApi(): Promise<string[]> {
-  const cacheKey = "minishop_openadmindata_org_provinces_v2";
+  const cacheKey = "minishop_openadmindata_org_provinces_v3";
 
   if (typeof window !== "undefined") {
     const cached = sessionStorage.getItem(cacheKey) || localStorage.getItem(cacheKey);
@@ -84,15 +84,15 @@ export async function fetchProvincesApi(): Promise<string[]> {
     "Thành phố Cần Thơ",
     "Thành phố Huế",
     "Thành phố Đồng Nai",
-    "Tỉnh An Giang",
-    "Tỉnh Bắc Ninh",
-    "Tỉnh Cà Mau",
-    "Tỉnh Đồng Tháp",
-    "Tỉnh Gia Lai",
-    "Tỉnh Khánh Hòa",
-    "Tỉnh Lâm Đồng",
-    "Tỉnh Tây Ninh",
-    "Tỉnh Thái Nguyên",
+    "An Giang",
+    "Bắc Ninh",
+    "Cà Mau",
+    "Đồng Tháp",
+    "Gia Lai",
+    "Khánh Hòa",
+    "Lâm Đồng",
+    "Tây Ninh",
+    "Thái Nguyên",
   ];
   fallback.sort((a, b) => a.localeCompare(b, "vi"));
   return fallback;
