@@ -14,7 +14,7 @@ export const fetchProductsFromSupabase = async (): Promise<Product[]> => {
     const { data, error } = await supabase
       .from("products")
       .select("*")
-      .order("original_id", { ascending: true });
+      .order("id", { ascending: true });
 
     if (error || !data || data.length === 0) {
       console.warn("Supabase fetch error or empty, using fallback data:", error?.message);
@@ -22,7 +22,7 @@ export const fetchProductsFromSupabase = async (): Promise<Product[]> => {
     }
 
     return data.map((row: any) => ({
-      id: Number(row.original_id || row.id),
+      id: Number(row.id),
       name: String(row.name),
       category: String(row.category),
       categoryName: String(row.category_name || row.category),
@@ -66,7 +66,7 @@ export const fetchCategoriesFromSupabase = async (): Promise<SupabaseCategory[]>
     }
 
     return data.map((row: any) => ({
-      id: String(row.category_id),
+      id: String(row.code || row.id),
       label: String(row.name),
       icon: String(row.icon || "📁"),
     }));
@@ -82,7 +82,7 @@ export const fetchProductByIdFromSupabase = async (id: number): Promise<Product 
     const { data, error } = await supabase
       .from("products")
       .select("*")
-      .or(`original_id.eq.${id},id.eq.${id}`)
+      .eq("id", id)
       .limit(1);
 
     if (error || !data || data.length === 0) {
@@ -92,7 +92,7 @@ export const fetchProductByIdFromSupabase = async (id: number): Promise<Product 
 
     const row = data[0];
     return {
-      id: Number(row.original_id || row.id),
+      id: Number(row.id),
       name: String(row.name),
       category: String(row.category),
       categoryName: String(row.category_name || row.category),
