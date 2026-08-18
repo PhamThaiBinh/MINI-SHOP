@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, Suspense } from "react";
 import Link from "next/link";
 import "@/styles/product-list.css";
 import { formatVND, fixImagePath } from "@/lib/utils";
@@ -9,20 +9,41 @@ import { useWishlist } from "@/context/WishlistContext";
 import { Product } from "@/types/product";
 import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
 
-export default function ProductsPage() {
+import { useSearchParams, useRouter } from "next/navigation";
+
+function ProductsContent() {
   const { addToCart } = useCart();
   const { toggleWishlist, isWishlisted } = useWishlist();
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const [currentCategory, setCurrentCategory] = useState<string>("All");
-  const [currentPriceRange, setCurrentPriceRange] = useState<string>("all");
-  const [searchQuery, setSearchQuery] = useState<string>("");
+  const initialCat = searchParams.get("category") || "All";
+  const initialPrice = searchParams.get("price") || "all";
+  const initialSearch = searchParams.get("search") || "";
+
+  const [currentCategory, setCurrentCategory] = useState<string>(initialCat);
+  const [currentPriceRange, setCurrentPriceRange] = useState<string>(initialPrice);
+  const [searchQuery, setSearchQuery] = useState<string>(initialSearch);
   const [sortBy, setSortBy] = useState<string>("newest");
   const [inStockOnly, setInStockOnly] = useState<boolean>(true);
   const [pageSize, setPageSize] = useState<number>(10);
   const [currentPage, setCurrentPage] = useState<number>(1);
+
+  // Sync state changes to URL SearchParams
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (currentCategory && currentCategory !== "All") params.set("category", currentCategory);
+    if (currentPriceRange && currentPriceRange !== "all") params.set("price", currentPriceRange);
+    if (searchQuery.trim()) params.set("search", searchQuery.trim());
+
+    const newUrl = params.toString() ? `/products?${params.toString()}` : "/products";
+    if (typeof window !== "undefined") {
+      window.history.replaceState(null, "", newUrl);
+    }
+  }, [currentCategory, currentPriceRange, searchQuery]);
 
   useEffect(() => {
     async function loadData() {
@@ -502,6 +523,14 @@ export default function ProductsPage() {
         </div>
       </div>
     </>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={<div className="container" style={{ padding: "40px 15px", textAlign: "center" }}>Đang tải danh sách sản phẩm...</div>}>
+      <ProductsContent />
+    </Suspense>
   );
 }
 

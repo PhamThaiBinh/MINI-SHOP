@@ -472,48 +472,53 @@ export default function FlashSalePage() {
                   </div>
                 </div>
 
-                {/* Add to Cart button (Only enabled if isSlotAvailableToBuy) */}
-                {isSlotAvailableToBuy ? (
-                  <button
-                    onClick={() => {
-                      addToCart({ ...product, price: flashPrice }, 1);
-                      setAddedId(product.id);
-                      setTimeout(() => setAddedId(null), 1500);
-                    }}
-                    style={{
-                      width: "100%",
-                      padding: "10px",
-                      background: addedId === product.id ? "#15803d" : "var(--primary-color)",
-                      color: "#fff",
-                      border: "none",
-                      borderRadius: "var(--radius-md)",
-                      fontWeight: 800,
-                      fontSize: "13px",
-                      cursor: "pointer",
-                      transition: "all 0.2s ease",
-                    }}
-                  >
-                    {addedId === product.id ? "✅ Đã thêm vào giỏ!" : "🛒 MUA NGAY GIỜ VÀNG"}
-                  </button>
-                ) : (
-                  <button
-                    disabled
-                    style={{
-                      width: "100%",
-                      padding: "10px",
-                      background: "#94a3b8",
-                      color: "#fff",
-                      border: "none",
-                      borderRadius: "var(--radius-md)",
-                      fontWeight: 800,
-                      fontSize: "13px",
-                      cursor: "not-allowed",
-                      opacity: 0.8,
-                    }}
-                  >
-                    ⏰ CHỜ ĐẾN GIỜ SALE ({slotStartText})
-                  </button>
-                )}
+                {/* Add to Cart button (Only enabled if isSlotAvailableToBuy and not sold out) */}
+                {(() => {
+                  const isSoldOut = soldCount >= totalStock || (product.stock !== undefined && product.stock === 0);
+                  if (isSlotAvailableToBuy && !isSoldOut) {
+                    return (
+                      <button
+                        onClick={() => {
+                          addToCart({ ...product, price: flashPrice }, 1);
+                          setAddedId(product.id);
+                          setTimeout(() => setAddedId(null), 1500);
+                        }}
+                        style={{
+                          width: "100%",
+                          padding: "10px",
+                          background: addedId === product.id ? "#15803d" : "var(--primary-color)",
+                          color: "#fff",
+                          border: "none",
+                          borderRadius: "var(--radius-md)",
+                          fontWeight: 800,
+                          fontSize: "13px",
+                          cursor: "pointer",
+                          transition: "all 0.2s ease",
+                        }}
+                      >
+                        {addedId === product.id ? "✅ Đã thêm vào giỏ!" : "🛒 MUA NGAY GIỜ VÀNG"}
+                      </button>
+                    );
+                  }
+                  return (
+                    <button
+                      disabled
+                      style={{
+                        width: "100%",
+                        padding: "10px",
+                        background: "#94a3b8",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: "var(--radius-md)",
+                        fontWeight: 800,
+                        fontSize: "13px",
+                        cursor: "not-allowed",
+                      }}
+                    >
+                      {isSoldOut ? "❌ Hết suất Flash Sale" : `⏳ Chưa tới giờ bán (${slotStartText})`}
+                    </button>
+                  );
+                })()}
               </div>
             </div>
           );

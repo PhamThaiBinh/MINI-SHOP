@@ -115,11 +115,14 @@ export const Footer: React.FC = () => {
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  if (emailInput.trim()) {
-                    setSubscribeMsg("✅ Cảm ơn bạn đã đăng ký nhận bản tin ưu đãi!");
-                    setEmailInput("");
-                    setTimeout(() => setSubscribeMsg(""), 4000);
+                  const trimmed = emailInput.trim();
+                  if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+                    setSubscribeMsg("⚠️ Vui lòng nhập email đúng định dạng (VD: name@domain.com)!");
+                    return;
                   }
+                  setSubscribeMsg("✅ Đăng ký nhận tin ưu đãi thành công!");
+                  setEmailInput("");
+                  setTimeout(() => setSubscribeMsg(""), 4000);
                 }}
                 style={{ display: "flex", gap: "6px" }}
               >

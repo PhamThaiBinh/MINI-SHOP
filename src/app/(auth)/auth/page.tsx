@@ -791,6 +791,38 @@ export default function AuthPage() {
                         value={loginPassword}
                         onChange={(e) => setLoginPassword(e.target.value)}
                       />
+                      <div style={{ textAlign: "right", marginTop: "6px" }}>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            const emailPrompt = prompt("📧 Nhập Email đăng ký của bạn để nhận liên kết khôi phục mật khẩu:", loginEmail || "");
+                            if (!emailPrompt) return;
+                            const email = emailPrompt.trim();
+                            if (!email.includes("@")) {
+                              alert("⚠️ Vui lòng nhập địa chỉ Email hợp lệ!");
+                              return;
+                            }
+                            const supabase = createClient();
+                            const { error } = await supabase.auth.resetPasswordForEmail(email);
+                            if (error) {
+                              alert(`❌ Lỗi: ${error.message}`);
+                            } else {
+                              alert(`📩 Hệ thống đã gửi hướng dẫn khôi phục mật khẩu tới Email "${email}". Vui lòng kiểm tra hộp thư!`);
+                            }
+                          }}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            color: "var(--primary-color)",
+                            fontSize: "13px",
+                            fontWeight: 700,
+                            cursor: "pointer",
+                            textDecoration: "underline",
+                          }}
+                        >
+                          🔑 Quên mật khẩu?
+                        </button>
+                      </div>
                     </div>
 
                     <button type="submit" className="btn-auth-submit">

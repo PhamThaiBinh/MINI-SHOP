@@ -295,6 +295,23 @@ export default function AdminProductsPage() {
                         <td style={{ textAlign: "center" }}>
                           <button
                             className="btn-action-edit"
+                            style={{ background: "#0284c7", color: "#fff", marginRight: "4px" }}
+                            onClick={() => {
+                              setEditingProduct(null);
+                              setFormName(`${prod.name} (Bản sao)`);
+                              setFormCategory(prod.category);
+                              setFormPrice(prod.price.toString());
+                              setFormImageUrl(prod.image);
+                              setFormStatus("Active");
+                              setFormDesc(prod.desc);
+                              alert(`📋 Đã nhân bản thông tin "${prod.name}" vào Form! Vui lòng kiểm tra và bấm "+ Thêm Sản Phẩm Mới".`);
+                            }}
+                            title="Sao chép nhanh thông tin sản phẩm này sang Form mới"
+                          >
+                            📋 Nhân bản
+                          </button>
+                          <button
+                            className="btn-action-edit"
                             onClick={() => handleEditClick(prod)}
                           >
                             📝 Sửa

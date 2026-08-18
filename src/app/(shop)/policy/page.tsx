@@ -167,6 +167,29 @@ function PolicyContent() {
         </button>
       </div>
 
+      {/* Table of Contents Jump Links Bar */}
+      <div
+        style={{
+          display: "flex",
+          gap: "10px",
+          alignItems: "center",
+          padding: "10px 16px",
+          background: "#f8fafc",
+          borderRadius: "var(--radius-md)",
+          marginBottom: "24px",
+          fontSize: "13px",
+          border: "1px solid #e2e8f0",
+          overflowX: "auto",
+        }}
+      >
+        <span style={{ fontWeight: 800, color: "#475569", whiteSpace: "nowrap" }}>📌 Mục lục cuộn nhanh:</span>
+        <a href="#sec-dieu-kien" style={{ color: "var(--primary-color)", fontWeight: 700, textDecoration: "none", whiteSpace: "nowrap" }}>1. Điều kiện đổi trả</a>
+        <span>•</span>
+        <a href="#sec-quy-trinh" style={{ color: "var(--primary-color)", fontWeight: 700, textDecoration: "none", whiteSpace: "nowrap" }}>2. Quy trình 3 bước</a>
+        <span>•</span>
+        <a href="#sec-bao-hanh" style={{ color: "var(--primary-color)", fontWeight: 700, textDecoration: "none", whiteSpace: "nowrap" }}>3. Chính sách bảo hành</a>
+      </div>
+
       {/* Content Container */}
       <div
         style={{
@@ -190,7 +213,7 @@ function PolicyContent() {
               Nhằm đảm bảo sự hài lòng tuyệt đối khi mua sắm tại MINI-SHOP, chúng tôi ban hành quy định Đổi trả & Bảo hành sản phẩm với tiêu chuẩn rõ ràng:
             </p>
 
-            <h3 style={{ fontSize: "16px", fontWeight: 800, color: "var(--primary-color)", marginTop: "24px" }}>
+            <h3 id="sec-dieu-kien" style={{ fontSize: "16px", fontWeight: 800, color: "var(--primary-color)", marginTop: "24px" }}>
               1. Điều kiện đổi trả hàng miễn phí
             </h3>
             <ul style={{ paddingLeft: "28px", margin: "10px 0 18px" }}>
@@ -200,7 +223,7 @@ function PolicyContent() {
               <li>Thời gian gửi yêu cầu đổi trả trong vòng <strong>7 ngày kể từ thời điểm nhận hàng</strong> thành công.</li>
             </ul>
 
-            <h3 style={{ fontSize: "16px", fontWeight: 800, color: "var(--primary-color)", marginTop: "24px" }}>
+            <h3 id="sec-quy-trinh" style={{ fontSize: "16px", fontWeight: 800, color: "var(--primary-color)", marginTop: "24px" }}>
               2. Quy trình tiếp nhận & đổi trả 3 bước
             </h3>
             <ol style={{ paddingLeft: "28px", margin: "10px 0 18px" }}>
@@ -209,8 +232,8 @@ function PolicyContent() {
               <li>MINI-SHOP xác minh trong vòng 2 giờ làm việc và cử đơn vị vận chuyển đến thu hồi sản phẩm lỗi, đồng thời gửi sản phẩm mới đến tận tay quý khách hoàn toàn miễn phí.</li>
             </ol>
 
-            <h3 style={{ fontSize: "16px", fontWeight: 800, color: "var(--primary-color)", marginTop: "24px" }}>
-              3. Chính sách hoàn tiền
+            <h3 id="sec-bao-hanh" style={{ fontSize: "16px", fontWeight: 800, color: "var(--primary-color)", marginTop: "24px" }}>
+              3. Chính sách hoàn tiền & Bảo hành
             </h3>
             <p>
               Trường hợp sản phẩm đổi trả đã hết hàng trong kho, quý khách sẽ được hoàn lại 100% số tiền thanh toán qua tài khoản ngân hàng trong vòng 24 - 48 giờ làm việc.

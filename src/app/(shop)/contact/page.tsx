@@ -18,7 +18,21 @@ export default function ContactPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.email || !formData.message) return;
+    if (!formData.name.trim() || !formData.email.trim() || !formData.message.trim()) return;
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email.trim())) {
+      alert("⚠️ Vui lòng nhập địa chỉ Email đúng định dạng (Ví dụ: name@example.com)!");
+      return;
+    }
+
+    if (formData.phone.trim()) {
+      const cleanPhone = formData.phone.replace(/\D/g, "");
+      if (cleanPhone.length < 9 || cleanPhone.length > 11) {
+        alert("⚠️ Số điện thoại liên hệ phải chứa từ 9 đến 11 chữ số!");
+        return;
+      }
+    }
 
     setSubmitting(true);
     const success = await sendContactMessageToSupabase(formData);

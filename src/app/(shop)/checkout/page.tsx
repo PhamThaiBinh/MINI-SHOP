@@ -748,18 +748,34 @@ export default function CheckoutPage() {
             </p>
             <div>Mã đơn hàng của bạn:</div>
             <div className="order-code-badge">{orderCode}</div>
-            <div>
+            <div style={{ display: "flex", justifyContent: "center", gap: "10px", flexWrap: "wrap" }}>
               <Link
                 href="/"
                 className="btn-checkout"
                 style={{
                   display: "inline-block",
                   width: "auto",
-                  padding: "12px 32px",
+                  padding: "12px 24px",
                 }}
               >
-                Về Trang Chủ Mua Sắm &rarr;
+                🏠 Quay Về Trang Chủ
               </Link>
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="btn btn-outline"
+                style={{
+                  display: "inline-block",
+                  padding: "12px 20px",
+                  borderColor: "var(--primary-color)",
+                  color: "var(--primary-color)",
+                  fontWeight: 800,
+                  fontSize: "14px",
+                  cursor: "pointer",
+                }}
+              >
+                📄 In / Lưu Biên Nhận
+              </button>
             </div>
           </div>
         </div>

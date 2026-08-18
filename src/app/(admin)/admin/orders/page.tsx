@@ -118,6 +118,22 @@ export default function AdminOrdersPage() {
   // BUG 5 FIX: Date Range Filter States
   const [fromDate, setFromDate] = useState<string>("");
   const [toDate, setToDate] = useState<string>("");
+  const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
+
+  const handleBulkApprove = async () => {
+    if (selectedOrderIds.length === 0) {
+      alert("Vui lòng chọn ít nhất 1 đơn hàng để duyệt!");
+      return;
+    }
+    if (confirm(`⚡ Bạn có chắc chắn muốn duyệt ${selectedOrderIds.length} đơn hàng đã chọn sang trạng thái "📦 Chờ lấy hàng" không?`)) {
+      setLoading(true);
+      for (const id of selectedOrderIds) {
+        await updateAdminOrderStatus(id, "processing");
+      }
+      setSelectedOrderIds([]);
+      await loadData();
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -561,12 +577,37 @@ export default function AdminOrdersPage() {
                   >
                     📥 Xuất File Excel
                   </button>
+                  {selectedOrderIds.length > 0 && (
+                    <button
+                      onClick={handleBulkApprove}
+                      className="select-filter-sm"
+                      style={{
+                        cursor: "pointer",
+                        background: "#1d4ed8",
+                        color: "#fff",
+                        border: "none",
+                        fontWeight: 700,
+                        marginLeft: "6px",
+                      }}
+                    >
+                      ⚡ Duyệt ({selectedOrderIds.length}) đơn đã chọn
+                    </button>
+                  )}
                 </div>
               </div>
 
               <table className="admin-table">
                 <thead>
                   <tr>
+                    <th style={{ width: "36px", textAlign: "center" }}>
+                      <input
+                        type="checkbox"
+                        checked={paginatedOrders.length > 0 && selectedOrderIds.length === paginatedOrders.length}
+                        onChange={(e) =>
+                          setSelectedOrderIds(e.target.checked ? paginatedOrders.map((o) => o.id) : [])
+                        }
+                      />
+                    </th>
                     <th>Mã Đơn Hàng</th>
                     <th>Khách Hàng</th>
                     <th>Sản Phẩm Đặt</th>
@@ -579,6 +620,17 @@ export default function AdminOrdersPage() {
                 <tbody>
                   {paginatedOrders.map((order) => (
                     <tr key={order.id}>
+                      <td style={{ textAlign: "center" }}>
+                        <input
+                          type="checkbox"
+                          checked={selectedOrderIds.includes(order.id)}
+                          onChange={(e) =>
+                            setSelectedOrderIds((prev) =>
+                              e.target.checked ? [...prev, order.id] : prev.filter((id) => id !== order.id)
+                            )
+                          }
+                        />
+                      </td>
                       <td>
                         <strong>#{order.id}</strong>
                         <br />
