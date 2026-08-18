@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, use, useEffect, Suspense } from "react";
+import React, { useState, use, useEffect, useMemo, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import "@/styles/product-detail.css";
@@ -10,6 +10,71 @@ import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { Product } from "@/types/product";
 import { fetchProductByIdFromSupabase, fetchProductsFromSupabase } from "@/lib/supabaseProducts";
+
+interface ReviewItem {
+  id: number;
+  name: string;
+  rating: number;
+  date: string;
+  comment: string;
+  isVerified: boolean;
+}
+
+function generateMockReviews(productId: number, totalCount: number): ReviewItem[] {
+  const names = [
+    "Nguyễn Minh Anh", "Trần Hoàng Nam", "Lê Thu Thủy", "Đặng Quốc Bảo",
+    "Phạm Hải Yến", "Vũ Hoàng Long", "Bùi Khánh Linh", "Đỗ Đức Mạnh",
+    "Hoàng Ngọc Ánh", "Nông Văn Cường", "Phan Gia Hưng", "Trịnh Bảo Ngọc",
+    "Dương Thành Trung", "Võ Mỹ Duyên", "Lý Thái Tông", "Ngô Quỳnh Trang"
+  ];
+
+  const comments5Star = [
+    "Sản phẩm cực kỳ chất lượng, hoàn thiện sắc nét đúng như mô tả hình ảnh. Đóng gói rất cẩn thận nhiều lớp chống sốc. Rất hài lòng!",
+    "Giao hàng siêu nhanh! Đặt chiều hôm trước sáng hôm sau đã nhận được. Chất liệu gỗ gốm sứ cao cấp, mịn màng đẹp mắt.",
+    "Đáng tiền từng xu! Đặt decor phòng khách ai đến chơi cũng khen đẹp và tinh tế. Shop phục vụ tận tình 10/5 sao!",
+    "Thiết kế chuẩn phong cách Bắc Âu tối giản, sang trọng. Hàng giao nguyên vẹn không sứt mẻ gì."
+  ];
+
+  const comments4Star = [
+    "Sản phẩm đẹp, khớp với hình ảnh trên website. Thời gian giao hàng mất 2 ngày nhưng bù lại chất lượng rất ổn.",
+    "Chất lượng sản phẩm tốt, màu sắc ngoài đời hơi đậm hơn hình chút nhưng tổng thể vẫn rất ưng ý."
+  ];
+
+  const comments3Star = [
+    "Sản phẩm đúng mô tả, tuy nhiên hộp đóng gói hơi móp nhẹ. Thần may sản phẩm bên trong không sao."
+  ];
+
+  const list: ReviewItem[] = [];
+  const now = new Date(2026, 7, 18);
+
+  for (let i = 0; i < totalCount; i++) {
+    const seed = (productId * 9301 + i * 49297) % 233280;
+    const name = names[seed % names.length];
+    
+    let rating = 5;
+    if (i % 7 === 5) rating = 4;
+    else if (i % 15 === 14) rating = 3;
+
+    let comment = comments5Star[i % comments5Star.length];
+    if (rating === 4) comment = comments4Star[i % comments4Star.length];
+    if (rating === 3) comment = comments3Star[i % comments3Star.length];
+
+    const daysAgo = i * 2 + (seed % 3);
+    const d = new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000);
+    const dateStr = `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+
+    list.push({
+      id: i + 1,
+      name,
+      rating,
+      date: dateStr,
+      comment,
+      isVerified: true,
+    });
+  }
+
+  return list;
+}
 
 function ProductDetailPageContent({
   params,
@@ -63,52 +128,23 @@ function ProductDetailPageContent({
   const [copied, setCopied] = useState(false);
   const [notifyEmail, setNotifyEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
+  const [selectedStarFilter, setSelectedStarFilter] = useState<number | "all">("all");
 
-  const [reviewFilter, setReviewFilter] = useState<number | "all">("all");
+  const totalReviewsCount = currentProduct.reviews || 20;
+  const allMockReviews = useMemo(
+    () => generateMockReviews(productId, totalReviewsCount),
+    [productId, totalReviewsCount]
+  );
 
-  const totalReviewsTarget = currentProduct.reviews || 20;
+  const count5Star = allMockReviews.filter((r) => r.rating === 5).length;
+  const count4Star = allMockReviews.filter((r) => r.rating === 4).length;
+  const count3Star = allMockReviews.filter((r) => r.rating === 3).length;
+  const count2Star = allMockReviews.filter((r) => r.rating === 2).length;
+  const count1Star = allMockReviews.filter((r) => r.rating === 1).length;
 
-  const generatedReviews = React.useMemo(() => {
-    const sampleNames = [
-      "Nguyễn Minh Anh", "Trần Hoàng Nam", "Phạm Thị Mai", "Lê Quốc Bảo", "Đỗ Thu Trang",
-      "Vũ Đức Thắng", "Hoàng Kim Chi", "Bùi Thanh Tùng", "Đặng Quỳnh Anh", "Phan Anh Tuấn",
-      "Nông Văn Cường", "Dương Ngọc Hà", "Ngô Phương Thảo", "Trịnh Gia Huy", "Đinh Bích Phương",
-      "Lý Hồng Ngọc", "Hồ Tiến Dũng", "Tạ Nhật Minh", "Võ Hoài Nam", "Nguyễn Ngọc Hương"
-    ];
-    const sampleComments = [
-      "Sản phẩm cực kỳ chất lượng, đóng gói 3 lớp xốp khí rất cẩn thận!",
-      "Màu sắc đúng chuẩn như hình chụp, đường hoàn thiện rất sắc nét tỉ mỉ.",
-      "Giao hàng siêu nhanh, nhân viên tư vấn nhiệt tình chu đáo.",
-      "Xài rất thích, phối không gian phòng khách rất sang trọng chuẩn phong cách Bắc Âu.",
-      "Rất đáng tiền, sẽ tiếp tục ủng hộ shop các sản phẩm tiếp theo!",
-      "Chất lượng vượt kỳ vọng trong tầm giá, giao hàng đúng hẹn.",
-      "Shop hỗ trợ đổi trả nhanh chóng, đóng gói hàng đẹp tuyệt vời.",
-      "Đã mua lần 2 của shop, vẫn rất hài lòng về chất lượng dịch vụ."
-    ];
-
-    const list = [];
-    for (let i = 0; i < totalReviewsTarget; i++) {
-      const nameIndex = (productId * 7 + i * 3) % sampleNames.length;
-      const commentIndex = (productId * 5 + i * 2) % sampleComments.length;
-      const rating = i % 9 === 0 ? 3 : i % 6 === 0 ? 4 : 5;
-      const day = Math.max(1, 18 - Math.floor(i / 2));
-      const month = "08";
-      const dateStr = `${day < 10 ? "0" + day : day}/${month}/2026`;
-
-      list.push({
-        id: `rev-${productId}-${i + 1}`,
-        name: sampleNames[nameIndex],
-        date: dateStr,
-        rating: rating,
-        comment: sampleComments[commentIndex],
-      });
-    }
-    return list;
-  }, [productId, totalReviewsTarget]);
-
-  const filteredReviews = reviewFilter === "all"
-    ? generatedReviews
-    : generatedReviews.filter((r) => r.rating === reviewFilter);
+  const filteredReviews = selectedStarFilter === "all"
+    ? allMockReviews
+    : allMockReviews.filter((r) => r.rating === selectedStarFilter);
 
   // Gallery Images (Primary image + thumbnail variations)
   const galleryImages = [
@@ -189,35 +225,29 @@ function ProductDetailPageContent({
                 />
               </div>
 
-              {/* Social Share Bar (Moved directly under Product Image in Column 1) */}
+              {/* Social Share Bar Under Image Gallery */}
               <div
                 className="product-share-bar"
                 style={{
                   marginTop: "16px",
-                  padding: "12px 14px",
-                  background: "#ffffff",
+                  padding: "14px",
+                  background: "#f8fafc",
                   border: "1px solid #e2e8f0",
-                  borderRadius: "var(--radius-md)",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
+                  borderRadius: "12px",
                   width: "100%",
                 }}
               >
-                <div style={{ fontSize: "12px", fontWeight: 800, color: "#475569", marginBottom: "10px", display: "flex", alignItems: "center", gap: "6px" }}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-                  </svg>
-                  Chia sẻ sản phẩm qua các ứng dụng:
+                <div style={{ fontSize: "13px", fontWeight: 700, color: "#334155", marginBottom: "10px", display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span>🔗</span> Chia sẻ sản phẩm qua các ứng dụng:
                 </div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                   <a
                     href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    title="Chia sẻ qua Facebook"
-                    style={{ padding: "6px 10px", background: "#1877f2", color: "#fff", borderRadius: "6px", fontSize: "12px", fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                    style={{ padding: "6px 12px", background: "#1877f2", color: "#fff", borderRadius: "6px", fontSize: "12px", fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "6px" }}
                   >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#ffffff">
                       <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                     </svg>
                     Facebook
@@ -226,21 +256,19 @@ function ProductDetailPageContent({
                     href={`https://zalo.me/share?url=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    title="Chia sẻ qua Zalo"
-                    style={{ padding: "6px 10px", background: "#0068ff", color: "#fff", borderRadius: "6px", fontSize: "12px", fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                    style={{ padding: "6px 12px", background: "#0068ff", color: "#fff", borderRadius: "6px", fontSize: "12px", fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "6px" }}
                   >
-                    <span style={{ background: "#fff", color: "#0068ff", borderRadius: "3px", padding: "0 3px", fontSize: "9px", fontWeight: 900 }}>Zalo</span>
+                    <span style={{ fontSize: "10px", fontWeight: 900, background: "#fff", color: "#0068ff", padding: "1px 4px", borderRadius: "3px" }}>Zalo</span>
                     Zalo
                   </a>
                   <a
-                    href="https://m.me/"
+                    href={`https://m.me/`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    title="Chia sẻ qua Messenger"
-                    style={{ padding: "6px 10px", background: "#0084ff", color: "#fff", borderRadius: "6px", fontSize: "12px", fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                    style={{ padding: "6px 12px", background: "linear-gradient(45deg, #0084ff, #a033ff)", color: "#fff", borderRadius: "6px", fontSize: "12px", fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "6px" }}
                   >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 0C5.373 0 0 4.974 0 11.111c0 3.497 1.745 6.616 4.472 8.652v4.237l4.086-2.242c1.09.301 2.246.464 3.442.464 6.627 0 12-4.974 12-11.111S18.627 0 12 0zm1.191 14.963l-3.055-3.26-5.963 3.26 6.559-6.963 3.13 3.26 5.888-3.26-6.559 6.963z"/>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#ffffff">
+                      <path d="M12 0C5.373 0 0 4.974 0 11.111c0 3.498 1.744 6.614 4.469 8.654V24l4.088-2.242c1.092.304 2.246.464 3.443.464 6.627 0 12-4.974 12-11.111C24 4.974 18.627 0 12 0zm1.191 14.963l-3.055-3.26-5.963 3.26 6.559-6.963 3.13 3.259 5.889-3.259-6.56 6.964z"/>
                     </svg>
                     Messenger
                   </a>
@@ -248,10 +276,9 @@ function ProductDetailPageContent({
                     href={`https://api.whatsapp.com/send?text=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    title="Chia sẻ qua WhatsApp"
-                    style={{ padding: "6px 10px", background: "#25d366", color: "#fff", borderRadius: "6px", fontSize: "12px", fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                    style={{ padding: "6px 12px", background: "#25d366", color: "#fff", borderRadius: "6px", fontSize: "12px", fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "6px" }}
                   >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#ffffff">
                       <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
                     </svg>
                     WhatsApp
@@ -260,11 +287,10 @@ function ProductDetailPageContent({
                     href={`https://t.me/share/url?url=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    title="Chia sẻ qua Telegram"
-                    style={{ padding: "6px 10px", background: "#229ed9", color: "#fff", borderRadius: "6px", fontSize: "12px", fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                    style={{ padding: "6px 12px", background: "#229ed9", color: "#fff", borderRadius: "6px", fontSize: "12px", fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "6px" }}
                   >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.562 8.161c-.18 1.897-.962 6.502-1.359 8.627-.168.9-.5 1.201-.82 1.23-.697.064-1.226-.461-1.901-.903-1.056-.692-1.653-1.123-2.678-1.799-1.185-.781-.417-1.21.258-1.911.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.329-.913.489-1.302.481-.428-.008-1.252-.241-1.865-.44-.752-.244-1.349-.374-1.297-.789.027-.216.324-.437.892-.663 3.498-1.524 5.831-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635.099-.002.321.023.465.141.119.098.152.228.166.323.014.095.03.312.016.483z"/>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#ffffff">
+                      <path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.56 8.16l-2.14 10.08c-.16.73-.59.91-1.2.57l-3.28-2.42-1.58 1.52c-.17.17-.32.32-.66.32l.24-3.34 6.08-5.5c.26-.23-.06-.36-.41-.13l-7.52 4.73-3.24-1.01c-.7-.22-.72-.7.15-1.04l12.67-4.88c.59-.22 1.11.14.92.98z"/>
                     </svg>
                     Telegram
                   </a>
@@ -272,10 +298,9 @@ function ProductDetailPageContent({
                     href="https://www.instagram.com/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    title="Chia sẻ qua Instagram"
-                    style={{ padding: "6px 10px", background: "linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)", color: "#fff", borderRadius: "6px", fontSize: "12px", fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                    style={{ padding: "6px 12px", background: "linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)", color: "#fff", borderRadius: "6px", fontSize: "12px", fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "6px" }}
                   >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#ffffff">
                       <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
                     </svg>
                     Instagram
@@ -288,13 +313,9 @@ function ProductDetailPageContent({
                         setTimeout(() => setCopied(false), 3000);
                       }
                     }}
-                    style={{ padding: "6px 10px", background: copied ? "#166534" : "#f1f5f9", color: copied ? "#fff" : "#334155", border: "1px solid #cbd5e1", borderRadius: "6px", fontSize: "12px", fontWeight: 700, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                    style={{ padding: "6px 12px", background: copied ? "#166534" : "#ffffff", color: copied ? "#fff" : "#334155", border: "1px solid #cbd5e1", borderRadius: "6px", fontSize: "12px", fontWeight: 700, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px" }}
                   >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-                    </svg>
-                    {copied ? "Đã chép link!" : "Sao chép đường link"}
+                    📋 {copied ? "Đã chép link!" : "Sao chép đường link"}
                   </button>
                 </div>
               </div>
@@ -570,101 +591,131 @@ function ProductDetailPageContent({
                 </div>
               )}
 
-              {/* Trust Commitments (3 Equal Horizontal Box Cards Side-By-Side) */}
+              {/* Horizontal 3 Trust Badges Row (Requirement 5) */}
               <div
-                className="hero-badges-horizontal"
                 style={{
-                  marginTop: "20px",
+                  display: "grid",
+                  gridTemplateColumns: "repeat(3, 1fr)",
+                  gap: "10px",
+                  marginTop: "24px",
                   paddingTop: "16px",
                   borderTop: "1px solid var(--border-color)",
-                  display: "flex",
-                  gap: "10px",
                   width: "100%",
                 }}
               >
                 <div
-                  className="badge-item"
                   style={{
-                    flex: 1,
-                    minWidth: 0,
-                    background: "#f8fafc",
+                    padding: "10px 8px",
+                    borderRadius: "10px",
                     border: "1px solid #e2e8f0",
-                    borderRadius: "var(--radius-md)",
-                    padding: "10px 12px",
+                    background: "#f8fafc",
                     display: "flex",
                     alignItems: "center",
                     gap: "8px",
+                    boxSizing: "border-box",
                   }}
                 >
-                  <div className="badge-icon" style={{ flexShrink: 0, width: "32px", height: "32px", borderRadius: "50%", background: "#e8f5e9", color: "var(--primary-color)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div
+                    style={{
+                      width: "34px",
+                      height: "34px",
+                      borderRadius: "50%",
+                      background: "#dcfce7",
+                      color: "#15803d",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
                     </svg>
                   </div>
-                  <div className="badge-text" style={{ minWidth: 0, overflow: "hidden" }}>
-                    <strong style={{ display: "block", fontSize: "12px", color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  <div style={{ minWidth: 0, flex: 1, overflow: "hidden" }}>
+                    <strong style={{ fontSize: "12px", whiteSpace: "nowrap", display: "block", color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis" }}>
                       Miễn phí vận chuyển
                     </strong>
-                    <span style={{ display: "block", fontSize: "11px", color: "#64748b", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                      Cho đơn hàng từ 500.000đ
+                    <span style={{ fontSize: "11px", whiteSpace: "nowrap", display: "block", color: "#64748b", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      Cho đơn hàng từ 500k
                     </span>
                   </div>
                 </div>
 
                 <div
-                  className="badge-item"
                   style={{
-                    flex: 1,
-                    minWidth: 0,
-                    background: "#f8fafc",
+                    padding: "10px 8px",
+                    borderRadius: "10px",
                     border: "1px solid #e2e8f0",
-                    borderRadius: "var(--radius-md)",
-                    padding: "10px 12px",
+                    background: "#f8fafc",
                     display: "flex",
                     alignItems: "center",
                     gap: "8px",
+                    boxSizing: "border-box",
                   }}
                 >
-                  <div className="badge-icon" style={{ flexShrink: 0, width: "32px", height: "32px", borderRadius: "50%", background: "#eff6ff", color: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div
+                    style={{
+                      width: "34px",
+                      height: "34px",
+                      borderRadius: "50%",
+                      background: "#dbeafe",
+                      color: "#1d4ed8",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
                     </svg>
                   </div>
-                  <div className="badge-text" style={{ minWidth: 0, overflow: "hidden" }}>
-                    <strong style={{ display: "block", fontSize: "12px", color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  <div style={{ minWidth: 0, flex: 1, overflow: "hidden" }}>
+                    <strong style={{ fontSize: "12px", whiteSpace: "nowrap", display: "block", color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis" }}>
                       🔄 Đổi trả 30 ngày
                     </strong>
-                    <span style={{ display: "block", fontSize: "11px", color: "#64748b", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                      Đổi trả dễ dàng & nhanh chóng
+                    <span style={{ fontSize: "11px", whiteSpace: "nowrap", display: "block", color: "#64748b", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      Dễ dàng & nhanh chóng
                     </span>
                   </div>
                 </div>
 
                 <div
-                  className="badge-item"
                   style={{
-                    flex: 1,
-                    minWidth: 0,
-                    background: "#f8fafc",
+                    padding: "10px 8px",
+                    borderRadius: "10px",
                     border: "1px solid #e2e8f0",
-                    borderRadius: "var(--radius-md)",
-                    padding: "10px 12px",
+                    background: "#f8fafc",
                     display: "flex",
                     alignItems: "center",
                     gap: "8px",
+                    boxSizing: "border-box",
                   }}
                 >
-                  <div className="badge-icon" style={{ flexShrink: 0, width: "32px", height: "32px", borderRadius: "50%", background: "#fef3c7", color: "#d97706", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div
+                    style={{
+                      width: "34px",
+                      height: "34px",
+                      borderRadius: "50%",
+                      background: "#fef3c7",
+                      color: "#b45309",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
                     </svg>
                   </div>
-                  <div className="badge-text" style={{ minWidth: 0, overflow: "hidden" }}>
-                    <strong style={{ display: "block", fontSize: "12px", color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  <div style={{ minWidth: 0, flex: 1, overflow: "hidden" }}>
+                    <strong style={{ fontSize: "12px", whiteSpace: "nowrap", display: "block", color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis" }}>
                       🛡️ Thanh toán an toàn
                     </strong>
-                    <span style={{ display: "block", fontSize: "11px", color: "#64748b", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                      Bảo mật 100% khi thanh toán
+                    <span style={{ fontSize: "11px", whiteSpace: "nowrap", display: "block", color: "#64748b", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      Bảo mật 100%
                     </span>
                   </div>
                 </div>
@@ -756,7 +807,7 @@ function ProductDetailPageContent({
                     ★★★★★
                   </div>
                   <div style={{ fontSize: "13px", color: "#64748b", fontWeight: 600 }}>
-                    Dựa trên {product.reviews || 48} đánh giá xác thực
+                    Dựa trên {totalReviewsCount} đánh giá xác thực
                   </div>
 
                   {/* Rating progress bars */}
@@ -764,42 +815,42 @@ function ProductDetailPageContent({
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                       <span style={{ width: "35px" }}>5 sao</span>
                       <div style={{ flex: 1, height: "8px", background: "#e2e8f0", borderRadius: "4px", overflow: "hidden" }}>
-                        <div style={{ width: "88%", height: "100%", background: "#eab308" }} />
+                        <div style={{ width: `${Math.round((count5Star / totalReviewsCount) * 100)}%`, height: "100%", background: "#eab308" }} />
                       </div>
-                      <span style={{ width: "35px", textAlign: "right" }}>88%</span>
+                      <span style={{ width: "35px", textAlign: "right" }}>{Math.round((count5Star / totalReviewsCount) * 100)}%</span>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                       <span style={{ width: "35px" }}>4 sao</span>
                       <div style={{ flex: 1, height: "8px", background: "#e2e8f0", borderRadius: "4px", overflow: "hidden" }}>
-                        <div style={{ width: "8%", height: "100%", background: "#eab308" }} />
+                        <div style={{ width: `${Math.round((count4Star / totalReviewsCount) * 100)}%`, height: "100%", background: "#eab308" }} />
                       </div>
-                      <span style={{ width: "35px", textAlign: "right" }}>8%</span>
+                      <span style={{ width: "35px", textAlign: "right" }}>{Math.round((count4Star / totalReviewsCount) * 100)}%</span>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                       <span style={{ width: "35px" }}>3 sao</span>
                       <div style={{ flex: 1, height: "8px", background: "#e2e8f0", borderRadius: "4px", overflow: "hidden" }}>
-                        <div style={{ width: "4%", height: "100%", background: "#eab308" }} />
+                        <div style={{ width: `${Math.round((count3Star / totalReviewsCount) * 100)}%`, height: "100%", background: "#eab308" }} />
                       </div>
-                      <span style={{ width: "35px", textAlign: "right" }}>4%</span>
+                      <span style={{ width: "35px", textAlign: "right" }}>{Math.round((count3Star / totalReviewsCount) * 100)}%</span>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                       <span style={{ width: "35px" }}>2 sao</span>
                       <div style={{ flex: 1, height: "8px", background: "#e2e8f0", borderRadius: "4px", overflow: "hidden" }}>
-                        <div style={{ width: "0%", height: "100%", background: "#eab308" }} />
+                        <div style={{ width: `${Math.round((count2Star / totalReviewsCount) * 100)}%`, height: "100%", background: "#eab308" }} />
                       </div>
-                      <span style={{ width: "35px", textAlign: "right" }}>0%</span>
+                      <span style={{ width: "35px", textAlign: "right" }}>{Math.round((count2Star / totalReviewsCount) * 100)}%</span>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                       <span style={{ width: "35px" }}>1 sao</span>
                       <div style={{ flex: 1, height: "8px", background: "#e2e8f0", borderRadius: "4px", overflow: "hidden" }}>
-                        <div style={{ width: "0%", height: "100%", background: "#eab308" }} />
+                        <div style={{ width: `${Math.round((count1Star / totalReviewsCount) * 100)}%`, height: "100%", background: "#eab308" }} />
                       </div>
-                      <span style={{ width: "35px", textAlign: "right" }}>0%</span>
+                      <span style={{ width: "35px", textAlign: "right" }}>{Math.round((count1Star / totalReviewsCount) * 100)}%</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Right Column: Review Form + Customer Comments List */}
+                {/* Right Column: Review Form + Filter Pills + Customer Comments List */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
                   {/* Form */}
                   <form
@@ -856,72 +907,74 @@ function ProductDetailPageContent({
                     </div>
                   </form>
 
-                  {/* Customer Review List & Star Filter Tabs */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+                  {/* Star Filter Pills & Customer Review List Items */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <div style={{ fontSize: "15px", fontWeight: 800, color: "#0f172a" }}>
-                        💬 Nhận xét từ khách hàng ({filteredReviews.length}/{generatedReviews.length}):
+                        💬 Nhận xét từ khách hàng ({filteredReviews.length}/{totalReviewsCount}):
                       </div>
-                      <div style={{ fontSize: "12px", color: "#64748b", fontWeight: 600 }}>
-                        (Mặc định hiển thị mới nhất)
-                      </div>
+                      <span style={{ fontSize: "12px", color: "#64748b", fontWeight: 600 }}>Mới nhất trước</span>
                     </div>
 
-                    {/* Star Filter Tabs */}
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                    {/* Star Filter Pills */}
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                       <button
                         type="button"
-                        onClick={() => setReviewFilter("all")}
+                        onClick={() => setSelectedStarFilter("all")}
                         style={{
-                          padding: "5px 12px",
+                          padding: "6px 14px",
                           borderRadius: "20px",
-                          border: reviewFilter === "all" ? "1px solid var(--primary-color)" : "1px solid #cbd5e1",
-                          background: reviewFilter === "all" ? "#f0fdf4" : "#ffffff",
-                          color: reviewFilter === "all" ? "var(--primary-color)" : "#475569",
-                          fontWeight: 700,
                           fontSize: "12px",
+                          fontWeight: 700,
+                          border: "1px solid",
+                          borderColor: selectedStarFilter === "all" ? "var(--primary-color)" : "#cbd5e1",
+                          background: selectedStarFilter === "all" ? "var(--primary-color)" : "#ffffff",
+                          color: selectedStarFilter === "all" ? "#ffffff" : "#334155",
                           cursor: "pointer",
                         }}
                       >
-                        Tất cả ({generatedReviews.length})
+                        Tất cả ({totalReviewsCount})
                       </button>
                       {[5, 4, 3, 2, 1].map((star) => {
-                        const cnt = generatedReviews.filter((r) => r.rating === star).length;
+                        const count = allMockReviews.filter((r) => r.rating === star).length;
                         return (
                           <button
                             key={star}
                             type="button"
-                            onClick={() => setReviewFilter(star)}
+                            onClick={() => setSelectedStarFilter(star)}
                             style={{
-                              padding: "5px 12px",
+                              padding: "6px 14px",
                               borderRadius: "20px",
-                              border: reviewFilter === star ? "1px solid var(--primary-color)" : "1px solid #cbd5e1",
-                              background: reviewFilter === star ? "#f0fdf4" : "#ffffff",
-                              color: reviewFilter === star ? "var(--primary-color)" : "#475569",
-                              fontWeight: 700,
                               fontSize: "12px",
+                              fontWeight: 700,
+                              border: "1px solid",
+                              borderColor: selectedStarFilter === star ? "var(--primary-color)" : "#cbd5e1",
+                              background: selectedStarFilter === star ? "var(--primary-color)" : "#ffffff",
+                              color: selectedStarFilter === star ? "#ffffff" : "#334155",
                               cursor: "pointer",
                             }}
                           >
-                            {star} ⭐ ({cnt})
+                            {"⭐".repeat(star)} ({count})
                           </button>
                         );
                       })}
                     </div>
-                    
-                    {/* List Items */}
-                    <div style={{ display: "flex", flexDirection: "column", gap: "12px", maxHeight: "420px", overflowY: "auto", paddingRight: "4px" }}>
+
+                    {/* Reviews List */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "12px", maxHeight: "480px", overflowY: "auto", paddingRight: "4px" }}>
                       {filteredReviews.length === 0 ? (
-                        <div style={{ padding: "24px", textAlign: "center", color: "#94a3b8", fontSize: "13px" }}>
-                          Không có bài nhận xét nào {reviewFilter} sao.
+                        <div style={{ textAlign: "center", padding: "24px", color: "#64748b", fontSize: "13px" }}>
+                          Không có nhận xét nào với số sao đã chọn.
                         </div>
                       ) : (
                         filteredReviews.map((rev) => (
-                          <div key={rev.id} style={{ padding: "14px 16px", background: "#f8fafc", borderRadius: "8px", border: "1px solid #f1f5f9" }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                          <div key={rev.id} style={{ padding: "16px", background: "#f8fafc", borderRadius: "10px", border: "1px solid #f1f5f9" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
                               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                                 <strong style={{ fontSize: "14px", color: "#0f172a" }}>{rev.name}</strong>
-                                <span style={{ fontSize: "11px", background: "#dcfce7", color: "#166534", padding: "2px 6px", borderRadius: "4px", fontWeight: 700 }}>✓ Đã mua hàng</span>
+                                {rev.isVerified && (
+                                  <span style={{ fontSize: "11px", background: "#dcfce7", color: "#166534", padding: "2px 6px", borderRadius: "4px", fontWeight: 700 }}>✓ Đã mua hàng</span>
+                                )}
                               </div>
                               <span style={{ fontSize: "12px", color: "#94a3b8" }}>{rev.date}</span>
                             </div>

@@ -209,7 +209,7 @@ export default function CartPage() {
               </div>
             ) : (
               <>
-              {/* Main Cart Layout (2 Columns) */}
+                {/* Main Cart Layout (2 Columns) */}
               <div className="cart-layout" id="cart-main-layout">
                 {/* Left: Products List Table */}
                 <div className="cart-table-card">
