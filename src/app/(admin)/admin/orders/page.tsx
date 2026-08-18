@@ -148,53 +148,21 @@ export default function AdminOrdersPage() {
     return () => window.removeEventListener("ordersUpdated", loadData);
   }, []);
 
-  const handleQuickStatusChange = async (id: string, newStatus: UnifiedOrder["status"]) => {
-    setLoading(true);
-    await updateAdminOrderStatus(id, newStatus);
-    await loadData();
-  };
-
-  const getStatusPill = (order: UnifiedOrder) => {
-    return (
-      <select
-        value={order.status}
-        onChange={(e) => handleQuickStatusChange(order.id, e.target.value as UnifiedOrder["status"])}
-        style={{
-          padding: "4px 8px",
-          borderRadius: "12px",
-          fontSize: "12px",
-          fontWeight: 700,
-          border: "1px solid var(--border-color)",
-          cursor: "pointer",
-          backgroundColor:
-            order.status === "completed"
-              ? "#dcfce7"
-              : order.status === "shipping"
-              ? "#e0f2fe"
-              : order.status === "processing"
-              ? "#fef9c3"
-              : order.status === "cancelled"
-              ? "#fee2e2"
-              : "#fff7ed",
-          color:
-            order.status === "completed"
-              ? "#166534"
-              : order.status === "shipping"
-              ? "#0369a1"
-              : order.status === "processing"
-              ? "#854d0e"
-              : order.status === "cancelled"
-              ? "#991b1b"
-              : "#c2410c",
-        }}
-      >
-        <option value="pending">⏳ Chờ xác nhận</option>
-        <option value="processing">📦 Chờ lấy hàng</option>
-        <option value="shipping">🚚 Đang giao hàng</option>
-        <option value="completed">✅ Đã hoàn thành</option>
-        <option value="cancelled">❌ Đã hủy</option>
-      </select>
-    );
+  const getStatusPill = (status: UnifiedOrder["status"]) => {
+    switch (status) {
+      case "pending":
+        return <span className="status-pill status-pending">⏳ Chờ xác nhận</span>;
+      case "processing":
+        return <span className="status-pill status-processing">📦 Chờ lấy hàng</span>;
+      case "shipping":
+        return <span className="status-pill status-shipping">🚚 Đang giao hàng</span>;
+      case "completed":
+        return <span className="status-pill status-completed">✅ Đã hoàn thành</span>;
+      case "cancelled":
+        return <span className="status-pill status-cancelled">❌ Đã hủy</span>;
+      default:
+        return <span className="status-pill status-pending">⏳ {status}</span>;
+    }
   };
 
   const [paymentFilter, setPaymentFilter] = useState<string>("all");
@@ -774,7 +742,7 @@ export default function AdminOrdersPage() {
                           {order.paymentMethod}
                         </span>
                       </td>
-                      <td>{getStatusPill(order)}</td>
+                      <td>{getStatusPill(order.status)}</td>
                       <td style={{ textAlign: "center" }}>
                         {order.status === "pending" && (
                           <button

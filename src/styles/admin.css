@@ -1025,29 +1025,3 @@ textarea.form-control-auth {
     width: 100% !important;
     min-width: 600px;
 }
-
-/* Admin Dark Mode Theme Variables & Override */
-body.admin-dark {
-    background-color: #0f172a !important;
-    color: #f8fafc !important;
-}
-
-body.admin-dark .admin-sidebar,
-body.admin-dark .admin-top-header,
-body.admin-dark .dashboard-card,
-body.admin-dark .admin-table th,
-body.admin-dark .admin-table td {
-    background-color: #1e293b !important;
-    color: #f8fafc !important;
-    border-color: #334155 !important;
-}
-
-body.admin-dark .admin-page-title,
-body.admin-dark .stat-card-value,
-body.admin-dark .dashboard-card h3 {
-    color: #ffffff !important;
-}
-
-body.admin-dark .admin-table tbody tr:hover {
-    background-color: #334155 !important;
-}

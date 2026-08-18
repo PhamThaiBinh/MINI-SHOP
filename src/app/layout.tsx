@@ -5,7 +5,6 @@ import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { MobileBottomNav } from "@/components/common/MobileBottomNav";
 
 export const metadata: Metadata = {
   title: "Mini Shop - Sống đẹp mỗi ngày | Đồ dùng & Trang trí nhà cửa",
@@ -45,7 +44,6 @@ export default function RootLayout({
               <Header />
               <main className="main-content">{children}</main>
               <Footer />
-              <MobileBottomNav />
             </WishlistProvider>
           </CartProvider>
         </AuthProvider>

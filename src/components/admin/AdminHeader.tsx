@@ -84,14 +84,6 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
     }
   };
 
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(true);
-
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-    document.body.classList.toggle("admin-dark", !isDarkMode);
-  };
-
   return (
     <header className="admin-top-header">
       <div className="top-header-left">
@@ -107,7 +99,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
 
       <div className="top-header-right">
         {setSearchQuery && (
-          <div className="admin-search-box" style={{ width: "240px" }}>
+          <div className="admin-search-box" style={{ width: "260px" }}>
             <input
               type="text"
               placeholder={searchPlaceholder}
@@ -117,44 +109,6 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
             <span className="admin-search-shortcut">Ctrl + K</span>
           </div>
         )}
-
-        {/* Audio Alert Toggle */}
-        <button
-          onClick={() => setSoundEnabled(!soundEnabled)}
-          className="btn-header-action"
-          style={{
-            background: soundEnabled ? "#dcfce7" : "#f1f5f9",
-            color: soundEnabled ? "#166534" : "#64748b",
-            border: "1px solid var(--border-color)",
-            padding: "6px 10px",
-            borderRadius: "8px",
-            fontSize: "12px",
-            fontWeight: 700,
-            cursor: "pointer",
-          }}
-          title={soundEnabled ? "Âm thanh báo đơn mới: BẬT" : "Âm thanh báo đơn mới: TẮT"}
-        >
-          {soundEnabled ? "🔊 Âm thanh" : "🔇 Tắt chuông"}
-        </button>
-
-        {/* Dark Mode Toggle */}
-        <button
-          onClick={toggleDarkMode}
-          className="btn-header-action"
-          style={{
-            background: isDarkMode ? "#1e293b" : "#f1f5f9",
-            color: isDarkMode ? "#f8fafc" : "#0f172a",
-            border: "1px solid var(--border-color)",
-            padding: "6px 10px",
-            borderRadius: "8px",
-            fontSize: "12px",
-            fontWeight: 700,
-            cursor: "pointer",
-          }}
-          title="Chuyển chế độ Giao diện Tối/Sáng"
-        >
-          {isDarkMode ? "🌙 Dark" : "☀️ Light"}
-        </button>
 
         {/* Unified Notification Bell Dropdown */}
         <div ref={notifRef} style={{ position: "relative" }}>

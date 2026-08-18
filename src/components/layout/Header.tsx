@@ -10,9 +10,6 @@ import { useAuth } from "@/context/AuthContext";
 import { PRODUCTS_DATA } from "@/data/products";
 import { formatVND, fixImagePath } from "@/lib/utils";
 
-import { MiniCartDrawer } from "@/components/common/MiniCartDrawer";
-import { InstantSearchModal } from "@/components/common/InstantSearchModal";
-
 export const Header: React.FC = () => {
   const pathname = usePathname();
   const router = useRouter();
@@ -23,8 +20,6 @@ export const Header: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
-  const [isMiniCartOpen, setIsMiniCartOpen] = useState(false);
-  const [isInstantSearchOpen, setIsInstantSearchOpen] = useState(false);
 
   const matchingProducts = PRODUCTS_DATA.filter((p) =>
     p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -289,11 +284,10 @@ export const Header: React.FC = () => {
               </div>
             </Link>
 
-            <button
-              onClick={() => setIsMiniCartOpen(true)}
+            <Link
+              href="/cart"
               className="btn-stacked btn-stacked-green"
-              title="Giỏ hàng mua sắm"
-              style={{ cursor: "pointer", border: "none" }}
+              title="Giỏ hàng"
             >
               <div className="btn-stacked-icon">
                 <span className="icon-symbol">🛒</span>
@@ -301,16 +295,7 @@ export const Header: React.FC = () => {
                   {totalItems}
                 </sup>
               </div>
-            </button>
-
-            <MiniCartDrawer
-              isOpen={isMiniCartOpen}
-              onClose={() => setIsMiniCartOpen(false)}
-            />
-            <InstantSearchModal
-              isOpen={isInstantSearchOpen}
-              onClose={() => setIsInstantSearchOpen(false)}
-            />
+            </Link>
 
             {/* User Auth Section */}
             {user ? (
