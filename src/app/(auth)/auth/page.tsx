@@ -276,7 +276,7 @@ export default function AuthPage() {
     async function initLocations() {
       const provs = await fetchProvincesApi();
       setProvincesList(provs);
-      const firstProv = provs[0] || "Thành phố Hồ Chí Minh";
+      const firstProv = provs[0] || "Hồ Chí Minh";
       setAddrProvince(firstProv);
       const wards = await fetchWardsForProvinceApi(firstProv);
       setWardsList(wards);
@@ -439,7 +439,7 @@ export default function AuthPage() {
   const [showAddAddressModal, setShowAddAddressModal] = useState(false);
   const [addrName, setAddrName] = useState("");
   const [addrPhone, setAddrPhone] = useState("");
-  const [addrProvince, setAddrProvince] = useState("Thành phố Hồ Chí Minh");
+  const [addrProvince, setAddrProvince] = useState("Hồ Chí Minh");
   const [addrWard, setAddrWard] = useState("");
   const [addrDetail, setAddrDetail] = useState("");
   const [addrSetDefault, setAddrSetDefault] = useState(false);
