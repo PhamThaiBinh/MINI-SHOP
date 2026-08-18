@@ -180,49 +180,51 @@ function ProductDetailPageContent({
       <main className="main-content" style={{ paddingTop: "24px" }}>
         <div className="container">
           <div className="product-detail-hero">
-            {/* Column 1: Image Gallery */}
-            <div className="product-gallery">
-              {/* Thumbnails list */}
-              <div className="gallery-thumbnails" id="gallery-thumbs">
-                {galleryImages.map((imgSrc, idx) => (
-                  <div
-                    key={idx}
-                    className={`thumb-item ${
-                      activeImageIndex === idx ? "active" : ""
-                    }`}
-                    onClick={() => setActiveImageIndex(idx)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        setActiveImageIndex(idx);
-                      }
-                    }}
-                    tabIndex={0}
-                    role="button"
-                    aria-label={`Xem hình ảnh ${idx + 1}`}
-                    style={{ cursor: "pointer" }}
-                  >
-                    <img
-                      src={fixImagePath(imgSrc)}
-                      alt={`Thumb ${idx + 1}`}
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = fixImagePath(currentProduct.image);
+            {/* Column 1: Image Gallery & Social Share */}
+            <div>
+              <div className="product-gallery">
+                {/* Thumbnails list */}
+                <div className="gallery-thumbnails" id="gallery-thumbs">
+                  {galleryImages.map((imgSrc, idx) => (
+                    <div
+                      key={idx}
+                      className={`thumb-item ${
+                        activeImageIndex === idx ? "active" : ""
+                      }`}
+                      onClick={() => setActiveImageIndex(idx)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setActiveImageIndex(idx);
+                        }
                       }}
-                    />
-                  </div>
-                ))}
-              </div>
+                      tabIndex={0}
+                      role="button"
+                      aria-label={`Xem hình ảnh ${idx + 1}`}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <img
+                        src={fixImagePath(imgSrc)}
+                        alt={`Thumb ${idx + 1}`}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = fixImagePath(currentProduct.image);
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
 
-              {/* Main display image */}
-              <div className="gallery-main-image">
-                <img
-                  id="main-detail-image"
-                  src={fixImagePath(galleryImages[activeImageIndex])}
-                  alt={product.name}
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = fixImagePath(currentProduct.image);
-                  }}
-                />
+                {/* Main display image */}
+                <div className="gallery-main-image">
+                  <img
+                    id="main-detail-image"
+                    src={fixImagePath(galleryImages[activeImageIndex])}
+                    alt={product.name}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = fixImagePath(currentProduct.image);
+                    }}
+                  />
+                </div>
               </div>
 
               {/* Social Share Bar Under Image Gallery */}
@@ -673,7 +675,7 @@ function ProductDetailPageContent({
                   </div>
                   <div style={{ minWidth: 0, flex: 1, overflow: "hidden" }}>
                     <strong style={{ fontSize: "12px", whiteSpace: "nowrap", display: "block", color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis" }}>
-                      🔄 Đổi trả 30 ngày
+                      Đổi trả 30 ngày
                     </strong>
                     <span style={{ fontSize: "11px", whiteSpace: "nowrap", display: "block", color: "#64748b", overflow: "hidden", textOverflow: "ellipsis" }}>
                       Dễ dàng & nhanh chóng
@@ -712,7 +714,7 @@ function ProductDetailPageContent({
                   </div>
                   <div style={{ minWidth: 0, flex: 1, overflow: "hidden" }}>
                     <strong style={{ fontSize: "12px", whiteSpace: "nowrap", display: "block", color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis" }}>
-                      🛡️ Thanh toán an toàn
+                      Thanh toán an toàn
                     </strong>
                     <span style={{ fontSize: "11px", whiteSpace: "nowrap", display: "block", color: "#64748b", overflow: "hidden", textOverflow: "ellipsis" }}>
                       Bảo mật 100%
