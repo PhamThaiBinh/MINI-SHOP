@@ -62,7 +62,7 @@ export const DEFAULT_UNIFIED_ORDERS: UnifiedOrder[] = [
     statusText: "🚚 Đang vận chuyển (Dự kiến hôm nay)",
     recipientName: "Bình Nguyễn",
     recipientPhone: "0988.123.456",
-    address: "123 Đường Nguyễn Trãi, Phường Bến Thành, Quận 1, TP. Hồ Chí Minh",
+    address: "123 Đường Nguyễn Trãi, Phường Bến Thành, Thành phố Hồ Chí Minh",
     paymentMethod: "COD (Thanh toán khi nhận hàng)",
     items: [
       {
@@ -90,7 +90,7 @@ export const DEFAULT_UNIFIED_ORDERS: UnifiedOrder[] = [
     statusText: "✅ Đã hoàn thành",
     recipientName: "Bình Nguyễn",
     recipientPhone: "0988.123.456",
-    address: "123 Đường Nguyễn Trãi, Phường Bến Thành, Quận 1, TP. Hồ Chí Minh",
+    address: "123 Đường Nguyễn Trãi, Phường Bến Thành, Thành phố Hồ Chí Minh",
     paymentMethod: "Chuyển khoản VietQR",
     items: [
       {

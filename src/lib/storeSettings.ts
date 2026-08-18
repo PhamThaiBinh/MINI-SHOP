@@ -14,7 +14,7 @@ export const DEFAULT_STORE_SETTINGS: StoreSettings = {
   storeName: "Mini Shop Nội Thất & Gia Dụng",
   phone: "0987.654.321",
   email: "support@minishop.vn",
-  address: "123 Đường Nguyễn Trãi, Phường Bến Thành, Quận 1, TP. Hồ Chí Minh",
+  address: "123 Đường Nguyễn Trãi, Phường Bến Thành, Thành phố Hồ Chí Minh",
   workingHours: "8:00 AM - 21:30 PM (Tất cả các ngày)",
   description: "Mini Shop chuyên cung cấp giải pháp nội thất hiện đại, gỗ tự nhiên cao cấp và đồ gia dụng thông minh cho ngôi nhà của bạn.",
   facebookUrl: "https://facebook.com",

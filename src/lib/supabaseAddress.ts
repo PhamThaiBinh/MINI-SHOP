@@ -15,7 +15,7 @@ const DEFAULT_ADDRESS: UserAddressItem = {
   name: "Bình Nguyễn",
   phone: "0988123456",
   province: "Thành phố Hồ Chí Minh",
-  ward: "Phường Bến Thành (Quận 1, TP.HCM)",
+  ward: "Phường Bến Thành",
   detail: "123 Đường Nguyễn Trãi",
   isDefault: true,
 };
