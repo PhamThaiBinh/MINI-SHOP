@@ -324,7 +324,7 @@ function ProductsContent() {
             <div className="catalog-grid" id="product-catalog-grid">
               {loading ? (
                 <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "48px 0", color: "var(--text-muted)", fontWeight: 600 }}>
-                  Đang tải danh sách sản phẩm từ Supabase...
+                  Đang tải danh sách sản phẩm...
                 </div>
               ) : filteredProducts.length === 0 ? (
                 <div

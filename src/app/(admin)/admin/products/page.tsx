@@ -99,7 +99,7 @@ export default function AdminProductsPage() {
   };
 
   const handleDeleteProduct = async (id: number) => {
-    if (confirm("⚠️ Bạn có chắc muốn xóa sản phẩm này khỏi Supabase không?")) {
+    if (confirm("⚠️ Bạn có chắc muốn xóa sản phẩm này không?")) {
       setLoading(true);
       const success = await deleteAdminProduct(id);
       if (success) {
@@ -203,7 +203,7 @@ export default function AdminProductsPage() {
 
             {loading ? (
               <div style={{ padding: "30px", textAlign: "center", fontSize: "13px", color: "var(--text-muted)" }}>
-                ⏳ Đang tải sản phẩm từ kho dữ liệu Supabase...
+                ⏳ Đang tải danh sách sản phẩm...
               </div>
             ) : (
               <table className="admin-table">

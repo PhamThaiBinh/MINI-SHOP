@@ -76,7 +76,7 @@ export default function AdminCategoriesPage() {
   };
 
   const handleDeleteClick = async (id: number) => {
-    if (confirm("⚠️ Bạn có chắc chắn muốn xóa danh mục này khỏi kho Supabase không?")) {
+    if (confirm("⚠️ Bạn có chắc chắn muốn xóa danh mục này không?")) {
       const supabase = createClient();
       await supabase.from("categories").delete().eq("id", id);
       setCategories((prev) => prev.filter((c) => c.id !== id));
@@ -159,7 +159,7 @@ export default function AdminCategoriesPage() {
 
       <main className="admin-main">
         <AdminHeader
-          title="Quản Lý Danh Mục Sản Phẩm (Supabase Live)"
+          title="Quản Lý Danh Mục Sản Phẩm"
           sidebarCollapsed={sidebarCollapsed}
           setSidebarCollapsed={setSidebarCollapsed}
           searchPlaceholder="Tìm danh mục sản phẩm..."
@@ -169,7 +169,7 @@ export default function AdminCategoriesPage() {
           <div className="dashboard-card">
             <div className="card-header-row" style={{ marginBottom: "16px" }}>
               <div>
-                <h2 className="card-header-title">Danh Sách Danh Mục Supabase ({categories.length})</h2>
+                <h2 className="card-header-title">Danh Sách Danh Mục ({categories.length})</h2>
                 <p style={{ fontSize: "12px", color: "var(--text-muted)", margin: 0 }}>
                   Quản lý hiển thị các nhóm sản phẩm kinh doanh trên website
                 </p>
@@ -181,7 +181,7 @@ export default function AdminCategoriesPage() {
 
             {loading ? (
               <div style={{ padding: "30px", textAlign: "center", fontSize: "13px", color: "var(--text-muted)" }}>
-                ⏳ Đang tải dữ liệu danh mục thực tế từ Supabase...
+                ⏳ Đang tải dữ liệu danh mục...
               </div>
             ) : (
               <table className="admin-table">

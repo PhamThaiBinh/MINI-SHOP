@@ -183,8 +183,8 @@ export default function Home() {
           </div>
 
           {loading ? (
-            <div style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)", fontWeight: 600 }}>
-              Đang tải sản phẩm từ Supabase...
+            <div style={{ padding: "40px 0", textAlign: "center", fontSize: "14px", color: "var(--text-muted)", fontWeight: 700 }}>
+              Đang tải danh sách sản phẩm...
             </div>
           ) : (
             <div className="products-grid" id="home-featured-products-grid">

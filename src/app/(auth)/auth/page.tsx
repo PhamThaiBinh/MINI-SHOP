@@ -560,7 +560,7 @@ export default function AuthPage() {
     if (!res.success) {
       setAuthError(`⚠️ Đăng ký thất bại: ${res.error}`);
     } else {
-      setAuthSuccess("✅ Đăng ký tài khoản Supabase thành công! Hệ thống đang tự động đăng nhập...");
+      setAuthSuccess("✅ Đăng ký tài khoản thành công! Hệ thống đang tự động đăng nhập...");
       setTimeout(() => {
         router.push("/");
       }, 1000);

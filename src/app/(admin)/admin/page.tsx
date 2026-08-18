@@ -105,7 +105,7 @@ export default function AdminDashboardPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `Bao_Cao_Doanh_So_Supabase_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `Bao_Cao_Doanh_So_${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -179,7 +179,7 @@ export default function AdminDashboardPage() {
             <div className="dashboard-card">
               <div className="card-header-row" style={{ marginBottom: "16px" }}>
                 <div>
-                  <h2 className="card-header-title">Biểu Đồ Doanh Số Tích Hợp Supabase</h2>
+                  <h2 className="card-header-title">Biểu Đồ Doanh Số Kinh Doanh</h2>
                   <p style={{ fontSize: "12px", color: "var(--text-muted)", margin: 0 }}>
                     Theo dõi giá trị đơn hàng thực tế từ hệ thống
                   </p>
@@ -362,7 +362,7 @@ export default function AdminDashboardPage() {
 
               {loading ? (
                 <div style={{ padding: "20px", textAlign: "center", fontSize: "13px", color: "var(--text-muted)" }}>
-                  ⏳ Đang tải đơn hàng từ Supabase...
+                  ⏳ Đang tải danh sách đơn hàng...
                 </div>
               ) : orders.length > 0 ? (
                 <table className="admin-table">

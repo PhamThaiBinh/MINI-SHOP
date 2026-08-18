@@ -166,7 +166,7 @@ export default function AdminVouchersPage() {
 
             {loading ? (
               <div style={{ padding: "30px", textAlign: "center", fontSize: "13px", color: "var(--text-muted)" }}>
-                ⏳ Đang tải mã voucher từ Supabase...
+                ⏳ Đang tải mã voucher...
               </div>
             ) : (
               <table className="admin-table">

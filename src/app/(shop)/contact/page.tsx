@@ -120,7 +120,7 @@ export default function ContactPage() {
               <h2 className="contact-info-title">Gửi Tin Nhắn Cho Chúng Tôi</h2>
               {submitted && (
                 <div style={{ padding: "12px 16px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "6px", color: "#166534", fontSize: "14px", fontWeight: 700, marginBottom: "16px" }}>
-                  ✅ Cảm ơn bạn! Tin nhắn đã được gửi và lưu trực tiếp vào hệ thống Supabase. Bộ phận CSKH sẽ phản hồi trong 2 giờ.
+                  ✅ Cảm ơn bạn! Tin nhắn đã được gửi và lưu trực tiếp vào hệ thống. Bộ phận CSKH sẽ phản hồi trong 2 giờ.
                 </div>
               )}
               <form className="contact-form" onSubmit={handleSubmit}>
