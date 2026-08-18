@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import "@/styles/admin.css";
 import "@/styles/auth.css";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
+import { getStoreSettings, saveStoreSettings } from "@/lib/storeSettings";
 
 interface StaffUser {
   id: number;
@@ -112,8 +113,40 @@ export default function AdminSettingsPage() {
   const [activeTab, setActiveTab] = useState<
     "store" | "payment" | "shipping" | "security"
   >("store");
-
   const [notification, setNotification] = useState<string | null>(null);
+
+  // Store Info State
+  const [storeName, setStoreName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [address, setAddress] = useState("");
+  const [workingHours, setWorkingHours] = useState("");
+  const [description, setDescription] = useState("");
+
+  useEffect(() => {
+    const s = getStoreSettings();
+    setStoreName(s.storeName);
+    setPhone(s.phone);
+    setEmail(s.email);
+    setAddress(s.address);
+    setWorkingHours(s.workingHours);
+    setDescription(s.description || "");
+  }, []);
+
+  const handleSaveStoreInfo = (e: React.FormEvent) => {
+    e.preventDefault();
+    saveStoreSettings({
+      storeName: storeName.trim(),
+      phone: phone.trim(),
+      email: email.trim(),
+      address: address.trim(),
+      workingHours: workingHours.trim(),
+      description: description.trim(),
+    });
+    triggerNotify(
+      "💾 Đã lưu cấu hình thông tin cửa hàng thành công! (Footer & Trang liên hệ đã được tự động cập nhật)"
+    );
+  };
 
   // Staff Management State
   const [staffList, setStaffList] = useState<StaffUser[]>(INITIAL_STAFF_LIST);
@@ -380,21 +413,7 @@ export default function AdminSettingsPage() {
                   báo đến khách hàng.
                 </p>
 
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    if (typeof window !== "undefined") {
-                      const form = e.currentTarget;
-                      const formData = new FormData(form);
-                      localStorage.setItem("mini_shop_store_settings", JSON.stringify({
-                        savedAt: new Date().toISOString(),
-                      }));
-                    }
-                    triggerNotify(
-                      "💾 Đã lưu cấu hình thông tin cửa hàng thành công!"
-                    );
-                  }}
-                >
+                <form onSubmit={handleSaveStoreInfo}>
                   <div
                     style={{
                       display: "grid",
@@ -418,7 +437,8 @@ export default function AdminSettingsPage() {
                       <input
                         type="text"
                         className="admin-setting-input"
-                        defaultValue="Mini Shop Nội Thất & Gia Dụng"
+                        value={storeName}
+                        onChange={(e) => setStoreName(e.target.value)}
                         required
                       />
                     </div>
@@ -437,7 +457,8 @@ export default function AdminSettingsPage() {
                       <input
                         type="text"
                         className="admin-setting-input"
-                        defaultValue="0987.654.321"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
                         required
                       />
                     </div>
@@ -466,7 +487,8 @@ export default function AdminSettingsPage() {
                       <input
                         type="email"
                         className="admin-setting-input"
-                        defaultValue="support@minishop.vn"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                         required
                       />
                     </div>
@@ -485,13 +507,14 @@ export default function AdminSettingsPage() {
                       <input
                         type="text"
                         className="admin-setting-input"
-                        defaultValue="8:00 AM - 21:30 PM (Tất cả các ngày)"
+                        value={workingHours}
+                        onChange={(e) => setWorkingHours(e.target.value)}
                         required
                       />
                     </div>
                   </div>
 
-                  <div style={{ marginBottom: "20px" }}>
+                  <div style={{ marginBottom: "16px" }}>
                     <label
                       style={{
                         fontSize: "13px",
@@ -506,8 +529,29 @@ export default function AdminSettingsPage() {
                     <input
                       type="text"
                       className="admin-setting-input"
-                      defaultValue="123 Đường Nguyễn Trãi, Phường Bến Thành, Quận 1, TP. Hồ Chí Minh"
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
                       required
+                    />
+                  </div>
+
+                  <div style={{ marginBottom: "20px" }}>
+                    <label
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: 700,
+                        color: "#0f172a",
+                        marginBottom: "6px",
+                        display: "block",
+                      }}
+                    >
+                      Mô Tả Thương Hiệu (Hiển Thị Chân Trang Footers)
+                    </label>
+                    <textarea
+                      rows={2}
+                      className="admin-setting-input"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
                     />
                   </div>
 

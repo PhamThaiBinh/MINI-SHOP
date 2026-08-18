@@ -1,14 +1,29 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { IconChevronUp } from "@/components/common/Icons";
+import { getStoreSettings, StoreSettings } from "@/lib/storeSettings";
 
 export const Footer: React.FC = () => {
   const pathname = usePathname();
   const [emailInput, setEmailInput] = useState("");
   const [subscribeMsg, setSubscribeMsg] = useState("");
+  const [storeInfo, setStoreInfo] = useState<StoreSettings>(getStoreSettings());
+
+  useEffect(() => {
+    setStoreInfo(getStoreSettings());
+    const handleUpdate = (e: any) => {
+      if (e.detail) {
+        setStoreInfo(e.detail);
+      } else {
+        setStoreInfo(getStoreSettings());
+      }
+    };
+    window.addEventListener("minishop_store_settings_updated", handleUpdate);
+    return () => window.removeEventListener("minishop_store_settings_updated", handleUpdate);
+  }, []);
 
   if (pathname.startsWith("/admin")) {
     return null;
@@ -24,10 +39,10 @@ export const Footer: React.FC = () => {
               <svg viewBox="0 0 24 24">
                 <path d="M19 6h-2c0-2.76-2.24-5-5-5S7 3.24 7 6H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-7-3c1.66 0 3 1.34 3 3H9c0-1.66 1.34-3 3-3zm7 17H5V8h2v2c0 .55.45 1 1 1s1-.45 1-1V8h6v2c0 .55.45 1 1 1s1-.45 1-1V8h2v12z" />
               </svg>
-              <span>Mini Shop</span>
+              <span>{storeInfo.storeName}</span>
             </Link>
             <p style={{ marginTop: "12px", fontSize: "13px", color: "var(--text-muted)" }}>
-              Sản phẩm nội thất & đồ gia dụng cho không gian sống hiện đại.
+              {storeInfo.description}
             </p>
 
             {/* 4 Official Social Brand Icons (FB, IG, YT, TT) */}
@@ -105,10 +120,10 @@ export const Footer: React.FC = () => {
           <div className="footer-col">
             <h4>Thông Tin Liên Hệ</h4>
             <ul className="contact-info">
-              <li>📍 123 Đường Nguyễn Trãi, Phường Bến Thành, Quận 1, TP. Hồ Chí Minh</li>
-              <li>📞 0987.654.321 - Hotline hỗ trợ 24/7</li>
-              <li>✉️ support@minishop.vn</li>
-              <li>⏰ 8:00 AM - 21:30 PM (Tất cả các ngày trong tuần)</li>
+              <li>📍 {storeInfo.address}</li>
+              <li>📞 {storeInfo.phone} - Hotline hỗ trợ</li>
+              <li>✉️ {storeInfo.email}</li>
+              <li>⏰ {storeInfo.workingHours}</li>
             </ul>
             <div style={{ marginTop: "16px" }}>
               <h4 style={{ fontSize: "14px", marginBottom: "8px" }}>📩 Đăng ký nhận bản tin ưu đãi</h4>

@@ -5,7 +5,7 @@ import Link from "next/link";
 import "@/styles/admin.css";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
-import { fixImagePath } from "@/lib/utils";
+import { fixImagePath, formatVND } from "@/lib/utils";
 import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
 import { saveAdminProduct, deleteAdminProduct } from "@/lib/supabaseAdmin";
 
@@ -27,33 +27,12 @@ export default function AdminProductsPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null);
-
-  useEffect(() => {
-    async function loadData() {
-      setLoading(true);
-      const list = await fetchProductsFromSupabase();
-      const mapped = list.map((p) => ({
-        id: p.id,
-        name: p.name,
-        category: p.category,
-        categoryName: p.categoryName || p.category,
-        price: p.price,
-        image: p.image,
-        status: (p.status === "Hidden" ? "Hidden" : "Active") as any,
-        desc: p.description || "",
-        stock: p.stock !== undefined ? p.stock : 10,
-      }));
-      setProducts(mapped);
-      setLoading(false);
-    }
-    loadData();
-  }, []);
+  const [showModal, setShowModal] = useState<boolean>(false);
 
   // Form state
   const [formName, setFormName] = useState("");
   const [formCategory, setFormCategory] = useState("Furniture");
   const [formPrice, setFormPrice] = useState("");
-  const [formImageMode, setFormImageMode] = useState<"file" | "url">("file");
   const [formImageUrl, setFormImageUrl] = useState("");
   const [formStatus, setFormStatus] = useState<"Active" | "Hidden">("Active");
   const [formDesc, setFormDesc] = useState("");
@@ -61,6 +40,27 @@ export default function AdminProductsPage() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [onlyLowStock, setOnlyLowStock] = useState<boolean>(false);
 
+  const loadProductData = async () => {
+    setLoading(true);
+    const list = await fetchProductsFromSupabase();
+    const mapped = list.map((p) => ({
+      id: p.id,
+      name: p.name,
+      category: p.category,
+      categoryName: p.categoryName || p.category,
+      price: p.price,
+      image: p.image,
+      status: (p.status === "Hidden" ? "Hidden" : "Active") as any,
+      desc: p.description || "",
+      stock: p.stock !== undefined ? p.stock : 10,
+    }));
+    setProducts(mapped);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadProductData();
+  }, []);
 
   const filteredProducts = products.filter(
     (p) =>
@@ -76,6 +76,17 @@ export default function AdminProductsPage() {
     safeCurrentPage * pageSize
   );
 
+  const handleOpenAddModal = () => {
+    setEditingProduct(null);
+    setFormName("");
+    setFormCategory("Furniture");
+    setFormPrice("");
+    setFormImageUrl("");
+    setFormStatus("Active");
+    setFormDesc("");
+    setShowModal(true);
+  };
+
   const handleEditClick = (prod: ProductItem) => {
     setEditingProduct(prod);
     setFormName(prod.name);
@@ -84,46 +95,20 @@ export default function AdminProductsPage() {
     setFormImageUrl(prod.image);
     setFormStatus(prod.status);
     setFormDesc(prod.desc);
+    setShowModal(true);
   };
 
-  const loadProductData = async () => {
-    setLoading(true);
-    const list = await fetchProductsFromSupabase();
-    const mapped = list.map((p) => ({
-      id: p.id,
-      name: p.name,
-      category: p.category,
-      categoryName: p.categoryName || p.category,
-      price: p.price,
-      image: p.image,
-      status: (p.status === "Hidden" ? "Hidden" : "Active") as any,
-      desc: p.description || "",
-    }));
-    setProducts(mapped);
-    setLoading(false);
-  };
-
-  const handleDeleteClick = async (id: number) => {
-    if (confirm("⚠️ Bạn có chắc chắn muốn xóa sản phẩm này khỏi kho Supabase không?")) {
+  const handleDeleteProduct = async (id: number) => {
+    if (confirm("⚠️ Bạn có chắc muốn xóa sản phẩm này khỏi Supabase không?")) {
       setLoading(true);
       const success = await deleteAdminProduct(id);
       if (success) {
-        await loadProductData();
+        setProducts((prev) => prev.filter((p) => p.id !== id));
       } else {
-        alert("Xóa thất bại!");
-        setLoading(false);
+        alert("Xóa sản phẩm thất bại!");
       }
+      setLoading(false);
     }
-  };
-
-  const handleResetForm = () => {
-    setEditingProduct(null);
-    setFormName("");
-    setFormCategory("Furniture");
-    setFormPrice("");
-    setFormImageUrl("");
-    setFormStatus("Active");
-    setFormDesc("");
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -164,38 +149,18 @@ export default function AdminProductsPage() {
     const success = await saveAdminProduct(prodData);
     if (success) {
       await loadProductData();
-      handleResetForm();
+      setShowModal(false);
     } else {
       alert("Lưu sản phẩm thất bại!");
       setLoading(false);
     }
   };
 
-  const getCategoryBadgeClass = (category: string) => {
-    switch (category) {
-      case "Furniture":
-        return "cat-badge cat-furniture";
-      case "Lighting":
-        return "cat-badge cat-lighting";
-      case "Decor":
-        return "cat-badge cat-decor";
-      case "Storage":
-        return "cat-badge cat-storage";
-      case "Kitchen":
-        return "cat-badge cat-kitchen";
-      default:
-        return "cat-badge cat-furniture";
-    }
-  };
-
   return (
     <div className="admin-wrapper">
-      {/* Left Sidebar Navigation */}
       <AdminSidebar activeMenu="products" sidebarCollapsed={sidebarCollapsed} />
 
-      {/* 2. Main Content Area */}
       <main className="admin-main">
-        {/* Top Header Bar Đồng Bộ Chuẩn 3 Thông Báo & Menu Admin Interactive */}
         <AdminHeader
           title="Quản Lý Sản Phẩm"
           sidebarCollapsed={sidebarCollapsed}
@@ -205,498 +170,277 @@ export default function AdminProductsPage() {
           searchPlaceholder="Tìm tên sản phẩm hoặc danh mục..."
         />
 
-        {/* Dashboard Workspace 3-Column Grid Layout */}
         <div className="dashboard-content-body">
-          <div className="admin-workspace-grid">
-            {/* Center Column: Products Table */}
-            <div className="tables-column">
-              <div className="dashboard-card">
-                <div className="card-header-row">
-                  <h2 className="card-header-title">Quản Lý Sản Phẩm</h2>
-                  <div style={{ display: "flex", gap: "8px" }}>
-                    <button
-                      onClick={() => setOnlyLowStock(!onlyLowStock)}
-                      style={{
-                        padding: "6px 12px",
-                        fontSize: "12px",
-                        fontWeight: 700,
-                        border: "1px solid var(--border-color)",
-                        borderRadius: "6px",
-                        background: onlyLowStock ? "#fee2e2" : "#f8fafc",
-                        color: onlyLowStock ? "#b91c1c" : "inherit",
-                        cursor: "pointer",
-                      }}
-                    >
-                      {onlyLowStock ? "🔥 Đang lọc: Sắp hết hàng" : "🔥 Sắp hết hàng"}
-                    </button>
-                    <button
-                      className="btn-add-product-green"
-                      onClick={handleResetForm}
-                    >
-                      + Thêm Sản Phẩm
-                    </button>
-                  </div>
-                </div>
-
-                <table className="admin-table">
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>Hình ảnh</th>
-                      <th>Tên Sản Phẩm</th>
-                      <th>Danh mục</th>
-                      <th>Giá bán</th>
-                      <th>Tồn kho</th>
-                      <th>Trạng thái</th>
-                      <th style={{ textAlign: "center" }}>Thao tác</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginatedProducts.map((prod, index) => (
-                      <tr key={prod.id}>
-                        <td>{(safeCurrentPage - 1) * pageSize + index + 1}</td>
-                        <td>
-                            <img
-                              src={fixImagePath(prod.image)}
-                              alt={prod.name}
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = "/assets/images/products/noi-that-gia-dung/sofa-phong-khach.webp";
-                              }}
-                            />
-                        </td>
-                        <td>
-                          <strong>{prod.name}</strong>
-                        </td>
-                        <td>
-                          <span className={getCategoryBadgeClass(prod.category)}>
-                            {prod.categoryName}
-                          </span>
-                        </td>
-                        <td>{prod.price.toLocaleString("vi-VN")}đ</td>
-                        <td>
-                          {(prod.stock ?? 10) === 0 ? (
-                            <span style={{ padding: "3px 8px", borderRadius: "12px", fontSize: "11px", fontWeight: 800, background: "#fee2e2", color: "#dc2626" }}>
-                              ❌ Hết hàng (0)
-                            </span>
-                          ) : (prod.stock ?? 10) <= 5 ? (
-                            <span style={{ padding: "3px 8px", borderRadius: "12px", fontSize: "11px", fontWeight: 800, background: "#fef3c7", color: "#d97706" }}>
-                              ⚠️ Sắp hết ({prod.stock})
-                            </span>
-                          ) : (
-                            <span style={{ padding: "3px 8px", borderRadius: "12px", fontSize: "11px", fontWeight: 800, background: "#dcfce7", color: "#15803d" }}>
-                              ● Còn hàng ({prod.stock})
-                            </span>
-                          )}
-                        </td>
-                        <td>
-                          <span
-                            className={
-                              prod.status === "Active"
-                                ? "badge-visible"
-                                : "badge-lowstock"
-                            }
-                          >
-                            {prod.status === "Active" ? "● Hoạt động" : "○ Ẩn"}
-                          </span>
-                        </td>
-                        <td style={{ textAlign: "center" }}>
-                          <button
-                            className="btn-action-edit"
-                            style={{ background: "#0284c7", color: "#fff", marginRight: "4px" }}
-                            onClick={() => {
-                              setEditingProduct(null);
-                              setFormName(`${prod.name} (Bản sao)`);
-                              setFormCategory(prod.category);
-                              setFormPrice(prod.price.toString());
-                              setFormImageUrl(prod.image);
-                              setFormStatus("Active");
-                              setFormDesc(prod.desc);
-                              alert(`📋 Đã nhân bản thông tin "${prod.name}" vào Form! Vui lòng kiểm tra và bấm "+ Thêm Sản Phẩm Mới".`);
-                            }}
-                            title="Sao chép nhanh thông tin sản phẩm này sang Form mới"
-                          >
-                            📋 Nhân bản
-                          </button>
-                          <button
-                            className="btn-action-edit"
-                            onClick={() => handleEditClick(prod)}
-                          >
-                            📝 Sửa
-                          </button>
-                          <button
-                            className="btn-action-delete"
-                            onClick={() => handleDeleteClick(prod.id)}
-                          >
-                            🗑️ Xóa
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-
-                {/* Table Footer Pagination */}
-                <div className="table-footer-row">
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                      fontSize: "13px",
-                      color: "var(--text-muted)",
-                    }}
-                  >
-                    <span>Hiển thị:</span>
-                    <select
-                      value={pageSize}
-                      onChange={(e) => {
-                        setPageSize(Number(e.target.value));
-                        setCurrentPage(1);
-                      }}
-                      style={{
-                        padding: "4px 8px",
-                        fontSize: "12px",
-                        fontWeight: 700,
-                        border: "1px solid var(--border-color)",
-                        borderRadius: "6px",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <option value={10}>10 SP / trang</option>
-                      <option value={25}>25 SP / trang</option>
-                      <option value={50}>50 SP / trang</option>
-                    </select>
-                    <span>
-                      Hiển thị {filteredProducts.length > 0 ? (safeCurrentPage - 1) * pageSize + 1 : 0} -{" "}
-                      {Math.min(safeCurrentPage * pageSize, filteredProducts.length)} / tổng {filteredProducts.length} sản phẩm
-                    </span>
-                  </div>
-                  <div className="pagination-controls">
-                    <button
-                      className="page-btn"
-                      disabled={safeCurrentPage <= 1}
-                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                      style={{ opacity: safeCurrentPage <= 1 ? 0.5 : 1, cursor: safeCurrentPage <= 1 ? "not-allowed" : "pointer" }}
-                    >
-                      &lt; Trang trước
-                    </button>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                      <button
-                        key={p}
-                        className={`page-btn ${p === safeCurrentPage ? "active" : ""}`}
-                        onClick={() => setCurrentPage(p)}
-                      >
-                        {p}
-                      </button>
-                    ))}
-                    <button
-                      className="page-btn"
-                      disabled={safeCurrentPage >= totalPages}
-                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                      style={{ opacity: safeCurrentPage >= totalPages ? 0.5 : 1, cursor: safeCurrentPage >= totalPages ? "not-allowed" : "pointer" }}
-                    >
-                      Trang sau &gt;
-                    </button>
-                  </div>
-                </div>
+          <div className="dashboard-card">
+            <div className="card-header-row" style={{ marginBottom: "16px" }}>
+              <div>
+                <h2 className="card-header-title">Danh Sách Sản Phẩm Kinh Doanh ({products.length})</h2>
+                <p style={{ fontSize: "12px", color: "var(--text-muted)", margin: 0 }}>
+                  Quản lý giá bán, hình ảnh và tồn kho sản phẩm trực tuyến
+                </p>
+              </div>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button
+                  onClick={() => setOnlyLowStock(!onlyLowStock)}
+                  style={{
+                    padding: "6px 12px",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    border: "1px solid var(--border-color)",
+                    borderRadius: "6px",
+                    background: onlyLowStock ? "#fee2e2" : "#f8fafc",
+                    color: onlyLowStock ? "#b91c1c" : "inherit",
+                    cursor: "pointer",
+                  }}
+                >
+                  {onlyLowStock ? "🔥 Đang lọc: Sắp hết hàng" : "🔥 Sắp hết hàng"}
+                </button>
+                <button className="btn-add-product-green" onClick={handleOpenAddModal}>
+                  + Thêm Sản Phẩm Mới
+                </button>
               </div>
             </div>
 
-            {/* Right Column: Product Form Panel */}
-            <aside className="product-form-panel">
-              <h2
-                className="card-header-title"
-                style={{ marginBottom: "16px" }}
-              >
-                {editingProduct ? "Chỉnh Sửa Sản Phẩm" : "Form Sản Phẩm Mới"}
-              </h2>
-
-              <form
-                style={{ display: "flex", flexDirection: "column", gap: "14px" }}
-                onSubmit={handleFormSubmit}
-              >
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label htmlFor="form-p-name">Tên sản phẩm *</label>
-                  <input
-                    type="text"
-                    id="form-p-name"
-                    className="form-control"
-                    placeholder="Nhập tên sản phẩm..."
-                    required
-                    value={formName}
-                    onChange={(e) => setFormName(e.target.value)}
-                  />
-                </div>
-
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label htmlFor="form-p-category">Danh mục</label>
-                  <select
-                    id="form-p-category"
-                    className="form-control"
-                    style={{ background: "#fff" }}
-                    required
-                    value={formCategory}
-                    onChange={(e) => setFormCategory(e.target.value)}
-                  >
-                    <option value="Furniture">Nội thất</option>
-                    <option value="Decor">Trang trí</option>
-                    <option value="Lighting">Đèn trang trí</option>
-                    <option value="Kitchen">Nhà bếp</option>
-                    <option value="Storage">Lưu trữ</option>
-                  </select>
-                </div>
-
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label htmlFor="form-p-price">Giá bán (VNĐ) *</label>
-                  <input
-                    type="number"
-                    id="form-p-price"
-                    className="form-control"
-                    placeholder="Nhập giá bán..."
-                    required
-                    value={formPrice}
-                    onChange={(e) => setFormPrice(e.target.value)}
-                  />
-                </div>
-
-                {/* Chế độ Tải ảnh: Tệp máy tính OR URL Online */}
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <span>Hình ảnh sản phẩm</span>
-                    <span
-                      style={{
-                        fontSize: "11px",
-                        color: "var(--text-muted)",
-                        fontWeight: "normal",
-                      }}
-                    >
-                      File máy tính hoặc URL
-                    </span>
-                  </label>
-
-                  {/* Tab Chuyển Đổi Nguồn Ảnh */}
-                  <div
-                    className="image-source-tabs"
-                    style={{ display: "flex", gap: "6px", marginBottom: "8px" }}
-                  >
-                    <button
-                      type="button"
-                      className={`img-tab-btn ${
-                        formImageMode === "file" ? "active" : ""
-                      }`}
-                      onClick={() => setFormImageMode("file")}
-                      style={{
-                        flex: 1,
-                        padding: "6px",
-                        fontSize: "12px",
-                        fontWeight: 700,
-                        border: "1px solid var(--border-color)",
-                        borderRadius: "var(--radius-sm)",
-                        background:
-                          formImageMode === "file"
-                            ? "#e8f5e9"
-                            : "#f8fafc",
-                        color:
-                          formImageMode === "file"
-                            ? "var(--primary-color)"
-                            : "var(--text-muted)",
-                        cursor: "pointer",
-                      }}
-                    >
-                      📁 Tải từ máy tính
-                    </button>
-                    <button
-                      type="button"
-                      className={`img-tab-btn ${
-                        formImageMode === "url" ? "active" : ""
-                      }`}
-                      onClick={() => setFormImageMode("url")}
-                      style={{
-                        flex: 1,
-                        padding: "6px",
-                        fontSize: "12px",
-                        fontWeight: 700,
-                        border: "1px solid var(--border-color)",
-                        borderRadius: "var(--radius-sm)",
-                        background:
-                          formImageMode === "url" ? "#e8f5e9" : "#f8fafc",
-                        color:
-                          formImageMode === "url"
-                            ? "var(--primary-color)"
-                            : "var(--text-muted)",
-                        cursor: "pointer",
-                      }}
-                    >
-                      🌐 Nhập URL Online
-                    </button>
-                  </div>
-
-                  {/* Mode 1: Upload File từ Máy tính */}
-                  {formImageMode === "file" ? (
-                    <div
-                      className="upload-image-box"
-                      onClick={() => {
-                        const fileInput = document.getElementById(
-                          "input-file-image-app"
-                        );
-                        if (fileInput) fileInput.click();
-                      }}
-                    >
-                      <input
-                        type="file"
-                        id="input-file-image-app"
-                        accept="image/*"
-                        style={{ display: "none" }}
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (event) => {
-                              if (event.target?.result) {
-                                setFormImageUrl(
-                                  event.target.result as string
-                                );
-                              }
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                        }}
-                      />
-                      <div
-                        style={{
-                          fontSize: "24px",
-                          color: "var(--primary-color)",
-                        }}
-                      >
-                        💻
-                      </div>
-                      <div className="upload-icon-text">
-                        Nhấp để chọn tệp từ máy tính
-                      </div>
-                      <div className="upload-hint">
-                        Hỗ trợ .jpg, .png, .webp, .gif (Tối đa 5MB)
-                      </div>
-                    </div>
+            {loading ? (
+              <div style={{ padding: "30px", textAlign: "center", fontSize: "13px", color: "var(--text-muted)" }}>
+                ⏳ Đang tải sản phẩm từ kho dữ liệu Supabase...
+              </div>
+            ) : (
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Hình ảnh</th>
+                    <th>Tên Sản Phẩm</th>
+                    <th>Danh mục</th>
+                    <th>Giá bán</th>
+                    <th>Trạng thái</th>
+                    <th style={{ textAlign: "center" }}>Thao Tác</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedProducts.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)" }}>
+                        Không có sản phẩm nào khớp với tìm kiếm.
+                      </td>
+                    </tr>
                   ) : (
-                    /* Mode 2: Nhập Link URL Online */
-                    <div>
-                      <input
-                        type="url"
-                        className="form-control"
-                        placeholder="https://example.com/hinh-anh.jpg"
-                        value={formImageUrl}
-                        onChange={(e) => setFormImageUrl(e.target.value)}
-                      />
-                      <div
-                        className="upload-hint"
-                        style={{ marginTop: "4px" }}
-                      >
-                        Dán đường dẫn ảnh trực tiếp từ website
-                      </div>
-                    </div>
+                    paginatedProducts.map((prod, index) => (
+                      <tr key={prod.id}>
+                        <td>{(safeCurrentPage - 1) * pageSize + index + 1}</td>
+                        <td>
+                          <img
+                            src={fixImagePath(prod.image)}
+                            alt={prod.name}
+                            style={{ width: "40px", height: "40px", borderRadius: "6px", objectFit: "cover" }}
+                          />
+                        </td>
+                        <td><strong>{prod.name}</strong></td>
+                        <td>
+                          <span className="cat-badge cat-furniture">{prod.categoryName}</span>
+                        </td>
+                        <td style={{ fontWeight: 800, color: "var(--primary-color)" }}>{formatVND(prod.price)}</td>
+                        <td>
+                          <span
+                            style={{
+                              padding: "4px 8px",
+                              borderRadius: "6px",
+                              fontSize: "11px",
+                              fontWeight: 700,
+                              background: prod.status === "Active" ? "#dcfce7" : "#fee2e2",
+                              color: prod.status === "Active" ? "#166534" : "#991b1b",
+                            }}
+                          >
+                            {prod.status === "Active" ? "● Đang bán" : "○ Đã ẩn"}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: "center" }}>
+                          <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
+                            <button
+                              onClick={() => handleEditClick(prod)}
+                              style={{
+                                padding: "4px 8px",
+                                background: "#eff6ff",
+                                color: "#2563eb",
+                                border: "1px solid #bfdbfe",
+                                borderRadius: "6px",
+                                cursor: "pointer",
+                                fontSize: "12px",
+                                fontWeight: 700,
+                              }}
+                            >
+                              ✏️ Sửa
+                            </button>
+                            <button
+                              onClick={() => handleDeleteProduct(prod.id)}
+                              style={{
+                                padding: "4px 8px",
+                                background: "#fef2f2",
+                                color: "#dc2626",
+                                border: "1px solid #fca5a5",
+                                borderRadius: "6px",
+                                cursor: "pointer",
+                                fontSize: "12px",
+                                fontWeight: 700,
+                              }}
+                            >
+                              🗑️ Xóa
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
                   )}
-
-                  {/* Khung Xem Trước Ảnh (Preview Box) */}
-                  {formImageUrl && (
-                    <div
-                      style={{
-                        marginTop: "10px",
-                        position: "relative",
-                        textAlign: "center",
-                      }}
-                    >
-                      <img
-                        src={formImageUrl}
-                        alt="Preview"
-                        style={{
-                          maxHeight: "120px",
-                          borderRadius: "var(--radius-md)",
-                          border: "1px solid var(--border-color)",
-                          objectFit: "cover",
-                        }}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setFormImageUrl("")}
-                        style={{
-                          position: "absolute",
-                          top: "-6px",
-                          right: "calc(50% - 65px)",
-                          background: "#ef4444",
-                          color: "#fff",
-                          border: "none",
-                          borderRadius: "50%",
-                          width: "20px",
-                          height: "20px",
-                          fontSize: "11px",
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                        title="Xóa ảnh"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label htmlFor="form-p-status">Trạng thái kinh doanh</label>
-                  <select
-                    id="form-p-status"
-                    className="form-control"
-                    style={{ background: "#fff" }}
-                    value={formStatus}
-                    onChange={(e) =>
-                      setFormStatus(e.target.value as "Active" | "Hidden")
-                    }
-                  >
-                    <option value="Active">● Hoạt động</option>
-                    <option value="Hidden">○ Ẩn sản phẩm</option>
-                  </select>
-                </div>
-
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label htmlFor="form-p-desc">Mô tả sản phẩm</label>
-                  <textarea
-                    id="form-p-desc"
-                    className="form-control"
-                    placeholder="Nhập mô tả chi tiết sản phẩm..."
-                    style={{ minHeight: "75px" }}
-                    value={formDesc}
-                    onChange={(e) => setFormDesc(e.target.value)}
-                  ></textarea>
-                </div>
-
-                <div className="form-footer-btns">
-                  <button
-                    type="submit"
-                    className="btn-save-green"
-                    style={{ backgroundColor: "var(--primary-color)" }}
-                  >
-                    💾 {editingProduct ? "Cập Nhật" : "Lưu Sản Phẩm"}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-cancel-gray"
-                    onClick={handleResetForm}
-                  >
-                    Hủy
-                  </button>
-                </div>
-              </form>
-            </aside>
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
       </main>
+
+      {/* FORM MODAL SẢN PHẨM MỚI / CHỈNH SỬA */}
+      {showModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.5)",
+            zIndex: 3000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
+          }}
+        >
+          <div
+            style={{
+              background: "#fff",
+              width: "100%",
+              maxWidth: "520px",
+              borderRadius: "var(--radius-lg)",
+              padding: "24px",
+              boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+              <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", margin: 0 }}>
+                {editingProduct ? "✏️ Chỉnh Sửa Sản Phẩm" : "🛍️ Form Sản Phẩm Mới"}
+              </h3>
+              <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer" }}>&times;</button>
+            </div>
+
+            <form onSubmit={handleFormSubmit}>
+              <div style={{ marginBottom: "12px" }}>
+                <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "4px" }}>Tên Sản Phẩm *</label>
+                <input
+                  type="text"
+                  className="form-control admin-setting-input"
+                  placeholder="Ví dụ: Bàn Ăn Gỗ Sồi Tự Nhiên"
+                  value={formName}
+                  onChange={(e) => setFormName(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+                <div>
+                  <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "4px" }}>Danh Mục *</label>
+                  <select
+                    className="form-control admin-setting-input"
+                    value={formCategory}
+                    onChange={(e) => setFormCategory(e.target.value)}
+                  >
+                    <option value="Furniture">Nội thất phòng khách/ngủ</option>
+                    <option value="Decor">Trang trí & Decor</option>
+                    <option value="Lighting">Đèn trang trí</option>
+                    <option value="Kitchen">Nhà bếp & Phòng ăn</option>
+                    <option value="Storage">Lưu trữ & Tủ quần áo</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "4px" }}>Giá Bán (VNĐ) *</label>
+                  <input
+                    type="number"
+                    className="form-control admin-setting-input"
+                    placeholder="Ví dụ: 3500000"
+                    value={formPrice}
+                    onChange={(e) => setFormPrice(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div style={{ marginBottom: "12px" }}>
+                <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "4px" }}>Đường Dẫn Hình Ảnh (URL hoặc Assets)</label>
+                <input
+                  type="text"
+                  className="form-control admin-setting-input"
+                  placeholder="/assets/images/products/... hoặc https://..."
+                  value={formImageUrl}
+                  onChange={(e) => setFormImageUrl(e.target.value)}
+                />
+              </div>
+
+              <div style={{ marginBottom: "12px" }}>
+                <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "4px" }}>Trạng Thái Bán</label>
+                <select
+                  className="form-control admin-setting-input"
+                  value={formStatus}
+                  onChange={(e) => setFormStatus(e.target.value as any)}
+                >
+                  <option value="Active">● Đang bán (Hiển thị công khai)</option>
+                  <option value="Hidden">○ Đã ẩn (Không hiển thị)</option>
+                </select>
+              </div>
+
+              <div style={{ marginBottom: "20px" }}>
+                <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "4px" }}>Mô Tả Sản Phẩm</label>
+                <textarea
+                  rows={3}
+                  className="form-control admin-setting-input"
+                  placeholder="Nhập mô tả chi tiết chất liệu, kích thước..."
+                  value={formDesc}
+                  onChange={(e) => setFormDesc(e.target.value)}
+                />
+              </div>
+
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  style={{
+                    flex: 1,
+                    padding: "10px",
+                    background: "#f1f5f9",
+                    border: "none",
+                    borderRadius: "var(--radius-md)",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  Hủy Bỏ
+                </button>
+                <button
+                  type="submit"
+                  style={{
+                    flex: 1,
+                    padding: "10px",
+                    background: "var(--primary-color)",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "var(--radius-md)",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  {editingProduct ? "Lưu Cập Nhật" : "Tạo Sản Phẩm Mới"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

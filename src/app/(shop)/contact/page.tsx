@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import "@/styles/contact.css";
-
 import { sendContactMessageToSupabase } from "@/lib/supabaseContact";
+import { getStoreSettings, StoreSettings } from "@/lib/storeSettings";
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -15,6 +15,20 @@ export default function ContactPage() {
   });
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [storeInfo, setStoreInfo] = useState<StoreSettings>(getStoreSettings());
+
+  useEffect(() => {
+    setStoreInfo(getStoreSettings());
+    const handleUpdate = (e: any) => {
+      if (e.detail) {
+        setStoreInfo(e.detail);
+      } else {
+        setStoreInfo(getStoreSettings());
+      }
+    };
+    window.addEventListener("minishop_store_settings_updated", handleUpdate);
+    return () => window.removeEventListener("minishop_store_settings_updated", handleUpdate);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,10 +86,7 @@ export default function ContactPage() {
                 <div className="contact-icon">📍</div>
                 <div className="contact-text">
                   <strong>Địa chỉ showroom:</strong>
-                  <span>
-                    123 Đường Nguyễn Trãi, Phường Bến Thành, Quận 1, TP. Hồ Chí
-                    Minh
-                  </span>
+                  <span>{storeInfo.address}</span>
                 </div>
               </div>
 
@@ -83,7 +94,7 @@ export default function ContactPage() {
                 <div className="contact-icon">📞</div>
                 <div className="contact-text">
                   <strong>Hotline tư vấn:</strong>
-                  <span>0987.654.321 (Tư vấn 24/7)</span>
+                  <span>{storeInfo.phone}</span>
                 </div>
               </div>
 
@@ -91,7 +102,7 @@ export default function ContactPage() {
                 <div className="contact-icon">✉️</div>
                 <div className="contact-text">
                   <strong>Email hỗ trợ:</strong>
-                  <span>support@minishop.vn</span>
+                  <span>{storeInfo.email}</span>
                 </div>
               </div>
 
@@ -99,7 +110,7 @@ export default function ContactPage() {
                 <div className="contact-icon">⏰</div>
                 <div className="contact-text">
                   <strong>Giờ mở cửa:</strong>
-                  <span>8:00 AM - 21:30 PM (Tất cả các ngày trong tuần)</span>
+                  <span>{storeInfo.workingHours}</span>
                 </div>
               </div>
             </div>

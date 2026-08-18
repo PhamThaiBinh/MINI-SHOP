@@ -14,6 +14,7 @@ export default function AdminVouchersPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [editingVoucher, setEditingVoucher] = useState<SystemVoucher | null>(null);
+  const [showModal, setShowModal] = useState<boolean>(false);
 
   const loadData = async () => {
     setLoading(true);
@@ -38,6 +39,17 @@ export default function AdminVouchersPage() {
     loadData();
   }, []);
 
+  const handleOpenAddModal = () => {
+    setEditingVoucher(null);
+    setFormCode("");
+    setFormDesc("");
+    setFormDiscountType("fixed");
+    setFormDiscountValue("");
+    setFormMinOrder("");
+    setFormIsActive(true);
+    setShowModal(true);
+  };
+
   const handleEditClick = (v: SystemVoucher) => {
     setEditingVoucher(v);
     setFormCode(v.code);
@@ -48,16 +60,7 @@ export default function AdminVouchersPage() {
     );
     setFormMinOrder((v.minOrder || 0).toString());
     setFormIsActive(v.isActive);
-  };
-
-  const handleResetForm = () => {
-    setEditingVoucher(null);
-    setFormCode("");
-    setFormDesc("");
-    setFormDiscountType("fixed");
-    setFormDiscountValue("");
-    setFormMinOrder("");
-    setFormIsActive(true);
+    setShowModal(true);
   };
 
   const handleToggleStatus = async (targetCode: string) => {
@@ -76,9 +79,6 @@ export default function AdminVouchersPage() {
       setVouchers(updated);
       saveSystemVouchers(updated);
       await deleteAdminVoucher(targetCode);
-      if (editingVoucher?.code === targetCode) {
-        handleResetForm();
-      }
     }
   };
 
@@ -110,17 +110,13 @@ export default function AdminVouchersPage() {
         v.code === editingVoucher.code ? newVoucherItem : v
       );
     } else {
-      if (vouchers.some((v) => v.code === formattedCode)) {
-        alert("Mã Voucher này đã tồn tại trong hệ thống!");
-        return;
-      }
       updated = [newVoucherItem, ...vouchers];
     }
 
     setVouchers(updated);
     saveSystemVouchers(updated);
     await saveAdminVoucher(newVoucherItem);
-    handleResetForm();
+    setShowModal(false);
   };
 
   const filteredVouchers = vouchers.filter((v) => {
@@ -139,12 +135,9 @@ export default function AdminVouchersPage() {
 
   return (
     <div className="admin-wrapper">
-      {/* Left Sidebar Navigation */}
       <AdminSidebar activeMenu="vouchers" sidebarCollapsed={sidebarCollapsed} />
 
-      {/* Main Content Area */}
       <main className="admin-main">
-        {/* Top Header Bar Đồng Bộ Chuẩn 3 Thông Báo & Menu Admin Interactive */}
         <AdminHeader
           title="Quản Lý Mã Voucher Ưu Đãi"
           sidebarCollapsed={sidebarCollapsed}
@@ -157,327 +150,274 @@ export default function AdminVouchersPage() {
           searchPlaceholder="Tìm mã hoặc mô tả voucher..."
         />
 
-        {/* Dashboard Workspace 2-Column Grid Layout (Giống hệt trang Sản phẩm Admin) */}
         <div className="dashboard-content-body">
-          <div className="admin-workspace-grid">
-            {/* Center Column: Vouchers Table */}
-            <div className="tables-column">
-              <div className="dashboard-card">
-                <div className="card-header-row">
-                  <h2 className="card-header-title">Quản Lý Mã Voucher System</h2>
-                  <div style={{ display: "flex", gap: "8px" }}>
-                    <button
-                      className="select-filter-sm"
-                      style={{ cursor: "pointer" }}
-                    >
-                      🔍 Bộ lọc
-                    </button>
-                    <button
-                      className="btn-add-product-green"
-                      onClick={handleResetForm}
-                    >
-                      + Tạo Mã Voucher
-                    </button>
-                  </div>
-                </div>
-
-                <table className="admin-table">
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>Mã Voucher</th>
-                      <th>Mô Tả Chương Trình</th>
-                      <th>Mức Giảm Giá</th>
-                      <th>Đơn Tối Thiểu</th>
-                      <th>Trạng Thái</th>
-                      <th style={{ textAlign: "center" }}>Thao Tác</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginatedVouchers.length === 0 ? (
-                      <tr>
-                        <td colSpan={7} style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)" }}>
-                          Chưa có mã voucher nào phù hợp.
-                        </td>
-                      </tr>
-                    ) : (
-                      paginatedVouchers.map((v, index) => (
-                        <tr key={v.code}>
-                          <td>{(safeCurrentPage - 1) * pageSize + index + 1}</td>
-                          <td>
-                            <span
-                              style={{
-                                background: "#f0fdf4",
-                                border: "1px dashed var(--primary-color)",
-                                color: "var(--primary-color)",
-                                padding: "4px 8px",
-                                borderRadius: "4px",
-                                fontWeight: 800,
-                                fontSize: "13px",
-                                display: "inline-block",
-                              }}
-                            >
-                              🎟️ {v.code}
-                            </span>
-                          </td>
-                          <td>
-                            <strong>{v.desc}</strong>
-                          </td>
-                          <td>
-                            <strong style={{ color: "#2e7d32" }}>
-                              {v.percent
-                                ? `Giảm ${v.percent}%`
-                                : `Giảm ${v.fixedDiscount?.toLocaleString("vi-VN")}đ`}
-                            </strong>
-                          </td>
-                          <td>
-                            {v.minOrder && v.minOrder > 0
-                              ? `${v.minOrder.toLocaleString("vi-VN")}đ`
-                              : "Không giới hạn"}
-                          </td>
-                          <td style={{ whiteSpace: "nowrap" }}>
-                            {v.expiryDate && new Date(v.expiryDate) < new Date() ? (
-                              <span
-                                style={{
-                                  background: "#fee2e2",
-                                  color: "#b91c1c",
-                                  padding: "4px 8px",
-                                  borderRadius: "4px",
-                                  fontWeight: 800,
-                                  fontSize: "12px",
-                                  display: "inline-block",
-                                  whiteSpace: "nowrap",
-                                }}
-                              >
-                                ⏰ Đã hết hạn
-                              </span>
-                            ) : (
-                              <span
-                                className={
-                                  v.isActive ? "badge-visible" : "badge-lowstock"
-                                }
-                                style={{ whiteSpace: "nowrap", display: "inline-block" }}
-                              >
-                                {v.isActive ? "● Hoạt động" : "○ Tạm dừng"}
-                              </span>
-                            )}
-                          </td>
-                          <td style={{ textAlign: "center", whiteSpace: "nowrap" }}>
-                            <div style={{ display: "inline-flex", gap: "4px", alignItems: "center", whiteSpace: "nowrap" }}>
-                              <button
-                                className="btn-action-edit"
-                                onClick={() => handleEditClick(v)}
-                                style={{ whiteSpace: "nowrap" }}
-                              >
-                                📝 Sửa
-                              </button>
-                              <button
-                                className="btn-action-edit"
-                                onClick={() => handleToggleStatus(v.code)}
-                                style={{
-                                  borderColor: v.isActive ? "#fdba74" : "#86efac",
-                                  color: v.isActive ? "#c2410c" : "#15803d",
-                                  whiteSpace: "nowrap",
-                                }}
-                              >
-                                {v.isActive ? "⏸️ Tạm dừng" : "▶️ Bật"}
-                              </button>
-                              <button
-                                className="btn-action-delete"
-                                onClick={() => handleDeleteVoucher(v.code)}
-                                style={{ whiteSpace: "nowrap" }}
-                              >
-                                🗑️ Xóa
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-
-                {/* Table Footer Pagination */}
-                <div className="table-footer-row">
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                      fontSize: "13px",
-                      color: "var(--text-muted)",
-                    }}
-                  >
-                    <span>Hiển thị:</span>
-                    <select
-                      value={pageSize}
-                      onChange={(e) => {
-                        setPageSize(Number(e.target.value));
-                        setCurrentPage(1);
-                      }}
-                      style={{
-                        padding: "4px 8px",
-                        fontSize: "12px",
-                        fontWeight: 700,
-                        border: "1px solid var(--border-color)",
-                        borderRadius: "6px",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <option value={10}>10 mã / trang</option>
-                      <option value={25}>25 mã / trang</option>
-                      <option value={50}>50 mã / trang</option>
-                    </select>
-                    <span>
-                      Hiển thị {filteredVouchers.length > 0 ? (safeCurrentPage - 1) * pageSize + 1 : 0} -{" "}
-                      {Math.min(safeCurrentPage * pageSize, filteredVouchers.length)} / tổng {filteredVouchers.length} voucher
-                    </span>
-                  </div>
-                  <div className="pagination-controls">
-                    <button
-                      className="page-btn"
-                      disabled={safeCurrentPage <= 1}
-                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    >
-                      &lt; Trang trước
-                    </button>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                      <button
-                        key={p}
-                        className={`page-btn ${p === safeCurrentPage ? "active" : ""}`}
-                        onClick={() => setCurrentPage(p)}
-                      >
-                        {p}
-                      </button>
-                    ))}
-                    <button
-                      className="page-btn"
-                      disabled={safeCurrentPage >= totalPages}
-                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    >
-                      Trang sau &gt;
-                    </button>
-                  </div>
-                </div>
+          <div className="dashboard-card">
+            <div className="card-header-row" style={{ marginBottom: "16px" }}>
+              <div>
+                <h2 className="card-header-title">Danh Sách Mã Voucher ({vouchers.length})</h2>
+                <p style={{ fontSize: "12px", color: "var(--text-muted)", margin: 0 }}>
+                  Tạo và điều chỉnh chính sách ưu đãi chiết khấu khuyến mãi cho cửa hàng
+                </p>
               </div>
+              <button className="btn-add-product-green" onClick={handleOpenAddModal}>
+                + Tạo Mã Voucher Mới
+              </button>
             </div>
 
-            {/* Right Column: Voucher Form Panel (Đồng bộ chuẩn Form Sản phẩm Admin) */}
-            <aside className="product-form-panel">
-              <h2
-                className="card-header-title"
-                style={{ marginBottom: "16px" }}
-              >
-                {editingVoucher ? "Chỉnh Sửa Mã Voucher" : "Form Mã Voucher Mới"}
-              </h2>
-
-              <form onSubmit={handleFormSubmit}>
-                <div style={{ marginBottom: "16px" }}>
-                  <label className="auth-label">Mã Voucher (Viết hoa không dấu) *</label>
-                  <input
-                    type="text"
-                    className="form-control auth-input"
-                    placeholder="Ví dụ: HE2026, SALEOFF50K"
-                    required
-                    value={formCode}
-                    onChange={(e) => setFormCode(e.target.value.toUpperCase())}
-                    readOnly={!!editingVoucher}
-                    style={editingVoucher ? { background: "#f1f5f9", cursor: "not-allowed" } : {}}
-                  />
-                </div>
-
-                <div style={{ marginBottom: "16px" }}>
-                  <label className="auth-label">Mô tả chương trình ưu đãi *</label>
-                  <input
-                    type="text"
-                    className="form-control auth-input"
-                    placeholder="Ví dụ: Giảm 50.000đ cho đơn hàng từ 300.000đ"
-                    required
-                    value={formDesc}
-                    onChange={(e) => setFormDesc(e.target.value)}
-                  />
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
-                  <div>
-                    <label className="auth-label">Loại giảm giá *</label>
-                    <select
-                      className="form-control auth-input"
-                      value={formDiscountType}
-                      onChange={(e) => setFormDiscountType(e.target.value as any)}
-                    >
-                      <option value="fixed">Tiền cố định (VNĐ)</option>
-                      <option value="percent">Phần trăm (%)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="auth-label">Mức giảm *</label>
-                    <input
-                      type="number"
-                      className="form-control auth-input"
-                      placeholder={formDiscountType === "fixed" ? "50000" : "15"}
-                      required
-                      value={formDiscountValue}
-                      onChange={(e) => setFormDiscountValue(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div style={{ marginBottom: "16px" }}>
-                  <label className="auth-label">Đơn hàng tối thiểu (VNĐ)</label>
-                  <input
-                    type="number"
-                    className="form-control auth-input"
-                    placeholder="Ví dụ: 200000 (Nhập 0 nếu không áp đặt)"
-                    value={formMinOrder}
-                    onChange={(e) => setFormMinOrder(e.target.value)}
-                  />
-                </div>
-
-                <div style={{ marginBottom: "20px" }}>
-                  <label className="auth-label">Trạng thái phát hành *</label>
-                  <select
-                    className="form-control auth-input"
-                    value={formIsActive ? "Active" : "Hidden"}
-                    onChange={(e) => setFormIsActive(e.target.value === "Active")}
-                  >
-                    <option value="Active">● Hoạt động (Khách hàng sử dụng được)</option>
-                    <option value="Hidden">○ Tạm dừng phát hành</option>
-                  </select>
-                </div>
-
-                <div style={{ display: "flex", gap: "10px" }}>
-                  <button
-                    type="submit"
-                    className="btn-add-product-green"
-                    style={{ flex: 1, justifyContent: "center", height: "42px" }}
-                  >
-                    {editingVoucher ? "💾 Lưu Cập Nhật" : "➕ Tạo Mã Voucher"}
-                  </button>
-
-                  {editingVoucher && (
-                    <button
-                      type="button"
-                      onClick={handleResetForm}
-                      style={{
-                        padding: "0 16px",
-                        background: "#f1f5f9",
-                        border: "1px solid var(--border-color)",
-                        borderRadius: "var(--radius-md)",
-                        fontWeight: 700,
-                        fontSize: "13px",
-                        cursor: "pointer",
-                      }}
-                    >
-                      Hủy bỏ
-                    </button>
+            {loading ? (
+              <div style={{ padding: "30px", textAlign: "center", fontSize: "13px", color: "var(--text-muted)" }}>
+                ⏳ Đang tải mã voucher từ Supabase...
+              </div>
+            ) : (
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Mã Voucher</th>
+                    <th>Mô Tả Chương Trình</th>
+                    <th>Mức Giảm Giá</th>
+                    <th>Đơn Tối Thiểu</th>
+                    <th>Trạng Thái</th>
+                    <th style={{ textAlign: "center" }}>Thao Tác</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedVouchers.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)" }}>
+                        Chưa có mã voucher nào phù hợp.
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedVouchers.map((v, index) => (
+                      <tr key={v.code}>
+                        <td>{(safeCurrentPage - 1) * pageSize + index + 1}</td>
+                        <td>
+                          <span
+                            style={{
+                              background: "#f0fdf4",
+                              border: "1px dashed var(--primary-color)",
+                              color: "var(--primary-color)",
+                              padding: "4px 8px",
+                              borderRadius: "4px",
+                              fontWeight: 800,
+                              fontSize: "13px",
+                              display: "inline-block",
+                            }}
+                          >
+                            🎟️ {v.code}
+                          </span>
+                        </td>
+                        <td><strong>{v.desc}</strong></td>
+                        <td style={{ fontWeight: 800, color: "#16a34a" }}>
+                          {v.percent
+                            ? `Giảm ${v.percent}%`
+                            : `Giảm ${v.fixedDiscount ? v.fixedDiscount.toLocaleString() : 0}đ`}
+                        </td>
+                        <td>Đơn từ {(v.minOrder || 0).toLocaleString()}đ</td>
+                        <td>
+                          <span
+                            onClick={() => handleToggleStatus(v.code)}
+                            style={{
+                              padding: "4px 8px",
+                              borderRadius: "6px",
+                              fontSize: "11px",
+                              fontWeight: 700,
+                              cursor: "pointer",
+                              background: v.isActive ? "#dcfce7" : "#fee2e2",
+                              color: v.isActive ? "#166534" : "#991b1b",
+                            }}
+                          >
+                            {v.isActive ? "● Đang kích hoạt" : "○ Tạm tắt"}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: "center" }}>
+                          <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
+                            <button
+                              onClick={() => handleEditClick(v)}
+                              style={{
+                                padding: "4px 8px",
+                                background: "#eff6ff",
+                                color: "#2563eb",
+                                border: "1px solid #bfdbfe",
+                                borderRadius: "6px",
+                                cursor: "pointer",
+                                fontSize: "12px",
+                                fontWeight: 700,
+                              }}
+                            >
+                              ✏️ Sửa
+                            </button>
+                            <button
+                              onClick={() => handleDeleteVoucher(v.code)}
+                              style={{
+                                padding: "4px 8px",
+                                background: "#fef2f2",
+                                color: "#dc2626",
+                                border: "1px solid #fca5a5",
+                                borderRadius: "6px",
+                                cursor: "pointer",
+                                fontSize: "12px",
+                                fontWeight: 700,
+                              }}
+                            >
+                              🗑️ Xóa
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
                   )}
-                </div>
-              </form>
-            </aside>
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
       </main>
+
+      {/* FORM MODAL MÃ VOUCHER MỚI / CHỈNH SỬA */}
+      {showModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.5)",
+            zIndex: 3000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
+          }}
+        >
+          <div
+            style={{
+              background: "#fff",
+              width: "100%",
+              maxWidth: "500px",
+              borderRadius: "var(--radius-lg)",
+              padding: "24px",
+              boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+              <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", margin: 0 }}>
+                {editingVoucher ? "✏️ Chỉnh Sửa Mã Voucher" : "🎟️ Form Mã Voucher Mới"}
+              </h3>
+              <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer" }}>&times;</button>
+            </div>
+
+            <form onSubmit={handleFormSubmit}>
+              <div style={{ marginBottom: "12px" }}>
+                <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "4px" }}>Mã Ưu Đãi (Voucher Code) *</label>
+                <input
+                  type="text"
+                  className="form-control admin-setting-input"
+                  placeholder="Ví dụ: MINISHOP50, FREESHIP"
+                  value={formCode}
+                  onChange={(e) => setFormCode(e.target.value)}
+                  disabled={Boolean(editingVoucher)}
+                  required
+                />
+              </div>
+
+              <div style={{ marginBottom: "12px" }}>
+                <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "4px" }}>Mô Tả Chương Trình *</label>
+                <input
+                  type="text"
+                  className="form-control admin-setting-input"
+                  placeholder="Ví dụ: Giảm 50.000đ cho đơn hàng từ 300.000đ"
+                  value={formDesc}
+                  onChange={(e) => setFormDesc(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+                <div>
+                  <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "4px" }}>Loại Giảm Giá *</label>
+                  <select
+                    className="form-control admin-setting-input"
+                    value={formDiscountType}
+                    onChange={(e) => setFormDiscountType(e.target.value as any)}
+                  >
+                    <option value="fixed">Số tiền cố định (đ)</option>
+                    <option value="percent">Phần trăm (%)</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "4px" }}>
+                    {formDiscountType === "fixed" ? "Giá Trị Giảm (VNĐ) *" : "Mức Giảm (%) *"}
+                  </label>
+                  <input
+                    type="number"
+                    className="form-control admin-setting-input"
+                    placeholder={formDiscountType === "fixed" ? "50000" : "10"}
+                    value={formDiscountValue}
+                    onChange={(e) => setFormDiscountValue(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div style={{ marginBottom: "12px" }}>
+                <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "4px" }}>Giá Trị Đơn Tối Thiểu (VNĐ)</label>
+                <input
+                  type="number"
+                  className="form-control admin-setting-input"
+                  placeholder="0"
+                  value={formMinOrder}
+                  onChange={(e) => setFormMinOrder(e.target.value)}
+                />
+              </div>
+
+              <div style={{ marginBottom: "20px" }}>
+                <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "4px" }}>Trạng Thái Sử Dụng</label>
+                <select
+                  className="form-control admin-setting-input"
+                  value={formIsActive ? "active" : "inactive"}
+                  onChange={(e) => setFormIsActive(e.target.value === "active")}
+                >
+                  <option value="active">● Kích hoạt (Cho phép nhập)</option>
+                  <option value="inactive">○ Tạm tắt (Không khả dụng)</option>
+                </select>
+              </div>
+
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  style={{
+                    flex: 1,
+                    padding: "10px",
+                    background: "#f1f5f9",
+                    border: "none",
+                    borderRadius: "var(--radius-md)",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  Hủy Bỏ
+                </button>
+                <button
+                  type="submit"
+                  style={{
+                    flex: 1,
+                    padding: "10px",
+                    background: "var(--primary-color)",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "var(--radius-md)",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  {editingVoucher ? "Lưu Cập Nhật" : "Tạo Voucher Mới"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
