@@ -48,11 +48,11 @@ export default function AdminCategoriesPage() {
     } else {
       // Fallback clean default categories
       setCategories([
-        { id: 1, icon: "🛏️", name: "Nội Thất Phòng Ngủ", slug: "phong-ngu", productCount: 4, status: "Active", desc: "Giường ngủ, tủ quần áo, bàn trang điểm" },
-        { id: 2, icon: "🛋️", name: "Nội Thất Phòng Khách", slug: "phong-khach", productCount: 5, status: "Active", desc: "Sofa, bàn trà, kệ TV" },
-        { id: 3, icon: "🍽️", name: "Nội Thất Phòng Ăn", slug: "phong-an", productCount: 4, status: "Active", desc: "Bàn ăn, ghế ăn, tủ bếp" },
-        { id: 4, icon: "💼", name: "Nội Thất Phòng Làm Việc", slug: "phong-lam-viec", productCount: 3, status: "Active", desc: "Bàn làm việc, ghế công thái học" },
-        { id: 5, icon: "🪴", name: "Trang Trí & Decor", slug: "trang-tri", productCount: 2, status: "Active", desc: "Đèn trang trí, thảm, tranh treo tường" },
+        { id: 1, icon: "Bed", name: "Nội Thất Phòng Ngủ", slug: "phong-ngu", productCount: 4, status: "Active", desc: "Giường ngủ, tủ quần áo, bàn trang điểm" },
+        { id: 2, icon: "Sofa", name: "Nội Thất Phòng Khách", slug: "phong-khach", productCount: 5, status: "Active", desc: "Sofa, bàn trà, kệ TV" },
+        { id: 3, icon: "Utensils", name: "Nội Thất Phòng Ăn", slug: "phong-an", productCount: 4, status: "Active", desc: "Bàn ăn, ghế ăn, tủ bếp" },
+        { id: 4, icon: "Briefcase", name: "Nội Thất Phòng Làm Việc", slug: "phong-lam-viec", productCount: 3, status: "Active", desc: "Bàn làm việc, ghế công thái học" },
+        { id: 5, icon: "Sparkles", name: "Trang Trí & Decor", slug: "trang-tri", productCount: 2, status: "Active", desc: "Đèn trang trí, thảm, tranh treo tường" },
       ]);
     }
     setLoading(false);

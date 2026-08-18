@@ -182,7 +182,7 @@ export const fetchAdminCategories = async (): Promise<AdminCategoryItem[]> => {
       return {
         id: Number(c.id),
         code: String(c.category_id || `C${String(c.id).padStart(4, "0")}`),
-        icon: String(c.icon || "📁"),
+        icon: String(c.icon || "Folder"),
         name: String(c.name),
         slug: String(c.slug || c.category_id),
         productCount: pCount,

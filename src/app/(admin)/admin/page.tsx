@@ -126,7 +126,7 @@ export default function AdminDashboard() {
     return {
       code: cat.code || cat.slug,
       name: cat.name,
-      icon: cat.icon || "📁",
+      icon: cat.icon || "Folder",
       orderCount: catOrderCount,
       revenue: catRevenue,
       percentage: netRevenue > 0 ? Math.round((catRevenue / netRevenue) * 100) : 0,
