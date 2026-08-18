@@ -151,10 +151,11 @@ export default function AdminCategoriesPage() {
         )
       );
     } else {
+      const generatedCategoryId = `MH${String(categories.length + 1).padStart(3, "0")}`;
       const { data } = await supabase
         .from("categories")
         .insert({
-          category_id: formName.trim(),
+          category_id: generatedCategoryId,
           name: formName.trim(),
           slug: cleanSlug,
           icon: cleanIcon,
