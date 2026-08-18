@@ -28,10 +28,19 @@
     --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+body:has(.admin-wrapper) {
+    padding-top: 0 !important;
+}
+
 .admin-wrapper {
     display: flex;
     min-height: 100vh;
     background-color: var(--bg-body);
+    margin-top: -76px !important;
+}
+
+body:has(.admin-wrapper) .admin-wrapper {
+    margin-top: 0 !important;
 }
 
 /* Left Sidebar (Light Theme V2) */
@@ -170,8 +179,8 @@
 }
 
 .admin-content {
-    margin-top: 0;
-    padding: 84px 32px 32px 32px;
+    margin-top: 0 !important;
+    padding: 84px 32px 32px 32px !important;
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -283,8 +292,8 @@
 
 /* Dashboard Body Container */
 .dashboard-content-body {
-    margin-top: 0;
-    padding: 84px 32px 32px 32px;
+    margin-top: 0 !important;
+    padding: 84px 32px 32px 32px !important;
     display: flex;
     flex-direction: column;
     gap: 20px;
