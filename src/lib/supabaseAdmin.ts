@@ -244,6 +244,18 @@ export const fetchAdminOrders = async (): Promise<UnifiedOrder[]> => {
           price: Number(it.price),
         }));
 
+      const finalItems =
+        items.length > 0
+          ? items
+          : [
+              {
+                name: "Sản phẩm Đơn Hàng #" + String(o.id),
+                image: "/assets/images/products/noi-that-gia-dung/sofa-phong-khach.webp",
+                qty: 1,
+                price: Number(o.subtotal || o.total || 0),
+              },
+            ];
+
       return {
         id: String(o.id),
         date: String(o.date),
@@ -253,7 +265,7 @@ export const fetchAdminOrders = async (): Promise<UnifiedOrder[]> => {
         recipientPhone: String(o.recipient_phone),
         address: String(o.address),
         paymentMethod: String(o.payment_method),
-        items: items,
+        items: finalItems,
         subtotal: Number(o.subtotal || 0),
         discount: Number(o.discount || 0),
         total: Number(o.total || 0),
