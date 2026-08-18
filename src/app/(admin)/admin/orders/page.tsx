@@ -196,6 +196,21 @@ export default function AdminOrdersPage() {
     await loadData();
   };
 
+  const parseOrderDate = (dateStr: string): Date | null => {
+    if (!dateStr) return null;
+    const parts = dateStr.split(" ")[0].split("/");
+    if (parts.length === 3) {
+      const day = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const year = parseInt(parts[2], 10);
+      if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+        return new Date(year, month, day);
+      }
+    }
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? null : d;
+  };
+
   const filteredOrders = orders.filter((order) => {
     const matchesTab = activeTab === "all" || order.status === activeTab;
     const matchesSearch =
@@ -214,9 +229,19 @@ export default function AdminOrdersPage() {
 
     let matchesDate = true;
     if (fromDate || toDate) {
-      const orderDateStr = order.date || "";
-      if (fromDate && orderDateStr && orderDateStr < fromDate) matchesDate = false;
-      if (toDate && orderDateStr && orderDateStr > toDate) matchesDate = false;
+      const oDate = parseOrderDate(order.date);
+      if (oDate) {
+        if (fromDate) {
+          const fDate = new Date(fromDate);
+          fDate.setHours(0, 0, 0, 0);
+          if (oDate < fDate) matchesDate = false;
+        }
+        if (toDate) {
+          const tDate = new Date(toDate);
+          tDate.setHours(23, 59, 59, 999);
+          if (oDate > tDate) matchesDate = false;
+        }
+      }
     }
 
     return matchesTab && matchesSearch && matchesPayment && matchesDate;
@@ -355,6 +380,17 @@ export default function AdminOrdersPage() {
           color: #b91c1c;
         }
         @media print {
+          @page {
+            size: A4 portrait;
+            margin: 0;
+          }
+          html, body {
+            height: 100vh !important;
+            overflow: hidden !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #ffffff !important;
+          }
           body * {
             visibility: hidden !important;
           }
@@ -362,14 +398,22 @@ export default function AdminOrdersPage() {
             visibility: visible !important;
           }
           #printable-invoice-card {
-            position: absolute !important;
-            left: 0 !important;
+            position: fixed !important;
             top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            margin: 0 auto !important;
             width: 100% !important;
-            max-width: 100% !important;
+            max-width: 190mm !important;
+            max-height: 270mm !important;
             box-shadow: none !important;
             border: 1px solid #cbd5e1 !important;
-            padding: 30px !important;
+            padding: 12mm 15mm !important;
+            box-sizing: border-box !important;
+            page-break-inside: avoid !important;
+            page-break-after: avoid !important;
+            page-break-before: avoid !important;
+            overflow: hidden !important;
           }
           .btn-print-hide {
             display: none !important;
@@ -481,48 +525,6 @@ export default function AdminOrdersPage() {
                     flexWrap: "wrap",
                   }}
                 >
-                  <button
-                    onClick={() => {
-                      if (!orders || orders.length === 0) {
-                        alert("Không có đơn hàng nào để xuất!");
-                        return;
-                      }
-                      const headers = ["Mã Đơn", "Ngày Đặt", "Trạng Thái", "Người Nhận", "SĐT", "Địa Chỉ", "Tổng Tiền (VND)"];
-                      const rows = orders.map((o) => [
-                        `"${o.id}"`,
-                        `"${o.date}"`,
-                        `"${o.statusText}"`,
-                        `"${o.recipientName}"`,
-                        `"${o.recipientPhone}"`,
-                        `"${(o.address || "").replace(/"/g, '""')}"`,
-                        o.total,
-                      ]);
-                      const csvContent = "\uFEFF" + [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
-                      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-                      const url = URL.createObjectURL(blob);
-                      const link = document.createElement("a");
-                      link.setAttribute("href", url);
-                      link.setAttribute("download", `Bao_Cao_Don_Hang_${new Date().toISOString().slice(0, 10)}.csv`);
-                      document.body.appendChild(link);
-                      link.click();
-                      document.body.removeChild(link);
-                    }}
-                    style={{
-                      padding: "6px 12px",
-                      fontSize: "12px",
-                      fontWeight: 700,
-                      border: "1px solid #166534",
-                      background: "#f0fdf4",
-                      color: "#166534",
-                      borderRadius: "6px",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "5px",
-                    }}
-                  >
-                    <IconDownload size={14} color="#166534" /> Xuất Excel/CSV
-                  </button>
                   <div
                     style={{
                       display: "flex",
@@ -564,6 +566,35 @@ export default function AdminOrdersPage() {
                       }}
                     />
                   </div>
+
+                  {(searchQuery || paymentFilter !== "all" || fromDate || toDate || activeTab !== "all") && (
+                    <button
+                      onClick={() => {
+                        setSearchQuery("");
+                        setPaymentFilter("all");
+                        setFromDate("");
+                        setToDate("");
+                        setActiveTab("all");
+                      }}
+                      style={{
+                        padding: "6px 12px",
+                        fontSize: "12px",
+                        fontWeight: 700,
+                        background: "#fee2e2",
+                        color: "#dc2626",
+                        border: "1px solid #fca5a5",
+                        borderRadius: "6px",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px",
+                      }}
+                      title="Xóa tất cả bộ lọc"
+                    >
+                      ✕ Xóa lọc
+                    </button>
+                  )}
+
                   <button
                     onClick={handleExportCSV}
                     className="select-filter-sm"
@@ -573,10 +604,14 @@ export default function AdminOrdersPage() {
                       color: "#fff",
                       border: "none",
                       fontWeight: 700,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "5px",
                     }}
                   >
-                    📥 Xuất File Excel
+                    <IconDownload size={14} color="#ffffff" /> Xuất File Excel
                   </button>
+
                   {selectedOrderIds.length > 0 && (
                     <button
                       onClick={handleBulkApprove}
@@ -889,26 +924,6 @@ export default function AdminOrdersPage() {
                 Chi Tiết Đơn Hàng #{selectedOrder.id}
               </h3>
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }} className="btn-print-hide">
-                <button
-                  type="button"
-                  className="btn-print-hide"
-                  onClick={() => window.print()}
-                  style={{
-                    padding: "6px 12px",
-                    background: "var(--primary-color)",
-                    color: "#ffffff",
-                    border: "none",
-                    borderRadius: "6px",
-                    fontWeight: 700,
-                    fontSize: "12px",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "4px",
-                  }}
-                >
-                  <IconPrinter size={14} color="#ffffff" /> In hóa đơn ngay
-                </button>
                 <button
                   className="btn-print-hide"
                   onClick={() => setSelectedOrder(null)}
