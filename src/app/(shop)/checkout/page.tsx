@@ -593,7 +593,7 @@ export default function CheckoutPage() {
                 <div className="summary-row">
                   <span className="summary-label">Phí vận chuyển:</span>
                   <strong style={{ color: isFreeShip ? "var(--primary-color)" : "#334155" }}>
-                    {isFreeShip ? "🎉 Miễn phí (Đơn từ 500.000đ)" : formatVND(shippingFee)}
+                    {isFreeShip ? "Miễn phí" : formatVND(shippingFee)}
                   </strong>
                 </div>
 

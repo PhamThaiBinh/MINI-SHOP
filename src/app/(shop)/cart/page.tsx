@@ -209,53 +209,6 @@ export default function CartPage() {
               </div>
             ) : (
               <>
-                {/* Free Shipping Progress Bar Card */}
-                <div
-                style={{
-                  background: subtotal >= 500000 ? "#f0fdf4" : "#f8fafc",
-                  border: subtotal >= 500000 ? "1px solid #bbf7d0" : "1px solid var(--border-color)",
-                  borderRadius: "var(--radius-lg)",
-                  padding: "16px 20px",
-                  marginBottom: "20px",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    fontSize: "13px",
-                    fontWeight: 700,
-                    color: subtotal >= 500000 ? "#166534" : "#334155",
-                    marginBottom: "8px",
-                  }}
-                >
-                  <span>
-                    {subtotal >= 500000
-                      ? "🎉 Bạn đã đạt điều kiện Miễn Phí Giao Hàng toàn quốc!"
-                      : `🚚 Mua thêm ${formatVND(500000 - subtotal)} để được Miễn Phí Giao Hàng toàn quốc!`}
-                  </span>
-                  <span>{Math.min(100, Math.round((subtotal / 500000) * 100))}%</span>
-                </div>
-                <div
-                  style={{
-                    height: "8px",
-                    background: "#e2e8f0",
-                    borderRadius: "4px",
-                    overflow: "hidden",
-                  }}
-                >
-                  <div
-                    style={{
-                      height: "100%",
-                      width: `${Math.min(100, (subtotal / 500000) * 100)}%`,
-                      background: subtotal >= 500000 ? "var(--primary-color)" : "#3b82f6",
-                      borderRadius: "4px",
-                      transition: "width 0.4s ease",
-                    }}
-                  />
-                </div>
-              </div>
-
               {/* Main Cart Layout (2 Columns) */}
               <div className="cart-layout" id="cart-main-layout">
                 {/* Left: Products List Table */}
@@ -413,7 +366,7 @@ export default function CartPage() {
                       id="cart-summary-shipping"
                       style={{ color: subtotal >= 500000 ? "var(--primary-color)" : "var(--text-main)" }}
                     >
-                      {subtotal >= 500000 ? "Miễn phí (Đơn từ 500k)" : "20.000đ - 30.000đ"}
+                      {subtotal >= 500000 ? "Miễn phí" : "20.000đ - 30.000đ"}
                     </strong>
                   </div>
 

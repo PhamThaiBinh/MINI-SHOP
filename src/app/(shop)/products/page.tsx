@@ -248,17 +248,22 @@ function ProductsContent() {
                   </div>
 
                   <div className="toolbar-actions">
-                    <div className="toolbar-search" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                      <input
-                        type="text"
-                        id="catalog-search-input"
-                        placeholder="Tìm sản phẩm..."
-                        value={searchQuery}
-                        onChange={(e) => {
-                          setSearchQuery(e.target.value);
-                          setCurrentPage(1);
-                        }}
-                      />
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <div className="toolbar-search">
+                        <input
+                          type="text"
+                          id="catalog-search-input"
+                          placeholder="Tìm sản phẩm..."
+                          value={searchQuery}
+                          onChange={(e) => {
+                            setSearchQuery(e.target.value);
+                            setCurrentPage(1);
+                          }}
+                        />
+                        <svg viewBox="0 0 24 24">
+                          <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                        </svg>
+                      </div>
                       {(searchQuery || currentCategory !== "all" || currentPriceRange !== "all" || inStockOnly) && (
                         <button
                           onClick={() => {
@@ -278,15 +283,16 @@ function ProductsContent() {
                             fontWeight: 700,
                             cursor: "pointer",
                             whiteSpace: "nowrap",
+                            height: "35px",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
                           }}
                           title="Xóa tất cả bộ lọc"
                         >
                           ❌
                         </button>
                       )}
-                      <svg viewBox="0 0 24 24">
-                        <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
-                      </svg>
                     </div>
 
                     <select

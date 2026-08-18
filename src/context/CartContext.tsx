@@ -137,8 +137,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (isExceeded) {
       showToast(`⚠️ Kho chỉ còn tối đa ${maxStock} món cho sản phẩm "${product.name}"!`);
-    } else {
-      showToast(`🛒 Đã thêm "${product.name}" vào giỏ hàng!`);
     }
   };
 
