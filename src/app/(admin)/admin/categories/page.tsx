@@ -151,7 +151,7 @@ export default function AdminCategoriesPage() {
         )
       );
     } else {
-      const generatedCategoryId = `MH${String(categories.length + 1).padStart(3, "0")}`;
+      const generatedCategoryId = `C${String(categories.length + 1).padStart(4, "0")}`;
       const { data } = await supabase
         .from("categories")
         .insert({
