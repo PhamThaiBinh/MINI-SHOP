@@ -14,21 +14,33 @@ export interface OpenAdminWardEntity {
   parent_name_local: string;
 }
 
-/**
- * Format province name to include "Thành phố" prefix if not present
- */
+// 7 Thành phố trực thuộc Trung ương cập nhật mới nhất (đến 18/08/2026)
+export const CENTRAL_CITIES = [
+  "Hà Nội",
+  "Hồ Chí Minh",
+  "Hải Phòng",
+  "Đà Nẵng",
+  "Cần Thơ",
+  "Huế",
+  "Đồng Nai",
+];
+
 export function formatProvinceName(rawName: string): string {
-  const clean = rawName.trim();
-  if (/^(thành phố|tỉnh|tp\.)/i.test(clean)) return clean;
-  return `Thành phố ${clean}`;
+  const clean = rawName.replace(/^(tỉnh|thành phố|tp\.)\s*/i, "").trim();
+  const isCentralCity = CENTRAL_CITIES.some(
+    (c) => c.toLowerCase() === clean.toLowerCase()
+  );
+  if (isCentralCity) {
+    return `Thành phố ${clean}`;
+  }
+  return `Tỉnh ${clean}`;
 }
 
 /**
- * Fetch post-merger Vietnam Provinces from https://api.openadmindata.org/api/v1/vn/province.json
- * Sorted A-Z with "Thành phố" prefix (Updated to 18/08/2026)
+ * Fetch 34 post-merger Vietnam Provinces, prefixed with "Thành phố" / "Tỉnh" and sorted A-Z
  */
 export async function fetchProvincesApi(): Promise<string[]> {
-  const cacheKey = "minishop_openadmindata_org_provinces_v2026_az";
+  const cacheKey = "minishop_openadmindata_org_provinces_v2";
 
   if (typeof window !== "undefined") {
     const cached = sessionStorage.getItem(cacheKey) || localStorage.getItem(cacheKey);
@@ -47,9 +59,12 @@ export async function fetchProvincesApi(): Promise<string[]> {
     if (res.ok) {
       const data = await res.json();
       if (data && Array.isArray(data.entities) && data.entities.length > 0) {
-        const provinceNames: string[] = data.entities
-          .map((p: OpenAdminProvinceEntity) => formatProvinceName(p.name_local))
-          .sort((a: string, b: string) => a.localeCompare(b, "vi"));
+        const provinceNames: string[] = data.entities.map(
+          (p: OpenAdminProvinceEntity) => formatProvinceName(p.name_local)
+        );
+
+        // Sort A-Z in Vietnamese
+        provinceNames.sort((a, b) => a.localeCompare(b, "vi"));
 
         if (typeof window !== "undefined") {
           sessionStorage.setItem(cacheKey, JSON.stringify(provinceNames));
@@ -62,49 +77,33 @@ export async function fetchProvincesApi(): Promise<string[]> {
   }
 
   const fallback = [
-    "Thành phố An Giang",
-    "Thành phố Bắc Ninh",
-    "Thành phố Cần Thơ",
-    "Thành phố Cà Mau",
-    "Thành phố Cao Bằng",
-    "Thành phố Đà Nẵng",
-    "Thành phố Điện Biên",
-    "Thành phố Đồng Nai",
-    "Thành phố Đồng Tháp",
-    "Thành phố Gia Lai",
     "Thành phố Hà Nội",
-    "Thành phố Hải Phòng",
     "Thành phố Hồ Chí Minh",
+    "Thành phố Hải Phòng",
+    "Thành phố Đà Nẵng",
+    "Thành phố Cần Thơ",
     "Thành phố Huế",
-    "Thành phố Khánh Hòa",
-    "Thành phố Lai Châu",
-    "Thành phố Lâm Đồng",
-    "Thành phố Lạng Sơn",
-    "Thành phố Lào Cai",
-    "Thành phố Nghệ An",
-    "Thành phố Ninh Bình",
-    "Thành phố Phú Thọ",
-    "Thành phố Quảng Ngãi",
-    "Thành phố Quảng Ninh",
-    "Thành phố Quảng Trị",
-    "Thành phố Sơn La",
-    "Thành phố Tây Ninh",
-    "Thành phố Thái Nguyên",
-    "Thành phố Thanh Hóa",
-    "Thành phố Tuyên Quang",
-    "Thành phố Vĩnh Long",
-  ].sort((a: string, b: string) => a.localeCompare(b, "vi"));
-
+    "Thành phố Đồng Nai",
+    "Tỉnh An Giang",
+    "Tỉnh Bắc Ninh",
+    "Tỉnh Cà Mau",
+    "Tỉnh Đồng Tháp",
+    "Tỉnh Gia Lai",
+    "Tỉnh Khánh Hòa",
+    "Tỉnh Lâm Đồng",
+    "Tỉnh Tây Ninh",
+    "Tỉnh Thái Nguyên",
+  ];
+  fallback.sort((a, b) => a.localeCompare(b, "vi"));
   return fallback;
 }
 
 /**
- * Fetch Wards for a specific Province from https://api.openadmindata.org/api/v1/vn/ward.json
- * Sorted A-Z
+ * Fetch Wards for a specific Province, sorted A-Z
  */
 export async function fetchWardsForProvinceApi(provinceName: string): Promise<string[]> {
-  const cleanProv = provinceName.trim();
-  const cacheKey = `minishop_openadmindata_org_wards_v2026_${encodeURIComponent(cleanProv)}`;
+  const cleanProv = provinceName.replace(/^(tỉnh|thành phố|tp\.)\s*/i, "").trim();
+  const cacheKey = `minishop_openadmindata_org_wards_v2_${encodeURIComponent(cleanProv)}`;
 
   if (typeof window !== "undefined") {
     const cached = sessionStorage.getItem(cacheKey) || localStorage.getItem(cacheKey);
@@ -123,15 +122,23 @@ export async function fetchWardsForProvinceApi(provinceName: string): Promise<st
     if (res.ok) {
       const data = await res.json();
       if (data && Array.isArray(data.entities)) {
-        const cleanTarget = cleanProv.toLowerCase().replace(/^(thành phố|tỉnh|tp\.)\s*/i, "");
-        
+        const cleanTarget = cleanProv.toLowerCase();
+
         const matchedWards: string[] = data.entities
           .filter((w: OpenAdminWardEntity) => {
-            const parentName = (w.parent_name_local || "").toLowerCase().replace(/^(thành phố|tỉnh|tp\.)\s*/i, "");
-            return parentName === cleanTarget || (w.parent_name_local || "").toLowerCase() === cleanProv.toLowerCase();
+            const parentName = (w.parent_name_local || "")
+              .toLowerCase()
+              .replace(/^(tỉnh|thành phố|tp\.)\s*/i, "")
+              .trim();
+            return (
+              parentName === cleanTarget ||
+              (w.parent_name_local || "").toLowerCase() === provinceName.toLowerCase()
+            );
           })
-          .map((w: OpenAdminWardEntity) => w.name_local)
-          .sort((a: string, b: string) => a.localeCompare(b, "vi"));
+          .map((w: OpenAdminWardEntity) => w.name_local);
+
+        // Sort A-Z in Vietnamese
+        matchedWards.sort((a, b) => a.localeCompare(b, "vi"));
 
         if (matchedWards.length > 0) {
           if (typeof window !== "undefined") {
@@ -145,10 +152,12 @@ export async function fetchWardsForProvinceApi(provinceName: string): Promise<st
     console.error("Error fetching wards from api.openadmindata.org for", provinceName, err);
   }
 
-  return [
-    `Phường Bến Thành (${cleanProv})`,
-    `Phường Phạm Ngũ Lão (${cleanProv})`,
-    `Phường Tân Định (${cleanProv})`,
-    `Phường Võ Thị Sáu (${cleanProv})`,
-  ].sort((a: string, b: string) => a.localeCompare(b, "vi"));
+  const defaultWards = [
+    "Phường Bến Thành",
+    "Phường Phạm Ngũ Lão",
+    "Phường Tân Định",
+    "Phường Võ Thị Sáu",
+  ];
+  defaultWards.sort((a, b) => a.localeCompare(b, "vi"));
+  return defaultWards;
 }

@@ -276,7 +276,7 @@ export default function AuthPage() {
     async function initLocations() {
       const provs = await fetchProvincesApi();
       setProvincesList(provs);
-      const firstProv = provs[0] || "Hồ Chí Minh";
+      const firstProv = provs.find(p => p.includes("Hồ Chí Minh")) || provs[0] || "Thành phố Hồ Chí Minh";
       setAddrProvince(firstProv);
       const wards = await fetchWardsForProvinceApi(firstProv);
       setWardsList(wards);
