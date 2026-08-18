@@ -94,25 +94,8 @@ function ProductDetailPageContent({
 
   return (
     <>
-      {/* 2. Breadcrumb Navigation Section */}
-      <div className="breadcrumb-section">
-        <div className="container">
-          <ul className="breadcrumb">
-            <li>
-              <Link href="/">Trang chủ</Link>
-            </li>
-            <li className="breadcrumb-separator">&rsaquo;</li>
-            <li>
-              <Link href="/products">{product.categoryName}</Link>
-            </li>
-            <li className="breadcrumb-separator">&rsaquo;</li>
-            <li className="breadcrumb-current">{product.name}</li>
-          </ul>
-        </div>
-      </div>
-
       {/* 3. Main Product Hero Section (3 Columns Layout) */}
-      <main className="main-content">
+      <main className="main-content" style={{ paddingTop: "24px" }}>
         <div className="container">
           <div className="product-detail-hero">
             {/* Column 1: Image Gallery */}
@@ -285,15 +268,25 @@ function ProductDetailPageContent({
                 </div>
               </div>
 
-              {/* Action CTA Buttons */}
-              <div className="action-buttons-group">
+              {/* Action CTA Buttons (3 Equal Buttons) */}
+              <div className="action-buttons-group" style={{ display: "flex", gap: "10px", width: "100%", marginTop: "20px" }}>
                 <button
                   className="btn-add-cart"
                   disabled={(product.stock ?? 50) === 0}
                   onClick={() =>
                     addToCart({ ...product, price: effectivePrice }, quantity)
                   }
-                  style={{ opacity: (product.stock ?? 50) === 0 ? 0.5 : 1 }}
+                  style={{
+                    flex: 1,
+                    height: "48px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "6px",
+                    fontWeight: 800,
+                    fontSize: "14px",
+                    opacity: (product.stock ?? 50) === 0 ? 0.5 : 1,
+                  }}
                 >
                   <span>🛒</span> Thêm vào giỏ hàng
                 </button>
@@ -305,7 +298,15 @@ function ProductDetailPageContent({
                     router.push("/checkout");
                   }}
                   style={{
+                    flex: 1,
+                    height: "48px",
                     backgroundColor: "#ef4444",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "6px",
+                    fontWeight: 800,
+                    fontSize: "14px",
                     opacity: (product.stock ?? 50) === 0 ? 0.5 : 1,
                   }}
                 >
@@ -315,6 +316,14 @@ function ProductDetailPageContent({
                   className="btn-detail-wishlist"
                   onClick={() => toggleWishlist(product.id)}
                   style={{
+                    flex: 1,
+                    height: "48px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "6px",
+                    fontWeight: 800,
+                    fontSize: "14px",
                     color: isWishlisted(product.id) ? "#ef4444" : "inherit",
                     borderColor: isWishlisted(product.id)
                       ? "#ef4444"
@@ -323,23 +332,84 @@ function ProductDetailPageContent({
                 >
                   <span>{isWishlisted(product.id) ? "♥" : "♡"}</span> Yêu thích
                 </button>
-                <button
-                  className="btn-detail-wishlist"
-                  onClick={() => {
-                    if (typeof window !== "undefined") {
-                      navigator.clipboard.writeText(window.location.href);
-                      setCopied(true);
-                      setTimeout(() => setCopied(false), 3000);
-                    }
-                  }}
-                  title="Sao chép liên kết chia sẻ"
-                  style={{
-                    borderColor: copied ? "#166534" : "var(--border-color)",
-                    color: copied ? "#166534" : "inherit",
-                  }}
-                >
-                  <span>{copied ? "✅" : "🔗"}</span> {copied ? "Đã chép link!" : "Chia sẻ"}
-                </button>
+              </div>
+
+              {/* Social Share Bar */}
+              <div
+                className="product-share-bar"
+                style={{
+                  marginTop: "16px",
+                  padding: "12px 16px",
+                  background: "#f8fafc",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "var(--radius-md)",
+                }}
+              >
+                <div style={{ fontSize: "13px", fontWeight: 700, color: "#475569", marginBottom: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span>🔗</span> Chia sẻ sản phẩm qua các ứng dụng:
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                  <a
+                    href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ padding: "6px 12px", background: "#1877f2", color: "#fff", borderRadius: "6px", fontSize: "12px", fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                  >
+                    📘 Facebook
+                  </a>
+                  <a
+                    href={`https://zalo.me/share?url=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ padding: "6px 12px", background: "#0068ff", color: "#fff", borderRadius: "6px", fontSize: "12px", fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                  >
+                    💬 Zalo
+                  </a>
+                  <a
+                    href={`https://m.me/`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ padding: "6px 12px", background: "#0084ff", color: "#fff", borderRadius: "6px", fontSize: "12px", fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                  >
+                    ⚡ Messenger
+                  </a>
+                  <a
+                    href={`https://api.whatsapp.com/send?text=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ padding: "6px 12px", background: "#25d366", color: "#fff", borderRadius: "6px", fontSize: "12px", fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                  >
+                    🟢 WhatsApp
+                  </a>
+                  <a
+                    href={`https://t.me/share/url?url=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ padding: "6px 12px", background: "#229ed9", color: "#fff", borderRadius: "6px", fontSize: "12px", fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                  >
+                    ✈️ Telegram
+                  </a>
+                  <a
+                    href="https://www.instagram.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ padding: "6px 12px", background: "linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)", color: "#fff", borderRadius: "6px", fontSize: "12px", fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                  >
+                    📷 Instagram
+                  </a>
+                  <button
+                    onClick={() => {
+                      if (typeof window !== "undefined") {
+                        navigator.clipboard.writeText(window.location.href);
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 3000);
+                      }
+                    }}
+                    style={{ padding: "6px 12px", background: copied ? "#166534" : "#ffffff", color: copied ? "#fff" : "#334155", border: "1px solid #cbd5e1", borderRadius: "6px", fontSize: "12px", fontWeight: 700, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                  >
+                    {copied ? "✅ Đã chép link!" : "📋 Sao chép đường link"}
+                  </button>
+                </div>
               </div>
 
               {/* Back-In-Stock Email Notification Box (When stock is 0) */}
@@ -422,26 +492,38 @@ function ProductDetailPageContent({
                 </div>
               )}
 
-              {/* Trust Commitments */}
-              <div className="trust-commitments">
-                <div className="commitment-item">
-                  <div className="commitment-icon">🚚</div>
-                  <div className="commitment-text">
+              {/* Trust Commitments (Formatted like Home page badge-item) */}
+              <div className="hero-badges" style={{ marginTop: "24px", paddingTop: "20px", borderTop: "1px solid var(--border-color)", display: "flex", flexDirection: "column", gap: "12px" }}>
+                <div className="badge-item">
+                  <div className="badge-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
+                    </svg>
+                  </div>
+                  <div className="badge-text">
                     <strong>Miễn phí vận chuyển</strong>
                     <span>Cho đơn hàng từ 500.000đ</span>
                   </div>
                 </div>
-                <div className="commitment-item">
-                  <div className="commitment-icon">🔄</div>
-                  <div className="commitment-text">
-                    <strong>Đổi trả 30 ngày</strong>
+                <div className="badge-item">
+                  <div className="badge-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
+                    </svg>
+                  </div>
+                  <div className="badge-text">
+                    <strong>🔄 Đổi trả 30 ngày</strong>
                     <span>Đổi trả dễ dàng & nhanh chóng</span>
                   </div>
                 </div>
-                <div className="commitment-item">
-                  <div className="commitment-icon">🛡️</div>
-                  <div className="commitment-text">
-                    <strong>Thanh toán an toàn</strong>
+                <div className="badge-item">
+                  <div className="badge-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+                    </svg>
+                  </div>
+                  <div className="badge-text">
+                    <strong>🛡️ Thanh toán an toàn</strong>
                     <span>Bảo mật 100% khi thanh toán</span>
                   </div>
                 </div>
@@ -500,71 +582,173 @@ function ProductDetailPageContent({
                 <ul className="delivery-info-list">
                   <li>Thời gian giao hàng tiêu chuẩn: 2–5 ngày làm việc</li>
                   <li>Giao hàng hỏa tốc: 1–2 ngày làm việc</li>
-                  <li>Phí vận chuyển: 30.000đ</li>
+                  <li>
+                    Phí vận chuyển:{" "}
+                    {effectivePrice >= 500000 ? (
+                      <span style={{ color: "var(--primary-color)", fontWeight: 800 }}>Miễn phí giao hàng (Đơn từ 500.000đ)</span>
+                    ) : (
+                      "20.000đ (Nội thành) / 30.000đ (Tỉnh)"
+                    )}
+                  </li>
                 </ul>
-                <Link href="/policy" className="link-delivery-more">
+                <Link href="/policy?tab=shipping" className="link-delivery-more">
                   Xem thêm chính sách giao hàng
                 </Link>
               </div>
             </div>
 
-            {/* Interactive Product Reviews Form Section */}
-            <div style={{ marginTop: "32px", padding: "24px", background: "#f8fafc", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
-              <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", marginBottom: "12px" }}>
-                ⭐ Đánh Giá & Nhận Xét Từ Khách Hàng
-              </h3>
-              <p style={{ fontSize: "13px", color: "#64748b", marginBottom: "16px" }}>
-                Hãy chia sẻ cảm nhận của bạn về sản phẩm này:
-              </p>
+            {/* Interactive Product Reviews Form Section (Redesigned Bento Layout) */}
+            <div style={{ gridColumn: "1 / -1", marginTop: "32px", padding: "28px", background: "#ffffff", borderRadius: "16px", border: "1px solid #e2e8f0", boxShadow: "0 4px 16px rgba(0,0,0,0.04)" }}>
+              <div style={{ borderBottom: "2px solid #f1f5f9", paddingBottom: "16px", marginBottom: "24px" }}>
+                <h3 style={{ fontSize: "20px", fontWeight: 900, color: "#0f172a", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span>⭐</span> ĐÁNH GIÁ & NHẬN XÉT TỪ KHÁCH HÀNG
+                </h3>
+              </div>
 
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  alert("✅ Cảm ơn bạn đã gửi đánh giá! Nhận xét của bạn đã được ghi nhận.");
-                  setProduct((prev) => ({
-                    ...prev,
-                    reviews: (prev.reviews || 0) + 1,
-                  }));
-                }}
-                style={{ display: "flex", flexDirection: "column", gap: "12px" }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span style={{ fontSize: "14px", fontWeight: 700, color: "#334155" }}>Chọn số sao:</span>
-                  <select
-                    defaultValue="5"
-                    style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "14px", fontFamily: "inherit" }}
-                  >
-                    <option value="5">⭐⭐⭐⭐⭐ (5/5 sao - Rất tốt)</option>
-                    <option value="4">⭐⭐⭐⭐ (4/5 sao - Tốt)</option>
-                    <option value="3">⭐⭐⭐ (3/5 sao - Bình thường)</option>
-                    <option value="2">⭐⭐ (2/5 sao - Tạm được)</option>
-                    <option value="1">⭐ (1/5 sao - Cần cải thiện)</option>
-                  </select>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "32px", alignItems: "start" }}>
+                {/* Left Column: Overall Rating Score Breakdown */}
+                <div style={{ background: "#f8fafc", borderRadius: "12px", padding: "24px", border: "1px solid #e2e8f0", textAlign: "center" }}>
+                  <div style={{ fontSize: "44px", fontWeight: 900, color: "#0f172a", lineHeight: 1 }}>
+                    4.9
+                  </div>
+                  <div style={{ color: "#eab308", fontSize: "20px", margin: "8px 0 4px" }}>
+                    ★★★★★
+                  </div>
+                  <div style={{ fontSize: "13px", color: "#64748b", fontWeight: 600 }}>
+                    Dựa trên {product.reviews || 48} đánh giá xác thực
+                  </div>
+
+                  {/* Rating progress bars */}
+                  <div style={{ marginTop: "20px", display: "flex", flexDirection: "column", gap: "8px", fontSize: "12px", color: "#475569" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ width: "35px" }}>5 sao</span>
+                      <div style={{ flex: 1, height: "8px", background: "#e2e8f0", borderRadius: "4px", overflow: "hidden" }}>
+                        <div style={{ width: "88%", height: "100%", background: "#eab308" }} />
+                      </div>
+                      <span style={{ width: "35px", textAlign: "right" }}>88%</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ width: "35px" }}>4 sao</span>
+                      <div style={{ flex: 1, height: "8px", background: "#e2e8f0", borderRadius: "4px", overflow: "hidden" }}>
+                        <div style={{ width: "8%", height: "100%", background: "#eab308" }} />
+                      </div>
+                      <span style={{ width: "35px", textAlign: "right" }}>8%</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ width: "35px" }}>3 sao</span>
+                      <div style={{ flex: 1, height: "8px", background: "#e2e8f0", borderRadius: "4px", overflow: "hidden" }}>
+                        <div style={{ width: "4%", height: "100%", background: "#eab308" }} />
+                      </div>
+                      <span style={{ width: "35px", textAlign: "right" }}>4%</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ width: "35px" }}>2 sao</span>
+                      <div style={{ flex: 1, height: "8px", background: "#e2e8f0", borderRadius: "4px", overflow: "hidden" }}>
+                        <div style={{ width: "0%", height: "100%", background: "#eab308" }} />
+                      </div>
+                      <span style={{ width: "35px", textAlign: "right" }}>0%</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ width: "35px" }}>1 sao</span>
+                      <div style={{ flex: 1, height: "8px", background: "#e2e8f0", borderRadius: "4px", overflow: "hidden" }}>
+                        <div style={{ width: "0%", height: "100%", background: "#eab308" }} />
+                      </div>
+                      <span style={{ width: "35px", textAlign: "right" }}>0%</span>
+                    </div>
+                  </div>
                 </div>
-                <textarea
-                  placeholder="Nhập cảm nhận của bạn về chất lượng sản phẩm..."
-                  required
-                  rows={3}
-                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "14px", fontFamily: "inherit" }}
-                />
-                <div>
-                  <button
-                    type="submit"
-                    style={{
-                      padding: "10px 24px",
-                      backgroundColor: "var(--primary-color, #2e7d32)",
-                      color: "#fff",
-                      border: "none",
-                      borderRadius: "6px",
-                      fontWeight: 700,
-                      cursor: "pointer",
-                      fontSize: "14px",
+
+                {/* Right Column: Review Form + Customer Comments List */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+                  {/* Form */}
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      alert("✅ Cảm ơn bạn đã gửi đánh giá! Nhận xét của bạn đã được ghi nhận.");
+                      setProduct((prev) => ({
+                        ...prev,
+                        reviews: (prev.reviews || 0) + 1,
+                      }));
                     }}
+                    style={{ background: "#f8fafc", padding: "20px", borderRadius: "12px", border: "1px solid #e2e8f0", display: "flex", flexDirection: "column", gap: "14px" }}
                   >
-                    ✍️ Gửi Đánh Giá Ngay
-                  </button>
+                    <div style={{ fontSize: "14px", fontWeight: 800, color: "#1e293b" }}>✍️ Viết đánh giá của bạn:</div>
+
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <span style={{ fontSize: "13px", fontWeight: 700, color: "#334155" }}>Chọn số sao:</span>
+                      <select
+                        defaultValue="5"
+                        style={{ padding: "8px 14px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "14px", fontFamily: "inherit", cursor: "pointer" }}
+                      >
+                        <option value="5">⭐⭐⭐⭐⭐ (5 sao)</option>
+                        <option value="4">⭐⭐⭐⭐ (4 sao)</option>
+                        <option value="3">⭐⭐⭐ (3 sao)</option>
+                        <option value="2">⭐⭐ (2 sao)</option>
+                        <option value="1">⭐ (1 sao)</option>
+                      </select>
+                    </div>
+
+                    <textarea
+                      placeholder="Nhập cảm nhận chi tiết của bạn về chất lượng sản phẩm..."
+                      required
+                      rows={3}
+                      style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "14px", fontFamily: "inherit", outline: "none" }}
+                    />
+
+                    <div style={{ display: "flex", justifyContent: "center", width: "100%" }}>
+                      <button
+                        type="submit"
+                        style={{
+                          padding: "10px 32px",
+                          backgroundColor: "var(--primary-color, #2e7d32)",
+                          color: "#fff",
+                          border: "none",
+                          borderRadius: "8px",
+                          fontWeight: 800,
+                          cursor: "pointer",
+                          fontSize: "14px",
+                          boxShadow: "0 4px 12px rgba(46, 125, 50, 0.25)",
+                        }}
+                      >
+                        ✍️ Gửi Đánh Giá Ngay
+                      </button>
+                    </div>
+                  </form>
+
+                  {/* Customer Review List Items */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                    <div style={{ fontSize: "15px", fontWeight: 800, color: "#0f172a" }}>💬 Nhận xét gần đây:</div>
+                    
+                    <div style={{ padding: "16px", background: "#f8fafc", borderRadius: "8px", border: "1px solid #f1f5f9" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <strong style={{ fontSize: "14px", color: "#0f172a" }}>Nguyễn Minh Anh</strong>
+                          <span style={{ fontSize: "11px", background: "#dcfce7", color: "#166534", padding: "2px 6px", borderRadius: "4px", fontWeight: 700 }}>✓ Đã mua hàng</span>
+                        </div>
+                        <span style={{ fontSize: "12px", color: "#94a3b8" }}>15/08/2026</span>
+                      </div>
+                      <div style={{ color: "#eab308", fontSize: "13px", marginBottom: "6px" }}>★★★★★</div>
+                      <p style={{ margin: 0, fontSize: "13px", color: "#334155", lineHeight: 1.5 }}>
+                        Sản phẩm giao cực kỳ đóng gói cẩn thận, đúng như mô tả hình ảnh. Đặt hôm trước hôm sau đã nhận được hàng. Rất hài lòng!
+                      </p>
+                    </div>
+
+                    <div style={{ padding: "16px", background: "#f8fafc", borderRadius: "8px", border: "1px solid #f1f5f9" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <strong style={{ fontSize: "14px", color: "#0f172a" }}>Trần Hoàng Nam</strong>
+                          <span style={{ fontSize: "11px", background: "#dcfce7", color: "#166534", padding: "2px 6px", borderRadius: "4px", fontWeight: 700 }}>✓ Đã mua hàng</span>
+                        </div>
+                        <span style={{ fontSize: "12px", color: "#94a3b8" }}>12/08/2026</span>
+                      </div>
+                      <div style={{ color: "#eab308", fontSize: "13px", marginBottom: "6px" }}>★★★★★</div>
+                      <p style={{ margin: 0, fontSize: "13px", color: "#334155", lineHeight: 1.5 }}>
+                        Chất liệu hoàn thiện sắc nét, màu sắc tinh tế chuẩn Bắc Âu. Đội ngũ nhân viên tư vấn nhiệt tình chu đáo. Sẽ tiếp tục ủng hộ shop!
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              </form>
+              </div>
             </div>
           </div>
 

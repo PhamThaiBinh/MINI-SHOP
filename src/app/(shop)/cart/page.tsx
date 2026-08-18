@@ -256,7 +256,7 @@ export default function CartPage() {
                 </div>
               </div>
 
-              /* Main Cart Layout (2 Columns) */
+              {/* Main Cart Layout (2 Columns) */}
               <div className="cart-layout" id="cart-main-layout">
                 {/* Left: Products List Table */}
                 <div className="cart-table-card">
@@ -411,9 +411,9 @@ export default function CartPage() {
                     <span className="summary-label">Phí giao hàng:</span>
                     <strong
                       id="cart-summary-shipping"
-                      style={{ color: "var(--primary-color)" }}
+                      style={{ color: subtotal >= 500000 ? "var(--primary-color)" : "var(--text-main)" }}
                     >
-                      Miễn phí
+                      {subtotal >= 500000 ? "Miễn phí (Đơn từ 500k)" : "20.000đ - 30.000đ"}
                     </strong>
                   </div>
 

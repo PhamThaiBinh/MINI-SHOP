@@ -167,28 +167,7 @@ function PolicyContent() {
         </button>
       </div>
 
-      {/* Table of Contents Jump Links Bar */}
-      <div
-        style={{
-          display: "flex",
-          gap: "10px",
-          alignItems: "center",
-          padding: "10px 16px",
-          background: "#f8fafc",
-          borderRadius: "var(--radius-md)",
-          marginBottom: "24px",
-          fontSize: "13px",
-          border: "1px solid #e2e8f0",
-          overflowX: "auto",
-        }}
-      >
-        <span style={{ fontWeight: 800, color: "#475569", whiteSpace: "nowrap" }}>📌 Mục lục cuộn nhanh:</span>
-        <a href="#sec-dieu-kien" style={{ color: "var(--primary-color)", fontWeight: 700, textDecoration: "none", whiteSpace: "nowrap" }}>1. Điều kiện đổi trả</a>
-        <span>•</span>
-        <a href="#sec-quy-trinh" style={{ color: "var(--primary-color)", fontWeight: 700, textDecoration: "none", whiteSpace: "nowrap" }}>2. Quy trình 3 bước</a>
-        <span>•</span>
-        <a href="#sec-bao-hanh" style={{ color: "var(--primary-color)", fontWeight: 700, textDecoration: "none", whiteSpace: "nowrap" }}>3. Chính sách bảo hành</a>
-      </div>
+
 
       {/* Content Container */}
       <div

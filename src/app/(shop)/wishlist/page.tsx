@@ -36,8 +36,6 @@ export default function WishlistPage() {
 
   const handleRemoveWishlist = (id: number) => {
     toggleWishlist(id);
-    setToastMsg("💔 Đã xóa sản phẩm khỏi danh sách yêu thích!");
-    setTimeout(() => setToastMsg(""), 3000);
   };
 
   const handleMoveAllToCart = () => {
@@ -51,21 +49,8 @@ export default function WishlistPage() {
 
   return (
     <>
-      {/* 2. Breadcrumb Navigation Section */}
-      <div className="breadcrumb-section">
-        <div className="container">
-          <ul className="breadcrumb">
-            <li>
-              <Link href="/">Trang chủ</Link>
-            </li>
-            <li className="breadcrumb-separator">&rsaquo;</li>
-            <li className="breadcrumb-current">Sản phẩm yêu thích</li>
-          </ul>
-        </div>
-      </div>
-
       {/* 3. Main Wishlist Content */}
-      <main className="main-content">
+      <main className="main-content" style={{ paddingTop: "24px" }}>
         <div className="container">
           {toastMsg && (
             <div

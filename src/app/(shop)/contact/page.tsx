@@ -49,16 +49,9 @@ export default function ContactPage() {
 
   return (
     <>
-      {/* 2. Breadcrumb & Contact Hero */}
+      {/* 2. Contact Hero */}
       <section className="contact-hero">
         <div className="container">
-          <ul className="breadcrumb" style={{ marginBottom: "12px" }}>
-            <li>
-              <Link href="/">Trang chủ</Link>
-            </li>
-            <li className="breadcrumb-separator">&rsaquo;</li>
-            <li className="breadcrumb-current">Liên hệ</li>
-          </ul>
           <h1 className="contact-hero-title">Liên Hệ Với Mini Shop</h1>
           <p className="contact-hero-desc">
             Chúng tôi luôn lắng nghe và sẵn sàng hỗ trợ bạn 24/7. Hãy gửi tin

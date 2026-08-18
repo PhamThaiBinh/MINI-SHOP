@@ -139,21 +139,8 @@ function ProductsContent() {
 
   return (
     <>
-      {/* 2. Breadcrumb Navigation Section */}
-      <div className="breadcrumb-section">
-        <div className="container">
-          <ul className="breadcrumb">
-            <li>
-              <Link href="/">Trang chủ</Link>
-            </li>
-            <li className="breadcrumb-separator">&rsaquo;</li>
-            <li className="breadcrumb-current">Sản phẩm</li>
-          </ul>
-        </div>
-      </div>
-
       {/* 3. Main Content Section (Sidebar + Product Catalog) */}
-      <div className="container">
+      <div className="container" style={{ paddingTop: "24px" }}>
         <div className="product-page-layout">
           {/* Left Sidebar Filter */}
           <aside className="filter-sidebar">
@@ -280,21 +267,21 @@ function ProductsContent() {
                             setCurrentPriceRange("all");
                             setInStockOnly(false);
                             setCurrentPage(1);
-                            window.history.pushState({}, "", "/products");
                           }}
                           style={{
                             background: "#fee2e2",
                             color: "#b91c1c",
                             border: "1px solid #fca5a5",
                             borderRadius: "6px",
-                            padding: "6px 12px",
+                            padding: "6px 10px",
                             fontSize: "12px",
                             fontWeight: 700,
                             cursor: "pointer",
                             whiteSpace: "nowrap",
                           }}
+                          title="Xóa tất cả bộ lọc"
                         >
-                          ❌ Đặt lại bộ lọc
+                          ❌
                         </button>
                       )}
                       <svg viewBox="0 0 24 24">
@@ -311,9 +298,9 @@ function ProductsContent() {
                       }}
                       style={{ cursor: "pointer", fontWeight: 700 }}
                     >
-                      <option value={10}>Hiển thị 10 / trang</option>
-                      <option value={25}>Hiển thị 25 / trang</option>
-                      <option value={50}>Hiển thị 50 / trang</option>
+                      <option value={10}>Hiển thị 10 sản phẩm</option>
+                      <option value={25}>Hiển thị 25 sản phẩm</option>
+                      <option value={50}>Hiển thị 50 sản phẩm</option>
                     </select>
 
                     <select
@@ -322,9 +309,9 @@ function ProductsContent() {
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value)}
                     >
-                      <option value="newest">Sắp xếp: Mới nhất ∨</option>
-                      <option value="price-asc">Giá: Thấp đến Cao</option>
-                      <option value="price-desc">Giá: Cao đến Thấp</option>
+                      <option value="newest">Mới nhất</option>
+                      <option value="price-asc">Thấp đến cao</option>
+                      <option value="price-desc">Cao đến thấp</option>
                     </select>
                   </div>
                 </div>

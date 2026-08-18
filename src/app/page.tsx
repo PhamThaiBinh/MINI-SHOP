@@ -189,7 +189,7 @@ export default function Home() {
           ) : (
             <div className="products-grid" id="home-featured-products-grid">
               {filteredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard key={product.id} product={product} hideQuickView={true} />
               ))}
             </div>
           )}

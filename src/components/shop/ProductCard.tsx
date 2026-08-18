@@ -10,6 +10,7 @@ interface ProductCardProps {
   product: Product;
   onPrevProduct?: () => void;
   onNextProduct?: () => void;
+  hideQuickView?: boolean;
 }
 
 import { IconEye } from "@/components/common/Icons";
@@ -18,6 +19,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   product,
   onPrevProduct,
   onNextProduct,
+  hideQuickView = false,
 }) => {
   const { addToCart } = useCart();
   const [showQuickView, setShowQuickView] = React.useState(false);
@@ -53,33 +55,35 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         <Link href={`/products/${product.id}`}>
           <img src={fixImagePath(product.image)} alt={product.name} loading="lazy" />
         </Link>
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            setShowQuickView(true);
-          }}
-          title="Xem nhanh thông tin sản phẩm"
-          style={{
-            position: "absolute",
-            bottom: "10px",
-            right: "10px",
-            background: "rgba(15, 23, 42, 0.75)",
-            color: "#ffffff",
-            border: "none",
-            borderRadius: "6px",
-            padding: "5px 10px",
-            fontSize: "12px",
-            fontWeight: 700,
-            cursor: "pointer",
-            backdropFilter: "blur(4px)",
-            transition: "all 0.2s ease",
-            display: "flex",
-            alignItems: "center",
-            gap: "5px",
-          }}
-        >
-          <IconEye size={14} color="#ffffff" /> Xem nhanh
-        </button>
+        {!hideQuickView && (
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              setShowQuickView(true);
+            }}
+            title="Xem nhanh thông tin sản phẩm"
+            style={{
+              position: "absolute",
+              bottom: "10px",
+              right: "10px",
+              background: "rgba(15, 23, 42, 0.75)",
+              color: "#ffffff",
+              border: "none",
+              borderRadius: "6px",
+              padding: "5px 10px",
+              fontSize: "12px",
+              fontWeight: 700,
+              cursor: "pointer",
+              backdropFilter: "blur(4px)",
+              transition: "all 0.2s ease",
+              display: "flex",
+              alignItems: "center",
+              gap: "5px",
+            }}
+          >
+            <IconEye size={14} color="#ffffff" /> Xem nhanh
+          </button>
+        )}
       </div>
       <div className="product-info">
         <h3 className="product-name">

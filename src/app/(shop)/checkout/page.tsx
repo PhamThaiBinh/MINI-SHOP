@@ -114,7 +114,16 @@ export default function CheckoutPage() {
     }
   }
 
-  const grandTotal = Math.max(0, subtotal - discountAmount);
+  const isFreeShip = subtotal >= 500000;
+  const shippingFee = isFreeShip
+    ? 0
+    : address.toLowerCase().includes("hà nội") ||
+      address.toLowerCase().includes("hồ chí minh") ||
+      address.toLowerCase().includes("hcm")
+    ? 20000
+    : 30000;
+
+  const grandTotal = Math.max(0, subtotal - discountAmount + shippingFee);
 
   const totalAvailableItemsCount =
     (user?.vouchers.reduce((sum, v) => sum + (v.quantity || 1), 0) || 0) +
@@ -583,8 +592,8 @@ export default function CheckoutPage() {
 
                 <div className="summary-row">
                   <span className="summary-label">Phí vận chuyển:</span>
-                  <strong style={{ color: subtotal >= 500000 ? "var(--primary-color)" : "#334155" }}>
-                    {subtotal >= 500000 ? "🎉 Miễn phí (Đơn từ 500.000đ)" : "30.000đ"}
+                  <strong style={{ color: isFreeShip ? "var(--primary-color)" : "#334155" }}>
+                    {isFreeShip ? "🎉 Miễn phí (Đơn từ 500.000đ)" : formatVND(shippingFee)}
                   </strong>
                 </div>
 

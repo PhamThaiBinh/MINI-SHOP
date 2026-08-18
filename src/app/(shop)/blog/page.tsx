@@ -9,16 +9,9 @@ export default async function BlogListPage() {
 
   return (
     <>
-      {/* 2. Breadcrumb & Blog Hero */}
+      {/* 2. Blog Hero */}
       <section className="blog-hero">
         <div className="container">
-          <ul className="breadcrumb" style={{ marginBottom: "12px" }}>
-            <li>
-              <Link href="/">Trang chủ</Link>
-            </li>
-            <li className="breadcrumb-separator">&rsaquo;</li>
-            <li className="breadcrumb-current">Bài viết & Cẩm nang</li>
-          </ul>
           <h1 className="blog-hero-title">Cẩm Nang Không Gian Sống</h1>
           <p className="blog-hero-desc">
             Khám phá các bí quyết trang trí nội thất Bắc Âu, mẹo bảo quản đồ
