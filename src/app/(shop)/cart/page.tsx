@@ -457,7 +457,7 @@ export default function CartPage() {
                         placeholder="Nhập hoặc chọn mã..."
                         style={{ textTransform: "uppercase" }}
                         value={couponCode}
-                        onChange={(e) => setCouponCode(e.target.value)}
+                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                       />
                       <button
                         type="button"

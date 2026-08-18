@@ -54,15 +54,22 @@ export default function AdminUsersPage() {
   const handleToggleBlockUser = async (id: number) => {
     const target = users.find((u) => u.id === id);
     if (!target) return;
+    const newStatus = target.status === "Active" ? "Blocked" : "Active";
+
     setUsers((prev) =>
-      prev.map((u) => {
-        if (u.id === id) {
-          const newStatus = u.status === "Active" ? "Blocked" : "Active";
-          return { ...u, status: newStatus };
-        }
-        return u;
-      })
+      prev.map((u) => (u.id === id ? { ...u, status: newStatus } : u))
     );
+
+    // Save blocked emails list to localStorage for instant cross-tab logout sync
+    try {
+      const blockedList = users
+        .filter((u) => (u.id === id ? newStatus === "Blocked" : u.status === "Blocked"))
+        .map((u) => u.email);
+      localStorage.setItem("mini_shop_blocked_users", JSON.stringify(blockedList));
+    } catch (err) {
+      console.error(err);
+    }
+
     await toggleAdminUserStatus(id, target.status);
   };
 

@@ -212,17 +212,21 @@ export default function AdminSettingsPage() {
   const handleSaveShippingRate = (id: number) => {
     const feeNum = Number(editFeeVal);
     const freeshipNum = Number(editFreeshipVal);
-    setShippingRates((prev) =>
-      prev.map((r) =>
-        r.id === id
-          ? {
-              ...r,
-              fixedFee: isNaN(feeNum) ? r.fixedFee : feeNum,
-              minOrderFreeship: isNaN(freeshipNum) ? r.minOrderFreeship : freeshipNum,
-            }
-          : r
-      )
+    const updatedRates = shippingRates.map((r) =>
+      r.id === id
+        ? {
+            ...r,
+            fixedFee: isNaN(feeNum) ? r.fixedFee : feeNum,
+            minOrderFreeship: isNaN(freeshipNum) ? r.minOrderFreeship : freeshipNum,
+          }
+        : r
     );
+    setShippingRates(updatedRates);
+    try {
+      localStorage.setItem("mini_shop_shipping_rates", JSON.stringify(updatedRates));
+    } catch (err) {
+      console.error(err);
+    }
     setEditingRateId(null);
     triggerNotify("💾 Đã lưu cấu hình phí vận chuyển vùng thành công!");
   };

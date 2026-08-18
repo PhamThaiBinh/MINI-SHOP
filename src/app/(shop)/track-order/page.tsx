@@ -13,11 +13,22 @@ export default function TrackOrderPage() {
   const [loading, setLoading] = useState(false);
   const [orderResult, setOrderResult] = useState<UnifiedOrder | null>(null);
 
+  const normalizePhone = (phone: string) => {
+    let cleaned = phone.replace(/\D/g, ""); // Remove dots, spaces, dashes
+    if (cleaned.startsWith("84")) {
+      cleaned = "0" + cleaned.slice(2);
+    }
+    return cleaned;
+  };
+
   const handleSearchOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     setSearched(true);
     setLoading(true);
-    const found = await lookupOrderFromSupabase(searchCode, searchPhone);
+    const cleanCode = searchCode.trim().replace(/^#/, "");
+    const cleanPhone = normalizePhone(searchPhone);
+
+    const found = await lookupOrderFromSupabase(cleanCode, cleanPhone);
     setOrderResult(found);
     setLoading(false);
   };

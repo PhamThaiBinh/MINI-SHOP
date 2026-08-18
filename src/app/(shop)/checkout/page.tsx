@@ -620,7 +620,7 @@ export default function CheckoutPage() {
                       placeholder="Nhập hoặc chọn mã..."
                       style={{ textTransform: "uppercase" }}
                       value={voucherCode}
-                      onChange={(e) => setVoucherCode(e.target.value)}
+                      onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
                     />
                     <button
                       type="button"

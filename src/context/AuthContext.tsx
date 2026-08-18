@@ -129,6 +129,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
     fetchSessionUser();
 
+    // Check if currently logged in user is blocked
+    const checkBlockedStatus = (currentUser: UserProfile) => {
+      try {
+        const blockedListStr = localStorage.getItem("mini_shop_blocked_users");
+        if (blockedListStr) {
+          const blockedEmails: string[] = JSON.parse(blockedListStr);
+          if (Array.isArray(blockedEmails) && blockedEmails.includes(currentUser.email)) {
+            alert("🔒 Tài khoản của bạn đã bị Quản trị viên khóa. Hệ thống tự động đăng xuất!");
+            logout();
+            return true;
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+      return false;
+    };
+
+    // Cross-tab auto-logout if blocked by Admin
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "mini_shop_blocked_users" && user) {
+        checkBlockedStatus(user);
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+
     // Listen to Auth State Changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
       if (session?.user) {

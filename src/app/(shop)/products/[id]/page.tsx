@@ -365,6 +365,19 @@ function ProductDetailPageContent({
                       onSubmit={(e) => {
                         e.preventDefault();
                         if (notifyEmail.trim()) {
+                          try {
+                            const saved = localStorage.getItem("mini_shop_out_of_stock_subscriptions");
+                            const list = saved ? JSON.parse(saved) : [];
+                            list.push({
+                              productId: product.id,
+                              productName: product.name,
+                              email: notifyEmail.trim(),
+                              date: new Date().toISOString(),
+                            });
+                            localStorage.setItem("mini_shop_out_of_stock_subscriptions", JSON.stringify(list));
+                          } catch (err) {
+                            console.error(err);
+                          }
                           setSubscribed(true);
                         }
                       }}

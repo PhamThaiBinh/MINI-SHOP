@@ -8,11 +8,17 @@ import { useCart } from "@/context/CartContext";
 
 interface ProductCardProps {
   product: Product;
+  onPrevProduct?: () => void;
+  onNextProduct?: () => void;
 }
 
 import { IconEye } from "@/components/common/Icons";
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({
+  product,
+  onPrevProduct,
+  onNextProduct,
+}) => {
   const { addToCart } = useCart();
   const [showQuickView, setShowQuickView] = React.useState(false);
 
@@ -188,6 +194,42 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               </div>
             </div>
             <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
+              {(onPrevProduct || onNextProduct) && (
+                <div style={{ display: "flex", gap: "6px" }}>
+                  {onPrevProduct && (
+                    <button
+                      onClick={onPrevProduct}
+                      title="Sản phẩm trước"
+                      style={{
+                        padding: "10px 12px",
+                        background: "#f1f5f9",
+                        border: "1px solid #cbd5e1",
+                        borderRadius: "8px",
+                        fontWeight: 800,
+                        cursor: "pointer",
+                      }}
+                    >
+                      &lsaquo; Trước
+                    </button>
+                  )}
+                  {onNextProduct && (
+                    <button
+                      onClick={onNextProduct}
+                      title="Sản phẩm tiếp theo"
+                      style={{
+                        padding: "10px 12px",
+                        background: "#f1f5f9",
+                        border: "1px solid #cbd5e1",
+                        borderRadius: "8px",
+                        fontWeight: 800,
+                        cursor: "pointer",
+                      }}
+                    >
+                      Tiếp &rsaquo;
+                    </button>
+                  )}
+                </div>
+              )}
               <button
                 onClick={() => {
                   addToCart(product);
@@ -205,13 +247,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                   cursor: "pointer",
                 }}
               >
-                🛒 Thêm vào giỏ hàng
+                🛒 Thêm vào giỏ
               </button>
               <Link
                 href={`/products/${product.id}`}
                 onClick={() => setShowQuickView(false)}
                 style={{
-                  padding: "10px 18px",
+                  padding: "10px 14px",
                   background: "#f8fafc",
                   color: "#0f172a",
                   border: "1px solid #cbd5e1",
@@ -223,7 +265,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                   textAlign: "center",
                 }}
               >
-                Xem chi tiết &rarr;
+                Chi tiết &rarr;
               </Link>
             </div>
           </div>

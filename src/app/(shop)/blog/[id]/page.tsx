@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import "@/styles/blog.css";
 import { fixImagePath } from "@/lib/utils";
 import { fetchBlogByIdFromSupabase } from "@/lib/supabaseBlogs";
+import { ScrollToTopOnMount } from "@/components/blog/ScrollToTopOnMount";
 
 interface BlogDetailPageProps {
   params: Promise<{ id: string }>;
@@ -32,6 +33,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
 
   return (
     <main className="article-container">
+      <ScrollToTopOnMount />
       <Link href="/blog" className="back-to-blog-btn">
         &lsaquo; Quay lại danh sách bài viết
       </Link>

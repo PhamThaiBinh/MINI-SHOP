@@ -19,6 +19,7 @@ export const Header: React.FC = () => {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState<number>(-1);
 
   const matchingProducts = PRODUCTS_DATA.filter((p) =>
     p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -148,17 +149,41 @@ export const Header: React.FC = () => {
               placeholder="Tìm sản phẩm..."
               id="header-search-input"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setSelectedIndex(-1);
+              }}
               onFocus={() => setShowSuggestions(true)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  const query = searchTerm.trim();
-                  setShowSuggestions(false);
-                  if (query) {
-                    router.push(`/products?search=${encodeURIComponent(query)}`);
-                  } else {
-                    router.push("/products");
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  if (matchingProducts.length > 0) {
+                    setSelectedIndex((prev) => (prev < matchingProducts.length - 1 ? prev + 1 : 0));
                   }
+                } else if (e.key === "ArrowUp") {
+                  e.preventDefault();
+                  if (matchingProducts.length > 0) {
+                    setSelectedIndex((prev) => (prev > 0 ? prev - 1 : matchingProducts.length - 1));
+                  }
+                } else if (e.key === "Enter") {
+                  if (selectedIndex >= 0 && selectedIndex < matchingProducts.length) {
+                    const selectedProd = matchingProducts[selectedIndex];
+                    setShowSuggestions(false);
+                    setSearchTerm("");
+                    setSelectedIndex(-1);
+                    router.push(`/products/${selectedProd.id}`);
+                  } else {
+                    const query = searchTerm.trim();
+                    setShowSuggestions(false);
+                    if (query) {
+                      router.push(`/products?search=${encodeURIComponent(query)}`);
+                    } else {
+                      router.push("/products");
+                    }
+                  }
+                } else if (e.key === "Escape") {
+                  setShowSuggestions(false);
+                  setSelectedIndex(-1);
                 }
               }}
             />
@@ -189,12 +214,13 @@ export const Header: React.FC = () => {
                     Không tìm thấy sản phẩm phù hợp.
                   </div>
                 ) : (
-                  matchingProducts.map((p) => (
+                  matchingProducts.map((p, idx) => (
                     <div
                       key={p.id}
                       onClick={() => {
                         setShowSuggestions(false);
                         setSearchTerm("");
+                        setSelectedIndex(-1);
                         router.push(`/products/${p.id}`);
                       }}
                       style={{
@@ -205,9 +231,9 @@ export const Header: React.FC = () => {
                         cursor: "pointer",
                         borderBottom: "1px solid #f1f5f9",
                         transition: "background 0.2s ease",
+                        background: idx === selectedIndex ? "#f1f5f9" : "#ffffff",
                       }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = "#f8fafc")}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = "#ffffff")}
+                      onMouseEnter={() => setSelectedIndex(idx)}
                     >
                       <img
                         src={fixImagePath(p.image)}
