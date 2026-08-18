@@ -154,7 +154,7 @@ export default function AdminVouchersPage() {
           <div className="dashboard-card">
             <div className="card-header-row" style={{ marginBottom: "16px" }}>
               <div>
-                <h2 className="card-header-title">Danh Sách Mã Voucher ({vouchers.length})</h2>
+                <h2 className="card-header-title">Danh Sách Mã Voucher ({filteredVouchers.length})</h2>
                 <p style={{ fontSize: "12px", color: "var(--text-muted)", margin: 0 }}>
                   Tạo và điều chỉnh chính sách ưu đãi chiết khấu khuyến mãi cho cửa hàng
                 </p>
@@ -169,107 +169,205 @@ export default function AdminVouchersPage() {
                 ⏳ Đang tải mã voucher...
               </div>
             ) : (
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Mã Voucher</th>
-                    <th>Mô Tả Chương Trình</th>
-                    <th>Mức Giảm Giá</th>
-                    <th>Đơn Tối Thiểu</th>
-                    <th>Trạng Thái</th>
-                    <th style={{ textAlign: "center" }}>Thao Tác</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedVouchers.length === 0 ? (
+              <>
+                <table className="admin-table">
+                  <thead>
                     <tr>
-                      <td colSpan={7} style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)" }}>
-                        Chưa có mã voucher nào phù hợp.
-                      </td>
+                      <th>#</th>
+                      <th>Mã Voucher</th>
+                      <th>Mô Tả Chương Trình</th>
+                      <th>Mức Giảm Giá</th>
+                      <th>Đơn Tối Thiểu</th>
+                      <th>Trạng Thái</th>
+                      <th style={{ textAlign: "center" }}>Thao Tác</th>
                     </tr>
-                  ) : (
-                    paginatedVouchers.map((v, index) => (
-                      <tr key={v.code}>
-                        <td>{(safeCurrentPage - 1) * pageSize + index + 1}</td>
-                        <td>
-                          <span
-                            style={{
-                              background: "#f0fdf4",
-                              border: "1px dashed var(--primary-color)",
-                              color: "var(--primary-color)",
-                              padding: "4px 8px",
-                              borderRadius: "4px",
-                              fontWeight: 800,
-                              fontSize: "13px",
-                              display: "inline-block",
-                            }}
-                          >
-                            🎟️ {v.code}
-                          </span>
-                        </td>
-                        <td><strong>{v.desc}</strong></td>
-                        <td style={{ fontWeight: 800, color: "#16a34a" }}>
-                          {v.percent
-                            ? `Giảm ${v.percent}%`
-                            : `Giảm ${v.fixedDiscount ? v.fixedDiscount.toLocaleString() : 0}đ`}
-                        </td>
-                        <td>Đơn từ {(v.minOrder || 0).toLocaleString()}đ</td>
-                        <td>
-                          <span
-                            onClick={() => handleToggleStatus(v.code)}
-                            style={{
-                              padding: "4px 8px",
-                              borderRadius: "6px",
-                              fontSize: "11px",
-                              fontWeight: 700,
-                              cursor: "pointer",
-                              background: v.isActive ? "#dcfce7" : "#fee2e2",
-                              color: v.isActive ? "#166534" : "#991b1b",
-                            }}
-                          >
-                            {v.isActive ? "● Đang kích hoạt" : "○ Tạm tắt"}
-                          </span>
-                        </td>
-                        <td style={{ textAlign: "center" }}>
-                          <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
-                            <button
-                              onClick={() => handleEditClick(v)}
-                              style={{
-                                padding: "4px 8px",
-                                background: "#eff6ff",
-                                color: "#2563eb",
-                                border: "1px solid #bfdbfe",
-                                borderRadius: "6px",
-                                cursor: "pointer",
-                                fontSize: "12px",
-                                fontWeight: 700,
-                              }}
-                            >
-                              ✏️ Sửa
-                            </button>
-                            <button
-                              onClick={() => handleDeleteVoucher(v.code)}
-                              style={{
-                                padding: "4px 8px",
-                                background: "#fef2f2",
-                                color: "#dc2626",
-                                border: "1px solid #fca5a5",
-                                borderRadius: "6px",
-                                cursor: "pointer",
-                                fontSize: "12px",
-                                fontWeight: 700,
-                              }}
-                            >
-                              🗑️ Xóa
-                            </button>
-                          </div>
+                  </thead>
+                  <tbody>
+                    {paginatedVouchers.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)" }}>
+                          Chưa có mã voucher nào phù hợp.
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    ) : (
+                      paginatedVouchers.map((v, index) => (
+                        <tr key={v.code}>
+                          <td>{(safeCurrentPage - 1) * pageSize + index + 1}</td>
+                          <td>
+                            <span
+                              style={{
+                                background: "#f0fdf4",
+                                border: "1px dashed var(--primary-color)",
+                                color: "var(--primary-color)",
+                                padding: "4px 8px",
+                                borderRadius: "4px",
+                                fontWeight: 800,
+                                fontSize: "13px",
+                                display: "inline-block",
+                              }}
+                            >
+                              🎟️ {v.code}
+                            </span>
+                          </td>
+                          <td><strong>{v.desc}</strong></td>
+                          <td style={{ fontWeight: 800, color: "#16a34a" }}>
+                            {v.percent
+                              ? `Giảm ${v.percent}%`
+                              : `Giảm ${v.fixedDiscount ? v.fixedDiscount.toLocaleString() : 0}đ`}
+                          </td>
+                          <td>Đơn từ {(v.minOrder || 0).toLocaleString()}đ</td>
+                          <td>
+                            <span
+                              onClick={() => handleToggleStatus(v.code)}
+                              style={{
+                                padding: "4px 8px",
+                                borderRadius: "6px",
+                                fontSize: "11px",
+                                fontWeight: 700,
+                                cursor: "pointer",
+                                background: v.isActive ? "#dcfce7" : "#fee2e2",
+                                color: v.isActive ? "#166534" : "#991b1b",
+                              }}
+                            >
+                              {v.isActive ? "● Đang kích hoạt" : "○ Tạm tắt"}
+                            </span>
+                          </td>
+                          <td style={{ textAlign: "center" }}>
+                            <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
+                              <button
+                                onClick={() => handleEditClick(v)}
+                                style={{
+                                  padding: "4px 8px",
+                                  background: "#eff6ff",
+                                  color: "#2563eb",
+                                  border: "1px solid #bfdbfe",
+                                  borderRadius: "6px",
+                                  cursor: "pointer",
+                                  fontSize: "12px",
+                                  fontWeight: 700,
+                                }}
+                              >
+                                ✏️ Sửa
+                              </button>
+                              <button
+                                onClick={() => handleDeleteVoucher(v.code)}
+                                style={{
+                                  padding: "4px 8px",
+                                  background: "#fef2f2",
+                                  color: "#dc2626",
+                                  border: "1px solid #fca5a5",
+                                  borderRadius: "6px",
+                                  cursor: "pointer",
+                                  fontSize: "12px",
+                                  fontWeight: 700,
+                                }}
+                              >
+                                🗑️ Xóa
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+
+                {/* Standardized Pagination Bar */}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "16px 0 4px 0",
+                    borderTop: "1px solid var(--border-color)",
+                    marginTop: "16px",
+                    flexWrap: "wrap",
+                    gap: "12px",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "var(--text-muted)" }}>
+                    <span>Hiển thị</span>
+                    <select
+                      value={pageSize}
+                      onChange={(e) => {
+                        setPageSize(Number(e.target.value));
+                        setCurrentPage(1);
+                      }}
+                      style={{
+                        padding: "4px 8px",
+                        borderRadius: "6px",
+                        border: "1px solid var(--border-color)",
+                        fontSize: "13px",
+                        fontWeight: 700,
+                        cursor: "pointer",
+                      }}
+                    >
+                      <option value={10}>10 voucher</option>
+                      <option value={25}>25 voucher</option>
+                      <option value={50}>50 voucher</option>
+                    </select>
+                    <span>
+                      (Hiển thị {filteredVouchers.length > 0 ? (safeCurrentPage - 1) * pageSize + 1 : 0} -{" "}
+                      {Math.min(safeCurrentPage * pageSize, filteredVouchers.length)} / tổng {filteredVouchers.length} mã voucher)
+                    </span>
+                  </div>
+
+                  <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                    <button
+                      disabled={safeCurrentPage === 1}
+                      onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                      style={{
+                        padding: "6px 12px",
+                        borderRadius: "6px",
+                        border: "1px solid var(--border-color)",
+                        background: "#fff",
+                        fontSize: "12px",
+                        fontWeight: 700,
+                        cursor: safeCurrentPage === 1 ? "not-allowed" : "pointer",
+                        opacity: safeCurrentPage === 1 ? 0.5 : 1,
+                      }}
+                    >
+                      &laquo; Trang trước
+                    </button>
+
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                      <button
+                        key={p}
+                        onClick={() => setCurrentPage(p)}
+                        style={{
+                          padding: "6px 12px",
+                          borderRadius: "6px",
+                          border: "1px solid var(--border-color)",
+                          background: p === safeCurrentPage ? "var(--primary-color)" : "#fff",
+                          color: p === safeCurrentPage ? "#fff" : "var(--text-main)",
+                          fontSize: "12px",
+                          fontWeight: 700,
+                          cursor: "pointer",
+                        }}
+                      >
+                        {p}
+                      </button>
+                    ))}
+
+                    <button
+                      disabled={safeCurrentPage === totalPages}
+                      onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                      style={{
+                        padding: "6px 12px",
+                        borderRadius: "6px",
+                        border: "1px solid var(--border-color)",
+                        background: "#fff",
+                        fontSize: "12px",
+                        fontWeight: 700,
+                        cursor: safeCurrentPage === totalPages ? "not-allowed" : "pointer",
+                        opacity: safeCurrentPage === totalPages ? 0.5 : 1,
+                      }}
+                    >
+                      Trang sau &raquo;
+                    </button>
+                  </div>
+                </div>
+              </>
             )}
           </div>
         </div>

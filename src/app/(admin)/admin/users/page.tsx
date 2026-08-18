@@ -13,6 +13,7 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [pageSize, setPageSize] = useState<number>(10);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
@@ -339,13 +340,13 @@ export default function AdminUsersPage() {
                       cursor: "pointer",
                     }}
                   >
-                    <option value={10}>10 người / trang</option>
-                    <option value={25}>25 người / trang</option>
-                    <option value={50}>50 người / trang</option>
+                    <option value={10}>10 tài khoản</option>
+                    <option value={25}>25 tài khoản</option>
+                    <option value={50}>50 tài khoản</option>
                   </select>
                   <span>
-                    Hiển thị {filteredUsers.length > 0 ? (safeCurrentPage - 1) * pageSize + 1 : 0} -{" "}
-                    {Math.min(safeCurrentPage * pageSize, filteredUsers.length)} / tổng {filteredUsers.length} người dùng
+                    (Hiển thị {filteredUsers.length > 0 ? (safeCurrentPage - 1) * pageSize + 1 : 0} -{" "}
+                    {Math.min(safeCurrentPage * pageSize, filteredUsers.length)} / tổng {filteredUsers.length} tài khoản)
                   </span>
                 </div>
                 <div className="pagination-controls">
@@ -520,7 +521,7 @@ export default function AdminUsersPage() {
                   marginBottom: "16px",
                 }}
               >
-                <div>
+                <div style={{ position: "relative" }}>
                   <label
                     style={{
                       fontSize: "13px",
@@ -532,14 +533,33 @@ export default function AdminUsersPage() {
                   >
                     Mật khẩu ban đầu *
                   </label>
-                  <input
-                    type="password"
-                    className="admin-setting-input"
-                    style={{ height: "42px" }}
-                    value={staffPassword}
-                    onChange={(e) => setStaffPassword(e.target.value)}
-                    required
-                  />
+                  <div style={{ position: "relative" }}>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      className="admin-setting-input"
+                      style={{ height: "42px", paddingRight: "40px" }}
+                      value={staffPassword}
+                      onChange={(e) => setStaffPassword(e.target.value)}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      style={{
+                        position: "absolute",
+                        right: "10px",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        fontSize: "16px",
+                      }}
+                      title={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                    >
+                      {showPassword ? "🙈" : "👁️"}
+                    </button>
+                  </div>
                 </div>
 
                 <div>
@@ -552,7 +572,7 @@ export default function AdminUsersPage() {
                       display: "block",
                     }}
                   >
-                    Vai trò quản trị *
+                    Vai trò tài khoản *
                   </label>
                   <select
                     className="admin-setting-input"
@@ -560,15 +580,10 @@ export default function AdminUsersPage() {
                     value={staffRole}
                     onChange={(e) => setStaffRole(e.target.value)}
                   >
-                    <option value="👑 Administrator">
-                      👑 Administrator (Super Admin)
-                    </option>
-                    <option value="📦 Quản lý kho">
-                      📦 Quản lý kho sản phẩm
-                    </option>
-                    <option value="🛍️ CSKH & Sales">
-                      🛍️ Nhân viên CSKH & Sales
-                    </option>
+                    <option value="Super Admin">👑 Super Admin (Toàn quyền)</option>
+                    <option value="Quản lý kho">📦 Quản lý kho</option>
+                    <option value="CSKH & Bán hàng">🛍️ CSKH & Bán hàng</option>
+                    <option value="Khách hàng">👤 Khách hàng (Người dùng)</option>
                   </select>
                 </div>
               </div>

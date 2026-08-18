@@ -23,8 +23,13 @@ export default function AdminCategoriesPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [searchQuery, setSearchQuery] = useState("");
   const [showModal, setShowModal] = useState<boolean>(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+
+  // Pagination states
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   // Form inputs state
   const [formName, setFormName] = useState("");
@@ -36,10 +41,12 @@ export default function AdminCategoriesPage() {
   const loadCategories = async () => {
     setLoading(true);
     const data = await fetchAdminCategories();
-    if (data.length > 0) {
-      setCategories(data);
+    const cleanData = data.filter((c) => c.name.trim() !== "Tất cả" && c.name.trim() !== "All");
+
+    if (cleanData.length > 0) {
+      setCategories(cleanData);
     } else {
-      // Fallback default categories
+      // Fallback clean default categories
       setCategories([
         { id: 1, icon: "🛏️", name: "Nội Thất Phòng Ngủ", slug: "phong-ngu", productCount: 4, status: "Active", desc: "Giường ngủ, tủ quần áo, bàn trang điểm" },
         { id: 2, icon: "🛋️", name: "Nội Thất Phòng Khách", slug: "phong-khach", productCount: 5, status: "Active", desc: "Sofa, bàn trà, kệ TV" },
@@ -54,6 +61,20 @@ export default function AdminCategoriesPage() {
   useEffect(() => {
     loadCategories();
   }, []);
+
+  const filteredCategories = categories.filter(
+    (c) =>
+      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.slug.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (c.desc && c.desc.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  const totalPages = Math.max(1, Math.ceil(filteredCategories.length / pageSize));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedCategories = filteredCategories.slice(
+    (safeCurrentPage - 1) * pageSize,
+    safeCurrentPage * pageSize
+  );
 
   const handleOpenAddModal = () => {
     setEditingCategory(null);
@@ -85,6 +106,11 @@ export default function AdminCategoriesPage() {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (formName.trim() === "Tất cả") {
+      alert("⚠️ Không thể đặt tên danh mục là 'Tất cả'!");
+      return;
+    }
+
     const isDuplicate = categories.some(
       (c) =>
         c.name.trim().toLowerCase() === formName.trim().toLowerCase() &&
@@ -162,6 +188,11 @@ export default function AdminCategoriesPage() {
           title="Quản Lý Danh Mục Sản Phẩm"
           sidebarCollapsed={sidebarCollapsed}
           setSidebarCollapsed={setSidebarCollapsed}
+          searchQuery={searchQuery}
+          setSearchQuery={(q) => {
+            setSearchQuery(q);
+            setCurrentPage(1);
+          }}
           searchPlaceholder="Tìm danh mục sản phẩm..."
         />
 
@@ -169,7 +200,7 @@ export default function AdminCategoriesPage() {
           <div className="dashboard-card">
             <div className="card-header-row" style={{ marginBottom: "16px" }}>
               <div>
-                <h2 className="card-header-title">Danh Sách Danh Mục ({categories.length})</h2>
+                <h2 className="card-header-title">Danh Sách Danh Mục ({filteredCategories.length})</h2>
                 <p style={{ fontSize: "12px", color: "var(--text-muted)", margin: 0 }}>
                   Quản lý hiển thị các nhóm sản phẩm kinh doanh trên website
                 </p>
@@ -184,96 +215,202 @@ export default function AdminCategoriesPage() {
                 ⏳ Đang tải dữ liệu danh mục...
               </div>
             ) : (
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Biểu tượng</th>
-                    <th>Tên Danh Mục</th>
-                    <th>Mã Slug</th>
-                    <th>Số Sản Phẩm</th>
-                    <th>Mô Tả</th>
-                    <th>Trạng Thái</th>
-                    <th style={{ textAlign: "center" }}>Thao Tác</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {categories.map((cat, index) => (
-                    <tr key={cat.id}>
-                      <td>{index + 1}</td>
-                      <td>
-                        <div
-                          style={{
-                            width: "36px",
-                            height: "36px",
-                            borderRadius: "var(--radius-md)",
-                            backgroundColor: "#e8f5e9",
-                            color: "var(--primary-color)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: "18px",
-                          }}
-                        >
-                          {cat.icon}
-                        </div>
-                      </td>
-                      <td><strong>{cat.name}</strong></td>
-                      <td><code style={{ background: "#f1f5f9", padding: "2px 6px", borderRadius: "4px" }}>{cat.slug}</code></td>
-                      <td><strong>{cat.productCount}</strong> sản phẩm</td>
-                      <td style={{ fontSize: "12px", color: "var(--text-muted)" }}>{cat.desc || "Chưa có mô tả"}</td>
-                      <td>
-                        <span
-                          style={{
-                            padding: "4px 8px",
-                            borderRadius: "6px",
-                            fontSize: "11px",
-                            fontWeight: 700,
-                            background: cat.status === "Active" ? "#dcfce7" : "#f1f5f9",
-                            color: cat.status === "Active" ? "#166534" : "#64748b",
-                          }}
-                        >
-                          {cat.status === "Active" ? "● Hoạt động" : "○ Đã ẩn"}
-                        </span>
-                      </td>
-                      <td style={{ textAlign: "center" }}>
-                        <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
-                          <button
-                            onClick={() => handleEditClick(cat)}
-                            style={{
-                              padding: "4px 8px",
-                              background: "#eff6ff",
-                              color: "#2563eb",
-                              border: "1px solid #bfdbfe",
-                              borderRadius: "6px",
-                              cursor: "pointer",
-                              fontSize: "12px",
-                              fontWeight: 700,
-                            }}
-                          >
-                            ✏️ Sửa
-                          </button>
-                          <button
-                            onClick={() => handleDeleteClick(cat.id)}
-                            style={{
-                              padding: "4px 8px",
-                              background: "#fef2f2",
-                              color: "#dc2626",
-                              border: "1px solid #fca5a5",
-                              borderRadius: "6px",
-                              cursor: "pointer",
-                              fontSize: "12px",
-                              fontWeight: 700,
-                            }}
-                          >
-                            🗑️ Xóa
-                          </button>
-                        </div>
-                      </td>
+              <>
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Biểu tượng</th>
+                      <th>Tên Danh Mục</th>
+                      <th>Mã Slug</th>
+                      <th>Số Sản Phẩm</th>
+                      <th>Mô Tả</th>
+                      <th>Trạng Thái</th>
+                      <th style={{ textAlign: "center" }}>Thao Tác</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {paginatedCategories.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)" }}>
+                          Không có danh mục nào khớp với tìm kiếm.
+                        </td>
+                      </tr>
+                    ) : (
+                      paginatedCategories.map((cat, index) => (
+                        <tr key={cat.id}>
+                          <td>{(safeCurrentPage - 1) * pageSize + index + 1}</td>
+                          <td>
+                            <div
+                              style={{
+                                width: "36px",
+                                height: "36px",
+                                borderRadius: "var(--radius-md)",
+                                backgroundColor: "#e8f5e9",
+                                color: "var(--primary-color)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: "18px",
+                              }}
+                            >
+                              {cat.icon}
+                            </div>
+                          </td>
+                          <td><strong>{cat.name}</strong></td>
+                          <td><code style={{ background: "#f1f5f9", padding: "2px 6px", borderRadius: "4px" }}>{cat.slug}</code></td>
+                          <td><strong>{cat.productCount}</strong> sản phẩm</td>
+                          <td style={{ fontSize: "12px", color: "var(--text-muted)" }}>{cat.desc || "Chưa có mô tả"}</td>
+                          <td>
+                            <span
+                              style={{
+                                padding: "4px 8px",
+                                borderRadius: "6px",
+                                fontSize: "11px",
+                                fontWeight: 700,
+                                background: cat.status === "Active" ? "#dcfce7" : "#f1f5f9",
+                                color: cat.status === "Active" ? "#166534" : "#64748b",
+                              }}
+                            >
+                              {cat.status === "Active" ? "● Hoạt động" : "○ Đã ẩn"}
+                            </span>
+                          </td>
+                          <td style={{ textAlign: "center" }}>
+                            <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
+                              <button
+                                onClick={() => handleEditClick(cat)}
+                                style={{
+                                  padding: "4px 8px",
+                                  background: "#eff6ff",
+                                  color: "#2563eb",
+                                  border: "1px solid #bfdbfe",
+                                  borderRadius: "6px",
+                                  cursor: "pointer",
+                                  fontSize: "12px",
+                                  fontWeight: 700,
+                                }}
+                              >
+                                ✏️ Sửa
+                              </button>
+                              <button
+                                onClick={() => handleDeleteClick(cat.id)}
+                                style={{
+                                  padding: "4px 8px",
+                                  background: "#fef2f2",
+                                  color: "#dc2626",
+                                  border: "1px solid #fca5a5",
+                                  borderRadius: "6px",
+                                  cursor: "pointer",
+                                  fontSize: "12px",
+                                  fontWeight: 700,
+                                }}
+                              >
+                                🗑️ Xóa
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+
+                {/* Standardized Pagination Bar */}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "16px 0 4px 0",
+                    borderTop: "1px solid var(--border-color)",
+                    marginTop: "16px",
+                    flexWrap: "wrap",
+                    gap: "12px",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "var(--text-muted)" }}>
+                    <span>Hiển thị</span>
+                    <select
+                      value={pageSize}
+                      onChange={(e) => {
+                        setPageSize(Number(e.target.value));
+                        setCurrentPage(1);
+                      }}
+                      style={{
+                        padding: "4px 8px",
+                        borderRadius: "6px",
+                        border: "1px solid var(--border-color)",
+                        fontSize: "13px",
+                        fontWeight: 700,
+                        cursor: "pointer",
+                      }}
+                    >
+                      <option value={10}>10 danh mục</option>
+                      <option value={25}>25 danh mục</option>
+                      <option value={50}>50 danh mục</option>
+                    </select>
+                    <span>
+                      (Hiển thị {filteredCategories.length > 0 ? (safeCurrentPage - 1) * pageSize + 1 : 0} -{" "}
+                      {Math.min(safeCurrentPage * pageSize, filteredCategories.length)} / tổng {filteredCategories.length} danh mục)
+                    </span>
+                  </div>
+
+                  <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                    <button
+                      disabled={safeCurrentPage === 1}
+                      onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                      style={{
+                        padding: "6px 12px",
+                        borderRadius: "6px",
+                        border: "1px solid var(--border-color)",
+                        background: "#fff",
+                        fontSize: "12px",
+                        fontWeight: 700,
+                        cursor: safeCurrentPage === 1 ? "not-allowed" : "pointer",
+                        opacity: safeCurrentPage === 1 ? 0.5 : 1,
+                      }}
+                    >
+                      &laquo; Trang trước
+                    </button>
+
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                      <button
+                        key={p}
+                        onClick={() => setCurrentPage(p)}
+                        style={{
+                          padding: "6px 12px",
+                          borderRadius: "6px",
+                          border: "1px solid var(--border-color)",
+                          background: p === safeCurrentPage ? "var(--primary-color)" : "#fff",
+                          color: p === safeCurrentPage ? "#fff" : "var(--text-main)",
+                          fontSize: "12px",
+                          fontWeight: 700,
+                          cursor: "pointer",
+                        }}
+                      >
+                        {p}
+                      </button>
+                    ))}
+
+                    <button
+                      disabled={safeCurrentPage === totalPages}
+                      onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                      style={{
+                        padding: "6px 12px",
+                        borderRadius: "6px",
+                        border: "1px solid var(--border-color)",
+                        background: "#fff",
+                        fontSize: "12px",
+                        fontWeight: 700,
+                        cursor: safeCurrentPage === totalPages ? "not-allowed" : "pointer",
+                        opacity: safeCurrentPage === totalPages ? 0.5 : 1,
+                      }}
+                    >
+                      Trang sau &raquo;
+                    </button>
+                  </div>
+                </div>
+              </>
             )}
           </div>
         </div>

@@ -785,13 +785,13 @@ export default function AdminOrdersPage() {
                       cursor: "pointer",
                     }}
                   >
-                    <option value={10}>10 đơn / trang</option>
-                    <option value={25}>25 đơn / trang</option>
-                    <option value={50}>50 đơn / trang</option>
+                    <option value={10}>10 đơn hàng</option>
+                    <option value={25}>25 đơn hàng</option>
+                    <option value={50}>50 đơn hàng</option>
                   </select>
                   <span>
-                    Hiển thị {filteredOrders.length > 0 ? (safeCurrentPage - 1) * pageSize + 1 : 0} -{" "}
-                    {Math.min(safeCurrentPage * pageSize, filteredOrders.length)} / tổng {filteredOrders.length} đơn hàng
+                    (Hiển thị {filteredOrders.length > 0 ? (safeCurrentPage - 1) * pageSize + 1 : 0} -{" "}
+                    {Math.min(safeCurrentPage * pageSize, filteredOrders.length)} / tổng {filteredOrders.length} đơn hàng)
                   </span>
                 </div>
                 <div className="pagination-controls">

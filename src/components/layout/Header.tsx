@@ -382,7 +382,7 @@ export const Header: React.FC = () => {
                 </Link>
 
                 <Link
-                  href="/auth"
+                  href="/auth?mode=register"
                   className="btn-stacked nav-link"
                   style={{
                     backgroundColor: "var(--primary-color)",

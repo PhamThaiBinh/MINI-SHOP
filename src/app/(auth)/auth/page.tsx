@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import "@/styles/auth.css";
 import { useAuth } from "@/context/AuthContext";
 import { fetchProvincesApi, fetchWardsForProvinceApi } from "@/lib/locationApi";
@@ -299,6 +299,22 @@ export default function AuthPage() {
   const [regName, setRegName] = useState("");
   const [regEmail, setRegEmail] = useState("");
   const [regPassword, setRegPassword] = useState("");
+  const [regConfirmPassword, setRegConfirmPassword] = useState("");
+
+  // Eye toggle states
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegPassword, setShowRegPassword] = useState(false);
+  const [showRegConfirmPassword, setShowRegConfirmPassword] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const mode = params.get("mode") || params.get("tab");
+      if (mode === "register") {
+        setActiveTab("register");
+      }
+    }
+  }, []);
 
   // Dashboard Subtabs
   const [dashboardTab, setDashboardTab] = useState<
@@ -543,13 +559,18 @@ export default function AuthPage() {
     setAuthError("");
     setAuthSuccess("");
 
-    if (!regEmail || !regPassword || !regName) {
-      setAuthError("⚠️ Vui lòng điền đầy đủ Tên, Email và Mật khẩu!");
+    if (!regEmail || !regPassword || !regName || !regConfirmPassword) {
+      setAuthError("⚠️ Vui lòng điền đầy đủ Tên, Email, Mật khẩu và Xác nhận mật khẩu!");
       return;
     }
 
     if (regPassword.length < 6) {
       setAuthError("⚠️ Mật khẩu phải có tối thiểu 6 ký tự!");
+      return;
+    }
+
+    if (regPassword !== regConfirmPassword) {
+      setAuthError("⚠️ Mật khẩu và Xác nhận mật khẩu không trùng khớp!");
       return;
     }
 
@@ -740,15 +761,35 @@ export default function AuthPage() {
                       <label htmlFor="login-password" className="auth-label">
                         Mật khẩu
                       </label>
-                      <input
-                        type="password"
-                        id="login-password"
-                        className="form-control auth-input"
-                        placeholder="••••••••"
-                        required
-                        value={loginPassword}
-                        onChange={(e) => setLoginPassword(e.target.value)}
-                      />
+                      <div style={{ position: "relative" }}>
+                        <input
+                          type={showLoginPassword ? "text" : "password"}
+                          id="login-password"
+                          className="form-control auth-input"
+                          style={{ paddingRight: "40px" }}
+                          placeholder="••••••••"
+                          required
+                          value={loginPassword}
+                          onChange={(e) => setLoginPassword(e.target.value)}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowLoginPassword(!showLoginPassword)}
+                          style={{
+                            position: "absolute",
+                            right: "12px",
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            fontSize: "16px",
+                          }}
+                          title={showLoginPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                        >
+                          {showLoginPassword ? "🙈" : "👁️"}
+                        </button>
+                      </div>
                       <div style={{ textAlign: "right", marginTop: "6px" }}>
                         <button
                           type="button"
@@ -825,15 +866,70 @@ export default function AuthPage() {
                       <label htmlFor="reg-password" className="auth-label">
                         Mật khẩu
                       </label>
-                      <input
-                        type="password"
-                        id="reg-password"
-                        className="form-control auth-input"
-                        placeholder="••••••••"
-                        required
-                        value={regPassword}
-                        onChange={(e) => setRegPassword(e.target.value)}
-                      />
+                      <div style={{ position: "relative" }}>
+                        <input
+                          type={showRegPassword ? "text" : "password"}
+                          id="reg-password"
+                          className="form-control auth-input"
+                          style={{ paddingRight: "40px" }}
+                          placeholder="••••••••"
+                          required
+                          value={regPassword}
+                          onChange={(e) => setRegPassword(e.target.value)}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowRegPassword(!showRegPassword)}
+                          style={{
+                            position: "absolute",
+                            right: "12px",
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            fontSize: "16px",
+                          }}
+                          title={showRegPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                        >
+                          {showRegPassword ? "🙈" : "👁️"}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label htmlFor="reg-confirm-password" className="auth-label">
+                        Xác nhận mật khẩu *
+                      </label>
+                      <div style={{ position: "relative" }}>
+                        <input
+                          type={showRegConfirmPassword ? "text" : "password"}
+                          id="reg-confirm-password"
+                          className="form-control auth-input"
+                          style={{ paddingRight: "40px" }}
+                          placeholder="••••••••"
+                          required
+                          value={regConfirmPassword}
+                          onChange={(e) => setRegConfirmPassword(e.target.value)}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowRegConfirmPassword(!showRegConfirmPassword)}
+                          style={{
+                            position: "absolute",
+                            right: "12px",
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            fontSize: "16px",
+                          }}
+                          title={showRegConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                        >
+                          {showRegConfirmPassword ? "🙈" : "👁️"}
+                        </button>
+                      </div>
                     </div>
 
                     <button type="submit" className="btn-auth-submit">
