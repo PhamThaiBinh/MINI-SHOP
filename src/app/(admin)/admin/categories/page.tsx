@@ -155,7 +155,7 @@ export default function AdminCategoriesPage() {
       const { data } = await supabase
         .from("categories")
         .insert({
-          code: generatedCategoryId,
+          category_id: generatedCategoryId,
           name: formName.trim(),
           slug: cleanSlug,
           icon: cleanIcon,

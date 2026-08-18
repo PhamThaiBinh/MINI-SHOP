@@ -154,6 +154,7 @@ export const toggleAdminUserStatus = async (id: number, currentStatus: "Active" 
 // ==================== 3. CATEGORIES CRUD ====================
 export interface AdminCategoryItem {
   id: number;
+  code: string;
   icon: string;
   name: string;
   slug: string;
@@ -175,9 +176,12 @@ export const fetchAdminCategories = async (): Promise<AdminCategoryItem[]> => {
     const { data: prodRows } = await supabase.from("products").select("category");
 
     return catRows.map((c: any) => {
-      const pCount = (prodRows || []).filter((p: any) => p.category === c.category_id || p.category === c.slug).length;
+      const pCount = (prodRows || []).filter(
+        (p: any) => p.category === c.category_id || p.category === c.slug || p.category === c.name
+      ).length;
       return {
         id: Number(c.id),
+        code: String(c.category_id || `C${String(c.id).padStart(4, "0")}`),
         icon: String(c.icon || "📁"),
         name: String(c.name),
         slug: String(c.slug || c.category_id),
@@ -197,7 +201,7 @@ export const saveAdminCategory = async (cat: Partial<AdminCategoryItem>): Promis
     const supabase = createClient();
     const { error } = await supabase.from("categories").upsert({
       ...(cat.id ? { id: cat.id } : {}),
-      code: cat.slug || cat.name?.toLowerCase().replace(/\s+/g, "-"),
+      category_id: cat.code || cat.slug || `C${Date.now().toString().slice(-4)}`,
       name: cat.name,
       slug: cat.slug,
       icon: cat.icon,
