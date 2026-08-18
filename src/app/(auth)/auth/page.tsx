@@ -439,7 +439,7 @@ export default function AuthPage() {
   const [showAddAddressModal, setShowAddAddressModal] = useState(false);
   const [addrName, setAddrName] = useState("");
   const [addrPhone, setAddrPhone] = useState("");
-  const [addrProvince, setAddrProvince] = useState("Hồ Chí Minh");
+  const [addrProvince, setAddrProvince] = useState("Thành phố Hồ Chí Minh");
   const [addrWard, setAddrWard] = useState("");
   const [addrDetail, setAddrDetail] = useState("");
   const [addrSetDefault, setAddrSetDefault] = useState(false);
