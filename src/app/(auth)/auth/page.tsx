@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import "@/styles/auth.css";
 import { useAuth } from "@/context/AuthContext";
-import { LOCATION_DATA, PROVINCES_LIST } from "@/data/locationData";
 import { fetchProvincesApi, fetchWardsForProvinceApi } from "@/lib/locationApi";
 import { fixImagePath } from "@/lib/utils";
 import { createClient } from "@/utils/supabase/client";
@@ -164,91 +163,6 @@ interface CustomerOrder {
   total: number;
 }
 
-const PROVINCES_34 = [
-  "TP. Hồ Chí Minh",
-  "TP. Hà Nội",
-  "TP. Đà Nẵng",
-  "TP. Hải Phòng",
-  "TP. Cần Thơ",
-  "TP. Thủ Đức (TP. Hồ Chí Minh)",
-  "An Giang",
-  "Bà Rịa - Vũng Tàu",
-  "Bắc Giang",
-  "Bắc Kạn",
-  "Bạc Liêu",
-  "Bắc Ninh",
-  "Bến Tre",
-  "Bình Định",
-  "Bình Dương",
-  "Bình Phước",
-  "Bình Thuận",
-  "Cà Mau",
-  "Cao Bằng",
-  "Đắk Lắk",
-  "Đắk Nông",
-  "Điện Biên",
-  "Đồng Nai",
-  "Đồng Tháp",
-  "Gia Lai",
-  "Hà Giang",
-  "Hà Nam",
-  "Hà Tĩnh",
-  "Hải Dương",
-  "Hậu Giang",
-  "Hòa Bình",
-  "Hưng Yên",
-  "Khánh Hòa",
-  "Kiên Giang",
-  "Kon Tum",
-  "Lai Châu",
-  "Lâm Đồng",
-  "Lạng Sơn",
-  "Lào Cai",
-  "Long An",
-  "Nam Định",
-  "Nghệ An",
-  "Ninh Bình",
-  "Ninh Thuận",
-  "Phú Thọ",
-  "Phú Yên",
-  "Quảng Bình",
-  "Quảng Nam",
-  "Quảng Ngãi",
-  "Quảng Ninh",
-  "Quảng Trị",
-  "Sóc Trăng",
-  "Sơn La",
-  "Tây Ninh",
-  "Thái Bình",
-  "Thái Nguyên",
-  "Thanh Hóa",
-  "Thừa Thiên Huế",
-  "Tiền Giang",
-  "Trà Vinh",
-  "Tuyên Quang",
-  "Vĩnh Long",
-  "Vĩnh Phúc",
-  "Yên Bái",
-];
-
-const WARDS_2026 = [
-  "Phường Bến Thành (Quận 1, TP.HCM)",
-  "Phường Tân Định (Quận 1, TP.HCM)",
-  "Phường Phạm Ngũ Lão (Quận 1, TP.HCM)",
-  "Phường Võ Thị Sáu (Quận 3, TP.HCM)",
-  "Phường An Khánh (TP. Thủ Đức, TP.HCM)",
-  "Phường Thảo Điền (TP. Thủ Đức, TP.HCM)",
-  "Phường Hàng Bạc (Q. Hoàn Kiếm, Hà Nội)",
-  "Phường Tràng Tiền (Q. Hoàn Kiếm, Hà Nội)",
-  "Phường Quán Thánh (Q. Ba Đình, Hà Nội)",
-  "Phường Hải Châu 1 (Q. Hải Châu, Đà Nẵng)",
-  "Phường Minh Khai (Q. Hồng Bàng, Hải Phòng)",
-  "Phường Tân An (Q. Ninh Kiều, Cần Thơ)",
-  "Xã Bình Chánh (H. Bình Chánh, TP.HCM)",
-  "Xã Hóc Môn (H. Hóc Môn, TP.HCM)",
-  "Xã Củ Chi (H. Củ Chi, TP.HCM)",
-];
-
 const MOCK_ORDERS: CustomerOrder[] = [
   {
     id: "#MS-9824",
@@ -355,7 +269,7 @@ export default function AuthPage() {
   const [liveOrders, setLiveOrders] = useState<UnifiedOrder[]>([]);
 
   // OpenAdminData API location state
-  const [provincesList, setProvincesList] = useState<string[]>(PROVINCES_LIST);
+  const [provincesList, setProvincesList] = useState<string[]>([]);
   const [wardsList, setWardsList] = useState<string[]>([]);
 
   useEffect(() => {
@@ -525,15 +439,15 @@ export default function AuthPage() {
   const [showAddAddressModal, setShowAddAddressModal] = useState(false);
   const [addrName, setAddrName] = useState("");
   const [addrPhone, setAddrPhone] = useState("");
-  const initialProvince = PROVINCES_LIST[0] || "Thành phố Hồ Chí Minh";
-  const [addrProvince, setAddrProvince] = useState(initialProvince);
-  const [addrWard, setAddrWard] = useState((LOCATION_DATA[initialProvince] || [])[0] || "");
+  const [addrProvince, setAddrProvince] = useState("Thành phố Hồ Chí Minh");
+  const [addrWard, setAddrWard] = useState("");
   const [addrDetail, setAddrDetail] = useState("");
   const [addrSetDefault, setAddrSetDefault] = useState(false);
 
-  const handleSelectProvince = (selected: string) => {
+  const handleSelectProvince = async (selected: string) => {
     setAddrProvince(selected);
-    const wards = LOCATION_DATA[selected] || [];
+    const wards = await fetchWardsForProvinceApi(selected);
+    setWardsList(wards);
     setAddrWard(wards[0] || "");
   };
 
@@ -2664,17 +2578,17 @@ export default function AuthPage() {
               </div>
 
               <SearchableDropdown
-                label="Tỉnh / Thành phố *"
+                label="Tỉnh / Thành phố (OpenAdminData API) *"
                 value={addrProvince}
-                options={PROVINCES_LIST}
+                options={provincesList}
                 placeholderSearch="🔍 Nhập từ khóa tìm nhanh Tỉnh / Thành phố..."
                 onSelect={handleSelectProvince}
               />
 
               <SearchableDropdown
-                label="Xã / Phường (Phụ thuộc Tỉnh thành) *"
+                label="Xã / Phường (OpenAdminData API - Phụ thuộc Tỉnh thành) *"
                 value={addrWard}
-                options={LOCATION_DATA[addrProvince] || []}
+                options={wardsList}
                 placeholderSearch="🔍 Nhập từ khóa tìm nhanh Xã / Phường..."
                 onSelect={(selectedWard) => setAddrWard(selectedWard)}
               />
