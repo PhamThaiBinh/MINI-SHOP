@@ -332,7 +332,6 @@ export default function AdminProductsPage() {
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "var(--text-muted)" }}>
-                    <span>Hiển thị</span>
                     <select
                       value={pageSize}
                       onChange={(e) => {
@@ -352,9 +351,8 @@ export default function AdminProductsPage() {
                       <option value={25}>25 sản phẩm</option>
                       <option value={50}>50 sản phẩm</option>
                     </select>
-                    <span>
-                      (Hiển thị {filteredProducts.length > 0 ? (safeCurrentPage - 1) * pageSize + 1 : 0} -{" "}
-                      {Math.min(safeCurrentPage * pageSize, filteredProducts.length)} / tổng {filteredProducts.length} sản phẩm)
+                    <span style={{ fontWeight: 700, color: "#0f172a" }}>
+                      Hiển thị {paginatedProducts.length}/{filteredProducts.length} sản phẩm
                     </span>
                   </div>
 

@@ -324,7 +324,6 @@ export default function AdminUsersPage() {
                     color: "var(--text-muted)",
                   }}
                 >
-                  <span>Hiển thị:</span>
                   <select
                     value={pageSize}
                     onChange={(e) => {
@@ -344,9 +343,8 @@ export default function AdminUsersPage() {
                     <option value={25}>25 tài khoản</option>
                     <option value={50}>50 tài khoản</option>
                   </select>
-                  <span>
-                    (Hiển thị {filteredUsers.length > 0 ? (safeCurrentPage - 1) * pageSize + 1 : 0} -{" "}
-                    {Math.min(safeCurrentPage * pageSize, filteredUsers.length)} / tổng {filteredUsers.length} tài khoản)
+                  <span style={{ fontWeight: 700, color: "#0f172a" }}>
+                    Hiển thị {paginatedUsers.length}/{filteredUsers.length} tài khoản
                   </span>
                 </div>
                 <div className="pagination-controls">

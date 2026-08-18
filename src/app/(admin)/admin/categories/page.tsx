@@ -329,7 +329,6 @@ export default function AdminCategoriesPage() {
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "var(--text-muted)" }}>
-                    <span>Hiển thị</span>
                     <select
                       value={pageSize}
                       onChange={(e) => {
@@ -349,9 +348,8 @@ export default function AdminCategoriesPage() {
                       <option value={25}>25 danh mục</option>
                       <option value={50}>50 danh mục</option>
                     </select>
-                    <span>
-                      (Hiển thị {filteredCategories.length > 0 ? (safeCurrentPage - 1) * pageSize + 1 : 0} -{" "}
-                      {Math.min(safeCurrentPage * pageSize, filteredCategories.length)} / tổng {filteredCategories.length} danh mục)
+                    <span style={{ fontWeight: 700, color: "#0f172a" }}>
+                      Hiển thị {paginatedCategories.length}/{filteredCategories.length} danh mục
                     </span>
                   </div>
 

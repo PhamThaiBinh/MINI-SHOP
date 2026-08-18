@@ -286,7 +286,6 @@ export default function AdminVouchersPage() {
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "var(--text-muted)" }}>
-                    <span>Hiển thị</span>
                     <select
                       value={pageSize}
                       onChange={(e) => {
@@ -306,9 +305,8 @@ export default function AdminVouchersPage() {
                       <option value={25}>25 voucher</option>
                       <option value={50}>50 voucher</option>
                     </select>
-                    <span>
-                      (Hiển thị {filteredVouchers.length > 0 ? (safeCurrentPage - 1) * pageSize + 1 : 0} -{" "}
-                      {Math.min(safeCurrentPage * pageSize, filteredVouchers.length)} / tổng {filteredVouchers.length} mã voucher)
+                    <span style={{ fontWeight: 700, color: "#0f172a" }}>
+                      Hiển thị {paginatedVouchers.length}/{filteredVouchers.length} mã voucher
                     </span>
                   </div>
 

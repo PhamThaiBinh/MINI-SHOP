@@ -769,7 +769,6 @@ export default function AdminOrdersPage() {
                     color: "var(--text-muted)",
                   }}
                 >
-                  <span>Hiển thị:</span>
                   <select
                     value={pageSize}
                     onChange={(e) => {
@@ -789,9 +788,8 @@ export default function AdminOrdersPage() {
                     <option value={25}>25 đơn hàng</option>
                     <option value={50}>50 đơn hàng</option>
                   </select>
-                  <span>
-                    (Hiển thị {filteredOrders.length > 0 ? (safeCurrentPage - 1) * pageSize + 1 : 0} -{" "}
-                    {Math.min(safeCurrentPage * pageSize, filteredOrders.length)} / tổng {filteredOrders.length} đơn hàng)
+                  <span style={{ fontWeight: 700, color: "#0f172a" }}>
+                    Hiển thị {paginatedOrders.length}/{filteredOrders.length} đơn hàng
                   </span>
                 </div>
                 <div className="pagination-controls">
