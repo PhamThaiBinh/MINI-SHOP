@@ -197,7 +197,7 @@ export const saveAdminCategory = async (cat: Partial<AdminCategoryItem>): Promis
     const supabase = createClient();
     const { error } = await supabase.from("categories").upsert({
       ...(cat.id ? { id: cat.id } : {}),
-      category_id: cat.slug || cat.name?.toLowerCase().replace(/\s+/g, "-"),
+      code: cat.slug || cat.name?.toLowerCase().replace(/\s+/g, "-"),
       name: cat.name,
       slug: cat.slug,
       icon: cat.icon,
