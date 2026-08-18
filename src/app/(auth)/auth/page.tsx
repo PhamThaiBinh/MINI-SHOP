@@ -47,10 +47,59 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const listRef = React.useRef<HTMLDivElement>(null);
 
   const filteredOptions = options.filter((opt) =>
     opt.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Reset highlight to top when search term changes or dropdown opens
+  useEffect(() => {
+    setHighlightedIndex(0);
+  }, [searchTerm, isOpen]);
+
+  // Scroll highlighted item into view
+  useEffect(() => {
+    if (isOpen && listRef.current) {
+      const highlightedEl = listRef.current.children[highlightedIndex] as HTMLElement;
+      if (highlightedEl) {
+        highlightedEl.scrollIntoView({ block: "nearest" });
+      }
+    }
+  }, [highlightedIndex, isOpen]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!isOpen) {
+      if (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Enter") {
+        setIsOpen(true);
+        e.preventDefault();
+      }
+      return;
+    }
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setHighlightedIndex((prev) =>
+        prev < filteredOptions.length - 1 ? prev + 1 : 0
+      );
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHighlightedIndex((prev) =>
+        prev > 0 ? prev - 1 : filteredOptions.length - 1
+      );
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (filteredOptions[highlightedIndex]) {
+        onSelect(filteredOptions[highlightedIndex]);
+        setIsOpen(false);
+        setSearchTerm("");
+      }
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      setIsOpen(false);
+    }
+  };
 
   return (
     <div style={{ marginBottom: "12px", position: "relative" }}>
@@ -58,6 +107,13 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
       <div
         onClick={() => setIsOpen(!isOpen)}
         className="form-control auth-input"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            setIsOpen(!isOpen);
+            e.preventDefault();
+          }
+        }}
         style={{
           display: "flex",
           justifyContent: "space-between",
@@ -98,39 +154,47 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
               placeholder={placeholderSearch}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={handleKeyDown}
               onClick={(e) => e.stopPropagation()}
             />
           </div>
 
-          <div style={{ maxHeight: "200px", overflowY: "auto" }}>
+          <div ref={listRef} style={{ maxHeight: "200px", overflowY: "auto" }}>
             {filteredOptions.length > 0 ? (
-              filteredOptions.map((opt) => (
-                <div
-                  key={opt}
-                  onClick={() => {
-                    onSelect(opt);
-                    setIsOpen(false);
-                    setSearchTerm("");
-                  }}
-                  style={{
-                    padding: "8px 12px",
-                    fontSize: "13px",
-                    cursor: "pointer",
-                    background: opt === value ? "#e8f5e9" : "#fff",
-                    fontWeight: opt === value ? 700 : 400,
-                    color: opt === value ? "var(--primary-color)" : "var(--text-main)",
-                    borderBottom: "1px solid #f1f5f9",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (opt !== value) e.currentTarget.style.background = "#f8fafc";
-                  }}
-                  onMouseLeave={(e) => {
-                    if (opt !== value) e.currentTarget.style.background = "#fff";
-                  }}
-                >
-                  {opt}
-                </div>
-              ))
+              filteredOptions.map((opt, idx) => {
+                const isSelected = opt === value;
+                const isHighlighted = idx === highlightedIndex;
+                return (
+                  <div
+                    key={opt}
+                    onClick={() => {
+                      onSelect(opt);
+                      setIsOpen(false);
+                      setSearchTerm("");
+                    }}
+                    onMouseEnter={() => setHighlightedIndex(idx)}
+                    style={{
+                      padding: "8px 12px",
+                      fontSize: "13px",
+                      cursor: "pointer",
+                      background: isHighlighted
+                        ? "#dbeafe"
+                        : isSelected
+                        ? "#e8f5e9"
+                        : "#fff",
+                      fontWeight: isSelected || isHighlighted ? 700 : 400,
+                      color: isHighlighted
+                        ? "#1e40af"
+                        : isSelected
+                        ? "var(--primary-color)"
+                        : "var(--text-main)",
+                      borderBottom: "1px solid #f1f5f9",
+                    }}
+                  >
+                    {opt}
+                  </div>
+                );
+              })
             ) : (
               <div style={{ padding: "12px", fontSize: "13px", color: "var(--text-muted)", textAlign: "center" }}>
                 Không tìm thấy kết quả phù hợp
