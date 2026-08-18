@@ -10,9 +10,35 @@ export interface UserAddressItem {
   isDefault: boolean;
 }
 
+const DEFAULT_ADDRESS: UserAddressItem = {
+  id: 101,
+  name: "Bình Nguyễn",
+  phone: "0988123456",
+  province: "Thành phố Hồ Chí Minh",
+  ward: "Phường Bến Thành (Quận 1, TP.HCM)",
+  detail: "123 Đường Nguyễn Trãi",
+  isDefault: true,
+};
+
+const getLocalKey = (username: string) => `minishop_user_addresses_${username.trim().replace(/^@/, "")}`;
+
 export const fetchUserAddressesFromSupabase = async (
   username: string
 ): Promise<UserAddressItem[]> => {
+  const localKey = getLocalKey(username);
+  
+  if (typeof window !== "undefined") {
+    const saved = localStorage.getItem(localKey);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      } catch (e) {}
+    }
+  }
+
   try {
     const supabase = createClient();
     const cleanUser = username.trim().replace(/^@/, "");
@@ -23,25 +49,21 @@ export const fetchUserAddressesFromSupabase = async (
       .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${cleanUser}`)
       .limit(1);
 
-    if (error || !data || data.length === 0 || !Array.isArray(data[0].addresses) || data[0].addresses.length === 0) {
-      return [
-        {
-          id: 101,
-          name: "Bình Nguyễn",
-          phone: "0988.123.456",
-          province: "TP. Hồ Chí Minh",
-          ward: "Phường Bến Thành (Quận 1, TP.HCM)",
-          detail: "123 Đường Nguyễn Trãi",
-          isDefault: true,
-        },
-      ];
+    if (!error && data && data.length > 0 && Array.isArray(data[0].addresses) && data[0].addresses.length > 0) {
+      if (typeof window !== "undefined") {
+        localStorage.setItem(localKey, JSON.stringify(data[0].addresses));
+      }
+      return data[0].addresses;
     }
-
-    return data[0].addresses;
   } catch (err) {
-    console.error("Error fetching user addresses:", err);
-    return [];
+    console.warn("Supabase address fetch warning, using local default:", err);
   }
+
+  const initialList = [DEFAULT_ADDRESS];
+  if (typeof window !== "undefined") {
+    localStorage.setItem(localKey, JSON.stringify(initialList));
+  }
+  return initialList;
 };
 
 export const addUserAddressToSupabase = async (
@@ -62,15 +84,23 @@ export const addUserAddressToSupabase = async (
     };
     updatedAddresses.push(newAddressItem);
 
-    const supabase = createClient();
-    const cleanUser = username.trim().replace(/^@/, "");
+    const localKey = getLocalKey(username);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(localKey, JSON.stringify(updatedAddresses));
+    }
 
-    const { error } = await supabase
-      .from("users")
-      .update({ addresses: updatedAddresses })
-      .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${cleanUser}`);
+    try {
+      const supabase = createClient();
+      const cleanUser = username.trim().replace(/^@/, "");
+      await supabase
+        .from("users")
+        .update({ addresses: updatedAddresses })
+        .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${cleanUser}`);
+    } catch (sbErr) {
+      console.warn("Supabase address sync warning:", sbErr);
+    }
 
-    return !error;
+    return true;
   } catch (err) {
     console.error("Error adding address:", err);
     return false;
@@ -88,15 +118,23 @@ export const setDefaultUserAddressInSupabase = async (
       isDefault: a.id === id,
     }));
 
-    const supabase = createClient();
-    const cleanUser = username.trim().replace(/^@/, "");
+    const localKey = getLocalKey(username);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(localKey, JSON.stringify(updatedAddresses));
+    }
 
-    const { error } = await supabase
-      .from("users")
-      .update({ addresses: updatedAddresses })
-      .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${cleanUser}`);
+    try {
+      const supabase = createClient();
+      const cleanUser = username.trim().replace(/^@/, "");
+      await supabase
+        .from("users")
+        .update({ addresses: updatedAddresses })
+        .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${cleanUser}`);
+    } catch (sbErr) {
+      console.warn("Supabase address sync warning:", sbErr);
+    }
 
-    return !error;
+    return true;
   } catch (err) {
     console.error("Error setting default address:", err);
     return false;
@@ -115,15 +153,23 @@ export const deleteUserAddressFromSupabase = async (
       updatedAddresses[0].isDefault = true;
     }
 
-    const supabase = createClient();
-    const cleanUser = username.trim().replace(/^@/, "");
+    const localKey = getLocalKey(username);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(localKey, JSON.stringify(updatedAddresses));
+    }
 
-    const { error } = await supabase
-      .from("users")
-      .update({ addresses: updatedAddresses })
-      .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${cleanUser}`);
+    try {
+      const supabase = createClient();
+      const cleanUser = username.trim().replace(/^@/, "");
+      await supabase
+        .from("users")
+        .update({ addresses: updatedAddresses })
+        .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${cleanUser}`);
+    } catch (sbErr) {
+      console.warn("Supabase address sync warning:", sbErr);
+    }
 
-    return !error;
+    return true;
   } catch (err) {
     console.error("Error deleting address:", err);
     return false;

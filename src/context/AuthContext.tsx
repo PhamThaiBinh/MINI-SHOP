@@ -66,6 +66,11 @@ interface AuthContextType {
     discount: number,
     code: string
   ) => boolean;
+  addPointsAndHistory: (
+    title: string,
+    pointsAmount: number,
+    code?: string
+  ) => void;
   consumeVoucher: (code: string) => void;
   addPlacedOrder: (order: PlacedOrder) => void;
 }
@@ -73,6 +78,26 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const AUTH_STORAGE_KEY = "mini_shop_auth_user";
+
+function getStoredUserPointsAndHistory(username: string) {
+  let points = 500;
+  let history: RedemptionHistory[] = [];
+  if (typeof window !== "undefined") {
+    const storedPts = localStorage.getItem(`minishop_user_points_${username}`);
+    if (storedPts !== null) {
+      const parsed = parseInt(storedPts, 10);
+      if (!isNaN(parsed)) points = parsed;
+    }
+    const storedHist = localStorage.getItem(`minishop_user_history_${username}`);
+    if (storedHist) {
+      try {
+        const parsedHist = JSON.parse(storedHist);
+        if (Array.isArray(parsedHist)) history = parsedHist;
+      } catch (e) {}
+    }
+  }
+  return { points, history };
+}
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -92,7 +117,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         if (saved) {
           const parsed = JSON.parse(saved);
           if (parsed && parsed.email) {
-            setUser(parsed);
+            const username = parsed.username || "user";
+            const storedData = getStoredUserPointsAndHistory(username);
+            setUser({
+              ...parsed,
+              points: storedData.points,
+              history: storedData.history.length > 0 ? storedData.history : parsed.history || [],
+            });
             setLoading(false);
             return;
           }
@@ -105,16 +136,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           const metadata = sbUser.user_metadata || {};
           const isEmailAdmin = sbUser.email === "admin@minishop.vn";
           const role = metadata.role === "admin" || isEmailAdmin ? "admin" : "customer";
+          const username = metadata.name ? metadata.name.toLowerCase().replace(/\s+/g, "_") : sbUser.email?.split("@")[0] || "user";
+          const storedData = getStoredUserPointsAndHistory(username);
 
           const profile: UserProfile = {
             id: sbUser.id,
-            username: metadata.name ? metadata.name.toLowerCase().replace(/\s+/g, "_") : sbUser.email?.split("@")[0] || "user",
+            username,
             name: metadata.name || sbUser.email?.split("@")[0] || "Khách hàng",
             email: sbUser.email || "",
             phone: metadata.phone || "0988.123.456",
             role: role,
-            points: 500,
-            history: [],
+            points: storedData.points,
+            history: storedData.history,
             vouchers: [],
           };
           setUser(profile);
@@ -424,15 +457,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       ];
     }
 
+    const newPoints = user.points - pointsRequired;
     const updatedUser: UserProfile = {
       ...user,
-      points: user.points - pointsRequired,
+      points: newPoints,
       history: [newRedemption, ...user.history],
       vouchers: updatedVouchers,
     };
 
     setUser(updatedUser);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(`minishop_user_points_${user.username}`, String(newPoints));
+      localStorage.setItem(`minishop_user_history_${user.username}`, JSON.stringify(updatedUser.history));
+    }
     return true;
+  };
+
+  const addPointsAndHistory = (
+    title: string,
+    pointsAmount: number,
+    code: string = "REWARD"
+  ) => {
+    if (!user) return;
+
+    const newTransaction: RedemptionHistory = {
+      id: `TASK-${Date.now().toString().slice(-4)}`,
+      date: new Date().toLocaleDateString("vi-VN"),
+      giftName: `Hoàn thành nhiệm vụ: ${title}`,
+      pointsSpent: -pointsAmount,
+      code,
+    };
+
+    const newPoints = user.points + pointsAmount;
+    const updatedUser: UserProfile = {
+      ...user,
+      points: newPoints,
+      history: [newTransaction, ...(user.history || [])],
+    };
+
+    setUser(updatedUser);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(`minishop_user_points_${user.username}`, String(newPoints));
+      localStorage.setItem(`minishop_user_history_${user.username}`, JSON.stringify(updatedUser.history));
+    }
   };
 
   const consumeVoucher = (code: string) => {
@@ -477,6 +544,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         loginUser,
         logout,
         redeemGift,
+        addPointsAndHistory,
         consumeVoucher,
         addPlacedOrder,
       }}

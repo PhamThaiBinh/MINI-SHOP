@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import "@/styles/auth.css";
 import { useAuth } from "@/context/AuthContext";
 import { LOCATION_DATA, PROVINCES_LIST } from "@/data/locationData";
+import { fetchProvincesApi, fetchWardsForProvinceApi } from "@/lib/locationApi";
 import { fixImagePath } from "@/lib/utils";
 import { createClient } from "@/utils/supabase/client";
 import { getAllOrders, getOrdersForUser, cancelOrderWithReason, UnifiedOrder } from "@/utils/orderStorage";
@@ -301,7 +302,7 @@ const MOCK_ORDERS: CustomerOrder[] = [
 
 export default function AuthPage() {
   const router = useRouter();
-  const { user, signUp, signIn, logout, redeemGift } = useAuth();
+  const { user, signUp, signIn, logout, redeemGift, addPointsAndHistory } = useAuth();
 
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
   const [authError, setAuthError] = useState("");
@@ -335,14 +336,40 @@ export default function AuthPage() {
   };
 
   const [hasCheckedIn, setHasCheckedIn] = useState(false);
-  const [hasShared, setHasShared] = useState(false);
-  const [hasReviewed, setHasReviewed] = useState(false);
+
+  // 3-Stage Task States: "not_started" | "performed" | "claimed"
+  const [shareTaskStatus, setShareTaskStatus] = useState<"not_started" | "performed" | "claimed">("not_started");
+  const [reviewTaskStatus, setReviewTaskStatus] = useState<"not_started" | "performed" | "claimed">("not_started");
+
+  // Task Modals
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState("");
+
   const [hasSpunWheelToday, setHasSpunWheelToday] = useState(false);
   const [isSpinning, setIsSpinning] = useState(false);
   const [spinDeg, setSpinDeg] = useState(0);
   const [spinResultMsg, setSpinResultMsg] = useState("");
   const [redeemFeedback, setRedeemFeedback] = useState("");
   const [liveOrders, setLiveOrders] = useState<UnifiedOrder[]>([]);
+
+  // OpenAdminData API location state
+  const [provincesList, setProvincesList] = useState<string[]>(PROVINCES_LIST);
+  const [wardsList, setWardsList] = useState<string[]>([]);
+
+  useEffect(() => {
+    async function initLocations() {
+      const provs = await fetchProvincesApi();
+      setProvincesList(provs);
+      const firstProv = provs[0] || "Thành phố Hồ Chí Minh";
+      setAddrProvince(firstProv);
+      const wards = await fetchWardsForProvinceApi(firstProv);
+      setWardsList(wards);
+      if (wards.length > 0) setAddrWard(wards[0]);
+    }
+    initLocations();
+  }, []);
 
   useEffect(() => {
     const supabase = createClient();
@@ -353,7 +380,6 @@ export default function AuthPage() {
     updateOrders();
     window.addEventListener("ordersUpdated", updateOrders);
 
-    // Supabase Realtime Cross-Device Subscription
     const channel = supabase
       .channel("orders_realtime_changes")
       .on(
@@ -375,71 +401,53 @@ export default function AuthPage() {
     if (typeof window !== "undefined") {
       const todayStr = getVnTodayStr();
       setHasCheckedIn(localStorage.getItem("minishop_task_checkin") === todayStr);
-      setHasShared(localStorage.getItem("minishop_task_share") === todayStr);
-      setHasReviewed(localStorage.getItem("minishop_task_review") === todayStr);
+
+      const shareClaimed = localStorage.getItem("minishop_task_share_claimed") === todayStr;
+      const sharePerformed = localStorage.getItem("minishop_task_share_performed") === todayStr;
+      setShareTaskStatus(shareClaimed ? "claimed" : sharePerformed ? "performed" : "not_started");
+
+      const reviewClaimed = localStorage.getItem("minishop_task_review_claimed") === todayStr;
+      const reviewPerformed = localStorage.getItem("minishop_task_review_performed") === todayStr;
+      setReviewTaskStatus(reviewClaimed ? "claimed" : reviewPerformed ? "performed" : "not_started");
+
       setHasSpunWheelToday(localStorage.getItem("minishop_wheel_spin") === todayStr);
     }
   }, []);
-
-
-
-  useEffect(() => {
-    async function loadRewards() {
-      if (user?.username) {
-        const rewardData = await fetchUserRewardsFromSupabase(user.username);
-        user.points = rewardData.points;
-        if (rewardData.lastCheckin) {
-          const todayStr = getVnTodayStr();
-          if (rewardData.lastCheckin === todayStr) {
-            setHasCheckedIn(true);
-          }
-        }
-      }
-    }
-    loadRewards();
-  }, [user]);
 
   const handleCheckIn = async () => {
     const todayStr = getVnTodayStr();
     if (hasCheckedIn) return;
     setHasCheckedIn(true);
     localStorage.setItem("minishop_task_checkin", todayStr);
-    if (user) {
-      user.points += 50;
-      await syncUserRewardsToSupabase(user.username, {
-        points: user.points,
-        history: user.history,
-        lastCheckin: todayStr,
-      });
-    }
+    addPointsAndHistory("Điểm danh hàng ngày", 50, "CHECKIN");
   };
 
-  const handleShareTask = async () => {
+  const handlePerformShare = () => {
     const todayStr = getVnTodayStr();
-    if (hasShared) return;
-    setHasShared(true);
-    localStorage.setItem("minishop_task_share", todayStr);
-    if (user) {
-      user.points += 100;
-      await syncUserRewardsToSupabase(user.username, {
-        points: user.points,
-        history: user.history,
-      });
-    }
+    setShowShareModal(true);
+    setShareTaskStatus("performed");
+    localStorage.setItem("minishop_task_share_performed", todayStr);
   };
 
-  const handleReviewTask = async () => {
+  const handleClaimShare = () => {
     const todayStr = getVnTodayStr();
-    if (hasReviewed) return;
-    setHasReviewed(true);
-    localStorage.setItem("minishop_task_review", todayStr);
-    if (user) {
-      user.points += 80;
-      await syncUserRewardsToSupabase(user.username, {
-        points: user.points,
-        history: user.history,
-      });
-    }
+    setShareTaskStatus("claimed");
+    localStorage.setItem("minishop_task_share_claimed", todayStr);
+    addPointsAndHistory("Chia sẻ Mini Shop lên MXH", 100, "SHARE");
+  };
+
+  const handlePerformReview = () => {
+    const todayStr = getVnTodayStr();
+    setShowReviewModal(true);
+    setReviewTaskStatus("performed");
+    localStorage.setItem("minishop_task_review_performed", todayStr);
+  };
+
+  const handleClaimReview = () => {
+    const todayStr = getVnTodayStr();
+    setReviewTaskStatus("claimed");
+    localStorage.setItem("minishop_task_review_claimed", todayStr);
+    addPointsAndHistory("Đánh giá sản phẩm đã mua", 80, "REVIEW");
   };
 
   const handleSpinWheel = () => {
@@ -453,45 +461,17 @@ export default function AuthPage() {
     const newDeg = spinDeg + extraRounds + randomAngle;
     setSpinDeg(newDeg);
 
-    setTimeout(async () => {
+    setTimeout(() => {
       setIsSpinning(false);
       setHasSpunWheelToday(true);
       localStorage.setItem("minishop_wheel_spin", todayStr);
 
-      const prizePool = [
-        "🎉 Chúc mừng! Bạn trúng 100 Điểm thưởng!",
-        "🎟️ Chúc mừng! Bạn trúng Voucher Giảm 50.000đ!",
-        "🪙 Chúc mừng! Bạn trúng 50 Điểm thưởng!",
-        "🍀 Chúc bạn may mắn lần sau!",
-        "🎟️ Chúc mừng! Bạn trúng Voucher Freeship 30.000đ!",
-        "🪙 Chúc mừng! Bạn trúng 200 Điểm thưởng!",
-      ];
-      const win = prizePool[Math.floor(Math.random() * prizePool.length)];
-      setSpinResultMsg(win);
-      if (user) {
-        if (win.includes("100 Điểm")) user.points += 100;
-        else if (win.includes("50 Điểm")) user.points += 50;
-        else if (win.includes("200 Điểm")) user.points += 200;
-        else if (win.includes("Voucher Giảm 50.000đ")) {
-          const exist = user.vouchers.find((v) => v.code === "MINISHOP50");
-          if (exist) exist.quantity += 1;
-          else user.vouchers.push({ code: "MINISHOP50", label: "Voucher Giảm 50.000đ", discount: 50000, quantity: 1 });
-        } else if (win.includes("Voucher Freeship 30.000đ")) {
-          const exist = user.vouchers.find((v) => v.code === "FREESHIP30");
-          if (exist) exist.quantity += 1;
-          else
-            user.vouchers.push({
-              code: "FREESHIP30",
-              label: "Miễn Phí Vận Chuyển 30.000đ",
-              discount: 30000,
-              quantity: 1,
-            });
-        }
-        await syncUserRewardsToSupabase(user.username, {
-          points: user.points,
-          history: user.history,
-        });
-      }
+      let pts = 50;
+      if (randomAngle % 3 === 0) pts = 100;
+      else if (randomAngle % 2 === 0) pts = 150;
+
+      addPointsAndHistory("Vòng quay may mắn", pts, "WHEEL");
+      setSpinResultMsg(`🎉 Chúc mừng! Bạn quay trúng +${pts} Điểm Thưởng! (Đã cộng vào Lịch sử)`);
     }, 3500);
   };
 
@@ -1742,26 +1722,58 @@ export default function AuthPage() {
                                   marginTop: "2px",
                                 }}
                               >
-                                Chia sẻ liên kết cửa hàng lên Facebook / Zalo
+                                Chia sẻ liên kết cửa hàng lên Facebook / Zalo (+100 điểm)
                               </div>
                             </div>
-                            <button
-                              onClick={handleShareTask}
-                              disabled={hasShared}
-                              style={{
-                                padding: "8px 16px",
-                                background: hasShared
-                                  ? "#cbd5e1"
-                                  : "var(--primary-color)",
-                                color: "#fff",
-                                border: "none",
-                                borderRadius: "var(--radius-md)",
-                                fontWeight: 700,
-                                cursor: hasShared ? "not-allowed" : "pointer",
-                              }}
-                            >
-                              {hasShared ? "✅ Đã nhận" : "+100 Điểm"}
-                            </button>
+                            {shareTaskStatus === "not_started" && (
+                              <button
+                                onClick={handlePerformShare}
+                                style={{
+                                  padding: "8px 16px",
+                                  background: "#2563eb",
+                                  color: "#fff",
+                                  border: "none",
+                                  borderRadius: "var(--radius-md)",
+                                  fontWeight: 700,
+                                  cursor: "pointer",
+                                }}
+                              >
+                                🔗 Thực hiện
+                              </button>
+                            )}
+                            {shareTaskStatus === "performed" && (
+                              <button
+                                onClick={handleClaimShare}
+                                style={{
+                                  padding: "8px 16px",
+                                  background: "#16a34a",
+                                  color: "#fff",
+                                  border: "none",
+                                  borderRadius: "var(--radius-md)",
+                                  fontWeight: 700,
+                                  cursor: "pointer",
+                                  boxShadow: "0 0 10px rgba(22, 163, 74, 0.4)",
+                                }}
+                              >
+                                🎁 Nhận quà (+100 điểm)
+                              </button>
+                            )}
+                            {shareTaskStatus === "claimed" && (
+                              <button
+                                disabled
+                                style={{
+                                  padding: "8px 16px",
+                                  background: "#cbd5e1",
+                                  color: "#64748b",
+                                  border: "none",
+                                  borderRadius: "var(--radius-md)",
+                                  fontWeight: 700,
+                                  cursor: "not-allowed",
+                                }}
+                              >
+                                ✅ Đã nhận quà
+                              </button>
+                            )}
                           </div>
 
                           <div
@@ -1786,26 +1798,58 @@ export default function AuthPage() {
                                   marginTop: "2px",
                                 }}
                               >
-                                Đánh giá 5 sao cho sản phẩm vừa trải nghiệm
+                                Đánh giá 5 sao cho sản phẩm vừa trải nghiệm (+80 điểm)
                               </div>
                             </div>
-                            <button
-                              onClick={handleReviewTask}
-                              disabled={hasReviewed}
-                              style={{
-                                padding: "8px 16px",
-                                background: hasReviewed
-                                  ? "#cbd5e1"
-                                  : "var(--primary-color)",
-                                color: "#fff",
-                                border: "none",
-                                borderRadius: "var(--radius-md)",
-                                fontWeight: 700,
-                                cursor: hasReviewed ? "not-allowed" : "pointer",
-                              }}
-                            >
-                              {hasReviewed ? "✅ Đã nhận" : "+80 Điểm"}
-                            </button>
+                            {reviewTaskStatus === "not_started" && (
+                              <button
+                                onClick={handlePerformReview}
+                                style={{
+                                  padding: "8px 16px",
+                                  background: "#2563eb",
+                                  color: "#fff",
+                                  border: "none",
+                                  borderRadius: "var(--radius-md)",
+                                  fontWeight: 700,
+                                  cursor: "pointer",
+                                }}
+                              >
+                                ✍️ Thực hiện
+                              </button>
+                            )}
+                            {reviewTaskStatus === "performed" && (
+                              <button
+                                onClick={handleClaimReview}
+                                style={{
+                                  padding: "8px 16px",
+                                  background: "#16a34a",
+                                  color: "#fff",
+                                  border: "none",
+                                  borderRadius: "var(--radius-md)",
+                                  fontWeight: 700,
+                                  cursor: "pointer",
+                                  boxShadow: "0 0 10px rgba(22, 163, 74, 0.4)",
+                                }}
+                              >
+                                🎁 Nhận quà (+80 điểm)
+                              </button>
+                            )}
+                            {reviewTaskStatus === "claimed" && (
+                              <button
+                                disabled
+                                style={{
+                                  padding: "8px 16px",
+                                  background: "#cbd5e1",
+                                  color: "#64748b",
+                                  border: "none",
+                                  borderRadius: "var(--radius-md)",
+                                  fontWeight: 700,
+                                  cursor: "not-allowed",
+                                }}
+                              >
+                                ✅ Đã nhận quà
+                              </button>
+                            )}
                           </div>
                         </div>
                       )}
@@ -2105,10 +2149,10 @@ export default function AuthPage() {
                                   }}
                                 >
                                   <th style={{ padding: "8px" }}>Mã GD</th>
-                                  <th style={{ padding: "8px" }}>Ngày đổi</th>
-                                  <th style={{ padding: "8px" }}>Phần quà</th>
+                                  <th style={{ padding: "8px" }}>Ngày GD</th>
+                                  <th style={{ padding: "8px" }}>Nội dung / Phần quà</th>
                                   <th style={{ padding: "8px" }}>Mã Voucher</th>
-                                  <th style={{ padding: "8px" }}>Điểm đã trừ</th>
+                                  <th style={{ padding: "8px" }}>Thay đổi điểm</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -2141,11 +2185,11 @@ export default function AuthPage() {
                                     <td
                                       style={{
                                         padding: "8px",
-                                        color: "#ef4444",
+                                        color: h.pointsSpent < 0 ? "#16a34a" : "#ef4444",
                                         fontWeight: 800,
                                       }}
                                     >
-                                      -{h.pointsSpent} Điểm
+                                      {h.pointsSpent < 0 ? `+${Math.abs(h.pointsSpent)}` : `-${h.pointsSpent}`} Điểm
                                     </td>
                                   </tr>
                                 ))}
@@ -2802,6 +2846,168 @@ export default function AuthPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL THỰC HIỆN CHIA SẺ */}
+      {showShareModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.5)",
+            zIndex: 3000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
+          }}
+        >
+          <div
+            style={{
+              background: "#fff",
+              width: "100%",
+              maxWidth: "460px",
+              borderRadius: "var(--radius-lg)",
+              padding: "24px",
+              boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
+              textAlign: "center",
+            }}
+          >
+            <div style={{ fontSize: "40px", marginBottom: "10px" }}>🔗</div>
+            <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", margin: "0 0 8px 0" }}>
+              Chia Sẻ MINI-SHOP Lên Mạng Xã Hội
+            </h3>
+            <p style={{ fontSize: "13px", color: "var(--text-muted)", marginBottom: "20px" }}>
+              Hãy chia sẻ đường link cửa hàng Mini Shop đến bạn bè qua Facebook hoặc Zalo để được ghi nhận thực hiện nhiệm vụ nhé!
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", justifyContent: "center", marginBottom: "20px" }}>
+              <a
+                href="https://www.facebook.com/sharer/sharer.php"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ padding: "8px 16px", background: "#1877f2", color: "#fff", borderRadius: "8px", textDecoration: "none", fontWeight: 700, fontSize: "13px" }}
+              >
+                Facebook
+              </a>
+              <a
+                href="https://zalo.me"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ padding: "8px 16px", background: "#0068ff", color: "#fff", borderRadius: "8px", textDecoration: "none", fontWeight: 700, fontSize: "13px" }}
+              >
+                Zalo
+              </a>
+              <button
+                onClick={() => {
+                  if (typeof window !== "undefined") {
+                    navigator.clipboard.writeText(window.location.origin);
+                    alert("📋 Đã chép liên kết Mini Shop vào bộ nhớ tạm!");
+                  }
+                }}
+                style={{ padding: "8px 16px", background: "#334155", color: "#fff", border: "none", borderRadius: "8px", fontWeight: 700, fontSize: "13px", cursor: "pointer" }}
+              >
+                📋 Sao chép Link
+              </button>
+            </div>
+            <button
+              onClick={() => setShowShareModal(false)}
+              style={{
+                width: "100%",
+                padding: "10px",
+                background: "var(--primary-color)",
+                color: "#fff",
+                border: "none",
+                borderRadius: "8px",
+                fontWeight: 800,
+                fontSize: "14px",
+                cursor: "pointer",
+              }}
+            >
+              ✅ Đã Chia Sẻ Xong (Sẵn Sàng Nhận +100 Điểm)
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL THỰC HIỆN ĐÁNH GIÁ SẢN PHẨM */}
+      {showReviewModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.5)",
+            zIndex: 3000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
+          }}
+        >
+          <div
+            style={{
+              background: "#fff",
+              width: "100%",
+              maxWidth: "480px",
+              borderRadius: "var(--radius-lg)",
+              padding: "24px",
+              boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+              <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", margin: 0 }}>
+                ✍️ Đánh Giá Sản Phẩm Đã Mua
+              </h3>
+              <button onClick={() => setShowReviewModal(false)} style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer" }}>&times;</button>
+            </div>
+
+            <div style={{ marginBottom: "16px" }}>
+              <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "6px" }}>Chọn mức độ hài lòng (Số sao):</label>
+              <div style={{ display: "flex", gap: "8px" }}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <span
+                    key={star}
+                    onClick={() => setReviewRating(star)}
+                    style={{ fontSize: "28px", cursor: "pointer", filter: star <= reviewRating ? "none" : "grayscale(100%) opacity(0.3)" }}
+                  >
+                    ⭐
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ marginBottom: "20px" }}>
+              <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "6px" }}>Viết cảm nhận của bạn về sản phẩm:</label>
+              <textarea
+                rows={3}
+                className="form-control auth-input"
+                placeholder="Ví dụ: Sản phẩm gỗ sồi tự nhiên rất đẹp, đóng gói cẩn thận..."
+                value={reviewComment}
+                onChange={(e) => setReviewComment(e.target.value)}
+                style={{ width: "100%", padding: "10px", fontSize: "13px" }}
+              />
+            </div>
+
+            <button
+              onClick={() => {
+                setShowReviewModal(false);
+                setReviewComment("");
+              }}
+              style={{
+                width: "100%",
+                padding: "10px",
+                background: "var(--primary-color)",
+                color: "#fff",
+                border: "none",
+                borderRadius: "8px",
+                fontWeight: 800,
+                fontSize: "14px",
+                cursor: "pointer",
+              }}
+            >
+              🚀 Gửi Đánh Giá (Sẵn Sàng Nhận +80 Điểm)
+            </button>
           </div>
         </div>
       )}
