@@ -66,7 +66,7 @@ export const fetchCategoriesFromSupabase = async (): Promise<SupabaseCategory[]>
     }
 
     return data.map((row: any) => ({
-      id: String(row.code || row.id),
+      id: String(row.category_id),
       label: String(row.name),
       icon: String(row.icon || "📁"),
     }));
@@ -82,7 +82,7 @@ export const fetchProductByIdFromSupabase = async (id: number): Promise<Product 
     const { data, error } = await supabase
       .from("products")
       .select("*")
-      .eq("id", id)
+      .or(`original_id.eq.${id},id.eq.${id}`)
       .limit(1);
 
     if (error || !data || data.length === 0) {
@@ -92,7 +92,7 @@ export const fetchProductByIdFromSupabase = async (id: number): Promise<Product 
 
     const row = data[0];
     return {
-      id: Number(row.id),
+      id: Number(row.original_id || row.id),
       name: String(row.name),
       category: String(row.category),
       categoryName: String(row.category_name || row.category),

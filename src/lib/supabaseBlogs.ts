@@ -46,7 +46,7 @@ export const fetchBlogByIdFromSupabase = async (id: number): Promise<BlogArticle
 
     const row = data[0];
     return {
-      id: Number(row.id),
+      id: Number(row.original_id || row.id),
       title: String(row.title),
       category: String(row.category),
       date: String(row.date),
