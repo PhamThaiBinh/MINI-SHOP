@@ -40,6 +40,15 @@ export default function WishlistPage() {
     setTimeout(() => setToastMsg(""), 3000);
   };
 
+  const handleMoveAllToCart = () => {
+    if (wishlistProducts.length === 0) return;
+    wishlistProducts.forEach((p) => {
+      addToCart(p, 1);
+    });
+    setToastMsg(`🛒 Đã chuyển toàn bộ ${wishlistProducts.length} sản phẩm yêu thích vào giỏ hàng thành công!`);
+    setTimeout(() => setToastMsg(""), 3500);
+  };
+
   return (
     <>
       {/* 2. Breadcrumb Navigation Section */}
@@ -62,9 +71,9 @@ export default function WishlistPage() {
             <div
               style={{
                 padding: "10px 16px",
-                background: "#fef2f2",
-                color: "#991b1b",
-                border: "1px solid #fecaca",
+                background: "#f0fdf4",
+                color: "#166534",
+                border: "1px solid #bbf7d0",
                 borderRadius: "8px",
                 fontSize: "13px",
                 fontWeight: 700,
@@ -78,7 +87,38 @@ export default function WishlistPage() {
             </div>
           )}
           <div className="cart-page-section">
-            <h1 className="cart-title-heading">Sản phẩm yêu thích của bạn</h1>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "20px",
+                flexWrap: "wrap",
+                gap: "10px",
+              }}
+            >
+              <h1 className="cart-title-heading" style={{ margin: 0 }}>
+                Sản phẩm yêu thích của bạn ({wishlistProducts.length})
+              </h1>
+              {wishlistProducts.length > 0 && (
+                <button
+                  onClick={handleMoveAllToCart}
+                  style={{
+                    padding: "10px 20px",
+                    background: "var(--primary-color)",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "var(--radius-md)",
+                    fontWeight: 800,
+                    fontSize: "13px",
+                    cursor: "pointer",
+                    boxShadow: "0 4px 12px rgba(46, 125, 50, 0.2)",
+                  }}
+                >
+                  🛒 Chuyển tất cả vào Giỏ hàng
+                </button>
+              )}
+            </div>
 
             {/* Empty State */}
             {wishlistProducts.length === 0 ? (

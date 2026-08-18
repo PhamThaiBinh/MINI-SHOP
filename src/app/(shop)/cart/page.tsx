@@ -376,7 +376,7 @@ export default function CartPage() {
                     <button
                       type="button"
                       onClick={() => {
-                        if (confirm("⚠️ Bạn có chắc chắn muốn xóa toàn bộ sản phẩm khỏi giỏ hàng?")) {
+                        if (confirm(`⚠️ Bạn có chắc chắn muốn xóa toàn bộ ${cart.length} sản phẩm khỏi giỏ hàng không?`)) {
                           clearCart();
                         }
                       }}

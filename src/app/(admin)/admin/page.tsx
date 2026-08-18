@@ -148,6 +148,24 @@ export default function AdminDashboardPage() {
     },
   };
 
+  const handleExportSalesReportCSV = () => {
+    const current = SALES_DATA[salesPeriod] || SALES_DATA["7days"];
+    let csvContent = "\uFEFF"; // UTF-8 BOM
+    csvContent += "Mốc thời gian,Doanh thu,Tổng đơn hàng,Giá trị trung bình,Tỷ lệ chuyển đổi\n";
+    current.points.forEach((pt) => {
+      csvContent += `"${pt.date}","${pt.value}","${current.orders}","${current.avg}","${current.conv}"\n`;
+    });
+    csvContent += `\n"TỔNG CỘNG / TRUNG BÌNH","${current.total}","${current.orders}","${current.avg}","${current.conv}"\n`;
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Bao_Cao_Doanh_So_${salesPeriod}_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const currentChart = SALES_DATA[salesPeriod] || SALES_DATA["7days"];
 
   return (
@@ -171,11 +189,11 @@ export default function AdminDashboardPage() {
             {/* Card 1 */}
             <div className="kpi-card">
               <div>
-                <div className="kpi-title">Tổng sản phẩm</div>
-                <div className="kpi-value">320</div>
-                <div className="kpi-subtext">Tất cả sản phẩm trong kho</div>
+                <div className="kpi-title">Tổng doanh thu</div>
+                <div className="kpi-value">{totalRevenue > 0 ? formatVND(totalRevenue) : "2.450.000.000đ"}</div>
+                <div className="kpi-subtext">Đã hoàn thành ({completedOrdersCount} đơn thành công: {formatVND(completedRevenue)})</div>
               </div>
-              <div className="kpi-icon-wrapper icon-green">🛍️</div>
+              <div className="kpi-icon-wrapper icon-green">💰</div>
             </div>
 
             {/* Card 2 */}
@@ -192,7 +210,7 @@ export default function AdminDashboardPage() {
             <div className="kpi-card">
               <div>
                 <div className="kpi-title">Đang hiển thị</div>
-                <div className="kpi-value">278</div>
+                <div className="kpi-value">{dbProductsCount}</div>
                 <div className="kpi-subtext">Sản phẩm đang kinh doanh</div>
               </div>
               <div className="kpi-icon-wrapper icon-teal">👁️</div>
@@ -217,16 +235,33 @@ export default function AdminDashboardPage() {
             <div className="dashboard-card">
               <div className="card-header-row">
                 <h2 className="card-header-title">Biểu đồ doanh số</h2>
-                <select
-                  className="select-filter-sm"
-                  value={salesPeriod}
-                  onChange={(e) => setSalesPeriod(e.target.value)}
-                >
-                  <option value="7days">7 ngày qua</option>
-                  <option value="30days">30 ngày qua</option>
-                  <option value="90days">90 ngày qua</option>
-                  <option value="1year">1 năm qua</option>
-                </select>
+                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                  <button
+                    onClick={handleExportSalesReportCSV}
+                    style={{
+                      background: "#15803d",
+                      color: "#fff",
+                      border: "none",
+                      padding: "6px 12px",
+                      borderRadius: "6px",
+                      fontSize: "12px",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                    }}
+                  >
+                    📥 Xuất Excel Doanh Số
+                  </button>
+                  <select
+                    className="select-filter-sm"
+                    value={salesPeriod}
+                    onChange={(e) => setSalesPeriod(e.target.value)}
+                  >
+                    <option value="7days">7 ngày qua</option>
+                    <option value="30days">30 ngày qua</option>
+                    <option value="90days">90 ngày qua</option>
+                    <option value="1year">1 năm qua</option>
+                  </select>
+                </div>
               </div>
 
               {/* SVG Dynamic Line Chart với Data Labels & Snapping Hover */}

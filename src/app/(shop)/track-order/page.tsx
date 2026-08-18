@@ -175,8 +175,18 @@ export default function TrackOrderPage() {
                   </div>
                   <span
                     style={{
-                      background: orderResult.status === "completed" ? "#dcfce7" : "#e0f2fe",
-                      color: orderResult.status === "completed" ? "#15803d" : "#0369a1",
+                      background:
+                        orderResult.status === "cancelled"
+                          ? "#fee2e2"
+                          : orderResult.status === "completed"
+                          ? "#dcfce7"
+                          : "#e0f2fe",
+                      color:
+                        orderResult.status === "cancelled"
+                          ? "#dc2626"
+                          : orderResult.status === "completed"
+                          ? "#15803d"
+                          : "#0369a1",
                       padding: "6px 12px",
                       borderRadius: "20px",
                       fontWeight: 800,
@@ -187,8 +197,30 @@ export default function TrackOrderPage() {
                   </span>
                 </div>
 
-                {/* Timeline Roadmap */}
-                <div style={{ marginBottom: "24px" }}>
+                {/* Status Content or Timeline Roadmap */}
+                {orderResult.status === "cancelled" ? (
+                  <div
+                    style={{
+                      padding: "16px 20px",
+                      background: "#fef2f2",
+                      border: "1px solid #fca5a5",
+                      borderRadius: "var(--radius-md)",
+                      color: "#dc2626",
+                      fontWeight: 800,
+                      fontSize: "14px",
+                      textAlign: "center",
+                      marginBottom: "24px",
+                    }}
+                  >
+                    ❌ ĐƠN HÀNG ĐÃ BỊ HỦY BỎ
+                    {orderResult.cancelReason && (
+                      <div style={{ fontSize: "13px", fontWeight: 600, marginTop: "6px", color: "#991b1b" }}>
+                        Lý do hủy: {orderResult.cancelReason}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ marginBottom: "24px" }}>
                   <div style={{ fontSize: "14px", fontWeight: 800, marginBottom: "12px" }}>
                     🚚 Lộ Trình Giao Hàng:
                   </div>
@@ -295,6 +327,7 @@ export default function TrackOrderPage() {
                     </div>
                   </div>
                 </div>
+                )}
 
                 {/* Recipient details */}
                 <div

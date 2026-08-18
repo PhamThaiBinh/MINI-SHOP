@@ -28,6 +28,9 @@ function ProductDetailPageContent({
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
     async function loadData() {
       setLoading(true);
       const [fetchedProduct, fetchedList] = await Promise.all([

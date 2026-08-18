@@ -34,14 +34,22 @@ export default function AdminUsersPage() {
   const [staffPassword, setStaffPassword] = useState("12345678");
   const [staffRole, setStaffRole] = useState("👑 Administrator");
 
+  const [roleFilter, setRoleFilter] = useState("all");
+
   const filteredUsers = users.filter((u) => {
     const q = searchQuery.toLowerCase();
-    return (
+    const matchSearch =
       u.name.toLowerCase().includes(q) ||
       u.email.toLowerCase().includes(q) ||
       u.phone.includes(q) ||
-      u.username.toLowerCase().includes(q)
-    );
+      u.username.toLowerCase().includes(q);
+    const matchRole =
+      roleFilter === "all"
+        ? true
+        : roleFilter === "admin"
+        ? u.roleType === "admin"
+        : u.roleType !== "admin";
+    return matchSearch && matchRole;
   });
 
   const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
@@ -174,6 +182,25 @@ export default function AdminUsersPage() {
                       fontFamily: "inherit",
                     }}
                   />
+                  <select
+                    value={roleFilter}
+                    onChange={(e) => {
+                      setRoleFilter(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    style={{
+                      padding: "6px 10px",
+                      fontSize: "13px",
+                      borderRadius: "6px",
+                      border: "1px solid var(--border-color)",
+                      fontFamily: "inherit",
+                      background: "#fff",
+                    }}
+                  >
+                    <option value="all">Tất cả vai trò</option>
+                    <option value="admin">Quản trị viên (Admin)</option>
+                    <option value="customer">Khách hàng (Customer)</option>
+                  </select>
                   <button
                     className="btn-add-product-green"
                     onClick={() => setShowAddModal(true)}

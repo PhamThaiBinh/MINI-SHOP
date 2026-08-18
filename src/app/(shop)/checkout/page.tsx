@@ -687,6 +687,23 @@ export default function CheckoutPage() {
                     {formatVND(grandTotal)}
                   </span>
                 </div>
+                {grandTotal === 0 && discountAmount > 0 && (
+                  <div
+                    style={{
+                      padding: "8px 12px",
+                      background: "#dcfce7",
+                      border: "1px solid #86efac",
+                      borderRadius: "6px",
+                      color: "#166534",
+                      fontWeight: 800,
+                      fontSize: "12px",
+                      textAlign: "center",
+                      marginTop: "10px",
+                    }}
+                  >
+                    🎁 Đơn hàng của bạn được miễn phí 100% nhờ Voucher!
+                  </div>
+                )}
 
                 <button type="submit" className="btn-place-order">
                   🛍️ ĐẶT HÀNG NGAY

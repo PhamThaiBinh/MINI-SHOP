@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import "@/styles/blog.css";
 import { fixImagePath } from "@/lib/utils";
 import { fetchBlogByIdFromSupabase } from "@/lib/supabaseBlogs";
+import { ShareButtons } from "@/components/blog/ShareButtons";
 import { ScrollToTopOnMount } from "@/components/blog/ScrollToTopOnMount";
 
 interface BlogDetailPageProps {
@@ -60,6 +61,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
           className="article-body"
           dangerouslySetInnerHTML={{ __html: article.content }}
         />
+        <ShareButtons title={article.title} />
       </article>
     </main>
   );

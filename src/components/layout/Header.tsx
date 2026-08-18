@@ -48,7 +48,21 @@ export const Header: React.FC = () => {
   }
 
   return (
-    <header className="site-header">
+    <>
+      {mobileMenuOpen && (
+        <div
+          onClick={() => setMobileMenuOpen(false)}
+          className="mobile-backdrop-overlay"
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.5)",
+            zIndex: 998,
+            cursor: "pointer",
+          }}
+        />
+      )}
+      <header className="site-header">
       <div className="container">
         <div className="header-inner">
           {/* Brand Logo */}
@@ -387,5 +401,6 @@ export const Header: React.FC = () => {
         </div>
       </div>
     </header>
+    </>
   );
 };

@@ -144,7 +144,10 @@ export default function AdminProductsPage() {
       Storage: "Lưu trữ",
     };
 
-    const finalImage = formImageUrl.trim() || "/assets/images/products/noi-that-gia-dung/sofa-phong-khach.webp";
+    let finalImage = formImageUrl.trim();
+    if (!finalImage || (!finalImage.startsWith("http://") && !finalImage.startsWith("https://") && !finalImage.startsWith("/assets/"))) {
+      finalImage = "/assets/images/products/noi-that-gia-dung/sofa-phong-khach.webp";
+    }
 
     const prodData = {
       id: editingProduct ? editingProduct.id : undefined,
@@ -253,9 +256,13 @@ export default function AdminProductsPage() {
                       <tr key={prod.id}>
                         <td>{(safeCurrentPage - 1) * pageSize + index + 1}</td>
                         <td>
-                          <div className="admin-product-cell">
-                            <img src={fixImagePath(prod.image)} alt={prod.name} />
-                          </div>
+                            <img
+                              src={fixImagePath(prod.image)}
+                              alt={prod.name}
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = "/assets/images/products/noi-that-gia-dung/sofa-phong-khach.webp";
+                              }}
+                            />
                         </td>
                         <td>
                           <strong>{prod.name}</strong>
