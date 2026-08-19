@@ -17,9 +17,9 @@ export const ProductComboOffer: React.FC<ProductComboOfferProps> = ({ currentPro
   const comboItems = [
     {
       id: 991,
-      name: "Bàn Trà Mây Tre Đan Nordic",
+      name: "Đèn Lồng Tre Đan Thủ Công",
       price: 650000,
-      image: "/assets/images/products/do-thu-cong/den-long-tre.webp",
+      image: "/assets/images/products/do-my-nghe/den-long-tre.webp",
     },
     {
       id: 992,
@@ -31,17 +31,26 @@ export const ProductComboOffer: React.FC<ProductComboOfferProps> = ({ currentPro
 
   const originalTotal = currentProduct.price + comboItems[0].price + comboItems[1].price;
   const comboDiscount = 250000;
-  const comboTotal = originalTotal - comboDiscount;
+  const comboTotal = Math.max(500000, originalTotal - comboDiscount);
+  const discountRatio = comboTotal / originalTotal;
 
   const handleAddCombo = () => {
-    // Add current product
-    addToCart(currentProduct);
+    const p0Price = Math.round(currentProduct.price * discountRatio);
+    const p1Price = Math.round(comboItems[0].price * discountRatio);
+    const p2Price = comboTotal - p0Price - p1Price;
+
+    // Add current product with proportional combo discount
+    addToCart({
+      ...currentProduct,
+      price: p0Price,
+      name: `${currentProduct.name} (Ưu Đãi Combo)`,
+    });
 
     // Add combo item 1
     addToCart({
       id: comboItems[0].id,
-      name: comboItems[0].name,
-      price: comboItems[0].price,
+      name: `${comboItems[0].name} (Ưu Đãi Combo)`,
+      price: p1Price,
       image: comboItems[0].image,
       category: "C0005",
       categoryName: "Trang trí",
@@ -50,8 +59,8 @@ export const ProductComboOffer: React.FC<ProductComboOfferProps> = ({ currentPro
     // Add combo item 2
     addToCart({
       id: comboItems[1].id,
-      name: comboItems[1].name,
-      price: comboItems[1].price,
+      name: `${comboItems[1].name} (Ưu Đãi Combo)`,
+      price: p2Price,
       image: comboItems[1].image,
       category: "C0005",
       categoryName: "Trang trí",
@@ -120,6 +129,9 @@ export const ProductComboOffer: React.FC<ProductComboOfferProps> = ({ currentPro
             src={fixImagePath(currentProduct.image)}
             alt={currentProduct.name}
             style={{ width: "80px", height: "80px", objectFit: "cover", borderRadius: "0.75rem", margin: "0 auto 8px" }}
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = "/assets/images/products/bo-binh-gom-minimal.webp";
+            }}
           />
           <div style={{ fontSize: "12.5px", fontWeight: 800, color: "#0f172a", height: "34px", overflow: "hidden" }}>
             {currentProduct.name}
@@ -145,6 +157,9 @@ export const ProductComboOffer: React.FC<ProductComboOfferProps> = ({ currentPro
             src={fixImagePath(comboItems[0].image)}
             alt={comboItems[0].name}
             style={{ width: "80px", height: "80px", objectFit: "cover", borderRadius: "0.75rem", margin: "0 auto 8px" }}
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = "/assets/images/products/do-my-nghe/den-long-tre.webp";
+            }}
           />
           <div style={{ fontSize: "12.5px", fontWeight: 800, color: "#0f172a", height: "34px", overflow: "hidden" }}>
             {comboItems[0].name}
@@ -170,6 +185,9 @@ export const ProductComboOffer: React.FC<ProductComboOfferProps> = ({ currentPro
             src={fixImagePath(comboItems[1].image)}
             alt={comboItems[1].name}
             style={{ width: "80px", height: "80px", objectFit: "cover", borderRadius: "0.75rem", margin: "0 auto 8px" }}
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = "/assets/images/products/noi-that-gia-dung/chau-cay-de-ban.webp";
+            }}
           />
           <div style={{ fontSize: "12.5px", fontWeight: 800, color: "#0f172a", height: "34px", overflow: "hidden" }}>
             {comboItems[1].name}
