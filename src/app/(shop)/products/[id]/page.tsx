@@ -321,9 +321,6 @@ function ProductDetailPageContent({
                   )}
                 </div>
 
-                {/* Product Voucher Box */}
-                <ProductVoucherBox />
-
                 {/* Color Swatches Control */}
                 <div style={{ marginBottom: "16px" }}>
                   <div style={{ fontSize: "13px", fontWeight: 800, color: "#334155", marginBottom: "8px" }}>
