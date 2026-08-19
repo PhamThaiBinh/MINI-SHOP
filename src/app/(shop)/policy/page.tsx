@@ -204,8 +204,8 @@ function PolicyContent() {
         {/* TAB 1: RETURNS & WARRANTY */}
         {activeTab === "returns" && (
           <div>
-            <h2 style={{ fontSize: "20px", fontWeight: 800, color: "#0f172a", marginTop: 0 }}>
-              🔄 Chính Sách Đổi Trả & Bảo Hành 7 Ngày
+            <h2 style={{ fontSize: "20px", fontWeight: 800, color: "#0f172a", marginTop: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+              <RefreshCw className="w-5 h-5 text-emerald-700" /> Chính Sách Đổi Trả & Bảo Hành 7 Ngày
             </h2>
             <p>
               Nhằm đảm bảo sự hài lòng tuyệt đối khi mua sắm tại MINI-SHOP, chúng tôi ban hành quy định Đổi trả & Bảo hành sản phẩm với tiêu chuẩn rõ ràng:

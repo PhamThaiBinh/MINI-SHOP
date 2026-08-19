@@ -10,7 +10,7 @@ import { formatVND, fixImagePath } from "@/lib/utils";
 import { getSystemVouchers } from "@/utils/voucherStorage";
 import { addPlacedOrder as addUnifiedPlacedOrder, formatFullTimestamp, UnifiedOrder } from "@/utils/orderStorage";
 import { createOrderInSupabase } from "@/lib/supabaseOrders";
-import { CreditCard, ShieldCheck, ShoppingCart, MapPin, Ticket, Gift, Home, CheckCircle2, AlertTriangle, Check, X } from "lucide-react";
+import { CreditCard, ShieldCheck, ShoppingCart, MapPin, Ticket, Gift, Home, CheckCircle2, AlertTriangle, Check, X, Printer } from "lucide-react";
 
 interface Coupon {
   code: string;
@@ -803,7 +803,10 @@ export default function CheckoutPage() {
                 onClick={() => window.print()}
                 className="btn btn-outline"
                 style={{
-                  display: "inline-block",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "6px",
                   padding: "12px 20px",
                   borderColor: "var(--primary-color)",
                   color: "var(--primary-color)",
@@ -812,7 +815,7 @@ export default function CheckoutPage() {
                   cursor: "pointer",
                 }}
               >
-                📄 In / Lưu Biên Nhận
+                <Printer className="w-4 h-4" /> In / Lưu Biên Nhận
               </button>
             </div>
           </div>

@@ -7,7 +7,7 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { formatVND, fixImagePath } from "@/lib/utils";
 import { getSystemVouchers } from "@/utils/voucherStorage";
-import { Truck, ShieldCheck, ShoppingCart, ShoppingBag, ArrowRight } from "lucide-react";
+import { Truck, ShieldCheck, ShoppingCart, ShoppingBag, ArrowRight, Trash2, Ticket, Gift, Sparkles, Check, AlertTriangle, X } from "lucide-react";
 
 interface Coupon {
   code: string;
@@ -135,7 +135,7 @@ export default function CartPage() {
       // REQUIREMENT 1: Check minOrder
       if (found.minOrder && subtotal < found.minOrder) {
         setCouponMsg(
-          `⚠️ Mã này chỉ áp dụng cho đơn hàng từ ${found.minOrder.toLocaleString(
+          `Mã này chỉ áp dụng cho đơn hàng từ ${found.minOrder.toLocaleString(
             "vi-VN"
           )}đ trở lên!`
         );
@@ -152,10 +152,10 @@ export default function CartPage() {
       const label = found.fixedDiscount
         ? `Giảm ${found.fixedDiscount.toLocaleString("vi-VN")}đ`
         : `Giảm ${found.percent}%`;
-      setCouponMsg(`✅ Áp dụng thành công mã ${found.code} (${label})`);
+      setCouponMsg(`Áp dụng thành công mã ${found.code} (${label})`);
       setShowModal(false);
     } else {
-      setCouponMsg("❌ Mã ưu đãi không hợp lệ hoặc không có trong Kho quà!");
+      setCouponMsg("Mã ưu đãi không hợp lệ hoặc không có trong Kho quà!");
     }
   };
 
@@ -170,7 +170,7 @@ export default function CartPage() {
           const label = found.fixedDiscount
             ? `Giảm ${found.fixedDiscount.toLocaleString("vi-VN")}đ`
             : `Giảm ${found.percent}%`;
-          setCouponMsg(`✅ Áp dụng thành công mã ${found.code} (${label})`);
+          setCouponMsg(`Áp dụng thành công mã ${found.code} (${label})`);
         }
       }
     } catch (e) {
@@ -188,7 +188,9 @@ export default function CartPage() {
             {/* Empty State */}
             {cart.length === 0 ? (
               <div className="cart-empty-box" id="cart-empty-state">
-                <div className="cart-empty-icon">🛒</div>
+                <div className="cart-empty-icon" style={{ display: "flex", justifyContent: "center", marginBottom: "16px" }}>
+                  <ShoppingCart className="w-16 h-16 text-slate-400" />
+                </div>
                 <h2 className="cart-empty-title">
                   Giỏ hàng của bạn đang trống!
                 </h2>
@@ -230,7 +232,7 @@ export default function CartPage() {
                         <div style={{ fontSize: "14px", fontWeight: 800, color: "#166534", display: "flex", alignItems: "center", gap: "8px" }}>
                           <Truck className="w-5 h-5 text-emerald-700" />
                           {subtotal >= freeShipThreshold ? (
-                            <span>🎉 Chúc mừng! Đơn hàng của bạn đã đủ điều kiện <strong>Miễn phí vận chuyển toàn quốc</strong>!</span>
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}><Sparkles className="w-4 h-4 text-emerald-700" /> Chúc mừng! Đơn hàng của bạn đã đủ điều kiện <strong>Miễn phí vận chuyển toàn quốc</strong>!</span>
                           ) : (
                             <span>Mua thêm <strong>{formatVND(needed)}</strong> để nhận ưu đãi <strong>MIỄN PHÍ VẬN CHUYỂN</strong></span>
                           )}
@@ -252,268 +254,269 @@ export default function CartPage() {
                   );
                 })()}
 
-                {/* Main Cart Layout (2 Columns) */}
-                <div className="cart-layout" id="cart-main-layout">
-                {/* Left: Products List Table */}
-                <div className="cart-table-card">
-                  <table className="cart-table">
-                    <thead>
-                      <tr>
-                        <th>Sản phẩm</th>
-                        <th>Đơn giá</th>
-                        <th>Số lượng</th>
-                        <th>Thành tiền</th>
-                        <th style={{ textAlign: "center" }}>Xóa</th>
-                      </tr>
-                    </thead>
-                    <tbody id="cart-table-body">
-                      {cart.map((item) => (
-                        <tr key={item.product.id}>
-                          <td>
-                            <div className="cart-product-cell">
+                {/* Main Cart Content Grid */}
+                <div className="cart-content-grid">
+                  {/* Left Items Table */}
+                  <div className="cart-table-wrapper">
+                    <table className="cart-table" id="cart-table">
+                      <thead>
+                        <tr>
+                          <th style={{ width: "80px" }}>Ảnh</th>
+                          <th>Sản phẩm</th>
+                          <th style={{ width: "120px" }}>Đơn giá</th>
+                          <th style={{ width: "120px" }}>Số lượng</th>
+                          <th style={{ width: "120px" }}>Thành tiền</th>
+                          <th style={{ width: "60px" }}>Xóa</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {cart.map((item) => (
+                          <tr key={item.product.id} className="cart-item-row">
+                            <td className="cart-img-cell">
                               <img
                                 src={fixImagePath(item.product.image)}
                                 alt={item.product.name}
-                                loading="lazy"
+                                className="cart-item-thumb"
                                 onError={(e) => {
                                   (e.target as HTMLImageElement).src = "/assets/images/products/noi-that-gia-dung/sofa-phong-khach.webp";
                                 }}
                               />
-                              <div>
-                                <h3 className="cart-product-title">
-                                  {item.product.name}
-                                </h3>
-                                <div className="cart-product-price-mobile">
-                                  {formatVND(item.product.price)}
-                                </div>
+                            </td>
+                            <td className="cart-info-cell">
+                              <Link
+                                href={`/products/${item.product.id}`}
+                                className="cart-item-title"
+                              >
+                                {item.product.name}
+                              </Link>
+                              <div className="cart-item-meta">
+                                Mã SP: P00{item.product.id}
                               </div>
-                            </div>
-                          </td>
-                          <td className="cart-price-cell">
-                            {item.product.oldPrice && item.product.oldPrice > item.product.price && (
-                              <div style={{ fontSize: "11px", color: "var(--text-muted)", textDecoration: "line-through" }}>
-                                {formatVND(item.product.oldPrice)}
-                              </div>
-                            )}
-                            <div style={{ fontWeight: 800, color: "var(--primary-color)" }}>
+                            </td>
+                            <td className="cart-price-cell">
                               {formatVND(item.product.price)}
-                            </div>
-                          </td>
-                          <td>
-                            <div className="cart-qty-control">
+                            </td>
+                            <td className="cart-qty-cell">
+                              <div className="qty-control">
+                                <button
+                                  type="button"
+                                  disabled={item.quantity <= 1}
+                                  onClick={() =>
+                                    updateQuantity(
+                                      item.product.id,
+                                      item.quantity - 1
+                                    )
+                                  }
+                                >
+                                  -
+                                </button>
+                                <input
+                                  type="number"
+                                  value={item.quantity}
+                                  min={1}
+                                  max={item.product.stock ?? 50}
+                                  onChange={(e) => {
+                                    let val = parseInt(e.target.value, 10);
+                                    const maxStock = item.product.stock ?? 50;
+                                    if (val > maxStock) {
+                                      alert(`Sản phẩm này chỉ còn ${maxStock} trong kho!`);
+                                      val = maxStock;
+                                    }
+                                    updateQuantity(item.product.id, isNaN(val) ? 1 : val);
+                                  }}
+                                  onBlur={(e) => {
+                                    const val = parseInt(e.target.value, 10);
+                                    if (isNaN(val) || val <= 0) {
+                                      updateQuantity(item.product.id, 1);
+                                    }
+                                  }}
+                                  style={{ width: "45px", textAlign: "center" }}
+                                />
+                                <button
+                                  type="button"
+                                  disabled={item.quantity >= (item.product.stock ?? 50)}
+                                  onClick={() => {
+                                    const maxStock = item.product.stock ?? 50;
+                                    if (item.quantity < maxStock) {
+                                      updateQuantity(item.product.id, item.quantity + 1);
+                                    } else {
+                                      alert(`Sản phẩm này chỉ còn ${maxStock} trong kho!`);
+                                    }
+                                  }}
+                                  style={{ opacity: item.quantity >= (item.product.stock ?? 50) ? 0.4 : 1 }}
+                                >
+                                  +
+                                </button>
+                              </div>
+                            </td>
+                            <td className="cart-subtotal-cell">
+                              {formatVND(item.product.price * item.quantity)}
+                            </td>
+                            <td style={{ textAlign: "center" }}>
                               <button
                                 type="button"
-                                onClick={() =>
-                                  updateQuantity(
-                                    item.product.id,
-                                    item.quantity - 1
-                                  )
-                                }
+                                className="btn-remove-item"
+                                onClick={() => removeFromCart(item.product.id)}
+                                title="Xóa khỏi giỏ hàng"
+                                style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}
                               >
-                                -
+                                <Trash2 className="w-4 h-4 text-red-500" />
                               </button>
-                              <input
-                                type="number"
-                                min="1"
-                                max={item.product.stock ?? 50}
-                                value={item.quantity}
-                                onChange={(e) => {
-                                  let val = parseInt(e.target.value, 10);
-                                  const maxStock = item.product.stock ?? 50;
-                                  if (val > maxStock) {
-                                    alert(`⚠️ Sản phẩm này chỉ còn ${maxStock} trong kho!`);
-                                    val = maxStock;
-                                  }
-                                  updateQuantity(item.product.id, isNaN(val) ? 1 : val);
-                                }}
-                                onBlur={(e) => {
-                                  const val = parseInt(e.target.value, 10);
-                                  if (isNaN(val) || val <= 0) {
-                                    updateQuantity(item.product.id, 1);
-                                  }
-                                }}
-                                style={{ width: "45px", textAlign: "center" }}
-                              />
-                              <button
-                                type="button"
-                                disabled={item.quantity >= (item.product.stock ?? 50)}
-                                onClick={() => {
-                                  const maxStock = item.product.stock ?? 50;
-                                  if (item.quantity < maxStock) {
-                                    updateQuantity(item.product.id, item.quantity + 1);
-                                  } else {
-                                    alert(`⚠️ Sản phẩm này chỉ còn ${maxStock} trong kho!`);
-                                  }
-                                }}
-                                style={{ opacity: item.quantity >= (item.product.stock ?? 50) ? 0.4 : 1 }}
-                              >
-                                +
-                              </button>
-                            </div>
-                          </td>
-                          <td className="cart-subtotal-cell">
-                            {formatVND(item.product.price * item.quantity)}
-                          </td>
-                          <td style={{ textAlign: "center" }}>
-                            <button
-                              type="button"
-                              className="btn-remove-item"
-                              onClick={() => removeFromCart(item.product.id)}
-                              title="Xóa khỏi giỏ hàng"
-                            >
-                              🗑️
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  <div style={{ padding: "12px 16px", borderTop: "1px solid var(--border-color)", textAlign: "right" }}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (confirm(`⚠️ Bạn có chắc chắn muốn xóa toàn bộ ${cart.length} sản phẩm khỏi giỏ hàng không?`)) {
-                          clearCart();
-                        }
-                      }}
-                      style={{
-                        background: "none",
-                        border: "1px solid #fca5a5",
-                        color: "#dc2626",
-                        padding: "6px 12px",
-                        fontSize: "12px",
-                        fontWeight: 700,
-                        borderRadius: "6px",
-                        cursor: "pointer",
-                      }}
-                    >
-                      🗑️ Xóa tất cả giỏ hàng
-                    </button>
-                  </div>
-                </div>
-
-                {/* Right Summary Card */}
-                <aside className="cart-summary-card">
-                  <div className="summary-title">TỔNG ĐƠN HÀNG</div>
-
-                  <div className="summary-row">
-                    <span className="summary-label">Tạm tính:</span>
-                    <strong id="cart-summary-subtotal">
-                      {formatVND(subtotal)}
-                    </strong>
-                  </div>
-
-                  <div className="summary-row">
-                    <span className="summary-label">Phí giao hàng:</span>
-                    <strong
-                      id="cart-summary-shipping"
-                      style={{ color: subtotal >= 500000 ? "var(--primary-color)" : "var(--text-main)" }}
-                    >
-                      {subtotal >= 500000 ? "Miễn phí" : "20.000đ - 30.000đ"}
-                    </strong>
-                  </div>
-
-                  {appliedCoupon && (
-                    <div className="summary-row">
-                      <span className="summary-label">
-                        Giảm giá ({appliedCoupon.code}):
-                      </span>
-                      <div style={{ textAlign: "right" }}>
-                        <strong style={{ color: "#ef4444" }}>
-                          -{formatVND(discountAmount)}
-                        </strong>
-                        {appliedCoupon.percent && (
-                          <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>
-                            (Ưu đãi giảm {appliedCoupon.percent}%)
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Mã giảm giá */}
-                  <div style={{ margin: "8px 0" }}>
-                    <div className="coupon-header-line">
-                      <label className="coupon-label-title">
-                        🎟️ Mã ưu đãi:
-                      </label>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    <div style={{ padding: "12px 16px", borderTop: "1px solid var(--border-color)", textAlign: "right" }}>
                       <button
                         type="button"
-                        className="btn-kho-qua-pill"
-                        onClick={() => setShowModal(true)}
-                        title="Mở danh sách mã ưu đãi & quà đã đổi"
-                      >
-                        📋 Chọn từ Kho Quà ({totalAvailableItemsCount})
-                      </button>
-                    </div>
-                    <div className="coupon-box">
-                      <input
-                        type="text"
-                        id="input-cart-coupon"
-                        placeholder="Nhập hoặc chọn mã..."
-                        style={{ textTransform: "uppercase" }}
-                        value={couponCode}
-                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                      />
-                      <button
-                        type="button"
-                        className="btn btn-outline"
-                        onClick={() => handleApplyCoupon()}
-                        style={{
-                          padding: "8px 14px",
-                          fontSize: "13px",
-                          borderColor: "var(--primary-color)",
-                          color: "var(--primary-color)",
-                          fontWeight: 700,
-                          whiteSpace: "nowrap",
+                        onClick={() => {
+                          if (confirm(`Bạn có chắc chắn muốn xóa toàn bộ ${cart.length} sản phẩm khỏi giỏ hàng không?`)) {
+                            clearCart();
+                          }
                         }}
-                      >
-                        Áp dụng
-                      </button>
-                    </div>
-                    {couponMsg && (
-                      <div
-                        id="cart-coupon-msg"
                         style={{
+                          background: "none",
+                          border: "1px solid #fca5a5",
+                          color: "#dc2626",
+                          padding: "6px 12px",
                           fontSize: "12px",
-                          color: couponMsg.startsWith("✅")
-                            ? "#166534"
-                            : "#ef4444",
                           fontWeight: 700,
-                          marginTop: "4px",
+                          borderRadius: "6px",
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "6px",
                         }}
                       >
-                        {couponMsg}
+                        <Trash2 className="w-3.5 h-3.5" /> Xóa tất cả giỏ hàng
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Right Summary Card */}
+                  <aside className="cart-summary-card">
+                    <div className="summary-title">TỔNG ĐƠN HÀNG</div>
+
+                    <div className="summary-row">
+                      <span className="summary-label">Tạm tính:</span>
+                      <strong id="cart-summary-subtotal">
+                        {formatVND(subtotal)}
+                      </strong>
+                    </div>
+
+                    <div className="summary-row">
+                      <span className="summary-label">Phí giao hàng:</span>
+                      <strong
+                        id="cart-summary-shipping"
+                        style={{ color: subtotal >= 500000 ? "var(--primary-color)" : "var(--text-main)" }}
+                      >
+                        {subtotal >= 500000 ? "Miễn phí" : "20.000đ - 30.000đ"}
+                      </strong>
+                    </div>
+
+                    {appliedCoupon && (
+                      <div className="summary-row">
+                        <span className="summary-label">
+                          Giảm giá ({appliedCoupon.code}):
+                        </span>
+                        <div style={{ textAlign: "right" }}>
+                          <strong style={{ color: "#ef4444" }}>
+                            -{formatVND(discountAmount)}
+                          </strong>
+                          {appliedCoupon.percent && (
+                            <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>
+                              (Ưu đãi giảm {appliedCoupon.percent}%)
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
-                  </div>
 
-                  <div className="summary-row-total">
-                    <span className="total-label">TỔNG TIỀN:</span>
-                    <span className="total-price" id="cart-summary-total">
-                      {formatVND(total)}
-                    </span>
-                  </div>
+                    {/* Mã giảm giá */}
+                    <div style={{ margin: "8px 0" }}>
+                      <div className="coupon-header-line">
+                        <label className="coupon-label-title" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                          <Ticket className="w-4 h-4 text-emerald-700" /> Mã ưu đãi:
+                        </label>
+                        <button
+                          type="button"
+                          className="btn-kho-qua-pill"
+                          onClick={() => setShowModal(true)}
+                          title="Mở danh sách mã ưu đãi & quà đã đổi"
+                          style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+                        >
+                          <Gift className="w-3.5 h-3.5" /> Chọn từ Kho Quà ({totalAvailableItemsCount})
+                        </button>
+                      </div>
+                      <div className="coupon-box">
+                        <input
+                          type="text"
+                          id="input-cart-coupon"
+                          placeholder="Nhập hoặc chọn mã..."
+                          style={{ textTransform: "uppercase" }}
+                          value={couponCode}
+                          onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                        />
+                        <button
+                          type="button"
+                          className="btn btn-outline"
+                          onClick={() => handleApplyCoupon()}
+                          style={{
+                            padding: "8px 14px",
+                            fontSize: "13px",
+                            borderColor: "var(--primary-color)",
+                            color: "var(--primary-color)",
+                            fontWeight: 700,
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          Áp dụng
+                        </button>
+                      </div>
+                      {couponMsg && (
+                        <div
+                          id="cart-coupon-msg"
+                          style={{
+                            fontSize: "12px",
+                            color: couponMsg.includes("thành công")
+                              ? "#166534"
+                              : "#ef4444",
+                            fontWeight: 700,
+                            marginTop: "4px",
+                          }}
+                        >
+                          {couponMsg}
+                        </div>
+                      )}
+                    </div>
 
-                  <Link href="/checkout" className="btn-checkout">
-                    Tiến hành Thanh toán &rarr;
-                  </Link>
-                  <Link
-                    href="/products"
-                    style={{
-                      textAlign: "center",
-                      fontSize: "13px",
-                      color: "var(--text-muted)",
-                      textDecoration: "underline",
-                      marginTop: "4px",
-                    }}
-                  >
-                    Tiếp tục mua sắm
-                  </Link>
-                </aside>
-              </div>
-            </>
-          )}
+                    <div className="summary-row-total">
+                      <span className="total-label">TỔNG TIỀN:</span>
+                      <span className="total-price" id="cart-summary-total">
+                        {formatVND(total)}
+                      </span>
+                    </div>
+
+                    <Link href="/checkout" className="btn-checkout">
+                      Tiến hành Thanh toán &rarr;
+                    </Link>
+                    <Link
+                      href="/products"
+                      style={{
+                        textAlign: "center",
+                        fontSize: "13px",
+                        color: "var(--text-muted)",
+                        textDecoration: "underline",
+                        marginTop: "4px",
+                      }}
+                    >
+                      Tiếp tục mua sắm
+                    </Link>
+                  </aside>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </main>
@@ -561,9 +564,12 @@ export default function CartPage() {
                   fontWeight: 800,
                   color: "#0f172a",
                   margin: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
                 }}
               >
-                📋 Kho Mã Ưu Đãi & Quà Đã Đổi của {user?.name || "bạn"}
+                <Gift className="w-5 h-5 text-emerald-700" /> Kho Mã Ưu Đãi & Quà Đã Đổi của {user?.name || "bạn"}
               </h3>
               <button
                 type="button"
@@ -660,9 +666,12 @@ export default function CartPage() {
                                 fontWeight: 700,
                                 padding: "1px 6px",
                                 borderRadius: "4px",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "4px",
                               }}
                             >
-                              🎁 Quà đã đổi
+                              <Gift className="w-3 h-3" /> Quà đã đổi
                             </span>
                           )}
                         </div>
@@ -684,7 +693,7 @@ export default function CartPage() {
                               marginTop: "2px",
                             }}
                           >
-                            📌 Đơn tối thiểu {formatVND(coupon.minOrder)} {subtotal < coupon.minOrder ? "(Chưa đủ điều kiện)" : "(Đủ điều kiện)"}
+                            Đơn tối thiểu {formatVND(coupon.minOrder)} {subtotal < coupon.minOrder ? "(Chưa đủ điều kiện)" : "(Đủ điều kiện)"}
                           </div>
                         )}
                       </div>
@@ -707,11 +716,18 @@ export default function CartPage() {
                         fontSize: "12px",
                         fontWeight: 700,
                         cursor: "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "4px",
                       }}
                     >
-                      {appliedCoupon?.code === coupon.code
-                        ? "✅ Đã chọn"
-                        : "Dùng Mã"}
+                      {appliedCoupon?.code === coupon.code ? (
+                        <>
+                          <Check className="w-3.5 h-3.5" /> Đã chọn
+                        </>
+                      ) : (
+                        "Dùng Mã"
+                      )}
                     </button>
                   </div>
                 ))

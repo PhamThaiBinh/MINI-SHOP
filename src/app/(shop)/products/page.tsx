@@ -10,7 +10,7 @@ import { Product } from "@/types/product";
 import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { Package, Sofa, Bed, Utensils, Lamp, Sparkles, Box, X, Search } from "lucide-react";
+import { Package, Sofa, Bed, Utensils, Lamp, Sparkles, Box, X, Search, Heart } from "lucide-react";
 
 function ProductsContent() {
   const { addToCart } = useCart();
@@ -420,9 +420,9 @@ function ProductsContent() {
                         className={`btn-wishlist ${wished ? "active" : ""}`}
                         onClick={() => toggleWishlist(product.id)}
                         title="Thêm vào yêu thích"
-                        style={wished ? { color: "#ef4444" } : {}}
+                        style={wished ? { color: "#ef4444", display: "inline-flex", alignItems: "center", justifyContent: "center" } : { display: "inline-flex", alignItems: "center", justifyContent: "center" }}
                       >
-                        {wished ? "♥" : "♡"}
+                        <Heart className={`w-4 h-4 ${wished ? "text-red-500 fill-red-500" : "text-slate-400"}`} />
                       </button>
                       <div className="catalog-img-wrapper">
                         <Link href={`/products/${product.id}`}>

@@ -10,7 +10,7 @@ import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { Product } from "@/types/product";
 import { fetchProductByIdFromSupabase, fetchProductsFromSupabase } from "@/lib/supabaseProducts";
-import { ShoppingCart, Zap, Heart, Truck, ShieldCheck, RefreshCw, Award, Copy, Check, AlertCircle, Flame, Bell, Star, Edit3 } from "lucide-react";
+import { ShoppingCart, Zap, Heart, Truck, ShieldCheck, RefreshCw, Award, Copy, Check, AlertCircle, Flame, Bell, Star, Edit3, Share2, MessageSquare, CheckCircle2 } from "lucide-react";
 
 interface ReviewItem {
   id: number;
@@ -242,7 +242,7 @@ function ProductDetailPageContent({
                 }}
               >
                 <div style={{ fontSize: "13px", fontWeight: 700, color: "#334155", marginBottom: "10px", display: "flex", alignItems: "center", gap: "6px" }}>
-                  <span>🔗</span> Chia sẻ sản phẩm qua các ứng dụng:
+                  <Share2 className="w-4 h-4 text-emerald-700" /> Chia sẻ sản phẩm qua các ứng dụng:
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                   {/* Row 1: 4 apps */}
@@ -521,13 +521,14 @@ function ProductDetailPageContent({
                     gap: "6px",
                     fontWeight: 800,
                     fontSize: "14px",
-                    color: isWishlisted(product.id) ? "#ef4444" : "inherit",
                     borderColor: isWishlisted(product.id)
                       ? "#ef4444"
                       : "var(--border-color)",
                   }}
                 >
-                  <span>{isWishlisted(product.id) ? "♥" : "♡"}</span> Yêu thích
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                    <Heart className={`w-4 h-4 ${isWishlisted(product.id) ? "text-red-500 fill-red-500" : "text-slate-500"}`} /> Yêu thích
+                  </span>
                 </button>
               </div>
 
@@ -922,9 +923,13 @@ function ProductDetailPageContent({
                           cursor: "pointer",
                           fontSize: "14px",
                           boxShadow: "0 4px 12px rgba(46, 125, 50, 0.25)",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "6px",
                         }}
                       >
-                        ✍️ Gửi Đánh Giá Ngay
+                        <Edit3 className="w-4 h-4" /> Gửi Đánh Giá Ngay
                       </button>
                     </div>
                   </form>
@@ -932,8 +937,8 @@ function ProductDetailPageContent({
                   {/* Star Filter Pills & Customer Review List Items */}
                   <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <div style={{ fontSize: "15px", fontWeight: 800, color: "#0f172a" }}>
-                        💬 Nhận xét từ khách hàng ({filteredReviews.length}/{totalReviewsCount}):
+                      <div style={{ fontSize: "15px", fontWeight: 800, color: "#0f172a", display: "flex", alignItems: "center", gap: "6px" }}>
+                        <MessageSquare className="w-4 h-4 text-emerald-700" /> Nhận xét từ khách hàng ({filteredReviews.length}/{totalReviewsCount}):
                       </div>
                       <span style={{ fontSize: "12px", color: "#64748b", fontWeight: 600 }}>Mới nhất trước</span>
                     </div>
@@ -976,7 +981,7 @@ function ProductDetailPageContent({
                               cursor: "pointer",
                             }}
                           >
-                            {"⭐".repeat(star)} ({count})
+                            {star} Sao ({count})
                           </button>
                         );
                       })}
@@ -995,7 +1000,9 @@ function ProductDetailPageContent({
                               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                                 <strong style={{ fontSize: "14px", color: "#0f172a" }}>{rev.name}</strong>
                                 {rev.isVerified && (
-                                  <span style={{ fontSize: "11px", background: "#dcfce7", color: "#166534", padding: "2px 6px", borderRadius: "4px", fontWeight: 700 }}>✓ Đã mua hàng</span>
+                                  <span style={{ fontSize: "11px", background: "#dcfce7", color: "#166534", padding: "2px 8px", borderRadius: "4px", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                    <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Đã mua hàng
+                                  </span>
                                 )}
                               </div>
                               <span style={{ fontSize: "12px", color: "#94a3b8" }}>{rev.date}</span>

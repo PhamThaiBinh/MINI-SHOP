@@ -8,7 +8,7 @@ import { PRODUCTS_DATA } from "@/data/products";
 import { Product } from "@/types/product";
 import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
 import "@/styles/product-list.css";
-import { Zap, ShoppingCart } from "lucide-react";
+import { Zap, ShoppingCart, Flame, Clock, Check, X, AlertCircle } from "lucide-react";
 
 // Generate 10 Flash Sale items per time slot guaranteed to be lower than original price
 const getSlotProducts = (productsList: Product[], slotIndex: number) => {
@@ -246,8 +246,8 @@ export default function FlashSalePage() {
           }}
         >
           <div style={{ fontSize: "15px" }}>00:00 - 09:00</div>
-          <div style={{ fontSize: "12px", opacity: 0.9, marginTop: "4px" }}>
-            {currentVnSlot === "slot1" ? "🔴 Đang diễn ra" : vnHour >= 0 ? "Đang / Đã mở bán" : "Chờ đón"}
+          <div style={{ fontSize: "12px", opacity: 0.9, marginTop: "4px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+            {currentVnSlot === "slot1" ? <><Flame className="w-3.5 h-3.5 text-red-500 fill-red-500" /> Đang diễn ra</> : vnHour >= 0 ? "Đang / Đã mở bán" : "Chờ đón"}
           </div>
         </button>
 
@@ -267,8 +267,8 @@ export default function FlashSalePage() {
           }}
         >
           <div style={{ fontSize: "15px" }}>09:00 - 15:00</div>
-          <div style={{ fontSize: "12px", opacity: 0.9, marginTop: "4px" }}>
-            {currentVnSlot === "slot2" ? "🔴 Đang diễn ra" : vnHour >= 9 ? "Đã mở bán" : "⏰ Chưa đến giờ"}
+          <div style={{ fontSize: "12px", opacity: 0.9, marginTop: "4px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+            {currentVnSlot === "slot2" ? <><Flame className="w-3.5 h-3.5 text-red-500 fill-red-500" /> Đang diễn ra</> : vnHour >= 9 ? "Đã mở bán" : <><Clock className="w-3.5 h-3.5" /> Chưa đến giờ</>}
           </div>
         </button>
 
@@ -288,8 +288,8 @@ export default function FlashSalePage() {
           }}
         >
           <div style={{ fontSize: "15px" }}>15:00 - 21:00</div>
-          <div style={{ fontSize: "12px", opacity: 0.9, marginTop: "4px" }}>
-            {currentVnSlot === "slot3" ? "🔴 Đang diễn ra" : vnHour >= 15 ? "Đã mở bán" : "⏰ Chưa đến giờ"}
+          <div style={{ fontSize: "12px", opacity: 0.9, marginTop: "4px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+            {currentVnSlot === "slot3" ? <><Flame className="w-3.5 h-3.5 text-red-500 fill-red-500" /> Đang diễn ra</> : vnHour >= 15 ? "Đã mở bán" : <><Clock className="w-3.5 h-3.5" /> Chưa đến giờ</>}
           </div>
         </button>
 
@@ -309,8 +309,8 @@ export default function FlashSalePage() {
           }}
         >
           <div style={{ fontSize: "15px" }}>21:00 - 24:00</div>
-          <div style={{ fontSize: "12px", opacity: 0.9, marginTop: "4px" }}>
-            {currentVnSlot === "slot4" ? "🔴 Đang diễn ra" : vnHour >= 21 ? "Đã mở bán" : "⏰ Chưa đến giờ"}
+          <div style={{ fontSize: "12px", opacity: 0.9, marginTop: "4px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+            {currentVnSlot === "slot4" ? <><Flame className="w-3.5 h-3.5 text-red-500 fill-red-500" /> Đang diễn ra</> : vnHour >= 21 ? "Đã mở bán" : <><Clock className="w-3.5 h-3.5" /> Chưa đến giờ</>}
           </div>
         </button>
       </div>
@@ -330,8 +330,8 @@ export default function FlashSalePage() {
           gap: "10px",
         }}
       >
-        <div style={{ fontSize: "15px", fontWeight: 800 }}>
-          🔥 Danh sách 10 sản phẩm Flash Sale thuộc khung giờ {activeSlot === "slot1" ? "00:00 - 09:00" : activeSlot === "slot2" ? "09:00 - 15:00" : activeSlot === "slot3" ? "15:00 - 21:00" : "21:00 - 24:00"}:
+        <div style={{ fontSize: "15px", fontWeight: 800, display: "flex", alignItems: "center", gap: "6px" }}>
+          <Flame className="w-4 h-4 text-red-600 fill-red-600" /> Danh sách 10 sản phẩm Flash Sale thuộc khung giờ {activeSlot === "slot1" ? "00:00 - 09:00" : activeSlot === "slot2" ? "09:00 - 15:00" : activeSlot === "slot3" ? "15:00 - 21:00" : "21:00 - 24:00"}:
         </div>
         <span
           style={{
@@ -341,11 +341,16 @@ export default function FlashSalePage() {
             padding: "4px 12px",
             borderRadius: "20px",
             fontWeight: 800,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "6px",
           }}
         >
-          {isSlotAvailableToBuy
-            ? "✅ Đang trong thời gian mở bán - Mua ngay!"
-            : `⏰ Chưa đến giờ mở bán (Chờ đến ${slotStartText})`}
+          {isSlotAvailableToBuy ? (
+            <><Check className="w-3.5 h-3.5 text-emerald-700" /> Đang trong thời gian mở bán - Mua ngay!</>
+          ) : (
+            <><Clock className="w-3.5 h-3.5 text-amber-700" /> Chưa đến giờ mở bán (Chờ đến {slotStartText})</>
+          )}
         </span>
       </div>
 
@@ -466,9 +471,10 @@ export default function FlashSalePage() {
                         fontWeight: 800,
                         color: "#fff",
                         textShadow: "0 1px 2px rgba(0,0,0,0.5)",
+                        gap: "4px",
                       }}
                     >
-                      🔥 ĐÃ BÁN {soldCount}/{totalStock} ({soldPercentage}%)
+                      <Flame className="w-3 h-3 text-red-500 fill-red-500" /> ĐÃ BÁN {soldCount}/{totalStock} ({soldPercentage}%)
                     </span>
                   </div>
                 </div>
@@ -495,9 +501,17 @@ export default function FlashSalePage() {
                           fontSize: "13px",
                           cursor: "pointer",
                           transition: "all 0.2s ease",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "6px",
                         }}
                       >
-                        {addedId === product.id ? "✅ Đã thêm vào giỏ!" : "🛒 MUA NGAY GIỜ VÀNG"}
+                        {addedId === product.id ? (
+                          <><Check className="w-4 h-4" /> Đã thêm vào giỏ!</>
+                        ) : (
+                          <><ShoppingCart className="w-4 h-4" /> MUA NGAY GIỜ VÀNG</>
+                        )}
                       </button>
                     );
                   }
@@ -514,9 +528,17 @@ export default function FlashSalePage() {
                         fontWeight: 800,
                         fontSize: "13px",
                         cursor: "not-allowed",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "6px",
                       }}
                     >
-                      {isSoldOut ? "❌ Hết suất Flash Sale" : `⏳ Chưa tới giờ bán (${slotStartText})`}
+                      {isSoldOut ? (
+                        <><AlertCircle className="w-4 h-4" /> Hết suất Flash Sale</>
+                      ) : (
+                        <><Clock className="w-4 h-4" /> Chưa tới giờ bán ({slotStartText})</>
+                      )}
                     </button>
                   );
                 })()}

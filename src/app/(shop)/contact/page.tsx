@@ -37,14 +37,14 @@ export default function ContactPage() {
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email.trim())) {
-      alert("⚠️ Vui lòng nhập địa chỉ Email đúng định dạng (Ví dụ: name@example.com)!");
+      alert("Vui lòng nhập địa chỉ Email đúng định dạng (Ví dụ: name@example.com)!");
       return;
     }
 
     if (formData.phone.trim()) {
       const cleanPhone = formData.phone.replace(/\D/g, "");
       if (cleanPhone.length < 9 || cleanPhone.length > 11) {
-        alert("⚠️ Số điện thoại liên hệ phải chứa từ 9 đến 11 chữ số!");
+        alert("Số điện thoại liên hệ phải chứa từ 9 đến 11 chữ số!");
         return;
       }
     }
@@ -184,8 +184,8 @@ export default function ContactPage() {
                   ></textarea>
                 </div>
 
-                <button type="submit" className="btn-submit-green" disabled={submitting} style={{ opacity: submitting ? 0.6 : 1 }}>
-                  {submitting ? "⏳ Đang gửi tin nhắn..." : "✉️ Gửi Tin Nhắn"}
+                <button type="submit" className="btn-submit-green" disabled={submitting} style={{ opacity: submitting ? 0.6 : 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                  {submitting ? "Đang gửi tin nhắn..." : <><Send className="w-4 h-4" /> Gửi Tin Nhắn</>}
                 </button>
               </form>
             </div>
