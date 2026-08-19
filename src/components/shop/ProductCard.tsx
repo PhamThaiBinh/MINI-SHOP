@@ -106,9 +106,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             </span>
           )}
         </div>
-        <span className="status-badge" style={{ backgroundColor: "#dcfce7", color: "#15803d", border: "1px solid #86efac", fontWeight: 800, padding: "2px 8px", borderRadius: "4px", fontSize: "11px", display: "inline-block", marginBottom: "12px", width: "fit-content" }}>
-          Còn hàng
-        </span>
+        <span className="status-badge">Còn hàng</span>
         <div className="catalog-card-footer" style={{ display: "flex", gap: "6px", marginTop: "auto" }}>
           <button
             onClick={() => addToCart(product)}
