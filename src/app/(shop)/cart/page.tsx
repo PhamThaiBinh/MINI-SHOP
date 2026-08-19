@@ -290,7 +290,7 @@ export default function CartPage() {
                       <Truck className="w-5 h-5 text-emerald-700 flex-shrink-0" />
                       {subtotal >= freeShipThreshold ? (
                         <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                          <Sparkles className="w-4 h-4 text-emerald-700" /> Chúc mừng! Đơn hàng của bạn đã đủ điều kiện <strong>Miễn phí vận chuyển toàn quốc</strong>!
+                          <Sparkles className="w-4 h-4 text-emerald-700" /> <strong>Miễn Phí Vận Chuyển Toàn Quốc</strong>
                         </span>
                       ) : (
                         <span>Mua thêm <strong>{formatVND(needed)}</strong> để nhận ưu đãi <strong>MIỄN PHÍ VẬN CHUYỂN</strong></span>

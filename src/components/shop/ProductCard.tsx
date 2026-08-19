@@ -87,7 +87,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </button>
         )}
       </div>
-      <div className="product-info">
+      <div className="product-info" style={{ display: "flex", flexDirection: "column", flexGrow: 1 }}>
         <h3 className="product-name">
           <Link
             href={`/products/${product.id}`}
@@ -96,24 +96,52 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             {product.name}
           </Link>
         </h3>
-        <div className="product-price">{formatVND(product.price)}</div>
-        <p className="product-desc">{product.categoryName}</p>
-        <div style={{ display: "flex", gap: "6px", marginTop: "auto" }}>
+        <div className="price-box" style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+          <span className="price-current" style={{ fontSize: "16px", fontWeight: 800, color: "var(--primary-color)" }}>
+            {formatVND(product.price)}
+          </span>
+          {product.oldPrice && (
+            <span className="price-old" style={{ fontSize: "13px", color: "#94a3b8", textDecoration: "line-through" }}>
+              {formatVND(product.oldPrice)}
+            </span>
+          )}
+        </div>
+        <span className="status-badge" style={{ backgroundColor: "#dcfce7", color: "#15803d", border: "1px solid #86efac", fontWeight: 800, padding: "2px 8px", borderRadius: "4px", fontSize: "11px", display: "inline-block", marginBottom: "12px", width: "fit-content" }}>
+          Còn hàng
+        </span>
+        <div className="catalog-card-footer" style={{ display: "flex", gap: "6px", marginTop: "auto" }}>
           <button
             onClick={() => addToCart(product)}
-            className="btn-card-action"
+            className="btn-add-cart-sm"
             style={{
+              flex: 1,
+              padding: "7px 10px",
               background: "var(--primary-color)",
               color: "#fff",
               border: "none",
-              fontWeight: 700,
-              gap: "4px",
+              borderRadius: "6px",
+              fontSize: "12px",
+              fontWeight: 800,
+              cursor: "pointer",
             }}
           >
-            <ShoppingCart style={{ width: 14, height: 14 }} /> Thêm giỏ
+            + Giỏ hàng
           </button>
-          <Link href={`/products/${product.id}`} className="btn-card-action" style={{ gap: "4px" }}>
-            Chi tiết <ArrowRight style={{ width: 14, height: 14 }} />
+          <Link
+            href={`/products/${product.id}`}
+            className="btn-detail-link"
+            style={{
+              padding: "7px 12px",
+              border: "1px solid #cbd5e1",
+              borderRadius: "6px",
+              fontSize: "12px",
+              fontWeight: 800,
+              color: "#0f172a",
+              textDecoration: "none",
+              whiteSpace: "nowrap",
+            }}
+          >
+            Chi tiết &rsaquo;
           </Link>
         </div>
       </div>

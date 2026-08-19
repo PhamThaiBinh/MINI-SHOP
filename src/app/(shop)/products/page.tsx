@@ -453,7 +453,7 @@ function ProductsContent() {
                             </span>
                           )}
                         </div>
-                        <span className="status-badge" style={{ backgroundColor: "var(--primary-color)", color: "#fff" }}>Còn hàng</span>
+                        <span className="status-badge">Còn hàng</span>
                         <div
                           className="catalog-card-footer"
                           style={{ display: "flex", gap: "6px" }}
