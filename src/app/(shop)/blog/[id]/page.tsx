@@ -7,7 +7,8 @@ import { fetchBlogByIdFromSupabase, fetchBlogsFromSupabase } from "@/lib/supabas
 import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
 import { ShareButtons } from "@/components/blog/ShareButtons";
 import { InArticleProductCard } from "@/components/blog/InArticleProductCard";
-import { Calendar, User, Clock, Eye, ArrowLeft, Bookmark, Sparkles, BookOpen, Share2 } from "lucide-react";
+import { ArticleToC } from "@/components/blog/ArticleToC";
+import { Calendar, User, Clock, Eye, ArrowLeft, Sparkles, BookOpen } from "lucide-react";
 import { ScrollToTopOnMount } from "@/components/blog/ScrollToTopOnMount";
 
 interface BlogDetailPageProps {
@@ -114,36 +115,10 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
           </div>
         </div>
 
-        {/* 2-Column Split: Sticky ToC Sidebar + Main Article Body */}
+        {/* 2-Column Split: Dynamic Sticky ToC Sidebar + Main Article Body */}
         <div style={{ display: "grid", gridTemplateColumns: "260px 1fr", gap: "36px", alignItems: "start" }}>
-          {/* Left Column: Sticky Table of Contents Sidebar */}
-          <aside style={{ position: "sticky", top: "100px", background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "1.25rem", padding: "20px", boxShadow: "0 4px 14px rgba(0,0,0,0.02)" }}>
-            <h3 style={{ fontSize: "14px", fontWeight: 900, color: "#0f172a", margin: "0 0 12px 0", display: "flex", alignItems: "center", gap: "6px" }}>
-              <BookOpen className="w-4 h-4 text-emerald-700" /> MỤC LỤC BÀI VIẾT
-            </h3>
-            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "10px", fontSize: "12.5px" }}>
-              <li>
-                <a href="#section-1" style={{ color: "var(--primary-color, #2e7d32)", fontWeight: 800, textDecoration: "none" }}>
-                  1. Triết lý thiết kế tối giản Nordic
-                </a>
-              </li>
-              <li>
-                <a href="#section-2" style={{ color: "#475569", fontWeight: 600, textDecoration: "none" }}>
-                  2. Lựa chọn chất liệu gỗ sồi chuẩn xuất khẩu
-                </a>
-              </li>
-              <li>
-                <a href="#section-3" style={{ color: "#475569", fontWeight: 600, textDecoration: "none" }}>
-                  3. Phối hợp ánh sáng & phụ kiện decor
-                </a>
-              </li>
-              <li>
-                <a href="#section-4" style={{ color: "#475569", fontWeight: 600, textDecoration: "none" }}>
-                  4. Kết luận & Mẹo bảo quản
-                </a>
-              </li>
-            </ul>
-          </aside>
+          {/* Left Column: Dynamic Interactive ToC */}
+          <ArticleToC content={article.content} />
 
           {/* Right Column: Main Article Body */}
           <div className="doppelrand-outer">

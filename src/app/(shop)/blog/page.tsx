@@ -5,7 +5,7 @@ import Link from "next/link";
 import "@/styles/blog.css";
 import { fixImagePath } from "@/lib/utils";
 import { fetchBlogsFromSupabase, BlogArticle } from "@/lib/supabaseBlogs";
-import { Calendar, BookOpen, ArrowRight, Search, Sparkles, User, Clock, Eye, Bookmark } from "lucide-react";
+import { Calendar, BookOpen, ArrowRight, Search, Sparkles, User, Clock } from "lucide-react";
 
 export default function BlogListPage() {
   const [articles, setArticles] = useState<BlogArticle[]>([]);
@@ -32,12 +32,12 @@ export default function BlogListPage() {
 
   const featuredArticle = articles[0] || {
     id: 1,
-    title: "Xu Hướng Thiết Kế Nội Thất Tối Giản Bắc Âu Nordic 2026",
-    excerpt: "Khám phá bí quyết phối hợp ánh sáng tự nhiên và chất liệu gỗ sồi tạo nên không gian sống tối giản nhưng vô cùng ấm cúng.",
-    category: "Xu Hướng Nội Thất 2026",
+    title: "5 Cách Phối Màu Sofa Nordic Cho Phòng Khách Tối Giản",
+    excerpt: "Tìm hiểu bí quyết kết hợp gam màu xám ghi, kem đất và xanh Navy với khung gỗ tự nhiên tạo nên không gian Bắc Âu tinh tế, ấm cúng.",
+    category: "Mẹo Decor Phòng Khách",
     date: "18/08/2026",
     author: "KTS. Lê Hoàng Nam",
-    img: "/assets/images/banner/banner-trang-chu-mini-shop.webp",
+    img: "/assets/images/products/noi-that-gia-dung/sofa-phong-khach.webp",
   };
 
   const filteredArticles = useMemo(() => {
@@ -46,7 +46,8 @@ export default function BlogListPage() {
         art.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         art.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesTopic =
-        selectedTopic === "Tất cả" || art.category.toLowerCase().includes(selectedTopic.toLowerCase());
+        selectedTopic === "Tất cả" ||
+        art.category.toLowerCase().trim() === selectedTopic.toLowerCase().trim();
       return matchesSearch && matchesTopic;
     });
   }, [articles, searchQuery, selectedTopic]);
@@ -61,7 +62,7 @@ export default function BlogListPage() {
       }}
     >
       <div className="container" style={{ padding: "30px 16px 0" }}>
-        {/* Magazine Editorial Title Header */}
+        {/* Title Header */}
         <div style={{ marginBottom: "28px", textAlign: "left" }}>
           <span style={{ fontSize: "11px", fontWeight: 800, color: "var(--primary-color, #2e7d32)", background: "#e8f5e9", padding: "4px 12px", borderRadius: "999px", textTransform: "uppercase", letterSpacing: "0.1em" }}>
             MINI-SHOP EDITORIAL JOURNAL
@@ -87,13 +88,13 @@ export default function BlogListPage() {
           <div className="doppelrand-outer" style={{ marginBottom: "36px" }}>
             <div className="doppelrand-inner" style={{ padding: "28px" }}>
               <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: "32px", alignItems: "center" }}>
-                {/* Left: Featured Image */}
+                {/* Left Image */}
                 <div style={{ borderRadius: "1.5rem", overflow: "hidden", aspectRatio: "16 / 10", border: "1px solid #e2e8f0" }}>
                   <Link href={`/blog/${featuredArticle.id}`}>
                     <img
                       src={fixImagePath(featuredArticle.img)}
                       alt={featuredArticle.title}
-                      style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.4s ease" }}
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = "/assets/images/banner/banner-trang-chu-mini-shop.webp";
                       }}
@@ -101,7 +102,7 @@ export default function BlogListPage() {
                   </Link>
                 </div>
 
-                {/* Right: Featured Meta & Title */}
+                {/* Right Meta & Actions */}
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
                     <span style={{ fontSize: "11px", fontWeight: 900, background: "#fef3c7", color: "#b45309", padding: "3px 10px", borderRadius: "999px" }}>
@@ -148,7 +149,7 @@ export default function BlogListPage() {
                         boxShadow: "0 4px 14px rgba(46, 125, 50, 0.2)",
                       }}
                     >
-                      Đọc Tạp Chí 1-Click <ArrowRight className="w-4 h-4" />
+                      Đọc bài viết <ArrowRight className="w-4 h-4" />
                     </Link>
                   </div>
                 </div>
@@ -214,7 +215,7 @@ export default function BlogListPage() {
           </div>
         </div>
 
-        {/* 3. Articles Grid Stream (Doppelrand Cards) */}
+        {/* 3. Articles Grid Stream */}
         <div className="blog-grid">
           {filteredArticles.map((article) => (
             <div key={article.id} className="doppelrand-outer">
@@ -224,7 +225,7 @@ export default function BlogListPage() {
                     <img
                       src={fixImagePath(article.img)}
                       alt={article.title}
-                      style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.3s ease" }}
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = "/assets/images/banner/banner-trang-chu-mini-shop.webp";
                       }}
@@ -254,7 +255,7 @@ export default function BlogListPage() {
                     href={`/blog/${article.id}`}
                     style={{ fontSize: "12.5px", fontWeight: 800, color: "var(--primary-color, #2e7d32)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "4px" }}
                   >
-                    Đọc tiếp <ArrowRight className="w-3.5 h-3.5" />
+                    Đọc bài viết <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
               </div>
