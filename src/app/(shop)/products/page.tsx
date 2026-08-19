@@ -8,15 +8,33 @@ import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { Product } from "@/types/product";
 import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
+import { useSearchParams } from "next/navigation";
+import {
+  Package,
+  Sofa,
+  Bed,
+  Utensils,
+  Lamp,
+  Sparkles,
+  Box,
+  X,
+  Search,
+  Heart,
+  ArrowRight,
+  LayoutGrid,
+  List as ListIcon,
+  Trees,
+  SlidersHorizontal,
+} from "lucide-react";
 
-import { useSearchParams, useRouter } from "next/navigation";
-import { Package, Sofa, Bed, Utensils, Lamp, Sparkles, Box, X, Search, Heart, ArrowRight } from "lucide-react";
+import { CatalogHeroBanner } from "@/components/shop/CatalogHeroBanner";
+import { QuickFilterBar, QuickFilterType } from "@/components/shop/QuickFilterBar";
+import { CatalogFaqGuide } from "@/components/shop/CatalogFaqGuide";
 
 function ProductsContent() {
   const { addToCart } = useCart();
   const { toggleWishlist, isWishlisted } = useWishlist();
   const searchParams = useSearchParams();
-  const router = useRouter();
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -29,8 +47,11 @@ function ProductsContent() {
   const [currentPriceRange, setCurrentPriceRange] = useState<string>(initialPrice);
   const [searchQuery, setSearchQuery] = useState<string>(initialSearch);
   const [sortBy, setSortBy] = useState<string>("newest");
-  const [inStockOnly, setInStockOnly] = useState<boolean>(true);
-  const [pageSize, setPageSize] = useState<number>(10);
+  const [inStockOnly, setInStockOnly] = useState<boolean>(false);
+  const [selectedMaterial, setSelectedMaterial] = useState<string>("all");
+  const [quickFilter, setQuickFilter] = useState<QuickFilterType>("all");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [pageSize, setPageSize] = useState<number>(12);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
   // Sync searchParams URL -> State
@@ -84,6 +105,14 @@ function ProductsContent() {
     { id: "over-3m", label: "Trên 3.000.000đ" },
   ];
 
+  const materials = [
+    { id: "all", label: "Tất cả chất liệu" },
+    { id: "go-soi", label: "Gỗ sồi tự nhiên" },
+    { id: "may-tre", label: "Mây tre đan" },
+    { id: "gom-su", label: "Gốm sứ men mờ" },
+    { id: "vai-ni", label: "Vải nỉ cao cấp" },
+  ];
+
   const matchesPriceRange = (price: number, range: string) => {
     if (range === "under-500k") return price < 500000;
     if (range === "500k-1m") return price >= 500000 && price <= 1000000;
@@ -102,28 +131,11 @@ function ProductsContent() {
 
     const synonymMap: Record<string, string[]> = {
       "c0001": ["c0001", "living room", "phòng khách", "phong khach", "phong-khach"],
-      "living room": ["c0001", "living room", "phòng khách", "phong khach", "phong-khach"],
-      "phòng khách": ["c0001", "living room", "phòng khách", "phong khach", "phong-khach"],
-
       "c0002": ["c0002", "bedroom", "phòng ngủ", "phong ngu", "phong-ngu"],
-      "bedroom": ["c0002", "bedroom", "phòng ngủ", "phong ngu", "phong-ngu"],
-      "phòng ngủ": ["c0002", "bedroom", "phòng ngủ", "phong ngu", "phong-ngu"],
-
       "c0003": ["c0003", "kitchen", "nhà bếp", "nha bep", "nha-bep", "phòng ăn"],
-      "kitchen": ["c0003", "kitchen", "nhà bếp", "nha bep", "nha-bep", "phòng ăn"],
-      "nhà bếp": ["c0003", "kitchen", "nhà bếp", "nha bep", "nha-bep", "phòng ăn"],
-
       "c0004": ["c0004", "lighting", "đèn chiếu sáng", "den chieu sang", "den-chieu-sang", "đèn"],
-      "lighting": ["c0004", "lighting", "đèn chiếu sáng", "den chieu sang", "den-chieu-sang", "đèn"],
-      "đèn chiếu sáng": ["c0004", "lighting", "đèn chiếu sáng", "den chieu sang", "den-chieu-sang", "đèn"],
-
       "c0005": ["c0005", "decor", "trang trí", "trang tri", "trang-tri"],
-      "decor": ["c0005", "decor", "trang trí", "trang tri", "trang-tri"],
-      "trang trí": ["c0005", "decor", "trang trí", "trang tri", "trang-tri"],
-
       "c0006": ["c0006", "storage", "lưu trữ", "luu tru", "luu-tru"],
-      "storage": ["c0006", "storage", "lưu trữ", "luu tru", "luu-tru"],
-      "lưu trữ": ["c0006", "storage", "lưu trữ", "luu tru", "luu-tru"],
     };
 
     const synonyms = synonymMap[target];
@@ -134,12 +146,34 @@ function ProductsContent() {
     return prodCat.includes(target) || prodName.includes(target) || target.includes(prodCat);
   };
 
+  const matchesMaterial = (product: Product, mat: string) => {
+    if (mat === "all") return true;
+    const text = `${product.name} ${product.description || ""}`.toLowerCase();
+    if (mat === "go-soi") return text.includes("gỗ") || text.includes("wood") || text.includes("sồi");
+    if (mat === "may-tre") return text.includes("mây") || text.includes("tre") || text.includes("bamboo");
+    if (mat === "gom-su") return text.includes("gốm") || text.includes("sứ") || text.includes("ceramic");
+    if (mat === "vai-ni") return text.includes("nỉ") || text.includes("vải") || text.includes("sofa");
+    return true;
+  };
+
+  const matchesQuickFilter = (product: Product, qf: QuickFilterType) => {
+    if (qf === "all") return true;
+    if (qf === "flashSale") return !!product.oldPrice && product.oldPrice > product.price;
+    if (qf === "bestseller") return (product.reviews || 0) >= 35 || product.badge === "Hot";
+    if (qf === "new") return product.badge === "Mới" || product.id >= 5;
+    if (qf === "wood") return `${product.name} ${product.description || ""}`.toLowerCase().match(/(gỗ|tre|mây|sồi)/);
+    if (qf === "fastDelivery") return (product.stock ?? 50) > 0;
+    return true;
+  };
+
   // Helper count for category items
   const getCategoryCount = (catId: string) => {
     return products.filter(
       (p) =>
         matchesCategory(p.category, catId, p.categoryName) &&
         matchesPriceRange(p.price, currentPriceRange) &&
+        matchesMaterial(p, selectedMaterial) &&
+        matchesQuickFilter(p, quickFilter) &&
         p.name.toLowerCase().includes(searchQuery.toLowerCase())
     ).length;
   };
@@ -150,6 +184,8 @@ function ProductsContent() {
       (p) =>
         matchesCategory(p.category, currentCategory, p.categoryName) &&
         matchesPriceRange(p.price, rangeId) &&
+        matchesMaterial(p, selectedMaterial) &&
+        matchesQuickFilter(p, quickFilter) &&
         p.name.toLowerCase().includes(searchQuery.toLowerCase())
     ).length;
   };
@@ -157,35 +193,55 @@ function ProductsContent() {
   const filteredProducts = useMemo(() => {
     let result = products.filter((product) => {
       const matchCat = matchesCategory(product.category, currentCategory, product.categoryName);
-      const matchSearch = product.name
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
+      const matchSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchPrice = matchesPriceRange(product.price, currentPriceRange);
-      return matchCat && matchSearch && matchPrice;
+      const matchMat = matchesMaterial(product, selectedMaterial);
+      const matchQF = matchesQuickFilter(product, quickFilter);
+      const matchStock = inStockOnly ? (product.stock ?? 50) > 0 : true;
+
+      return matchCat && matchSearch && matchPrice && matchMat && matchQF && matchStock;
     });
 
     if (sortBy === "price-asc") {
       result.sort((a, b) => a.price - b.price);
     } else if (sortBy === "price-desc") {
       result.sort((a, b) => b.price - a.price);
+    } else if (sortBy === "bestselling") {
+      result.sort((a, b) => (b.reviews || 0) - (a.reviews || 0));
     }
 
     return result;
-  }, [products, currentCategory, currentPriceRange, searchQuery, sortBy]);
+  }, [products, currentCategory, currentPriceRange, searchQuery, selectedMaterial, quickFilter, inStockOnly, sortBy]);
 
   const currentCategoryLabel =
     categories.find((c) => c.id === currentCategory)?.label || "Tất cả sản phẩm";
 
   return (
     <>
-      {/* 3. Main Content Section (Sidebar + Product Catalog) */}
+      {/* Container 1300px */}
       <div className="container" style={{ paddingTop: "24px" }}>
+        {/* 1. Catalog Hero Banner Section */}
+        <CatalogHeroBanner />
+
+        {/* 2. Smart Quick Filter Badges Bar */}
+        <QuickFilterBar
+          activeFilter={quickFilter}
+          onFilterChange={(filter) => {
+            setQuickFilter(filter);
+            setCurrentPage(1);
+          }}
+        />
+
+        {/* 3. Main Product Catalogue Layout (2 Columns) */}
         <div className="product-page-layout">
-          {/* Left Sidebar Filter */}
+          {/* Left Filter Sidebar */}
           <aside className="filter-sidebar">
             {/* Category Filter Group */}
             <div className="filter-group">
-              <div className="filter-group-title">Danh mục sản phẩm</div>
+              <div className="filter-group-title">
+                <span>Danh mục sản phẩm</span>
+                <SlidersHorizontal className="w-4 h-4 text-emerald-700" />
+              </div>
               <ul className="filter-list" id="category-filter-list">
                 {categories.map((cat) => (
                   <li
@@ -193,7 +249,10 @@ function ProductsContent() {
                     className={`filter-item ${
                       currentCategory === cat.id ? "active" : ""
                     }`}
-                    onClick={() => setCurrentCategory(cat.id)}
+                    onClick={() => {
+                      setCurrentCategory(cat.id);
+                      setCurrentPage(1);
+                    }}
                   >
                     <div className="filter-item-left">
                       <span>{cat.icon}</span> {cat.label}
@@ -232,7 +291,10 @@ function ProductsContent() {
                         name="price-range"
                         value={range.id}
                         checked={currentPriceRange === range.id}
-                        onChange={(e) => setCurrentPriceRange(e.target.value)}
+                        onChange={(e) => {
+                          setCurrentPriceRange(e.target.value);
+                          setCurrentPage(1);
+                        }}
                         style={{ cursor: "pointer" }}
                       />
                       <span style={{ fontSize: "14px", color: "var(--text-main)" }}>{range.label}</span>
@@ -247,22 +309,64 @@ function ProductsContent() {
 
             <hr style={{ border: 0, borderTop: "1px solid var(--border-color)" }} />
 
+            {/* Material Filter Group */}
+            <div className="filter-group">
+              <div className="filter-group-title">
+                <span>Chất liệu đặc trưng</span>
+                <Trees className="w-4 h-4 text-emerald-700" />
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {materials.map((mat) => (
+                  <label
+                    key={mat.id}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      fontSize: "14px",
+                      color: "var(--text-main)",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="material"
+                      value={mat.id}
+                      checked={selectedMaterial === mat.id}
+                      onChange={(e) => {
+                        setSelectedMaterial(e.target.value);
+                        setCurrentPage(1);
+                      }}
+                      style={{ cursor: "pointer" }}
+                    />
+                    <span>{mat.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <hr style={{ border: 0, borderTop: "1px solid var(--border-color)" }} />
+
             {/* Stock Availability Group */}
             <div className="filter-group">
-              <div className="filter-group-title">Trạng thái kho</div>
-              <label className="filter-option">
+              <div className="filter-group-title">Trạng thái kho hàng</div>
+              <label className="filter-option" style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
                 <input
                   type="checkbox"
                   id="stock-checkbox"
                   checked={inStockOnly}
-                  onChange={(e) => setInStockOnly(e.target.checked)}
+                  onChange={(e) => {
+                    setInStockOnly(e.target.checked);
+                    setCurrentPage(1);
+                  }}
+                  style={{ cursor: "pointer" }}
                 />
-                <span>Còn hàng</span>
+                <span style={{ fontSize: "14px", color: "var(--text-main)", fontWeight: 600 }}>Chỉ hiện sản phẩm còn hàng</span>
               </label>
             </div>
           </aside>
 
-          {/* Right Main Product Grid Content */}
+          {/* Right Main Product Grid / List Content */}
           {(() => {
             const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize));
             const safeCurrentPage = Math.min(currentPage, totalPages);
@@ -274,11 +378,11 @@ function ProductsContent() {
             return (
               <section className="products-main-content">
                 {/* Top Toolbar */}
-                <div className="products-main-header">
+                <div className="products-main-header" style={{ marginBottom: "20px" }}>
                   <div>
-                    <h1 className="products-page-title" id="page-title-heading">
+                    <h2 className="products-page-title" id="page-title-heading" style={{ fontSize: "22px", margin: 0 }}>
                       {currentCategoryLabel}
-                    </h1>
+                    </h2>
                     <div className="products-count-text" id="products-count-info">
                       Hiển thị {filteredProducts.length > 0 ? (safeCurrentPage - 1) * pageSize + 1 : 0} -{" "}
                       {Math.min(safeCurrentPage * pageSize, filteredProducts.length)} trong tổng số{" "}
@@ -287,6 +391,56 @@ function ProductsContent() {
                   </div>
 
                   <div className="toolbar-actions" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    {/* View Mode Switcher Buttons */}
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        background: "#f1f5f9",
+                        padding: "3px",
+                        borderRadius: "8px",
+                        gap: "2px",
+                        marginRight: "6px",
+                      }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setViewMode("grid")}
+                        style={{
+                          padding: "6px 10px",
+                          border: "none",
+                          borderRadius: "6px",
+                          background: viewMode === "grid" ? "#ffffff" : "transparent",
+                          color: viewMode === "grid" ? "var(--primary-color)" : "#64748b",
+                          boxShadow: viewMode === "grid" ? "0 2px 6px rgba(0,0,0,0.08)" : "none",
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                        }}
+                        title="Xem dạng Lưới 4 Cột"
+                      >
+                        <LayoutGrid className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setViewMode("list")}
+                        style={{
+                          padding: "6px 10px",
+                          border: "none",
+                          borderRadius: "6px",
+                          background: viewMode === "list" ? "#ffffff" : "transparent",
+                          color: viewMode === "list" ? "var(--primary-color)" : "#64748b",
+                          boxShadow: viewMode === "list" ? "0 2px 6px rgba(0,0,0,0.08)" : "none",
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                        }}
+                        title="Xem dạng Danh Sách Hàng Ngang"
+                      >
+                        <ListIcon className="w-4 h-4" />
+                      </button>
+                    </div>
+
                     <div className="toolbar-search">
                       <input
                         type="text"
@@ -303,12 +457,14 @@ function ProductsContent() {
                       </svg>
                     </div>
 
-                    {(searchQuery || currentCategory !== "all" || currentPriceRange !== "all" || inStockOnly) && (
+                    {(searchQuery || currentCategory !== "All" || currentPriceRange !== "all" || selectedMaterial !== "all" || quickFilter !== "all" || inStockOnly) && (
                       <button
                         onClick={() => {
                           setSearchQuery("");
-                          setCurrentCategory("all");
+                          setCurrentCategory("All");
                           setCurrentPriceRange("all");
+                          setSelectedMaterial("all");
+                          setQuickFilter("all");
                           setInStockOnly(false);
                           setCurrentPage(1);
                         }}
@@ -341,9 +497,9 @@ function ProductsContent() {
                       }}
                       style={{ cursor: "pointer", fontWeight: 700 }}
                     >
-                      <option value={10}>Hiển thị 10 sản phẩm</option>
-                      <option value={25}>Hiển thị 25 sản phẩm</option>
-                      <option value={50}>Hiển thị 50 sản phẩm</option>
+                      <option value={12}>Hiển thị 12 SP</option>
+                      <option value={24}>Hiển thị 24 SP</option>
+                      <option value={48}>Hiển thị 48 SP</option>
                     </select>
 
                     <select
@@ -351,208 +507,288 @@ function ProductsContent() {
                       id="sort-select-box"
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value)}
+                      style={{ cursor: "pointer", fontWeight: 700 }}
                     >
                       <option value="newest">Mới nhất</option>
-                      <option value="price-asc">Thấp đến cao</option>
-                      <option value="price-desc">Cao đến thấp</option>
+                      <option value="bestselling">Bán chạy nhất</option>
+                      <option value="price-asc">Giá: Thấp đến cao</option>
+                      <option value="price-desc">Giá: Cao đến thấp</option>
                     </select>
                   </div>
                 </div>
 
-            {/* 4-Column Product Catalog Grid */}
-            <div className="catalog-grid" id="product-catalog-grid">
-              {loading ? (
-                <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "48px 0", color: "var(--text-muted)", fontWeight: 600 }}>
-                  Đang tải danh sách sản phẩm...
-                </div>
-              ) : filteredProducts.length === 0 ? (
-                <div
-                  style={{
-                    gridColumn: "1 / -1",
-                    textAlign: "center",
-                    padding: "48px 0",
-                    color: "var(--text-muted)",
-                  }}
-                >
-                  <div style={{ fontSize: "40px", marginBottom: "12px", display: "flex", justifyContent: "center" }}>
-                    <Search className="w-12 h-12 text-slate-400" />
+                {/* Product Catalog Display (Grid View vs List View) */}
+                {loading ? (
+                  <div style={{ textAlign: "center", padding: "48px 0", color: "var(--text-muted)", fontWeight: 600 }}>
+                    Đang tải danh sách sản phẩm...
                   </div>
-                  <p style={{ fontSize: "16px", fontWeight: 600 }}>
-                    Không tìm thấy sản phẩm phù hợp!
-                  </p>
-                  <p style={{ fontSize: "13px", marginTop: "4px", marginBottom: "16px" }}>
-                    Vui lòng thử tìm kiếm bằng từ khóa khác hoặc bấm nút bên dưới để xem lại tất cả sản phẩm.
-                  </p>
-                  <button
-                    onClick={() => {
-                      setCurrentCategory("All");
-                      setCurrentPriceRange("all");
-                      setSearchQuery("");
-                    }}
+                ) : filteredProducts.length === 0 ? (
+                  <div
                     style={{
-                      padding: "8px 16px",
-                      background: "var(--primary-color)",
-                      color: "#fff",
-                      border: "none",
-                      borderRadius: "var(--radius-md)",
-                      fontSize: "13px",
-                      fontWeight: 700,
-                      cursor: "pointer",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "4px",
+                      textAlign: "center",
+                      padding: "48px 0",
+                      color: "var(--text-muted)",
+                      background: "#ffffff",
+                      borderRadius: "1.25rem",
+                      border: "1px solid #e2e8f0",
                     }}
                   >
-                    Xem tất cả sản phẩm <ArrowRight className="w-4 h-4" />
-                  </button>
-                </div>
-              ) : (
-                paginatedProducts.map((product) => {
-                  const wished = isWishlisted(product.id);
-                  return (
-                    <div key={product.id} className="catalog-card">
-                      {product.badge && (
-                        <span
-                          className={`card-badge ${product.badgeType || ""}`}
-                        >
-                          {product.badge}
-                        </span>
-                      )}
-                      <button
-                        className={`btn-wishlist ${wished ? "active" : ""}`}
-                        onClick={() => toggleWishlist(product.id)}
-                        title="Thêm vào yêu thích"
-                        style={wished ? { color: "#ef4444", display: "inline-flex", alignItems: "center", justifyContent: "center" } : { display: "inline-flex", alignItems: "center", justifyContent: "center" }}
-                      >
-                        <Heart className={`w-4 h-4 ${wished ? "text-red-500 fill-red-500" : "text-slate-400"}`} />
-                      </button>
-                      <div className="catalog-img-wrapper">
-                        <Link href={`/products/${product.id}`}>
-                          <img
-                            src={fixImagePath(product.image)}
-                            alt={product.name}
-                          />
-                        </Link>
-                      </div>
-                      <div className="catalog-card-body">
-                        <h3 className="catalog-title">
-                          <Link
-                            href={`/products/${product.id}`}
-                            style={{ color: "inherit", textDecoration: "none" }}
-                          >
-                            {product.name}
-                          </Link>
-                        </h3>
-                        <div className="price-box">
-                          <span className="price-current">
-                            {formatVND(product.price)}
-                          </span>
-                          {product.oldPrice && (
-                            <span className="price-old">
-                              {formatVND(product.oldPrice)}
+                    <div style={{ fontSize: "40px", marginBottom: "12px", display: "flex", justifyContent: "center" }}>
+                      <Search className="w-12 h-12 text-slate-400" />
+                    </div>
+                    <p style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>
+                      Không tìm thấy sản phẩm phù hợp!
+                    </p>
+                    <p style={{ fontSize: "13px", marginTop: "4px", marginBottom: "16px", color: "#64748b" }}>
+                      Vui lòng thử chọn bộ lọc khác hoặc bấm nút bên dưới để xem lại tất cả sản phẩm.
+                    </p>
+                    <button
+                      onClick={() => {
+                        setCurrentCategory("All");
+                        setCurrentPriceRange("all");
+                        setSelectedMaterial("all");
+                        setQuickFilter("all");
+                        setSearchQuery("");
+                      }}
+                      style={{
+                        padding: "8px 18px",
+                        background: "var(--primary-color)",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: "8px",
+                        fontSize: "13px",
+                        fontWeight: 800,
+                        cursor: "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                      }}
+                    >
+                      Xem tất cả sản phẩm <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : viewMode === "grid" ? (
+                  /* 4-Column Product Grid View */
+                  <div className="catalog-grid" id="product-catalog-grid">
+                    {paginatedProducts.map((product) => {
+                      const wished = isWishlisted(product.id);
+                      return (
+                        <div key={product.id} className="catalog-card">
+                          {product.badge && (
+                            <span className={`card-badge ${product.badgeType || ""}`}>
+                              {product.badge}
                             </span>
                           )}
-                        </div>
-                        <span className="status-badge">Còn hàng</span>
-                        <div
-                          className="catalog-card-footer"
-                          style={{ display: "flex", gap: "6px" }}
-                        >
                           <button
-                            onClick={() => addToCart(product)}
-                            className="btn-add-cart-sm"
-                            style={{
-                              flex: 1,
-                              padding: "6px 10px",
-                              background: "var(--primary-color)",
-                              color: "#fff",
-                              border: "none",
-                              borderRadius: "4px",
-                              fontSize: "12px",
-                              fontWeight: 700,
-                              cursor: "pointer",
-                            }}
+                            className={`btn-wishlist ${wished ? "active" : ""}`}
+                            onClick={() => toggleWishlist(product.id)}
+                            title="Thêm vào yêu thích"
+                            style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}
                           >
-                            + Giỏ hàng
+                            <Heart className={`w-4 h-4 ${wished ? "text-red-500 fill-red-500" : "text-slate-400"}`} />
                           </button>
-                          <Link
-                            href={`/products/${product.id}`}
-                            className="btn-detail-link"
-                          >
-                            Chi tiết &rsaquo;
-                          </Link>
+                          <div className="catalog-img-wrapper">
+                            <Link href={`/products/${product.id}`}>
+                              <img src={fixImagePath(product.image)} alt={product.name} />
+                            </Link>
+                          </div>
+                          <div className="catalog-card-body">
+                            <h3 className="catalog-title">
+                              <Link href={`/products/${product.id}`} style={{ color: "inherit", textDecoration: "none" }}>
+                                {product.name}
+                              </Link>
+                            </h3>
+                            <div className="price-box">
+                              <span className="price-current">{formatVND(product.price)}</span>
+                              {product.oldPrice && (
+                                <span className="price-old">{formatVND(product.oldPrice)}</span>
+                              )}
+                            </div>
+                            <span className="status-badge">Còn hàng</span>
+                            <div className="catalog-card-footer" style={{ display: "flex", gap: "6px", marginTop: "10px" }}>
+                              <button
+                                onClick={() => addToCart(product)}
+                                className="btn-add-cart-sm"
+                                style={{
+                                  flex: 1,
+                                  padding: "7px 10px",
+                                  background: "var(--primary-color)",
+                                  color: "#fff",
+                                  border: "none",
+                                  borderRadius: "6px",
+                                  fontSize: "12px",
+                                  fontWeight: 800,
+                                  cursor: "pointer",
+                                }}
+                              >
+                                + Giỏ hàng
+                              </button>
+                              <Link href={`/products/${product.id}`} className="btn-detail-link" style={{ borderRadius: "6px" }}>
+                                Chi tiết &rsaquo;
+                              </Link>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  /* Horizontal List View Mode */
+                  <div className="catalog-list-view">
+                    {paginatedProducts.map((product) => {
+                      const wished = isWishlisted(product.id);
+                      return (
+                        <div key={product.id} className="catalog-list-card">
+                          <div className="catalog-list-img-wrapper">
+                            <Link href={`/products/${product.id}`}>
+                              <img src={fixImagePath(product.image)} alt={product.name} />
+                            </Link>
+                          </div>
 
-            {/* Pagination Controls Footer */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                gap: "8px",
-                margin: "32px 0 16px 0",
-              }}
-            >
-              <button
-                disabled={safeCurrentPage <= 1}
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                style={{
-                  padding: "8px 16px",
-                  border: "1px solid var(--border-color)",
-                  borderRadius: "6px",
-                  background: "#fff",
-                  fontWeight: 700,
-                  cursor: safeCurrentPage <= 1 ? "not-allowed" : "pointer",
-                  opacity: safeCurrentPage <= 1 ? 0.5 : 1,
-                }}
-              >
-                &lt; Trang trước
-              </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                <button
-                  key={p}
-                  onClick={() => setCurrentPage(p)}
+                          <div className="catalog-list-info">
+                            <div className="catalog-list-meta">
+                              <span className="status-badge" style={{ margin: 0 }}>Còn hàng</span>
+                              {product.badge && (
+                                <span className={`card-badge ${product.badgeType || ""}`} style={{ position: "static", borderRadius: "999px" }}>
+                                  {product.badge}
+                                </span>
+                              )}
+                              <span style={{ fontSize: "11.5px", color: "#64748b", fontWeight: 700 }}>
+                                {product.categoryName}
+                              </span>
+                            </div>
+
+                            <h3 className="catalog-list-title">
+                              <Link href={`/products/${product.id}`} style={{ color: "inherit", textDecoration: "none" }}>
+                                {product.name}
+                              </Link>
+                            </h3>
+
+                            <p className="catalog-list-desc">
+                              {product.description || "Sản phẩm nội thất Nordics cao cấp chọn lọc với độ hoàn thiện sắc nét, tạo không gian ấm cúng sang trọng."}
+                            </p>
+                          </div>
+
+                          <div className="catalog-list-action-side">
+                            <button
+                              onClick={() => toggleWishlist(product.id)}
+                              style={{ background: "none", border: "none", cursor: "pointer", padding: "4px" }}
+                              title="Yêu thích"
+                            >
+                              <Heart className={`w-5 h-5 ${wished ? "text-red-500 fill-red-500" : "text-slate-400"}`} />
+                            </button>
+
+                            <div style={{ textAlign: "right" }}>
+                              <div style={{ fontSize: "18px", fontWeight: 900, color: "var(--primary-color)" }}>
+                                {formatVND(product.price)}
+                              </div>
+                              {product.oldPrice && (
+                                <div style={{ fontSize: "12px", color: "#94a3b8", textDecoration: "line-through" }}>
+                                  {formatVND(product.oldPrice)}
+                                </div>
+                              )}
+                            </div>
+
+                            <div style={{ display: "flex", gap: "6px", width: "100%" }}>
+                              <button
+                                onClick={() => addToCart(product)}
+                                style={{
+                                  flex: 1,
+                                  padding: "8px 12px",
+                                  background: "var(--primary-color)",
+                                  color: "#fff",
+                                  border: "none",
+                                  borderRadius: "8px",
+                                  fontSize: "12px",
+                                  fontWeight: 800,
+                                  cursor: "pointer",
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                + Giỏ hàng
+                              </button>
+                              <Link
+                                href={`/products/${product.id}`}
+                                className="btn-detail-link"
+                                style={{ borderRadius: "8px", padding: "8px 10px" }}
+                              >
+                                Chi tiết &rsaquo;
+                              </Link>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Pagination Controls Footer */}
+                <div
                   style={{
-                    width: "36px",
-                    height: "36px",
-                    border: "1px solid",
-                    borderColor: p === safeCurrentPage ? "var(--primary-color)" : "var(--border-color)",
-                    borderRadius: "6px",
-                    background: p === safeCurrentPage ? "var(--primary-color)" : "#fff",
-                    color: p === safeCurrentPage ? "#fff" : "var(--text-main)",
-                    fontWeight: 700,
-                    cursor: "pointer",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    gap: "8px",
+                    margin: "36px 0 16px 0",
                   }}
                 >
-                  {p}
-                </button>
-              ))}
-              <button
-                disabled={safeCurrentPage >= totalPages}
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                style={{
-                  padding: "8px 16px",
-                  border: "1px solid var(--border-color)",
-                  borderRadius: "6px",
-                  background: "#fff",
-                  fontWeight: 700,
-                  cursor: safeCurrentPage >= totalPages ? "not-allowed" : "pointer",
-                  opacity: safeCurrentPage >= totalPages ? 0.5 : 1,
-                }}
-              >
-                Trang sau &gt;
-              </button>
-            </div>
-          </section>
-        );
-      })()}
+                  <button
+                    disabled={safeCurrentPage <= 1}
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    style={{
+                      padding: "8px 16px",
+                      border: "1px solid var(--border-color)",
+                      borderRadius: "8px",
+                      background: "#fff",
+                      fontWeight: 800,
+                      cursor: safeCurrentPage <= 1 ? "not-allowed" : "pointer",
+                      opacity: safeCurrentPage <= 1 ? 0.5 : 1,
+                    }}
+                  >
+                    &lt; Trang trước
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => setCurrentPage(p)}
+                      style={{
+                        width: "36px",
+                        height: "36px",
+                        border: "1px solid",
+                        borderColor: p === safeCurrentPage ? "var(--primary-color)" : "var(--border-color)",
+                        borderRadius: "8px",
+                        background: p === safeCurrentPage ? "var(--primary-color)" : "#fff",
+                        color: p === safeCurrentPage ? "#fff" : "var(--text-main)",
+                        fontWeight: 800,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                  <button
+                    disabled={safeCurrentPage >= totalPages}
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    style={{
+                      padding: "8px 16px",
+                      border: "1px solid var(--border-color)",
+                      borderRadius: "8px",
+                      background: "#fff",
+                      fontWeight: 800,
+                      cursor: safeCurrentPage >= totalPages ? "not-allowed" : "pointer",
+                      opacity: safeCurrentPage >= totalPages ? 0.5 : 1,
+                    }}
+                  >
+                    Trang sau &gt;
+                  </button>
+                </div>
+              </section>
+            );
+          })()}
         </div>
+
+        {/* 4. Buyer's Guide & FAQ Section */}
+        <CatalogFaqGuide />
       </div>
     </>
   );
@@ -565,4 +801,3 @@ export default function ProductsPage() {
     </Suspense>
   );
 }
-
