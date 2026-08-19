@@ -14,10 +14,10 @@
     margin-bottom: 24px;
 }
 
-.cart-layout {
+.cart-layout, .cart-content-grid {
     display: grid;
-    grid-template-columns: 1fr 340px;
-    gap: 32px;
+    grid-template-columns: 1fr 350px;
+    gap: 24px;
     align-items: start;
 }
 
