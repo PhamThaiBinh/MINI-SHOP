@@ -327,36 +327,105 @@ export default function CheckoutPage() {
   ];
 
   return (
-    <main className="main-content">
-      <div className="container" style={{ paddingTop: "24px" }}>
-        <div className="checkout-page-section">
-          <h1 className="checkout-title-heading">Thanh toán & Đặt hàng</h1>
+    <main
+      style={{
+        backgroundColor: "var(--bg-main, #fcfbf9)",
+        minHeight: "100dvh",
+        padding: "40px 16px 80px",
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+      }}
+    >
+      <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
+        {/* Header Title Section */}
+        <div style={{ marginBottom: "28px", textAlign: "left" }}>
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "4px 12px",
+              borderRadius: "999px",
+              background: "#e0f2fe",
+              color: "#0369a1",
+              fontSize: "11px",
+              fontWeight: 800,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              marginBottom: "8px",
+            }}
+          >
+            <CreditCard className="w-3.5 h-3.5" />
+            <span>HOÀN TẤT ĐƠN HÀNG & THAO TÁC THANH TOÁN</span>
+          </div>
 
-          {/* Empty Cart Warning */}
-          {cart.length === 0 && !showSuccessModal ? (
-            <div className="cart-empty-box" id="checkout-empty-state">
-              <div className="cart-empty-icon">
-                <ShoppingCart className="w-12 h-12 text-slate-400" />
-              </div>
-              <h2 className="cart-empty-title">Giỏ hàng của bạn đang trống!</h2>
-              <p className="cart-empty-desc">
-                Vui lòng chọn sản phẩm vào giỏ hàng trước khi tiến hành đặt hàng.
-              </p>
-              <Link
-                href="/products"
-                className="btn-checkout"
-                style={{
-                  display: "inline-block",
-                  width: "auto",
-                  padding: "12px 28px",
-                }}
-              >
-                <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>Khám phá sản phẩm ngay <ArrowRight className="w-4 h-4" /></span>
-              </Link>
+          <h1
+            style={{
+              fontSize: "28px",
+              fontWeight: 900,
+              color: "#0f172a",
+              margin: 0,
+              letterSpacing: "-0.02em",
+            }}
+          >
+            Thanh toán & Đặt hàng
+          </h1>
+        </div>
+
+        {/* Empty Cart Warning */}
+        {cart.length === 0 && !showSuccessModal ? (
+          <div
+            style={{
+              background: "#ffffff",
+              border: "1px solid var(--border-color, #e2e8f0)",
+              borderRadius: "1.75rem",
+              padding: "64px 20px",
+              textAlign: "center",
+              boxShadow: "0 10px 30px rgba(0,0,0,0.03)",
+            }}
+          >
+            <div
+              style={{
+                width: "80px",
+                height: "80px",
+                borderRadius: "50%",
+                background: "#f1f5f9",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto 20px",
+              }}
+            >
+              <ShoppingCart className="w-10 h-10 text-slate-400" />
             </div>
-          ) : (
-            /* 2-Column Checkout Layout */
-            <form className="checkout-layout" onSubmit={handleSubmitOrder}>
+            <h2 style={{ fontSize: "20px", fontWeight: 800, color: "#0f172a", marginBottom: "8px" }}>
+              Giỏ hàng của bạn đang trống!
+            </h2>
+            <p style={{ fontSize: "14px", color: "#64748b", maxWidth: "480px", margin: "0 auto 24px" }}>
+              Vui lòng chọn sản phẩm vào giỏ hàng trước khi tiến hành đặt hàng.
+            </p>
+            <Link
+              href="/products"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                background: "var(--primary-color, #2e7d32)",
+                color: "#ffffff",
+                padding: "12px 28px",
+                borderRadius: "999px",
+                fontSize: "14px",
+                fontWeight: 800,
+                textDecoration: "none",
+                boxShadow: "0 6px 20px rgba(46, 125, 50, 0.25)",
+              }}
+            >
+              <span>Khám phá sản phẩm ngay</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        ) : (
+          /* 2-Column Checkout Layout */
+          <form className="checkout-layout" onSubmit={handleSubmitOrder}>
               {/* Left Column: Shipping Info & Payment Methods */}
               <div className="checkout-form-card">
                 <div>
@@ -730,7 +799,6 @@ export default function CheckoutPage() {
               </aside>
             </form>
           )}
-        </div>
       </div>
 
       {/* Modal QR Code */}

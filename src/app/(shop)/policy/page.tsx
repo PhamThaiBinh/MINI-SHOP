@@ -47,26 +47,49 @@ function PolicyContent() {
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
 
   return (
-    <main className="container" style={{ padding: "40px 15px", maxWidth: "980px" }}>
-      {/* Header Banner */}
-      <div
-        style={{
-          background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
-          borderRadius: "var(--radius-lg)",
-          padding: "30px 24px",
-          color: "#fff",
-          marginBottom: "30px",
-          textAlign: "center",
-          boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
-        }}
-      >
-        <h1 style={{ fontSize: "26px", fontWeight: 900, margin: 0, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
-          <ShieldCheck className="w-7 h-7 text-emerald-400" /> TRUNG TÂM CHÍNH SÁCH & ĐIỀU KHOẢN DỊCH VỤ
-        </h1>
-        <p style={{ margin: "8px 0 0", fontSize: "14px", opacity: 0.85 }}>
-          MINI-SHOP cam kết mang lại trải nghiệm mua sắm an tâm, minh bạch và bảo vệ tối đa quyền lợi khách hàng chuẩn Thương mại điện tử.
-        </p>
-      </div>
+    <main
+      style={{
+        backgroundColor: "var(--bg-main, #fcfbf9)",
+        minHeight: "100dvh",
+        padding: "40px 16px 80px",
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+      }}
+    >
+      <div style={{ maxWidth: "1050px", margin: "0 auto" }}>
+        {/* Header Title Section */}
+        <div style={{ marginBottom: "28px", textAlign: "left" }}>
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "4px 12px",
+              borderRadius: "999px",
+              background: "#e0f2fe",
+              color: "#0369a1",
+              fontSize: "11px",
+              fontWeight: 800,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              marginBottom: "8px",
+            }}
+          >
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>TRUNG TÂM HỖ TRỢ & CHÍNH SÁCH MINI-SHOP</span>
+          </div>
+
+          <h1
+            style={{
+              fontSize: "28px",
+              fontWeight: 900,
+              color: "#0f172a",
+              margin: 0,
+              letterSpacing: "-0.02em",
+            }}
+          >
+            Chính Sách & Giải Đáp Thắc Mắc
+          </h1>
+        </div>
 
       {/* Subtabs Navigation */}
       <div
@@ -392,6 +415,7 @@ function PolicyContent() {
             </div>
           </div>
         )}
+      </div>
       </div>
     </main>
   );

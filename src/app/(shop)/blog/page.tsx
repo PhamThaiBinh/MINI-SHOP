@@ -3,64 +3,98 @@ import Link from "next/link";
 import "@/styles/blog.css";
 import { fixImagePath } from "@/lib/utils";
 import { fetchBlogsFromSupabase } from "@/lib/supabaseBlogs";
-import { Calendar } from "lucide-react";
+import { Calendar, BookOpen, ArrowRight } from "lucide-react";
 
 export default async function BlogListPage() {
   const articles = await fetchBlogsFromSupabase();
 
   return (
-    <>
-      {/* 2. Blog Hero */}
-      <section className="blog-hero">
-        <div className="container">
-          <h1 className="blog-hero-title">Cẩm Nang Không Gian Sống</h1>
-          <p className="blog-hero-desc">
-            Khám phá các bí quyết trang trí nội thất Bắc Âu, mẹo bảo quản đồ
-            thủ công mây tre và xu hướng trang trí nhà cửa mới nhất.
-          </p>
-        </div>
-      </section>
-
-      {/* 3. Blog List Grid Section */}
-      <main className="main-content">
-        <div className="container">
-          <div className="blog-grid">
-            {articles.map((article) => (
-              <article key={article.id} className="blog-card">
-                <Link href={`/blog/${article.id}`}>
-                  <img
-                    src={fixImagePath(article.img)}
-                    alt={article.title}
-                    className="blog-card-img"
-                    loading="lazy"
-                  />
-                </Link>
-                <div className="blog-card-body">
-                  <span className="blog-tag">{article.category}</span>
-                  <h2 className="blog-title">
-                    <Link href={`/blog/${article.id}`}>{article.title}</Link>
-                  </h2>
-                  <p className="blog-excerpt">{article.excerpt}</p>
-                  <div className="blog-footer">
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}><Calendar className="w-3.5 h-3.5" /> {article.date}</span>
-                    <Link
-                      href={`/blog/${article.id}`}
-                      style={{
-                        color: "var(--primary-color)",
-                        fontWeight: 700,
-                        textDecoration: "none",
-                      }}
-                    >
-                      Đọc tiếp &rsaquo;
-                    </Link>
-                  </div>
-                </div>
-              </article>
-            ))}
+    <main
+      style={{
+        backgroundColor: "var(--bg-main, #fcfbf9)",
+        minHeight: "100dvh",
+        padding: "40px 16px 80px",
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+      }}
+    >
+      <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
+        {/* Header Title Section */}
+        <div style={{ marginBottom: "28px" }}>
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "4px 12px",
+              borderRadius: "999px",
+              background: "#e0f2fe",
+              color: "#0369a1",
+              fontSize: "11px",
+              fontWeight: 800,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              marginBottom: "8px",
+            }}
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            <span>CẨM NANG NỘI THẤT & KHÔNG GIAN SỐNG</span>
           </div>
+
+          <h1
+            style={{
+              fontSize: "28px",
+              fontWeight: 900,
+              color: "#0f172a",
+              margin: 0,
+              letterSpacing: "-0.02em",
+            }}
+          >
+            Kinh Nghiệm & Mẹo Trang Trí Tổ Ấm
+          </h1>
         </div>
-      </main>
-    </>
+
+        {/* Blog Grid Stream */}
+        <div className="blog-grid">
+          {articles.map((article) => (
+            <article key={article.id} className="blog-card">
+              <Link href={`/blog/${article.id}`}>
+                <img
+                  src={fixImagePath(article.img)}
+                  alt={article.title}
+                  className="blog-card-img"
+                  loading="lazy"
+                />
+              </Link>
+              <div className="blog-card-body">
+                <span className="blog-tag">{article.category}</span>
+                <h2 className="blog-title">
+                  <Link href={`/blog/${article.id}`}>{article.title}</Link>
+                </h2>
+                <p className="blog-excerpt">{article.excerpt}</p>
+                <div className="blog-footer">
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "#64748b" }}>
+                    <Calendar className="w-3.5 h-3.5" /> {article.date}
+                  </span>
+                  <Link
+                    href={`/blog/${article.id}`}
+                    style={{
+                      color: "var(--primary-color, #2e7d32)",
+                      fontWeight: 800,
+                      textDecoration: "none",
+                      fontSize: "13px",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px",
+                    }}
+                  >
+                    Đọc tiếp <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </main>
   );
 }
-

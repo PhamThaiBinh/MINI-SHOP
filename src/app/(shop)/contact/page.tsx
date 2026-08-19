@@ -63,22 +63,55 @@ export default function ContactPage() {
   };
 
   return (
-    <>
-      {/* 2. Contact Hero */}
-      <section className="contact-hero">
-        <div className="container">
-          <h1 className="contact-hero-title">Liên Hệ Với Mini Shop</h1>
-          <p className="contact-hero-desc">
-            Chúng tôi luôn lắng nghe và sẵn sàng hỗ trợ bạn 24/7. Hãy gửi tin
-            nhắn cho chúng tôi để được tư vấn chu đáo nhất.
+    <main
+      style={{
+        backgroundColor: "var(--bg-main, #fcfbf9)",
+        minHeight: "100dvh",
+        padding: "40px 16px 80px",
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+      }}
+    >
+      <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
+        {/* Header Title Section */}
+        <div style={{ marginBottom: "28px" }}>
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "4px 12px",
+              borderRadius: "999px",
+              background: "#e0f2fe",
+              color: "#0369a1",
+              fontSize: "11px",
+              fontWeight: 800,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              marginBottom: "8px",
+            }}
+          >
+            <Phone className="w-3.5 h-3.5" />
+            <span>HỖ TRỢ & TƯ VẤN KHÁCH HÀNG 24/7</span>
+          </div>
+
+          <h1
+            style={{
+              fontSize: "28px",
+              fontWeight: 900,
+              color: "#0f172a",
+              margin: 0,
+              letterSpacing: "-0.02em",
+            }}
+          >
+            Liên Hệ Với MINI-SHOP
+          </h1>
+          <p style={{ fontSize: "15px", color: "#64748b", margin: "8px 0 0" }}>
+            Chúng tôi luôn lắng nghe và sẵn sàng hỗ trợ bạn 24/7. Hãy gửi tin nhắn cho chúng tôi để được tư vấn chu đáo nhất.
           </p>
         </div>
-      </section>
 
-      {/* 3. Contact Form & Info Grid */}
-      <main className="main-content">
-        <div className="container">
-          <div className="contact-grid">
+        {/* Contact Form & Info Grid */}
+        <div className="contact-grid">
             {/* Left: Contact Details */}
             <div className="contact-info-card">
               <h2 className="contact-info-title">Thông Tin Trụ Sở</h2>
@@ -191,7 +224,6 @@ export default function ContactPage() {
             </div>
           </div>
         </div>
-      </main>
-    </>
+    </main>
   );
 }

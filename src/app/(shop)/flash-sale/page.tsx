@@ -140,8 +140,51 @@ export default function FlashSalePage() {
   const slotStartText = activeSlot === "slot1" ? "00:00" : activeSlot === "slot2" ? "09:00" : activeSlot === "slot3" ? "15:00" : "21:00";
 
   return (
-    <main className="container" style={{ padding: "30px 15px" }}>
-      {/* Header Banner Flash Sale */}
+    <main
+      style={{
+        backgroundColor: "var(--bg-main, #fcfbf9)",
+        minHeight: "100dvh",
+        padding: "40px 16px 80px",
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+      }}
+    >
+      <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
+        {/* Header Title Section */}
+        <div style={{ marginBottom: "24px" }}>
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "4px 12px",
+              borderRadius: "999px",
+              background: "#fee2e2",
+              color: "#dc2626",
+              fontSize: "11px",
+              fontWeight: 800,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              marginBottom: "8px",
+            }}
+          >
+            <Zap className="w-3.5 h-3.5 fill-red-600" />
+            <span>SĂN DEAL GIỜ VÀNG - ƯU ĐÃI KHỦNG</span>
+          </div>
+
+          <h1
+            style={{
+              fontSize: "28px",
+              fontWeight: 900,
+              color: "#0f172a",
+              margin: 0,
+              letterSpacing: "-0.02em",
+            }}
+          >
+            Flash Sale Săn Deal Giờ Vàng
+          </h1>
+        </div>
+
+        {/* Header Banner Flash Sale */}
       <div
         style={{
           background: "linear-gradient(135deg, #dc2626 0%, #ef4444 100%)",
@@ -546,6 +589,7 @@ export default function FlashSalePage() {
             </div>
           );
         })}
+      </div>
       </div>
     </main>
   );
