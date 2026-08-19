@@ -10,7 +10,7 @@ import { Product } from "@/types/product";
 import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { Package, Sofa, Bed, Utensils, Lamp, Sparkles, Box, X, Search, Heart } from "lucide-react";
+import { Package, Sofa, Bed, Utensils, Lamp, Sparkles, Box, X, Search, Heart, ArrowRight } from "lucide-react";
 
 function ProductsContent() {
   const { addToCart } = useCart();
@@ -385,23 +385,25 @@ function ProductsContent() {
                   </p>
                   <button
                     onClick={() => {
-                      setSearchQuery("");
                       setCurrentCategory("All");
                       setCurrentPriceRange("all");
-                      window.history.pushState({}, "", "/products");
+                      setSearchQuery("");
                     }}
                     style={{
-                      backgroundColor: "var(--primary-color)",
-                      color: "#ffffff",
+                      padding: "8px 16px",
+                      background: "var(--primary-color)",
+                      color: "#fff",
                       border: "none",
-                      padding: "10px 22px",
                       borderRadius: "var(--radius-md)",
                       fontSize: "13px",
                       fontWeight: 700,
                       cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px",
                     }}
                   >
-                    Xem tất cả sản phẩm &rarr;
+                    Xem tất cả sản phẩm <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
               ) : (

@@ -61,6 +61,77 @@ export const lookupOrderFromSupabase = async (
   }
 };
 
+export const fetchUserOrdersFromSupabase = async (
+  phone?: string,
+  email?: string,
+  username?: string
+): Promise<UnifiedOrder[]> => {
+  const cleanPhone = phone ? phone.trim().replace(/\D/g, "") : "";
+  const cleanEmail = email ? email.trim().toLowerCase() : "";
+  const cleanUsername = username ? username.trim().toLowerCase() : "";
+
+  // Get local user orders first
+  const { getAllOrders, parseOrderDate } = await import("@/utils/orderStorage");
+  const localAll = getAllOrders();
+  const localUserOrders = localAll.filter((o) => {
+    const oPhone = (o.recipientPhone || "").replace(/\D/g, "");
+    const oUser = (o.username || "").toLowerCase();
+    const matchPhone = cleanPhone && (oPhone.includes(cleanPhone) || cleanPhone.includes(oPhone));
+    const matchUser = cleanUsername && oUser === cleanUsername;
+    return matchPhone || matchUser;
+  });
+
+  try {
+    const supabase = createClient();
+    const { data: orderRows, error } = await supabase
+      .from("orders")
+      .select("*");
+
+    if (error || !orderRows || orderRows.length === 0) {
+      return localUserOrders;
+    }
+
+    const matchedSupabaseOrders: UnifiedOrder[] = orderRows
+      .filter((o: any) => {
+        const oPhone = String(o.recipient_phone || "").replace(/\D/g, "");
+        const oUser = String(o.username || "").toLowerCase();
+        const matchPhone = cleanPhone && (oPhone.includes(cleanPhone) || cleanPhone.includes(oPhone));
+        const matchUser = cleanUsername && oUser === cleanUsername;
+        return matchPhone || matchUser;
+      })
+      .map((o: any) => ({
+        id: String(o.id),
+        date: String(o.date),
+        status: o.status as any,
+        statusText: String(o.status_text || "Đang xử lý"),
+        recipientName: String(o.recipient_name),
+        recipientPhone: String(o.recipient_phone),
+        address: String(o.address),
+        paymentMethod: String(o.payment_method),
+        items: Array.isArray(o.items) ? o.items : [],
+        subtotal: Number(o.subtotal || 0),
+        discount: Number(o.discount || 0),
+        total: Number(o.total || 0),
+        username: o.username ? String(o.username) : undefined,
+        cancelReason: o.cancel_reason ? String(o.cancel_reason) : undefined,
+      }));
+
+    // Merge Supabase orders with local orders avoiding duplicates by ID
+    const mergedMap = new Map<string, UnifiedOrder>();
+    [...matchedSupabaseOrders, ...localUserOrders].forEach((ord) => {
+      mergedMap.set(ord.id.toUpperCase(), ord);
+    });
+
+    const result = Array.from(mergedMap.values()).sort(
+      (a, b) => parseOrderDate(b.date) - parseOrderDate(a.date)
+    );
+    return result;
+  } catch (err) {
+    console.error("Error fetching user orders from Supabase:", err);
+    return localUserOrders;
+  }
+};
+
 export const createOrderInSupabase = async (orderData: UnifiedOrder): Promise<boolean> => {
   try {
     const supabase = createClient();

@@ -7,6 +7,7 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { SystemVoucher, getSystemVouchers, saveSystemVouchers } from "@/utils/voucherStorage";
 import { fetchAdminVouchers, saveAdminVoucher, deleteAdminVoucher } from "@/lib/supabaseAdmin";
+import { Ticket, Edit3, Trash2, X } from "lucide-react";
 
 export default function AdminVouchersPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -91,7 +92,7 @@ export default function AdminVouchersPage() {
     const minOrderNum = Number(formMinOrder) || 0;
 
     if (minOrderNum < 0 || valNum < 0) {
-      alert("⚠️ Số tiền giảm giá và giá trị đơn tối thiểu phải lớn hơn hoặc bằng 0!");
+      alert("Số tiền giảm giá và giá trị đơn tối thiểu phải lớn hơn hoặc bằng 0!");
       return;
     }
 
@@ -166,7 +167,7 @@ export default function AdminVouchersPage() {
 
             {loading ? (
               <div style={{ padding: "30px", textAlign: "center", fontSize: "13px", color: "var(--text-muted)" }}>
-                ⏳ Đang tải mã voucher...
+                Đang tải mã voucher...
               </div>
             ) : (
               <>
@@ -203,10 +204,12 @@ export default function AdminVouchersPage() {
                                 borderRadius: "4px",
                                 fontWeight: 800,
                                 fontSize: "13px",
-                                display: "inline-block",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "4px",
                               }}
                             >
-                              🎟️ {v.code}
+                              <Ticket className="w-3.5 h-3.5" /> {v.code}
                             </span>
                           </td>
                           <td><strong>{v.desc}</strong></td>
@@ -245,9 +248,12 @@ export default function AdminVouchersPage() {
                                   cursor: "pointer",
                                   fontSize: "12px",
                                   fontWeight: 700,
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "4px",
                                 }}
                               >
-                                ✏️ Sửa
+                                <Edit3 className="w-3.5 h-3.5" /> Sửa
                               </button>
                               <button
                                 onClick={() => handleDeleteVoucher(v.code)}
@@ -260,9 +266,12 @@ export default function AdminVouchersPage() {
                                   cursor: "pointer",
                                   fontSize: "12px",
                                   fontWeight: 700,
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "4px",
                                 }}
                               >
-                                🗑️ Xóa
+                                <Trash2 className="w-3.5 h-3.5" /> Xóa
                               </button>
                             </div>
                           </td>
@@ -391,18 +400,18 @@ export default function AdminVouchersPage() {
               width: "100%",
               maxWidth: "500px",
               borderRadius: "var(--radius-lg)",
-              padding: "24px",
               boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
+              overflow: "hidden"
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-              <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", margin: 0 }}>
-                {editingVoucher ? "✏️ Chỉnh Sửa Mã Voucher" : "🎟️ Form Mã Voucher Mới"}
+            <div style={{ padding: "16px 20px", background: "#f8fafc", borderBottom: "1px solid var(--border-color)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <h3 style={{ fontSize: "16px", fontWeight: 800, color: "#0f172a", margin: 0, display: "flex", alignItems: "center", gap: "6px" }}>
+                {editingVoucher ? <><Edit3 className="w-4 h-4 text-emerald-700" /> Chỉnh Sửa Mã Voucher</> : <><Ticket className="w-4 h-4 text-emerald-700" /> Form Mã Voucher Mới</>}
               </h3>
-              <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer" }}>&times;</button>
+              <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", cursor: "pointer" }}><X className="w-5 h-5 text-slate-400 hover:text-slate-600" /></button>
             </div>
 
-            <form onSubmit={handleFormSubmit}>
+            <form onSubmit={handleFormSubmit} style={{ padding: "24px" }}>
               <div style={{ marginBottom: "12px" }}>
                 <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "4px" }}>Mã Ưu Đãi (Voucher Code) *</label>
                 <input

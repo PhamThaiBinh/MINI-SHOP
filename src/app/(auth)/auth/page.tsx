@@ -19,7 +19,7 @@ import {
   fetchUserRewardsFromSupabase,
   syncUserRewardsToSupabase,
 } from "@/lib/supabaseUserFeatures";
-import { User, Gift, Package, MapPin, LogOut, Eye, EyeOff, Key, Save, Check, Crown, ListCheck, Disc, Ticket, History, Gem, Award, Star, Calendar, Link2, AlertTriangle, Truck, Sofa } from "lucide-react";
+import { User, Gift, Package, MapPin, LogOut, Eye, EyeOff, Key, Save, Check, Crown, ListCheck, Disc, Ticket, History, Gem, Award, Star, Calendar, Link2, AlertTriangle, Truck, Sofa, Edit3, CheckCircle2, Trash2, Copy, Send, X, Search, Share2, ChevronUp, ChevronDown } from "lucide-react";
 
 interface AddressItem {
   id: number;
@@ -127,7 +127,9 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
         <span style={{ fontWeight: 600, color: value ? "var(--text-main)" : "var(--text-muted)" }}>
           {value || "Vui lòng chọn..."}
         </span>
-        <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>{isOpen ? "▲" : "▼"}</span>
+        <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>
+          {isOpen ? <ChevronUp className="w-4 h-4 text-emerald-700" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+        </span>
       </div>
 
       {isOpen && (
@@ -1199,16 +1201,16 @@ export default function AuthPage() {
                       style={{
                         padding: "12px 16px",
                         borderRadius: "var(--radius-md)",
-                        background: redeemFeedback.startsWith("🎉") || redeemFeedback.startsWith("✅")
+                        background: !redeemFeedback.includes("thất bại") && !redeemFeedback.includes("không đủ")
                           ? "var(--primary-light)"
                           : "#fef2f2",
-                        color: redeemFeedback.startsWith("🎉") || redeemFeedback.startsWith("✅")
+                        color: !redeemFeedback.includes("thất bại") && !redeemFeedback.includes("không đủ")
                           ? "#166534"
                           : "#dc2626",
                         fontSize: "13px",
                         fontWeight: 700,
                         marginBottom: "16px",
-                        border: redeemFeedback.startsWith("🎉") || redeemFeedback.startsWith("✅")
+                        border: !redeemFeedback.includes("thất bại") && !redeemFeedback.includes("không đủ")
                           ? "1px solid var(--primary-color)"
                           : "1px solid #fca5a5",
                       }}
@@ -1295,7 +1297,7 @@ export default function AuthPage() {
                             marginTop: "4px",
                           }}
                         >
-                          💾 Cập Nhật Hồ Sơ
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}><Save className="w-4 h-4" /> Cập Nhật Hồ Sơ</span>
                         </button>
                       </form>
                     </div>
@@ -1897,9 +1899,12 @@ export default function AuthPage() {
                                   borderRadius: "var(--radius-md)",
                                   fontWeight: 700,
                                   cursor: "not-allowed",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "4px",
                                 }}
                               >
-                                ✅ Đã nhận quà
+                                <Check className="w-4 h-4" /> Đã nhận quà
                               </button>
                             )}
                           </div>
@@ -1916,8 +1921,8 @@ export default function AuthPage() {
                             }}
                           >
                             <div>
-                              <strong style={{ fontSize: "14px" }}>
-                                ✍️ Đánh giá sản phẩm đã mua
+                              <strong style={{ fontSize: "14px", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                                <Edit3 className="w-4 h-4 text-emerald-700" /> Đánh giá sản phẩm đã mua
                               </strong>
                               <div
                                 style={{
@@ -1940,9 +1945,12 @@ export default function AuthPage() {
                                   borderRadius: "var(--radius-md)",
                                   fontWeight: 700,
                                   cursor: "pointer",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "4px",
                                 }}
                               >
-                                ✍️ Thực hiện
+                                <Edit3 className="w-4 h-4" /> Thực hiện
                               </button>
                             )}
                             {reviewTaskStatus === "performed" && (
@@ -1957,9 +1965,12 @@ export default function AuthPage() {
                                   fontWeight: 700,
                                   cursor: "pointer",
                                   boxShadow: "0 0 10px rgba(22, 163, 74, 0.4)",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "4px",
                                 }}
                               >
-                                🎁 Nhận quà (+80 điểm)
+                                <Gift className="w-4 h-4" /> Nhận quà (+80 điểm)
                               </button>
                             )}
                             {reviewTaskStatus === "claimed" && (
@@ -1973,9 +1984,12 @@ export default function AuthPage() {
                                   borderRadius: "var(--radius-md)",
                                   fontWeight: 700,
                                   cursor: "not-allowed",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "4px",
                                 }}
                               >
-                                ✅ Đã nhận quà
+                                <Check className="w-4 h-4" /> Đã nhận quà
                               </button>
                             )}
                           </div>
@@ -1990,9 +2004,13 @@ export default function AuthPage() {
                               fontSize: "18px",
                               fontWeight: 900,
                               marginBottom: "8px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "8px",
                             }}
                           >
-                            🎰 VÒNG QUAY MAY MẮN TRÚNG VOUCHER & ĐIỂM THƯỞNG
+                            <Disc className="w-5 h-5 text-red-600" /> VÒNG QUAY MAY MẮN TRÚNG VOUCHER & ĐIỂM THƯỞNG
                           </h3>
                           <p
                             style={{
@@ -2068,11 +2086,14 @@ export default function AuthPage() {
                               fontWeight: 900,
                               cursor: isSpinning ? "not-allowed" : "pointer",
                               boxShadow: "0 6px 16px rgba(220, 38, 38, 0.3)",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "8px",
                             }}
                           >
                             {isSpinning
-                              ? "⏳ Đang quay may mắn..."
-                              : "🎰 QUAY VÒNG MAY MẮN"}
+                              ? "Đang quay may mắn..."
+                              : <><Disc className="w-5 h-5" /> QUAY VÒNG MAY MẮN</>}
                           </button>
 
                           {spinResultMsg && (
@@ -2165,12 +2186,12 @@ export default function AuthPage() {
                                 background: "#f8fafc",
                               }}
                             >
-                              <div style={{ fontSize: "36px" }}>🎁</div>
+                              <div style={{ display: "flex", justifyContent: "center" }}><Gift className="w-12 h-12 text-slate-400" /></div>
                               <p style={{ fontWeight: 700, marginTop: "8px", color: "#0f172a" }}>
                                 Kho quà của bạn đang trống!
                               </p>
                               <p style={{ fontSize: "12px" }}>
-                                Hãy nhấn vào tab &quot;🎁 Đổi Quà Tặng&quot; để quy đổi điểm tích lũy của bạn nhé.
+                                Hãy nhấn vào tab &quot;Đổi Quà Tặng&quot; để quy đổi điểm tích lũy của bạn nhé.
                               </p>
                             </div>
                           ) : (
@@ -2206,7 +2227,7 @@ export default function AuthPage() {
                                         gap: "8px",
                                       }}
                                     >
-                                      <span>🎟️ {v.code} - {v.label}</span>
+                                      <span><Ticket className="w-4 h-4 text-emerald-700" /> {v.code} - {v.label}</span>
                                       {v.quantity > 1 && (
                                         <sup className="badge-superscript count-green" style={{ fontSize: "11px" }}>
                                           x{v.quantity}
@@ -2428,9 +2449,12 @@ export default function AuthPage() {
                                       fontWeight: 700,
                                       cursor: "pointer",
                                       color: "#dc2626",
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      gap: "4px",
                                     }}
                                   >
-                                    ❌ Hủy đơn
+                                    <X className="w-3.5 h-3.5" /> Hủy đơn
                                   </button>
                                 )}
                                 <button
@@ -2444,9 +2468,12 @@ export default function AuthPage() {
                                     fontWeight: 700,
                                     cursor: "pointer",
                                     color: "var(--text-main)",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "4px",
                                   }}
                                 >
-                                  🔍 Xem chi tiết
+                                  <Search className="w-3.5 h-3.5" /> Xem chi tiết
                                 </button>
                               </div>
                             </div>
@@ -2533,9 +2560,12 @@ export default function AuthPage() {
                                       fontWeight: 800,
                                       padding: "2px 8px",
                                       borderRadius: "var(--radius-full)",
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      gap: "4px",
                                     }}
                                   >
-                                    📌 Mặc định
+                                    <MapPin className="w-3 h-3" /> Mặc định
                                   </span>
                                 )}
                               </div>
@@ -2564,9 +2594,12 @@ export default function AuthPage() {
                                     fontSize: "12px",
                                     fontWeight: 700,
                                     cursor: "pointer",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "4px",
                                   }}
                                 >
-                                  📌 Đặt làm mặc định
+                                  <MapPin className="w-3.5 h-3.5" /> Đặt làm mặc định
                                 </button>
                               )}
                               <button
@@ -2580,9 +2613,12 @@ export default function AuthPage() {
                                   fontSize: "12px",
                                   fontWeight: 700,
                                   cursor: "pointer",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "4px",
                                 }}
                               >
-                                🗑️ Xóa
+                                <Trash2 className="w-3.5 h-3.5" /> Xóa
                               </button>
                             </div>
                           </div>
@@ -2633,8 +2669,8 @@ export default function AuthPage() {
                 alignItems: "center",
               }}
             >
-              <h3 style={{ fontSize: "16px", fontWeight: 800, color: "#0f172a", margin: 0 }}>
-                📋 Chi Tiết Đơn Hàng {selectedOrder.id}
+              <h3 style={{ fontSize: "16px", fontWeight: 800, color: "#0f172a", margin: 0, display: "flex", alignItems: "center", gap: "6px" }}>
+                <Package className="w-4 h-4 text-emerald-700" /> Chi Tiết Đơn Hàng {selectedOrder.id}
               </h3>
               <button
                 type="button"
@@ -2647,7 +2683,7 @@ export default function AuthPage() {
                   color: "var(--text-muted)",
                 }}
               >
-                &times;
+                <X className="w-5 h-5 text-slate-400 hover:text-slate-600" />
               </button>
             </div>
 
@@ -2665,7 +2701,9 @@ export default function AuthPage() {
                 <div>Ngày đặt: <span style={{ fontWeight: 600 }}>{selectedOrder.date}</span></div>
                 <div>Trạng thái: <span style={{ fontWeight: 600 }}>{selectedOrder.statusText}</span></div>
                 {selectedOrder.cancelReason && (
-                  <div style={{ color: "#dc2626", fontWeight: 600 }}>⚠️ Lý do hủy: {selectedOrder.cancelReason}</div>
+                  <div style={{ color: "#dc2626", fontWeight: 600, display: "flex", alignItems: "center", gap: "4px" }}>
+                    <AlertTriangle className="w-4 h-4 text-red-600" /> Lý do hủy: {selectedOrder.cancelReason}
+                  </div>
                 )}
                 <div>Người nhận: <span style={{ fontWeight: 600 }}>{selectedOrder.recipientName} ({selectedOrder.recipientPhone})</span></div>
                 <div>Địa chỉ: <span style={{ fontWeight: 600 }}>{selectedOrder.address}</span></div>
@@ -2747,8 +2785,8 @@ export default function AuthPage() {
                 alignItems: "center",
               }}
             >
-              <h3 style={{ fontSize: "16px", fontWeight: 800, color: "#0f172a", margin: 0 }}>
-                📍 Thêm Địa Chỉ Nhận Hàng Mới
+              <h3 style={{ fontSize: "16px", fontWeight: 800, color: "#0f172a", margin: 0, display: "flex", alignItems: "center", gap: "6px" }}>
+                <MapPin className="w-4 h-4 text-emerald-700" /> Thêm Địa Chỉ Nhận Hàng Mới
               </h3>
               <button
                 type="button"
@@ -2761,7 +2799,7 @@ export default function AuthPage() {
                   color: "var(--text-muted)",
                 }}
               >
-                &times;
+                <X className="w-5 h-5 text-slate-400 hover:text-slate-600" />
               </button>
             </div>
 
@@ -2795,7 +2833,7 @@ export default function AuthPage() {
                 label="Tỉnh / Thành phố (OpenAdminData API) *"
                 value={addrProvince}
                 options={provincesList}
-                placeholderSearch="🔍 Nhập từ khóa tìm nhanh Tỉnh / Thành phố..."
+                placeholderSearch="Nhập từ khóa tìm nhanh Tỉnh / Thành phố..."
                 onSelect={handleSelectProvince}
               />
 
@@ -2803,7 +2841,7 @@ export default function AuthPage() {
                 label="Xã / Phường (OpenAdminData API - Phụ thuộc Tỉnh thành) *"
                 value={addrWard}
                 options={wardsList}
-                placeholderSearch="🔍 Nhập từ khóa tìm nhanh Xã / Phường..."
+                placeholderSearch="Nhập từ khóa tìm nhanh Xã / Phường..."
                 onSelect={(selectedWard) => setAddrWard(selectedWard)}
               />
 
@@ -2831,9 +2869,9 @@ export default function AuthPage() {
               <button
                 type="submit"
                 className="btn-auth-submit"
-                style={{ width: "100%" }}
+                style={{ width: "100%", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px" }}
               >
-                💾 Lưu Địa Chỉ Mới
+                <Save className="w-4 h-4" /> Lưu Địa Chỉ Mới
               </button>
             </form>
           </div>
@@ -2874,8 +2912,8 @@ export default function AuthPage() {
                 alignItems: "center",
               }}
             >
-              <h3 style={{ fontSize: "16px", fontWeight: 800, color: "#991b1b", margin: 0 }}>
-                ⚠️ Lý Do Hủy Đơn Hàng {cancelTargetOrder.id}
+              <h3 style={{ fontSize: "16px", fontWeight: 800, color: "#991b1b", margin: 0, display: "flex", alignItems: "center", gap: "6px" }}>
+                <AlertTriangle className="w-4 h-4 text-red-600" /> Lý Do Hủy Đơn Hàng {cancelTargetOrder.id}
               </h3>
               <button
                 type="button"
@@ -2888,7 +2926,7 @@ export default function AuthPage() {
                   color: "#991b1b",
                 }}
               >
-                &times;
+                <X className="w-5 h-5 text-red-700" />
               </button>
             </div>
 
@@ -3003,7 +3041,7 @@ export default function AuthPage() {
               textAlign: "center",
             }}
           >
-            <div style={{ fontSize: "40px", marginBottom: "10px" }}>🔗</div>
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: "10px" }}><Share2 className="w-10 h-10 text-emerald-700" /></div>
             <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", margin: "0 0 8px 0" }}>
               Chia Sẻ MINI-SHOP Lên Mạng Xã Hội
             </h3>
@@ -3031,12 +3069,12 @@ export default function AuthPage() {
                 onClick={() => {
                   if (typeof window !== "undefined") {
                     navigator.clipboard.writeText(window.location.origin);
-                    alert("📋 Đã chép liên kết Mini Shop vào bộ nhớ tạm!");
+                    alert("Đã chép liên kết Mini Shop vào bộ nhớ tạm!");
                   }
                 }}
-                style={{ padding: "8px 16px", background: "#334155", color: "#fff", border: "none", borderRadius: "8px", fontWeight: 700, fontSize: "13px", cursor: "pointer" }}
+                style={{ padding: "8px 16px", background: "#334155", color: "#fff", border: "none", borderRadius: "8px", fontWeight: 700, fontSize: "13px", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px" }}
               >
-                📋 Sao chép Link
+                <Copy className="w-3.5 h-3.5" /> Sao chép Link
               </button>
             </div>
             <button
@@ -3051,9 +3089,13 @@ export default function AuthPage() {
                 fontWeight: 800,
                 fontSize: "14px",
                 cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "6px",
               }}
             >
-              ✅ Đã Chia Sẻ Xong (Sẵn Sàng Nhận +100 Điểm)
+              <Check className="w-4 h-4" /> Đã Chia Sẻ Xong (Sẵn Sàng Nhận +100 Điểm)
             </button>
           </div>
         </div>
@@ -3084,23 +3126,30 @@ export default function AuthPage() {
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-              <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", margin: 0 }}>
-                ✍️ Đánh Giá Sản Phẩm Đã Mua
+              <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", margin: 0, display: "flex", alignItems: "center", gap: "6px" }}>
+                <Edit3 className="w-4 h-4 text-emerald-700" /> Đánh Giá Sản Phẩm Đã Mua
               </h3>
-              <button onClick={() => setShowReviewModal(false)} style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer" }}>&times;</button>
+              <button onClick={() => setShowReviewModal(false)} style={{ background: "none", border: "none", cursor: "pointer" }}><X className="w-5 h-5 text-slate-400 hover:text-slate-600" /></button>
             </div>
 
             <div style={{ marginBottom: "16px" }}>
               <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "6px" }}>Chọn mức độ hài lòng (Số sao):</label>
               <div style={{ display: "flex", gap: "8px" }}>
                 {[1, 2, 3, 4, 5].map((star) => (
-                  <span
+                  <button
                     key={star}
+                    type="button"
                     onClick={() => setReviewRating(star)}
-                    style={{ fontSize: "28px", cursor: "pointer", filter: star <= reviewRating ? "none" : "grayscale(100%) opacity(0.3)" }}
+                    style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
                   >
-                    ⭐
-                  </span>
+                    <Star
+                      className={`w-7 h-7 ${
+                        star <= reviewRating
+                          ? "text-amber-500 fill-amber-500"
+                          : "text-slate-300 fill-slate-100"
+                      }`}
+                    />
+                  </button>
                 ))}
               </div>
             </div>
@@ -3132,9 +3181,13 @@ export default function AuthPage() {
                 fontWeight: 800,
                 fontSize: "14px",
                 cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "6px",
               }}
             >
-              🚀 Gửi Đánh Giá (Sẵn Sàng Nhận +80 Điểm)
+              <Send className="w-4 h-4" /> Gửi Đánh Giá (Sẵn Sàng Nhận +80 Điểm)
             </button>
           </div>
         </div>

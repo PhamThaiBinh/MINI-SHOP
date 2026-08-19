@@ -8,6 +8,7 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { fetchAdminCategories, saveAdminCategory, deleteAdminCategory } from "@/lib/supabaseAdmin";
 import { createClient } from "@/utils/supabase/client";
+import { Edit3, Trash2, Folder, Plus, X } from "lucide-react";
 
 interface Category {
   id: number;
@@ -80,7 +81,7 @@ export default function AdminCategoriesPage() {
     setEditingCategory(null);
     setFormName("");
     setFormSlug("");
-    setFormIcon("📁");
+    setFormIcon("");
     setFormStatus("Active");
     setFormDesc("");
     setShowModal(true);
@@ -97,7 +98,7 @@ export default function AdminCategoriesPage() {
   };
 
   const handleDeleteClick = async (id: number) => {
-    if (confirm("⚠️ Bạn có chắc chắn muốn xóa danh mục này không?")) {
+    if (confirm("Bạn có chắc chắn muốn xóa danh mục này không?")) {
       const supabase = createClient();
       await supabase.from("categories").delete().eq("id", id);
       setCategories((prev) => prev.filter((c) => c.id !== id));
@@ -107,7 +108,7 @@ export default function AdminCategoriesPage() {
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formName.trim() === "Tất cả") {
-      alert("⚠️ Không thể đặt tên danh mục là 'Tất cả'!");
+      alert("Không thể đặt tên danh mục là 'Tất cả'!");
       return;
     }
 
@@ -117,12 +118,12 @@ export default function AdminCategoriesPage() {
         (!editingCategory || c.id !== editingCategory.id)
     );
     if (isDuplicate) {
-      alert(`⚠️ Danh mục tên "${formName.trim()}" đã tồn tại trong hệ thống! Vui lòng chọn tên khác.`);
+      alert(`Danh mục tên "${formName.trim()}" đã tồn tại trong hệ thống! Vui lòng chọn tên khác.`);
       return;
     }
 
     const cleanSlug = formSlug || formName.toLowerCase().replace(/\s+/g, "-");
-    const cleanIcon = formIcon || "📁";
+    const cleanIcon = formIcon || "";
 
     const supabase = createClient();
     if (editingCategory) {
@@ -213,7 +214,7 @@ export default function AdminCategoriesPage() {
 
             {loading ? (
               <div style={{ padding: "30px", textAlign: "center", fontSize: "13px", color: "var(--text-muted)" }}>
-                ⏳ Đang tải dữ liệu danh mục...
+                Đang tải dữ liệu danh mục...
               </div>
             ) : (
               <>
@@ -255,7 +256,7 @@ export default function AdminCategoriesPage() {
                                 fontSize: "18px",
                               }}
                             >
-                              {cat.icon}
+                              {cat.icon || <Folder className="w-4 h-4 text-emerald-700" />}
                             </div>
                           </td>
                           <td><strong>{cat.name}</strong></td>
@@ -289,9 +290,12 @@ export default function AdminCategoriesPage() {
                                   cursor: "pointer",
                                   fontSize: "12px",
                                   fontWeight: 700,
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "4px",
                                 }}
                               >
-                                ✏️ Sửa
+                                <Edit3 className="w-3.5 h-3.5" /> Sửa
                               </button>
                               <button
                                 onClick={() => handleDeleteClick(cat.id)}
@@ -304,9 +308,12 @@ export default function AdminCategoriesPage() {
                                   cursor: "pointer",
                                   fontSize: "12px",
                                   fontWeight: 700,
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "4px",
                                 }}
                               >
-                                🗑️ Xóa
+                                <Trash2 className="w-3.5 h-3.5" /> Xóa
                               </button>
                             </div>
                           </td>
@@ -440,19 +447,19 @@ export default function AdminCategoriesPage() {
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-              <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", margin: 0 }}>
-                {editingCategory ? "✏️ Chỉnh Sửa Danh Mục" : "➕ Form Danh Mục Mới"}
+              <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", margin: 0, display: "flex", alignItems: "center", gap: "6px" }}>
+                {editingCategory ? <><Edit3 className="w-4 h-4 text-blue-600" /> Chỉnh Sửa Danh Mục</> : <><Plus className="w-4 h-4 text-emerald-700" /> Form Danh Mục Mới</>}
               </h3>
-              <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer" }}>&times;</button>
+              <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", cursor: "pointer" }}><X className="w-5 h-5 text-slate-400 hover:text-slate-600" /></button>
             </div>
 
             <form onSubmit={handleFormSubmit}>
               <div style={{ marginBottom: "12px" }}>
-                <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "4px" }}>Biểu Tượng (Icon Emoji) *</label>
+                <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "4px" }}>Biểu Tượng (Tùy chọn)</label>
                 <input
                   type="text"
                   className="form-control admin-setting-input"
-                  placeholder="Ví dụ: 🛏️, 🛋️, 🍽️"
+                  placeholder="Nhập kí hiệu hoặc để trống"
                   value={formIcon}
                   onChange={(e) => setFormIcon(e.target.value)}
                   required

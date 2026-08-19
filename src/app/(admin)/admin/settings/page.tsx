@@ -7,6 +7,7 @@ import "@/styles/auth.css";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { getStoreSettings, saveStoreSettings } from "@/lib/storeSettings";
+import { Building, CreditCard, Truck, ShieldCheck, Save, Download, Check, Banknote, Package, Gift, Edit3, Trash2, Play, Pause, UserPlus, Lock, Unlock, Shield, Key, User, ShoppingBag, Crown, Pin, X } from "lucide-react";
 
 interface StaffUser {
   id: number;
@@ -144,7 +145,7 @@ export default function AdminSettingsPage() {
       description: description.trim(),
     });
     triggerNotify(
-      "💾 Đã lưu cấu hình thông tin cửa hàng thành công! (Footer & Trang liên hệ đã được tự động cập nhật)"
+      "Đã lưu cấu hình thông tin cửa hàng thành công! (Footer & Trang liên hệ đã được tự động cập nhật)"
     );
   };
 
@@ -207,7 +208,7 @@ export default function AdminSettingsPage() {
     setStaffName("");
     setStaffEmail("");
     setShowAddStaffModal(false);
-    triggerNotify(`🎉 Đã tạo thành công tài khoản nhân viên ${staffName}!`);
+    triggerNotify(`Đã tạo thành công tài khoản nhân viên ${staffName}!`);
   };
 
   const handleToggleLockStaff = (id: number) => {
@@ -217,8 +218,8 @@ export default function AdminSettingsPage() {
           const nextStatus = s.status === "Active" ? "Blocked" : "Active";
           triggerNotify(
             nextStatus === "Blocked"
-              ? `🔒 Đã khóa tài khoản ${s.name}`
-              : `🔓 Đã mở khóa tài khoản ${s.name}`
+              ? `Đã khóa tài khoản ${s.name}`
+              : `Đã mở khóa tài khoản ${s.name}`
           );
           return { ...s, status: nextStatus };
         }
@@ -231,7 +232,7 @@ export default function AdminSettingsPage() {
     const target = staffList.find((s) => s.id === id);
     if (confirm(`Bạn có chắc muốn xóa nhân viên ${target?.name}?`)) {
       setStaffList((prev) => prev.filter((s) => s.id !== id));
-      triggerNotify(`🗑️ Đã xóa nhân viên ${target?.name}!`);
+      triggerNotify(`Đã xóa nhân viên ${target?.name}!`);
     }
   };
 
@@ -239,7 +240,7 @@ export default function AdminSettingsPage() {
     setShippingRates((prev) =>
       prev.map((r) => (r.id === id ? { ...r, isActive: !r.isActive } : r))
     );
-    triggerNotify("🚚 Đã cập nhật trạng thái vùng vận chuyển!");
+    triggerNotify("Đã cập nhật trạng thái vùng vận chuyển!");
   };
 
   const handleSaveShippingRate = (id: number) => {
@@ -261,7 +262,7 @@ export default function AdminSettingsPage() {
       console.error(err);
     }
     setEditingRateId(null);
-    triggerNotify("💾 Đã lưu cấu hình phí vận chuyển vùng thành công!");
+    triggerNotify("Đã lưu cấu hình phí vận chuyển vùng thành công!");
   };
 
   const handleBackupJSON = () => {
@@ -284,7 +285,7 @@ export default function AdminSettingsPage() {
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
-    triggerNotify("💾 Đã xuất file sao lưu dữ liệu hệ thống (JSON) thành công!");
+    triggerNotify("Đã xuất file sao lưu dữ liệu hệ thống (JSON) thành công!");
   };
 
   return (
@@ -352,10 +353,9 @@ export default function AdminSettingsPage() {
                     border: "none",
                     cursor: "pointer",
                     fontSize: "16px",
-                    color: "#15803d",
                   }}
                 >
-                  &times;
+                  <X className="w-4 h-4 text-emerald-800 hover:text-emerald-900" />
                 </button>
               </div>
             )}
@@ -367,32 +367,36 @@ export default function AdminSettingsPage() {
                   activeTab === "store" ? "active" : ""
                 }`}
                 onClick={() => setActiveTab("store")}
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
               >
-                🏬 Thông tin cửa hàng
+                <Building className="w-4 h-4" /> Thông tin cửa hàng
               </div>
               <div
                 className={`settings-tab-item ${
                   activeTab === "payment" ? "active" : ""
                 }`}
                 onClick={() => setActiveTab("payment")}
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
               >
-                💳 Cổng thanh toán (VietQR/Momo/9Pay)
+                <CreditCard className="w-4 h-4" /> Cổng thanh toán (VietQR/Momo/9Pay)
               </div>
               <div
                 className={`settings-tab-item ${
                   activeTab === "shipping" ? "active" : ""
                 }`}
                 onClick={() => setActiveTab("shipping")}
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
               >
-                🚚 Cấu hình vận chuyển
+                <Truck className="w-4 h-4" /> Cấu hình vận chuyển
               </div>
               <div
                 className={`settings-tab-item ${
                   activeTab === "security" ? "active" : ""
                 }`}
                 onClick={() => setActiveTab("security")}
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
               >
-                🔒 Bảo mật & Phân quyền
+                <ShieldCheck className="w-4 h-4" /> Bảo mật & Phân quyền
               </div>
             </div>
 
@@ -565,9 +569,9 @@ export default function AdminSettingsPage() {
                     <button
                       type="submit"
                       className="btn-add-product-green"
-                      style={{ padding: "10px 20px" }}
+                      style={{ padding: "10px 20px", display: "inline-flex", alignItems: "center", gap: "6px" }}
                     >
-                      💾 Lưu Thay Đổi Cấu Hình
+                      <Save className="w-4 h-4" /> Lưu Thay Đổi Cấu Hình
                     </button>
                     <button
                       type="button"
@@ -580,9 +584,12 @@ export default function AdminSettingsPage() {
                         fontSize: "13px",
                         fontWeight: 700,
                         cursor: "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
                       }}
                     >
-                      💾 Sao Lưu Dữ Liệu (JSON)
+                      <Download className="w-4 h-4" /> Sao Lưu Dữ Liệu (JSON)
                     </button>
                   </div>
                 </form>
@@ -637,7 +644,7 @@ export default function AdminSettingsPage() {
                           gap: "10px",
                         }}
                       >
-                        <span style={{ fontSize: "24px" }}>🏦</span>
+                        <CreditCard className="w-6 h-6 text-emerald-700" />
                         <div>
                           <strong
                             style={{ fontSize: "15px", color: "#0f172a" }}
@@ -665,7 +672,7 @@ export default function AdminSettingsPage() {
                           borderRadius: "12px",
                         }}
                       >
-                        🟢 Hoạt động
+                        Hoạt động
                       </span>
                     </div>
 
@@ -783,13 +790,13 @@ export default function AdminSettingsPage() {
                       type="button"
                       onClick={() =>
                         triggerNotify(
-                          "💳 Đã lưu và kiểm tra thành công kết nối VietQR Ngân Hàng!"
+                          "Đã lưu và kiểm tra thành công kết nối VietQR Ngân Hàng!"
                         )
                       }
                       className="btn-add-product-green"
-                      style={{ padding: "8px 16px", fontSize: "13px" }}
+                      style={{ padding: "8px 16px", fontSize: "13px", display: "inline-flex", alignItems: "center", gap: "6px" }}
                     >
-                      ✓ Lưu & Kiểm tra VietQR
+                      <Check className="w-4 h-4" /> Lưu & Kiểm tra VietQR
                     </button>
                   </div>
 
@@ -817,7 +824,7 @@ export default function AdminSettingsPage() {
                           gap: "10px",
                         }}
                       >
-                        <span style={{ fontSize: "24px" }}>💵</span>
+                        <Banknote className="w-6 h-6 text-emerald-700" />
                         <div>
                           <strong
                             style={{ fontSize: "15px", color: "#0f172a" }}
@@ -845,14 +852,14 @@ export default function AdminSettingsPage() {
                           borderRadius: "12px",
                         }}
                       >
-                        🟢 Kích hoạt
+                        Hoạt động
                       </span>
                     </div>
 
                     <button
                       type="button"
                       onClick={() =>
-                        triggerNotify("💵 Đã cập nhật cấu hình thanh toán COD!")
+                        triggerNotify("Đã cập nhật cấu hình thanh toán COD!")
                       }
                       style={{
                         padding: "8px 16px",
@@ -914,8 +921,8 @@ export default function AdminSettingsPage() {
                         marginBottom: "8px",
                       }}
                     >
-                      <strong style={{ fontSize: "14px", color: "#0f172a" }}>
-                        🚚 Giao Hàng Nhanh (GHN)
+                      <strong style={{ fontSize: "14px", color: "#0f172a", display: "flex", alignItems: "center", gap: "6px" }}>
+                        <Truck className="w-4 h-4 text-emerald-700" /> Giao Hàng Nhanh (GHN)
                       </strong>
                       <span
                         style={{
@@ -934,7 +941,7 @@ export default function AdminSettingsPage() {
                       type="button"
                       onClick={() =>
                         triggerNotify(
-                          "🚚 Đã lưu và kết nối API Giao Hàng Nhanh (GHN)!"
+                          "Đã lưu và kết nối API Giao Hàng Nhanh (GHN)!"
                         )
                       }
                       style={{
@@ -968,8 +975,8 @@ export default function AdminSettingsPage() {
                         marginBottom: "8px",
                       }}
                     >
-                      <strong style={{ fontSize: "14px", color: "#0f172a" }}>
-                        📦 Giao Hàng Tiết Kiệm (GHTK)
+                      <strong style={{ fontSize: "14px", color: "#0f172a", display: "flex", alignItems: "center", gap: "6px" }}>
+                        <Package className="w-4 h-4 text-emerald-700" /> Giao Hàng Tiết Kiệm (GHTK)
                       </strong>
                       <span
                         style={{
@@ -988,7 +995,7 @@ export default function AdminSettingsPage() {
                       type="button"
                       onClick={() =>
                         triggerNotify(
-                          "📦 Đã lưu và kết nối API Giao Hàng Tiết Kiệm (GHTK)!"
+                          "Đã lưu và kết nối API Giao Hàng Tiết Kiệm (GHTK)!"
                         )
                       }
                       style={{
@@ -1023,9 +1030,12 @@ export default function AdminSettingsPage() {
                         fontWeight: 800,
                         color: "#0f172a",
                         margin: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
                       }}
                     >
-                      📋 Bảng Thiết Lập Phí Vận Chuyển Cố Định Theo Vùng Địa Lý
+                      <Truck className="w-4 h-4 text-emerald-700" /> Bảng Thiết Lập Phí Vận Chuyển Cố Định Theo Vùng Địa Lý
                     </h3>
                     <span
                       style={{
@@ -1033,12 +1043,15 @@ export default function AdminSettingsPage() {
                         fontWeight: 700,
                         color: "var(--primary-color)",
                         background: "#f0fdf4",
+                        border: "1px solid #bbf7d0",
                         padding: "4px 8px",
                         borderRadius: "6px",
-                        border: "1px solid #bbf7d0",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "4px",
                       }}
                     >
-                      🎁 Đơn hàng đạt mức sẽ tự động Freeship
+                      <Gift className="w-3.5 h-3.5" /> Đơn hàng đạt mức sẽ tự động Freeship
                     </span>
                   </div>
 
@@ -1115,9 +1128,9 @@ export default function AdminSettingsPage() {
                                     type="button"
                                     className="btn-action-edit"
                                     onClick={() => handleSaveShippingRate(rate.id)}
-                                    style={{ background: "var(--primary-color)", color: "#fff", border: "none" }}
+                                    style={{ background: "var(--primary-color)", color: "#fff", border: "none", display: "inline-flex", alignItems: "center", gap: "4px" }}
                                   >
-                                    💾 Lưu
+                                    <Save className="w-3.5 h-3.5" /> Lưu
                                   </button>
                                 ) : (
                                   <button
@@ -1128,8 +1141,9 @@ export default function AdminSettingsPage() {
                                       setEditFeeVal(rate.fixedFee.toString());
                                       setEditFreeshipVal(rate.minOrderFreeship.toString());
                                     }}
+                                    style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}
                                   >
-                                    ✏️ Sửa
+                                    <Edit3 className="w-3.5 h-3.5" /> Sửa
                                   </button>
                                 )}
                                 <button
@@ -1139,9 +1153,12 @@ export default function AdminSettingsPage() {
                                   style={{
                                     borderColor: rate.isActive ? "#fdba74" : "#86efac",
                                     color: rate.isActive ? "#c2410c" : "#15803d",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "4px",
                                   }}
                                 >
-                                  {rate.isActive ? "⏸️ Tắt" : "▶️ Bật"}
+                                  {rate.isActive ? <><Pause className="w-3.5 h-3.5" /> Tắt</> : <><Play className="w-3.5 h-3.5" /> Bật</>}
                                 </button>
                               </div>
                             </td>
@@ -1208,7 +1225,7 @@ export default function AdminSettingsPage() {
                       boxShadow: "0 2px 4px rgba(46, 125, 50, 0.15)",
                     }}
                   >
-                    ➕ Thêm NV
+                    <UserPlus className="w-3.5 h-3.5" /> Thêm NV
                   </button>
                 </div>
 
@@ -1281,18 +1298,18 @@ export default function AdminSettingsPage() {
                                 type="button"
                                 className="btn-action-edit"
                                 onClick={() => handleToggleLockStaff(s.id)}
-                                style={{ whiteSpace: "nowrap" }}
+                                style={{ whiteSpace: "nowrap", display: "inline-flex", alignItems: "center", gap: "4px" }}
                               >
-                                {s.status === "Active" ? "🔒 Khóa" : "🔓 Mở"}
+                                {s.status === "Active" ? <><Lock className="w-3.5 h-3.5" /> Khóa</> : <><Unlock className="w-3.5 h-3.5" /> Mở</>}
                               </button>
                               {s.role !== "Super Admin" && (
                                 <button
                                   type="button"
                                   className="btn-action-delete"
                                   onClick={() => handleDeleteStaff(s.id)}
-                                  style={{ whiteSpace: "nowrap" }}
+                                  style={{ whiteSpace: "nowrap", display: "inline-flex", alignItems: "center", gap: "4px" }}
                                 >
-                                  🗑️ Xóa
+                                  <Trash2 className="w-3.5 h-3.5" /> Xóa
                                 </button>
                               )}
                             </div>
@@ -1325,9 +1342,12 @@ export default function AdminSettingsPage() {
                         fontWeight: 800,
                         color: "#0f172a",
                         marginBottom: "8px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
                       }}
                     >
-                      🔐 Xác Thực 2 Yếu Tố (2FA)
+                      <Shield className="w-4 h-4 text-emerald-700" /> Xác Thực 2 Yếu Tố (2FA)
                     </h4>
                     <p
                       style={{
@@ -1345,8 +1365,8 @@ export default function AdminSettingsPage() {
                         setIs2FAEnabled(!is2FAEnabled);
                         triggerNotify(
                           is2FAEnabled
-                            ? "⚪ Đã tắt tính năng bảo mật 2FA!"
-                            : "🟢 Đã bật tính năng bảo mật 2FA thành công!"
+                            ? "Đã tắt tính năng bảo mật 2FA!"
+                            : "Đã bật tính năng bảo mật 2FA thành công!"
                         );
                       }}
                       style={{
@@ -1382,15 +1402,18 @@ export default function AdminSettingsPage() {
                         fontWeight: 800,
                         color: "#0f172a",
                         marginBottom: "8px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
                       }}
                     >
-                      🔑 Đổi Mật Khẩu Admin
+                      <Key className="w-4 h-4 text-amber-600" /> Đổi Mật Khẩu Admin
                     </h4>
                     <form
                       onSubmit={(e) => {
                         e.preventDefault();
                         if (!oldPassword || !newPassword) return;
-                        triggerNotify("🔑 Đã cập nhật mật khẩu Admin thành công!");
+                        triggerNotify("Đã cập nhật mật khẩu Admin thành công!");
                         setOldPassword("");
                         setNewPassword("");
                       }}
@@ -1484,7 +1507,7 @@ export default function AdminSettingsPage() {
                 zIndex: 10,
               }}
             >
-              &times;
+              <X className="w-5 h-5 text-slate-400 hover:text-slate-600" />
             </button>
 
             <div
@@ -1495,7 +1518,9 @@ export default function AdminSettingsPage() {
                 textAlign: "center",
               }}
             >
-              <div style={{ fontSize: "32px", marginBottom: "6px" }}>👤</div>
+              <div style={{ display: "flex", justifyContent: "center", marginBottom: "6px" }}>
+                <User className="w-8 h-8 text-emerald-700" />
+              </div>
               <h2 className="auth-form-title" style={{ fontSize: "20px", margin: 0 }}>
                 Thêm Nhân Viên Quản Trị Mới
               </h2>
@@ -1558,13 +1583,13 @@ export default function AdminSettingsPage() {
                   style={{ height: "48px", fontSize: "14px", fontWeight: 600 }}
                 >
                   <option value="Quản lý kho">
-                    📦 Quản lý kho (Sản phẩm, tồn kho & danh mục)
+                    Quản lý kho (Sản phẩm, tồn kho & danh mục)
                   </option>
                   <option value="CSKH & Bán hàng">
-                    🛍️ CSKH & Bán hàng (Xác nhận & xử lý đơn)
+                    CSKH & Bán hàng (Xác nhận & xử lý đơn)
                   </option>
                   <option value="Super Admin">
-                    👑 Super Admin (Toàn quyền quản trị hệ thống)
+                    Super Admin (Toàn quyền quản trị hệ thống)
                   </option>
                 </select>
               </div>
@@ -1573,7 +1598,9 @@ export default function AdminSettingsPage() {
                 className="admin-hint-box"
                 style={{ marginTop: "4px", marginBottom: "4px" }}
               >
-                <strong>📌 Ghi chú khởi tạo:</strong>
+                <strong style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                  <Pin className="w-3.5 h-3.5 text-emerald-700" /> Ghi chú khởi tạo:
+                </strong>{" "}
                 Mật khẩu mặc định là <code>12345678</code>. Nhân viên có thể tự
                 thay đổi mật khẩu sau lần đăng nhập đầu tiên.
               </div>
@@ -1599,9 +1626,9 @@ export default function AdminSettingsPage() {
                 <button
                   type="submit"
                   className="btn-auth-submit"
-                  style={{ flex: 1, marginTop: 0 }}
+                  style={{ flex: 1, marginTop: 0, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px" }}
                 >
-                  ➕ Tạo Tài Khoản Nhân Viên
+                  <UserPlus className="w-4 h-4" /> Tạo Tài Khoản Nhân Viên
                 </button>
               </div>
             </form>

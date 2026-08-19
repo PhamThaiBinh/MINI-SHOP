@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { fetchFaqsFromSupabase, FaqItem } from "@/lib/supabasePolicy";
-import { ShieldCheck, RefreshCw, Truck, Lock, FileText, HelpCircle } from "lucide-react";
+import { ShieldCheck, RefreshCw, Truck, Lock, FileText, HelpCircle, ChevronUp, ChevronDown } from "lucide-react";
 
 function PolicyContent() {
   const searchParams = useSearchParams();
@@ -370,7 +370,7 @@ function PolicyContent() {
                       }}
                     >
                       <span>{faq.q}</span>
-                      <span>{isOpen ? "▲" : "▼"}</span>
+                      <span>{isOpen ? <ChevronUp className="w-4 h-4 text-emerald-700" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}</span>
                     </button>
                     {isOpen && (
                       <div
@@ -399,7 +399,7 @@ function PolicyContent() {
 
 export default function PolicyPage() {
   return (
-    <Suspense fallback={<div style={{ textAlign: "center", padding: "60px 15px" }}>⏳ Đang tải trung tâm chính sách...</div>}>
+    <Suspense fallback={<div style={{ textAlign: "center", padding: "60px 15px" }}>Đang tải trung tâm chính sách...</div>}>
       <PolicyContent />
     </Suspense>
   );

@@ -7,7 +7,7 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { fixImagePath, formatVND } from "@/lib/utils";
 import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
-import { Edit, Trash2, Plus } from "lucide-react";
+import { Edit, Trash2, Plus, X } from "lucide-react";
 import { saveAdminProduct, deleteAdminProduct, fetchAdminCategories } from "@/lib/supabaseAdmin";
 
 interface ProductItem {
@@ -74,11 +74,11 @@ export default function AdminProductsPage() {
       setDbCategories(cats.map((c) => ({ id: c.id, icon: c.icon, name: c.name })));
     } else {
       setDbCategories([
-        { id: 1, icon: "🛏️", name: "Nội Thất Phòng Ngủ" },
-        { id: 2, icon: "🛋️", name: "Nội Thất Phòng Khách" },
-        { id: 3, icon: "🍽️", name: "Nội Thất Phòng Ăn" },
-        { id: 4, icon: "💼", name: "Nội Thất Phòng Làm Việc" },
-        { id: 5, icon: "🪴", name: "Trang Trí & Decor" },
+        { id: 1, icon: "", name: "Nội Thất Phòng Ngủ" },
+        { id: 2, icon: "", name: "Nội Thất Phòng Khách" },
+        { id: 3, icon: "", name: "Nội Thất Phòng Ăn" },
+        { id: 4, icon: "", name: "Nội Thất Phòng Làm Việc" },
+        { id: 5, icon: "", name: "Trang Trí & Decor" },
       ]);
     }
     setLoading(false);
@@ -125,7 +125,7 @@ export default function AdminProductsPage() {
   };
 
   const handleDeleteProduct = async (id: number) => {
-    if (confirm("⚠️ Bạn có chắc muốn xóa sản phẩm này không?")) {
+    if (confirm("Bạn có chắc muốn xóa sản phẩm này không?")) {
       setLoading(true);
       const success = await deleteAdminProduct(id);
       if (success) {
@@ -143,7 +143,7 @@ export default function AdminProductsPage() {
 
     const numPrice = Number(formPrice);
     if (isNaN(numPrice) || numPrice <= 0) {
-      alert("⚠️ Giá bán sản phẩm phải là một số dương lớn hơn 0!");
+      alert("Giá bán sản phẩm phải là một số dương lớn hơn 0!");
       return;
     }
 
@@ -216,7 +216,7 @@ export default function AdminProductsPage() {
                     cursor: "pointer",
                   }}
                 >
-                  {onlyLowStock ? "🔥 Đang lọc: Sắp hết hàng" : "🔥 Sắp hết hàng"}
+                  {onlyLowStock ? "Đang lọc: Sắp hết hàng" : "Sắp hết hàng"}
                 </button>
                 <button className="btn-add-product-green" onClick={handleOpenAddModal}>
                   + Thêm Sản Phẩm Mới
@@ -226,7 +226,7 @@ export default function AdminProductsPage() {
 
             {loading ? (
               <div style={{ padding: "30px", textAlign: "center", fontSize: "13px", color: "var(--text-muted)" }}>
-                ⏳ Đang tải danh sách sản phẩm...
+                Đang tải danh sách sản phẩm...
               </div>
             ) : (
               <>
@@ -452,7 +452,7 @@ export default function AdminProductsPage() {
               <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", margin: 0 }}>
                 {editingProduct ? "Chỉnh Sửa Sản Phẩm" : "Form Sản Phẩm Mới"}
               </h3>
-              <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer" }}>&times;</button>
+              <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", cursor: "pointer" }}><X className="w-5 h-5 text-slate-400 hover:text-slate-600" /></button>
             </div>
 
             <form onSubmit={handleFormSubmit}>
@@ -479,7 +479,7 @@ export default function AdminProductsPage() {
                   >
                     {dbCategories.map((c) => (
                       <option key={c.id} value={c.name}>
-                        {c.icon || "📁"} {c.name}
+                        {c.name}
                       </option>
                     ))}
                   </select>

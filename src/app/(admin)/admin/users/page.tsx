@@ -6,6 +6,7 @@ import "@/styles/admin.css";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { fetchAdminUsers, saveAdminUser, toggleAdminUserStatus, AdminUserItem as UserItem } from "@/lib/supabaseAdmin";
+import { Lock, Unlock, X } from "lucide-react";
 
 export default function AdminUsersPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -33,7 +34,7 @@ export default function AdminUsersPage() {
   const [staffEmail, setStaffEmail] = useState("");
   const [staffPhone, setStaffPhone] = useState("");
   const [staffPassword, setStaffPassword] = useState("12345678");
-  const [staffRole, setStaffRole] = useState("👑 Administrator");
+  const [staffRole, setStaffRole] = useState("Administrator");
 
   const [roleFilter, setRoleFilter] = useState("all");
 
@@ -107,7 +108,7 @@ export default function AdminUsersPage() {
     setStaffEmail("");
     setStaffPhone("");
     setStaffPassword("12345678");
-    setStaffRole("👑 Administrator");
+    setStaffRole("Administrator");
   };
 
   return (
@@ -168,7 +169,7 @@ export default function AdminUsersPage() {
                 <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
                   <input
                     type="text"
-                    placeholder="🔍 Tìm tên, email, sđt, username..."
+                    placeholder="Nhập tên, email, sđt, username..."
                     value={searchQuery}
                     onChange={(e) => {
                       setSearchQuery(e.target.value);
@@ -285,7 +286,7 @@ export default function AdminUsersPage() {
                           <button
                             className="btn-action-edit"
                           >
-                            📝 Phân quyền
+                            Phân quyền
                           </button>
                         ) : (
                           <button
@@ -302,10 +303,11 @@ export default function AdminUsersPage() {
                                   : "var(--primary-color)",
                             }}
                           >
-                            📝{" "}
-                            {user.status === "Active"
-                              ? "Khóa TK"
-                              : "Mở khóa TK"}
+                            {user.status === "Active" ? (
+                              <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}><Lock className="w-3.5 h-3.5" /> Khóa TK</span>
+                            ) : (
+                              <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}><Unlock className="w-3.5 h-3.5" /> Mở khóa TK</span>
+                            )}
                           </button>
                         )}
                       </td>
@@ -416,7 +418,7 @@ export default function AdminUsersPage() {
               <h3
                 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a" }}
               >
-                ➕ Thêm Quản Trị Viên / Nhân Viên Mới
+                Thêm Quản Trị Viên / Nhân Viên Mới
               </h3>
               <button
                 onClick={() => setShowAddModal(false)}
@@ -428,7 +430,7 @@ export default function AdminUsersPage() {
                   color: "var(--text-muted)",
                 }}
               >
-                &times;
+                <X className="w-5 h-5 text-slate-400 hover:text-slate-600" />
               </button>
             </div>
 
@@ -555,7 +557,7 @@ export default function AdminUsersPage() {
                       }}
                       title={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                     >
-                      {showPassword ? "🙈" : "👁️"}
+                      {showPassword ? "Ẩn" : "Hiện"}
                     </button>
                   </div>
                 </div>
@@ -578,10 +580,10 @@ export default function AdminUsersPage() {
                     value={staffRole}
                     onChange={(e) => setStaffRole(e.target.value)}
                   >
-                    <option value="Super Admin">👑 Super Admin (Toàn quyền)</option>
-                    <option value="Quản lý kho">📦 Quản lý kho</option>
-                    <option value="CSKH & Bán hàng">🛍️ CSKH & Bán hàng</option>
-                    <option value="Khách hàng">👤 Khách hàng (Người dùng)</option>
+                    <option value="Super Admin">Super Admin (Toàn quyền)</option>
+                    <option value="Quản lý kho">Quản lý kho</option>
+                    <option value="CSKH & Bán hàng">CSKH & Bán hàng</option>
+                    <option value="Khách hàng">Khách hàng (Người dùng)</option>
                   </select>
                 </div>
               </div>

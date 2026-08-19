@@ -10,7 +10,7 @@ import { useWishlist } from "@/context/WishlistContext";
 import { useCart } from "@/context/CartContext";
 import { Product } from "@/types/product";
 import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
-import { ShoppingCart, Heart, Flame } from "lucide-react";
+import { ShoppingCart, Heart, Flame, ArrowRight } from "lucide-react";
 
 export default function WishlistPage() {
   const { wishlistIds, toggleWishlist } = useWishlist();
@@ -133,7 +133,7 @@ export default function WishlistPage() {
                     padding: "12px 28px",
                   }}
                 >
-                  <Flame className="w-4 h-4 text-amber-400" /> Khám phá sản phẩm HOT ngay &rarr;
+                  <Flame className="w-4 h-4 text-amber-400" /> Khám phá sản phẩm HOT ngay <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
             ) : (

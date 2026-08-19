@@ -207,7 +207,7 @@ export default function CartPage() {
                     padding: "12px 28px",
                   }}
                 >
-                  Khám phá sản phẩm ngay &rarr;
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>Khám phá sản phẩm ngay <ArrowRight className="w-4 h-4" /></span>
                 </Link>
               </div>
             ) : (
@@ -498,8 +498,8 @@ export default function CartPage() {
                       </span>
                     </div>
 
-                    <Link href="/checkout" className="btn-checkout">
-                      Tiến hành Thanh toán &rarr;
+                    <Link href="/checkout" className="btn-checkout" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                      Tiến hành Thanh toán <ArrowRight className="w-4 h-4" />
                     </Link>
                     <Link
                       href="/products"
@@ -582,7 +582,7 @@ export default function CartPage() {
                   color: "var(--text-muted)",
                 }}
               >
-                &times;
+                <X className="w-5 h-5 text-slate-400 hover:text-slate-600" />
               </button>
             </div>
 

@@ -350,7 +350,13 @@ function ProductDetailPageContent({
               <h1 className="product-detail-title">{product.name}</h1>
 
               <div className="rating-box">
-                <span className="stars">★★★★★</span>
+                <span className="stars" style={{ display: "inline-flex", alignItems: "center", gap: "2px", color: "#eab308" }}>
+                  <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
+                  <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
+                  <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
+                  <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
+                  <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
+                </span>
                 <span className="review-count">
                   ({product.reviews || 48} đánh giá)
                 </span>
@@ -824,8 +830,12 @@ function ProductDetailPageContent({
                   <div style={{ fontSize: "44px", fontWeight: 900, color: "#0f172a", lineHeight: 1 }}>
                     4.9
                   </div>
-                  <div style={{ color: "#eab308", fontSize: "20px", margin: "8px 0 4px" }}>
-                    ★★★★★
+                  <div style={{ color: "#eab308", fontSize: "16px", margin: "8px 0 4px", display: "inline-flex", justifyContent: "center", gap: "2px" }}>
+                    <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
+                    <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
+                    <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
+                    <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
+                    <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
                   </div>
                   <div style={{ fontSize: "13px", color: "#64748b", fontWeight: 600 }}>
                     Dựa trên {totalReviewsCount} đánh giá xác thực
@@ -1007,8 +1017,17 @@ function ProductDetailPageContent({
                               </div>
                               <span style={{ fontSize: "12px", color: "#94a3b8" }}>{rev.date}</span>
                             </div>
-                            <div style={{ color: "#eab308", fontSize: "13px", marginBottom: "6px" }}>
-                              {"★".repeat(rev.rating)}{"☆".repeat(5 - rev.rating)}
+                            <div style={{ color: "#eab308", fontSize: "13px", marginBottom: "6px", display: "inline-flex", alignItems: "center", gap: "2px" }}>
+                              {[...Array(5)].map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`w-3.5 h-3.5 ${
+                                    i < rev.rating
+                                      ? "text-amber-500 fill-amber-500"
+                                      : "text-slate-300 fill-slate-100"
+                                  }`}
+                                />
+                              ))}
                             </div>
                             <p style={{ margin: 0, fontSize: "13px", color: "#334155", lineHeight: 1.5 }}>
                               {rev.comment}
@@ -1055,8 +1074,9 @@ function ProductDetailPageContent({
                     <div className="related-price">
                       {formatVND(relProd.price)}
                     </div>
-                    <div className="related-stars">
-                      ★★★★★ ({relProd.reviews || 25})
+                    <div className="related-stars" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                      <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                      <span>5.0 ({relProd.reviews || 25})</span>
                     </div>
                   </div>
                 </Link>
@@ -1071,7 +1091,7 @@ function ProductDetailPageContent({
 
 export default function ProductDetailPage(props: { params: Promise<{ id: string }> }) {
   return (
-    <Suspense fallback={<div style={{ textAlign: "center", padding: "60px 15px" }}>⏳ Đang tải thông tin sản phẩm...</div>}>
+    <Suspense fallback={<div style={{ textAlign: "center", padding: "60px 15px" }}>Đang tải thông tin sản phẩm...</div>}>
       <ProductDetailPageContent {...props} />
     </Suspense>
   );

@@ -16,6 +16,7 @@ import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
 import { createClient } from "@/utils/supabase/client";
 import { UnifiedOrder } from "@/utils/orderStorage";
 import { Product } from "@/types/product";
+import { DollarSign, BarChart3, Target, AlertTriangle, CheckCircle2, Truck, Package, Clock, XCircle, Eye, ArrowRight } from "lucide-react";
 
 interface CategoryStat {
   code: string;
@@ -174,7 +175,7 @@ export default function AdminDashboard() {
                 color: "var(--text-muted)",
               }}
             >
-              ⏳ Đang nạp và xử lý mô hình phân tích dữ liệu Supabase...
+              Đang nạp và xử lý mô hình phân tích dữ liệu Supabase...
             </div>
           ) : (
             <>
@@ -194,7 +195,7 @@ export default function AdminDashboard() {
                       Từ <strong>{completedOrders.length}</strong> đơn hoàn thành
                     </div>
                   </div>
-                  <div className="kpi-icon-wrapper icon-green">💵</div>
+                  <div className="kpi-icon-wrapper icon-green" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}><DollarSign className="w-6 h-6 text-emerald-700" /></div>
                 </div>
 
                 {/* Card 2: AOV */}
@@ -208,7 +209,7 @@ export default function AdminDashboard() {
                       Pipeline tiềm năng: {formatVND(grossPipeline)}
                     </div>
                   </div>
-                  <div className="kpi-icon-wrapper icon-blue">📊</div>
+                  <div className="kpi-icon-wrapper icon-blue" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}><BarChart3 className="w-6 h-6 text-blue-600" /></div>
                 </div>
 
                 {/* Card 3: Fulfillment Rate */}
@@ -222,7 +223,7 @@ export default function AdminDashboard() {
                       {completedOrders.length} / {orders.length} tổng đơn phát sinh
                     </div>
                   </div>
-                  <div className="kpi-icon-wrapper icon-teal">🎯</div>
+                  <div className="kpi-icon-wrapper icon-teal" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}><Target className="w-6 h-6 text-teal-600" /></div>
                 </div>
 
                 {/* Card 4: Inventory Risk Alert */}
@@ -241,7 +242,7 @@ export default function AdminDashboard() {
                       {pendingOrders.length} đơn đang chờ duyệt gấp
                     </div>
                   </div>
-                  <div className="kpi-icon-wrapper icon-orange">⚠️</div>
+                  <div className="kpi-icon-wrapper icon-orange" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}><AlertTriangle className="w-6 h-6 text-amber-600" /></div>
                 </div>
               </div>
 
@@ -268,7 +269,7 @@ export default function AdminDashboard() {
                     {/* Progress Bar 1: Completed */}
                     <div>
                       <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", fontWeight: 700, marginBottom: "4px" }}>
-                        <span>✅ Đã hoàn thành ({completedOrders.length})</span>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}><CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Đã hoàn thành ({completedOrders.length})</span>
                         <span style={{ color: "#166534" }}>{formatVND(netRevenue)}</span>
                       </div>
                       <div style={{ background: "#f1f5f9", height: "10px", borderRadius: "5px", overflow: "hidden" }}>
@@ -279,7 +280,7 @@ export default function AdminDashboard() {
                     {/* Progress Bar 2: Shipping */}
                     <div>
                       <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", fontWeight: 700, marginBottom: "4px" }}>
-                        <span>🚚 Đang vận chuyển ({shippingOrders.length})</span>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}><Truck className="w-3.5 h-3.5 text-sky-600" /> Đang vận chuyển ({shippingOrders.length})</span>
                         <span style={{ color: "#0284c7" }}>
                           {formatVND(shippingOrders.reduce((sum, o) => sum + (o.total || 0), 0))}
                         </span>
@@ -292,7 +293,7 @@ export default function AdminDashboard() {
                     {/* Progress Bar 3: Processing */}
                     <div>
                       <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", fontWeight: 700, marginBottom: "4px" }}>
-                        <span>⚙️ Đang xử lý đóng gói ({processingOrders.length})</span>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}><Package className="w-3.5 h-3.5 text-amber-600" /> Đang xử lý đóng gói ({processingOrders.length})</span>
                         <span style={{ color: "#d97706" }}>
                           {formatVND(processingOrders.reduce((sum, o) => sum + (o.total || 0), 0))}
                         </span>
@@ -305,7 +306,7 @@ export default function AdminDashboard() {
                     {/* Progress Bar 4: Pending */}
                     <div>
                       <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", fontWeight: 700, marginBottom: "4px" }}>
-                        <span>⏳ Chờ duyệt mới ({pendingOrders.length})</span>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}><Clock className="w-3.5 h-3.5 text-slate-500" /> Chờ duyệt mới ({pendingOrders.length})</span>
                         <span style={{ color: "#64748b" }}>
                           {formatVND(pendingOrders.reduce((sum, o) => sum + (o.total || 0), 0))}
                         </span>
@@ -318,7 +319,7 @@ export default function AdminDashboard() {
                     {/* Progress Bar 5: Cancelled */}
                     <div>
                       <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", fontWeight: 700, marginBottom: "4px" }}>
-                        <span>❌ Đã hủy ({cancelledOrders.length})</span>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}><XCircle className="w-3.5 h-3.5 text-red-600" /> Đã hủy ({cancelledOrders.length})</span>
                         <span style={{ color: "#dc2626" }}>-{formatVND(cancelledLoss)}</span>
                       </div>
                       <div style={{ background: "#f1f5f9", height: "10px", borderRadius: "5px", overflow: "hidden" }}>
@@ -398,16 +399,16 @@ export default function AdminDashboard() {
                 <div className="dashboard-card">
                   <div className="card-header-row" style={{ marginBottom: "12px" }}>
                     <h3 className="card-header-title" style={{ color: "#dc2626", display: "flex", alignItems: "center", gap: "6px" }}>
-                      ⚠️ Sản Phẩm Tồn Kho Thấp (&le; 10 sản phẩm)
+                      <AlertTriangle className="w-4 h-4 text-red-600" /> Sản Phẩm Tồn Kho Thấp (&le; 10 sản phẩm)
                     </h3>
-                    <Link href="/admin/products" style={{ fontSize: "12px", color: "var(--primary-color)", fontWeight: 700 }}>
-                      Xem kho &rarr;
+                    <Link href="/admin/products" style={{ fontSize: "12px", color: "var(--primary-color)", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                      Xem kho <ArrowRight className="w-3.5 h-3.5" />
                     </Link>
                   </div>
 
                   {lowStockProducts.length === 0 ? (
-                    <div style={{ padding: "20px", textAlign: "center", fontSize: "13px", color: "#166534", background: "#f0fdf4", borderRadius: "var(--radius-md)" }}>
-                      ✅ Kho hàng an toàn, không có mặt hàng nào dưới 10 món.
+                    <div style={{ padding: "20px", textAlign: "center", fontSize: "13px", color: "#166534", background: "#f0fdf4", borderRadius: "var(--radius-md)", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Kho hàng an toàn, không có mặt hàng nào dưới 10 món.
                     </div>
                   ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
@@ -448,16 +449,16 @@ export default function AdminDashboard() {
                 <div className="dashboard-card">
                   <div className="card-header-row" style={{ marginBottom: "12px" }}>
                     <h3 className="card-header-title" style={{ color: "#d97706", display: "flex", alignItems: "center", gap: "6px" }}>
-                      ⏳ Đơn Hàng Cần Duyệt Gấp ({pendingOrders.length})
+                      <Clock className="w-4 h-4 text-amber-600" /> Đơn Hàng Cần Duyệt Gấp ({pendingOrders.length})
                     </h3>
-                    <Link href="/admin/orders" style={{ fontSize: "12px", color: "var(--primary-color)", fontWeight: 700 }}>
-                      Quản lý đơn &rarr;
+                    <Link href="/admin/orders" style={{ fontSize: "12px", color: "var(--primary-color)", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                      Quản lý đơn <ArrowRight className="w-3.5 h-3.5" />
                     </Link>
                   </div>
 
                   {pendingOrders.length === 0 ? (
-                    <div style={{ padding: "20px", textAlign: "center", fontSize: "13px", color: "#166534", background: "#f0fdf4", borderRadius: "var(--radius-md)" }}>
-                      🎉 Đã xử lý sạch đơn hàng chờ duyệt!
+                    <div style={{ padding: "20px", textAlign: "center", fontSize: "13px", color: "#166534", background: "#f0fdf4", borderRadius: "var(--radius-md)", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Đã xử lý sạch đơn hàng chờ duyệt!
                     </div>
                   ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
@@ -489,14 +490,16 @@ export default function AdminDashboard() {
                             <Link
                               href="/admin/orders"
                               style={{
-                                display: "inline-block",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "4px",
                                 fontSize: "11px",
                                 fontWeight: 700,
                                 color: "#2563eb",
                                 textDecoration: "underline",
                               }}
                             >
-                              Duyệt ngay &rarr;
+                              Duyệt ngay <ArrowRight className="w-3.5 h-3.5" />
                             </Link>
                           </div>
                         </div>
@@ -515,8 +518,8 @@ export default function AdminDashboard() {
                       Hiển thị <strong>{Math.min(10, filteredOrdersStream.length)}/{filteredOrdersStream.length} đơn hàng</strong> mới nhất nạp từ Supabase
                     </p>
                   </div>
-                  <Link href="/admin/orders" className="btn-add-product-green" style={{ textDecoration: "none" }}>
-                    Xem Tất Cả {orders.length} Đơn Hàng &rarr;
+                  <Link href="/admin/orders" className="btn-add-product-green" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                    Xem Tất Cả {orders.length} Đơn Hàng <ArrowRight className="w-4 h-4" />
                   </Link>
                 </div>
 
@@ -609,10 +612,12 @@ export default function AdminDashboard() {
                               fontSize: "12px",
                               fontWeight: 700,
                               textDecoration: "none",
-                              display: "inline-block",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "4px",
                             }}
                           >
-                            👁️ Chi tiết
+                            <Eye className="w-3.5 h-3.5" /> Chi tiết
                           </Link>
                         </td>
                       </tr>

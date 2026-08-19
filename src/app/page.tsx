@@ -7,7 +7,7 @@ import { ProductCard } from "@/components/shop/ProductCard";
 import { fixImagePath } from "@/lib/utils";
 import { Product } from "@/types/product";
 import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
-import { Package, Sofa, Bed, Utensils, Lamp, Sparkles, Box, Truck, ShieldCheck, Headphones } from "lucide-react";
+import { Package, Sofa, Bed, Utensils, Lamp, Sparkles, Box, Truck, ShieldCheck, Headphones, ArrowRight } from "lucide-react";
 
 export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
@@ -161,8 +161,9 @@ export default function Home() {
             <Link
               href={selectedCategory !== "All" ? `/products?category=${selectedCategory}` : "/products"}
               className="view-all-link"
+              style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}
             >
-              Xem tất cả &rarr;
+              Xem tất cả <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
 

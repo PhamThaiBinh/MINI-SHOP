@@ -3,6 +3,7 @@ import Link from "next/link";
 import "@/styles/blog.css";
 import { fixImagePath } from "@/lib/utils";
 import { fetchBlogsFromSupabase } from "@/lib/supabaseBlogs";
+import { Calendar } from "lucide-react";
 
 export default async function BlogListPage() {
   const articles = await fetchBlogsFromSupabase();
@@ -41,7 +42,7 @@ export default async function BlogListPage() {
                   </h2>
                   <p className="blog-excerpt">{article.excerpt}</p>
                   <div className="blog-footer">
-                    <span>📅 {article.date}</span>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}><Calendar className="w-3.5 h-3.5" /> {article.date}</span>
                     <Link
                       href={`/blog/${article.id}`}
                       style={{

@@ -10,7 +10,7 @@ import { formatVND, fixImagePath } from "@/lib/utils";
 import { getSystemVouchers } from "@/utils/voucherStorage";
 import { addPlacedOrder as addUnifiedPlacedOrder, formatFullTimestamp, UnifiedOrder } from "@/utils/orderStorage";
 import { createOrderInSupabase } from "@/lib/supabaseOrders";
-import { CreditCard, ShieldCheck, ShoppingCart, MapPin, Ticket, Gift, Home, CheckCircle2, AlertTriangle, Check, X, Printer } from "lucide-react";
+import { CreditCard, ShieldCheck, ShoppingCart, MapPin, Ticket, Gift, Home, CheckCircle2, AlertTriangle, Check, X, Printer, Clock, ArrowRight } from "lucide-react";
 
 interface Coupon {
   code: string;
@@ -351,7 +351,7 @@ export default function CheckoutPage() {
                   padding: "12px 28px",
                 }}
               >
-                Khám phá sản phẩm ngay &rarr;
+                <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>Khám phá sản phẩm ngay <ArrowRight className="w-4 h-4" /></span>
               </Link>
             </div>
           ) : (
@@ -657,7 +657,7 @@ export default function CheckoutPage() {
                     <div
                       style={{
                         fontSize: "12px",
-                        color: voucherMsg.startsWith("✅")
+                        color: !voucherMsg.includes("không") && !voucherMsg.includes("Không")
                           ? "#166534"
                           : "#ef4444",
                         fontWeight: 700,
@@ -765,8 +765,8 @@ export default function CheckoutPage() {
             >
               Đang xác nhận giao dịch...
             </div>
-            <div className="qr-timer-box">
-              ⏳ Tự động hoàn tất sau <span>{qrCountdown}</span> giây
+            <div className="qr-timer-box" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+              <Clock className="w-4 h-4 text-emerald-700" /> Tự động hoàn tất sau <span>{qrCountdown}</span> giây
             </div>
           </div>
         </div>
@@ -776,7 +776,9 @@ export default function CheckoutPage() {
       {showSuccessModal && (
         <div className="modal-overlay active" id="order-success-modal">
           <div className="modal-card">
-            <div className="success-icon-box">✓</div>
+            <div className="success-icon-box" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Check className="w-8 h-8 text-emerald-600" />
+            </div>
             <h2 className="modal-title">Đặt Hàng Thành Công!</h2>
             <p className="modal-desc">
               Cảm ơn <strong>{fullname}</strong> đã mua sắm tại <strong>Mini Shop</strong>. Đơn hàng của bạn
@@ -883,7 +885,7 @@ export default function CheckoutPage() {
                   color: "var(--text-muted)",
                 }}
               >
-                &times;
+                <X className="w-5 h-5 text-slate-400 hover:text-slate-600" />
               </button>
             </div>
 

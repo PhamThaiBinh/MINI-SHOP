@@ -11,6 +11,7 @@ import { fixImagePath } from "@/lib/utils";
 import { getAllOrders, updateOrderStatus, UnifiedOrder } from "@/utils/orderStorage";
 import { fetchAdminOrders, updateAdminOrderStatus } from "@/lib/supabaseAdmin";
 import { createClient } from "@/utils/supabase/client";
+import { Check, Truck, CheckCircle2, XCircle, Clock, Printer, Eye, X, Zap, AlertTriangle, Package } from "lucide-react";
 
 interface OrderItem {
   id: string;
@@ -125,7 +126,7 @@ export default function AdminOrdersPage() {
       alert("Vui lòng chọn ít nhất 1 đơn hàng để duyệt!");
       return;
     }
-    if (confirm(`⚡ Bạn có chắc chắn muốn duyệt ${selectedOrderIds.length} đơn hàng đã chọn sang trạng thái "📦 Chờ lấy hàng" không?`)) {
+    if (confirm(`Bạn có chắc chắn muốn duyệt ${selectedOrderIds.length} đơn hàng đã chọn sang trạng thái "Chờ lấy hàng" không?`)) {
       setLoading(true);
       for (const id of selectedOrderIds) {
         await updateAdminOrderStatus(id, "processing");
@@ -151,29 +152,29 @@ export default function AdminOrdersPage() {
   const getStatusPill = (status: UnifiedOrder["status"]) => {
     switch (status) {
       case "pending":
-        return <span className="status-pill status-pending">⏳ Chờ xác nhận</span>;
+        return <span className="status-pill status-pending" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}><Clock className="w-3.5 h-3.5" /> Chờ xác nhận</span>;
       case "processing":
-        return <span className="status-pill status-processing">📦 Chờ lấy hàng</span>;
+        return <span className="status-pill status-processing" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}><Package className="w-3.5 h-3.5" /> Chờ lấy hàng</span>;
       case "shipping":
-        return <span className="status-pill status-shipping">🚚 Đang giao hàng</span>;
+        return <span className="status-pill status-shipping" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}><Truck className="w-3.5 h-3.5" /> Đang giao hàng</span>;
       case "completed":
-        return <span className="status-pill status-completed">✅ Đã hoàn thành</span>;
+        return <span className="status-pill status-completed" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}><CheckCircle2 className="w-3.5 h-3.5" /> Đã hoàn thành</span>;
       case "cancelled":
-        return <span className="status-pill status-cancelled">❌ Đã hủy</span>;
+        return <span className="status-pill status-cancelled" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}><XCircle className="w-3.5 h-3.5" /> Đã hủy</span>;
       default:
-        return <span className="status-pill status-pending">⏳ {status}</span>;
+        return <span className="status-pill status-pending" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}><Clock className="w-3.5 h-3.5" /> {status}</span>;
     }
   };
 
   const [paymentFilter, setPaymentFilter] = useState<string>("all");
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelOrderId, setCancelOrderId] = useState<string | null>(null);
-  const [cancelReasonPreset, setCancelReasonPreset] = useState("📦 Hết hàng trong kho");
+  const [cancelReasonPreset, setCancelReasonPreset] = useState("Hết hàng trong kho");
   const [cancelReasonCustom, setCancelReasonCustom] = useState("");
 
   const handleOpenCancelModal = (id: string) => {
     setCancelOrderId(id);
-    setCancelReasonPreset("📦 Hết hàng trong kho");
+    setCancelReasonPreset("Hết hàng trong kho");
     setCancelReasonCustom("");
     setShowCancelModal(true);
   };
@@ -188,7 +189,7 @@ export default function AdminOrdersPage() {
     const supabase = createClient();
     await supabase
       .from("orders")
-      .update({ status: "cancelled", status_text: "❌ Đã hủy đơn", cancel_reason: finalReason })
+      .update({ status: "cancelled", status_text: "Đã hủy đơn", cancel_reason: finalReason })
       .eq("id", cancelOrderId);
 
     setShowCancelModal(false);
@@ -591,7 +592,7 @@ export default function AdminOrdersPage() {
                       }}
                       title="Xóa tất cả bộ lọc"
                     >
-                      ✕ Xóa lọc
+                      <X className="w-3.5 h-3.5" /> Xóa lọc
                     </button>
                   )}
 
@@ -612,183 +613,192 @@ export default function AdminOrdersPage() {
                     <IconDownload size={14} color="#ffffff" /> Xuất File Excel
                   </button>
 
-                  {selectedOrderIds.length > 0 && (
-                    <button
-                      onClick={handleBulkApprove}
-                      className="select-filter-sm"
-                      style={{
-                        cursor: "pointer",
-                        background: "#1d4ed8",
-                        color: "#fff",
-                        border: "none",
-                        fontWeight: 700,
-                        marginLeft: "6px",
-                      }}
-                    >
-                      ⚡ Duyệt ({selectedOrderIds.length}) đơn đã chọn
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th style={{ width: "36px", textAlign: "center" }}>
-                      <input
-                        type="checkbox"
-                        checked={paginatedOrders.length > 0 && selectedOrderIds.length === paginatedOrders.length}
-                        onChange={(e) =>
-                          setSelectedOrderIds(e.target.checked ? paginatedOrders.map((o) => o.id) : [])
-                        }
-                      />
-                    </th>
-                    <th>Mã Đơn Hàng</th>
-                    <th>Khách Hàng</th>
-                    <th>Sản Phẩm Đặt</th>
-                    <th>Tổng Tiền</th>
-                    <th>Thanh Toán</th>
-                    <th>Trạng Thái</th>
-                    <th style={{ textAlign: "center" }}>Thao Tác</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedOrders.map((order) => (
-                    <tr key={order.id}>
-                      <td style={{ textAlign: "center" }}>
-                        <input
-                          type="checkbox"
-                          checked={selectedOrderIds.includes(order.id)}
-                          onChange={(e) =>
-                            setSelectedOrderIds((prev) =>
-                              e.target.checked ? [...prev, order.id] : prev.filter((id) => id !== order.id)
-                            )
-                          }
-                        />
-                      </td>
-                      <td>
-                        <strong>#{order.id}</strong>
-                        <br />
-                        <span
-                          style={{
-                            fontSize: "11px",
-                            color: "var(--text-muted)",
-                          }}
-                        >
-                          {order.date}
-                        </span>
-                      </td>
-                      <td>
-                        <strong>{order.recipientName}</strong>
-                        <br />
-                        <span
-                          style={{
-                            fontSize: "11px",
-                            color: "var(--text-muted)",
-                          }}
-                        >
-                          {order.recipientPhone}
-                        </span>
-                      </td>
-                      <td>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                          }}
-                        >
-                          <img
-                            src={fixImagePath(order.items[0]?.image || "/assets/images/products/noi-that-gia-dung/sofa-phong-khach.webp")}
-                            width="32"
-                            height="32"
-                            style={{
-                              borderRadius: "4px",
-                              objectFit: "cover",
-                            }}
-                            alt={order.items[0]?.name || "Sản phẩm"}
-                          />
-                          <span>
-                            {order.items[0]?.name || "Sản phẩm"}{" "}
-                            {order.items.length > 1 ? `(+${order.items.length - 1} món khác)` : `(x${order.items[0]?.qty || 1})`}
-                          </span>
-                        </div>
-                      </td>
-                      <td>
-                        <strong style={{ color: "var(--primary-color)" }}>
-                          {order.total.toLocaleString("vi-VN")}đ
-                        </strong>
-                      </td>
-                      <td>
-                        <span
-                          className="badge-visible"
-                          style={{
-                            background: order.paymentMethod.includes("VietQR")
-                              ? "#e8f5e9"
-                              : order.paymentMethod.includes("MoMo")
-                              ? "#e0f2fe"
-                              : order.paymentMethod.includes("ZaloPay")
-                              ? "#f3e8ff"
-                              : "#fef3c7",
-                            color: order.paymentMethod.includes("VietQR")
-                              ? "var(--primary-color)"
-                              : order.paymentMethod.includes("MoMo")
-                              ? "#0284c7"
-                              : order.paymentMethod.includes("ZaloPay")
-                              ? "#7e22ce"
-                              : "#d97706",
-                          }}
-                        >
-                          {order.paymentMethod}
-                        </span>
-                      </td>
-                      <td>{getStatusPill(order.status)}</td>
-                      <td style={{ textAlign: "center" }}>
-                        {order.status === "pending" && (
-                          <button
-                            className="btn-action-edit"
-                            onClick={() => handleApproveOrder(order.id)}
-                          >
-                            ✓ Duyệt đơn
-                          </button>
-                        )}
-                        {order.status === "processing" && (
-                          <button
-                            className="btn-action-edit"
-                            onClick={() => handleShipOrder(order.id)}
-                          >
-                            🚚 Giao ĐVVC
-                          </button>
-                        )}
-                        {order.status === "shipping" && (
-                          <button
-                            className="btn-action-edit"
-                            onClick={() => handleCompleteOrder(order.id)}
-                          >
-                            ✅ Đã giao
-                          </button>
-                        )}
-                        {order.status !== "completed" && order.status !== "cancelled" && (
-                          <button
-                            className="btn-action-delete"
-                            onClick={() => handleOpenCancelModal(order.id)}
-                            style={{ marginLeft: "4px" }}
-                          >
-                            ❌ Hủy đơn
-                          </button>
-                        )}
+                      {selectedOrderIds.length > 0 && (
                         <button
-                          className="btn-action-edit"
-                          onClick={() => setSelectedOrder(order)}
+                          onClick={handleBulkApprove}
+                          className="select-filter-sm"
                           style={{
-                            borderColor: "#cbd5e1",
-                            color: "#475569",
-                            marginLeft: "4px",
+                            cursor: "pointer",
+                            background: "#1d4ed8",
+                            color: "#fff",
+                            border: "none",
+                            fontWeight: 700,
+                            marginLeft: "6px",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px",
                           }}
                         >
-                          👁️ Chi tiết
+                          <Zap className="w-3.5 h-3.5" /> Duyệt ({selectedOrderIds.length}) đơn đã chọn
                         </button>
-                      </td>
+                      )}
+                    </div>
+                  </div>
+
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th style={{ width: "36px", textAlign: "center" }}>
+                          <input
+                            type="checkbox"
+                            checked={paginatedOrders.length > 0 && selectedOrderIds.length === paginatedOrders.length}
+                            onChange={(e) =>
+                              setSelectedOrderIds(e.target.checked ? paginatedOrders.map((o) => o.id) : [])
+                            }
+                          />
+                        </th>
+                        <th>Mã Đơn Hàng</th>
+                        <th>Khách Hàng</th>
+                        <th>Sản Phẩm Đặt</th>
+                        <th>Tổng Tiền</th>
+                        <th>Thanh Toán</th>
+                        <th>Trạng Thái</th>
+                        <th style={{ textAlign: "center" }}>Thao Tác</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paginatedOrders.map((order) => (
+                        <tr key={order.id}>
+                          <td style={{ textAlign: "center" }}>
+                            <input
+                              type="checkbox"
+                              checked={selectedOrderIds.includes(order.id)}
+                              onChange={(e) =>
+                                setSelectedOrderIds((prev) =>
+                                  e.target.checked ? [...prev, order.id] : prev.filter((id) => id !== order.id)
+                                )
+                              }
+                            />
+                          </td>
+                          <td>
+                            <strong>#{order.id}</strong>
+                            <br />
+                            <span
+                              style={{
+                                fontSize: "11px",
+                                color: "var(--text-muted)",
+                              }}
+                            >
+                              {order.date}
+                            </span>
+                          </td>
+                          <td>
+                            <strong>{order.recipientName}</strong>
+                            <br />
+                            <span
+                              style={{
+                                fontSize: "11px",
+                                color: "var(--text-muted)",
+                              }}
+                            >
+                              {order.recipientPhone}
+                            </span>
+                          </td>
+                          <td>
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                              }}
+                            >
+                              <img
+                                src={fixImagePath(order.items[0]?.image || "/assets/images/products/noi-that-gia-dung/sofa-phong-khach.webp")}
+                                width="32"
+                                height="32"
+                                style={{
+                                  borderRadius: "4px",
+                                  objectFit: "cover",
+                                }}
+                                alt={order.items[0]?.name || "Sản phẩm"}
+                              />
+                              <span>
+                                {order.items[0]?.name || "Sản phẩm"}{" "}
+                                {order.items.length > 1 ? `(+${order.items.length - 1} món khác)` : `(x${order.items[0]?.qty || 1})`}
+                              </span>
+                            </div>
+                          </td>
+                          <td>
+                            <strong style={{ color: "var(--primary-color)" }}>
+                              {order.total.toLocaleString("vi-VN")}đ
+                            </strong>
+                          </td>
+                          <td>
+                            <span
+                              className="badge-visible"
+                              style={{
+                                background: order.paymentMethod.includes("VietQR")
+                                  ? "#e8f5e9"
+                                  : order.paymentMethod.includes("MoMo")
+                                  ? "#e0f2fe"
+                                  : order.paymentMethod.includes("ZaloPay")
+                                  ? "#f3e8ff"
+                                  : "#fef3c7",
+                                color: order.paymentMethod.includes("VietQR")
+                                  ? "var(--primary-color)"
+                                  : order.paymentMethod.includes("MoMo")
+                                  ? "#0284c7"
+                                  : order.paymentMethod.includes("ZaloPay")
+                                  ? "#7e22ce"
+                                  : "#d97706",
+                              }}
+                            >
+                              {order.paymentMethod}
+                            </span>
+                          </td>
+                          <td>{getStatusPill(order.status)}</td>
+                          <td style={{ textAlign: "center" }}>
+                            {order.status === "pending" && (
+                              <button
+                                className="btn-action-edit"
+                                onClick={() => handleApproveOrder(order.id)}
+                                style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}
+                              >
+                                <Check className="w-3.5 h-3.5" /> Duyệt đơn
+                              </button>
+                            )}
+                            {order.status === "processing" && (
+                              <button
+                                className="btn-action-edit"
+                                onClick={() => handleShipOrder(order.id)}
+                                style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}
+                              >
+                                <Truck className="w-3.5 h-3.5" /> Giao ĐVVC
+                              </button>
+                            )}
+                            {order.status === "shipping" && (
+                              <button
+                                className="btn-action-edit"
+                                onClick={() => handleCompleteOrder(order.id)}
+                                style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}
+                              >
+                                <CheckCircle2 className="w-3.5 h-3.5" /> Đã giao
+                              </button>
+                            )}
+                            {order.status !== "completed" && order.status !== "cancelled" && (
+                              <button
+                                className="btn-action-delete"
+                                onClick={() => handleOpenCancelModal(order.id)}
+                                style={{ marginLeft: "4px", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                              >
+                                <XCircle className="w-3.5 h-3.5" /> Hủy đơn
+                              </button>
+                            )}
+                            <button
+                              className="btn-action-edit"
+                              onClick={() => setSelectedOrder(order)}
+                              style={{
+                                borderColor: "#cbd5e1",
+                                color: "#475569",
+                                marginLeft: "4px",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "4px",
+                              }}
+                            >
+                              <Eye className="w-3.5 h-3.5" /> Chi tiết
+                            </button>
+                          </td>
                     </tr>
                   ))}
                 </tbody>
@@ -906,7 +916,7 @@ export default function AdminOrdersPage() {
                 textTransform: "uppercase",
               }}
             >
-              {selectedOrder.status === "completed" ? "✔ ĐÃ THANH TOÁN" : selectedOrder.status === "cancelled" ? "✖ ĐÃ HỦY ĐƠN" : "✔ ĐÃ DUYỆT ĐƠN"}
+              {selectedOrder.status === "completed" ? "ĐÃ THANH TOÁN" : selectedOrder.status === "cancelled" ? "ĐÃ HỦY ĐƠN" : "ĐÃ DUYỆT ĐƠN"}
             </div>
             <div
               style={{
@@ -935,7 +945,7 @@ export default function AdminOrdersPage() {
                     color: "var(--text-muted)",
                   }}
                 >
-                  &times;
+                  <X className="w-5 h-5 text-slate-400 hover:text-slate-600" />
                 </button>
               </div>
             </div>
@@ -983,7 +993,9 @@ export default function AdminOrdersPage() {
                 <strong>Địa chỉ giao hàng:</strong> {selectedOrder.address}
               </div>
               <div style={{ marginTop: "4px" }}>
-                <strong>📌 Ghi chú vận chuyển / Mã vận đơn:</strong>
+                <strong style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                  <Truck className="w-3.5 h-3.5 text-emerald-700" /> Ghi chú vận chuyển / Mã vận đơn:
+                </strong>
                 <input
                   type="text"
                   placeholder="Nhập mã vận đơn hoặc ghi chú kho (VD: GHTK-882910)..."
@@ -1070,9 +1082,12 @@ export default function AdminOrdersPage() {
                   background: "#f8fafc",
                   borderRadius: "6px",
                   cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
                 }}
               >
-                🖨️ In Hóa Đơn A4
+                <Printer className="w-4 h-4" /> In Hóa Đơn A4
               </button>
               <button
                 onClick={() => setSelectedOrder(null)}
@@ -1110,8 +1125,8 @@ export default function AdminOrdersPage() {
               fontFamily: "'Plus Jakarta Sans', sans-serif",
             }}
           >
-            <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", marginBottom: "12px" }}>
-              ❌ Ghi Nhận Lý Do Hủy Đơn Hàng
+            <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", marginBottom: "12px", display: "flex", alignItems: "center", gap: "6px" }}>
+              <XCircle className="w-5 h-5 text-red-600" /> Ghi Nhận Lý Do Hủy Đơn Hàng
             </h3>
             <p style={{ fontSize: "13px", color: "#64748b", marginBottom: "16px" }}>
               Vui lòng chọn hoặc nhập lý do hủy đơn để thông báo cho khách hàng:
@@ -1119,11 +1134,11 @@ export default function AdminOrdersPage() {
 
             <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
               {[
-                "📦 Hết hàng trong kho",
-                "📞 Không liên lạc được với khách hàng",
-                "👤 Khách hàng yêu cầu hủy đơn",
-                "📍 Địa chỉ giao hàng không hợp lệ",
-                "❓ Lý do khác",
+                "Hết hàng trong kho",
+                "Không liên lạc được với khách hàng",
+                "Khách hàng yêu cầu hủy đơn",
+                "Địa chỉ giao hàng không hợp lệ",
+                "Lý do khác",
               ].map((reason) => (
                 <label
                   key={reason}
