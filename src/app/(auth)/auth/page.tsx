@@ -232,7 +232,7 @@ const MOCK_ORDERS: CustomerOrder[] = [
     id: "#MS-9824",
     date: "12/08/2026",
     status: "shipping",
-    statusText: "🚚 Đang giao hàng",
+    statusText: "Đang giao hàng",
     recipientName: "Bình Nguyễn",
     recipientPhone: "0988.123.456",
     address: "123 Đường Nguyễn Trãi, Phường Bến Thành, Quận 1, TP. Hồ Chí Minh",
@@ -259,7 +259,7 @@ const MOCK_ORDERS: CustomerOrder[] = [
     id: "#MS-7102",
     date: "01/08/2026",
     status: "completed",
-    statusText: "✅ Đã hoàn thành",
+    statusText: "Đã hoàn thành",
     recipientName: "Bình Nguyễn",
     recipientPhone: "0988.123.456",
     address: "123 Đường Nguyễn Trãi, Phường Bến Thành, Quận 1, TP. Hồ Chí Minh",
@@ -465,7 +465,7 @@ export default function AuthPage() {
       else if (randomAngle % 2 === 0) pts = 150;
 
       addPointsAndHistory("Vòng quay may mắn", pts, "WHEEL");
-      setSpinResultMsg(`🎉 Chúc mừng! Bạn quay trúng +${pts} Điểm Thưởng! (Đã cộng vào Lịch sử)`);
+      setSpinResultMsg(`Chúc mừng! Bạn quay trúng +${pts} Điểm Thưởng! (Đã cộng vào Lịch sử)`);
     }, 3500);
   };
 
@@ -475,16 +475,16 @@ export default function AuthPage() {
   );
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelTargetOrder, setCancelTargetOrder] = useState<UnifiedOrder | null>(null);
-  const [cancelReasonPreset, setCancelReasonPreset] = useState("📍 Thay đổi địa chỉ / Số điện thoại nhận hàng");
+  const [cancelReasonPreset, setCancelReasonPreset] = useState("Thay đổi địa chỉ / Số điện thoại nhận hàng");
   const [cancelReasonCustom, setCancelReasonCustom] = useState("");
 
   const CANCELLATION_REASONS = [
-    "📍 Thay đổi địa chỉ / Số điện thoại nhận hàng",
-    "🛒 Muốn đổi / thêm bớt sản phẩm trong đơn hàng",
-    "🎟️ Quên áp dụng mã giảm giá / Voucher ưu đãi",
-    "⏱️ Thời gian giao hàng không phù hợp",
-    "💵 Tìm được sản phẩm khác giá tốt hơn",
-    "❓ Lý do khác (Cho phép nhập ghi chú bên dưới)",
+    "Thay đổi địa chỉ / Số điện thoại nhận hàng",
+    "Muốn đổi / thêm bớt sản phẩm trong đơn hàng",
+    "Quên áp dụng mã giảm giá / Voucher ưu đãi",
+    "Thời gian giao hàng không phù hợp",
+    "Tìm được sản phẩm khác giá tốt hơn",
+    "Lý do khác (Cho phép nhập ghi chú bên dưới)",
   ];
 
   const handleConfirmCancelOrder = (e: React.FormEvent) => {
@@ -541,9 +541,9 @@ export default function AuthPage() {
     setIsSubmitting(false);
 
     if (!res.success) {
-      setAuthError(`⚠️ Đăng nhập thất bại: ${res.error || "Sai email hoặc mật khẩu!"}`);
+      setAuthError(`Đăng nhập thất bại: ${res.error || "Sai email hoặc mật khẩu!"}`);
     } else {
-      setAuthSuccess("✅ Đăng nhập thành công!");
+      setAuthSuccess("Đăng nhập thành công!");
       setTimeout(() => {
         if (loginEmail.trim().toLowerCase().includes("admin")) {
           router.push("/admin");
@@ -560,17 +560,17 @@ export default function AuthPage() {
     setAuthSuccess("");
 
     if (!regEmail || !regPassword || !regName || !regConfirmPassword) {
-      setAuthError("⚠️ Vui lòng điền đầy đủ Tên, Email, Mật khẩu và Xác nhận mật khẩu!");
+      setAuthError("Vui lòng điền đầy đủ Tên, Email, Mật khẩu và Xác nhận mật khẩu!");
       return;
     }
 
     if (regPassword.length < 6) {
-      setAuthError("⚠️ Mật khẩu phải có tối thiểu 6 ký tự!");
+      setAuthError("Mật khẩu phải có tối thiểu 6 ký tự!");
       return;
     }
 
     if (regPassword !== regConfirmPassword) {
-      setAuthError("⚠️ Mật khẩu và Xác nhận mật khẩu không trùng khớp!");
+      setAuthError("Mật khẩu và Xác nhận mật khẩu không trùng khớp!");
       return;
     }
 
@@ -579,9 +579,9 @@ export default function AuthPage() {
     setIsSubmitting(false);
 
     if (!res.success) {
-      setAuthError(`⚠️ Đăng ký thất bại: ${res.error}`);
+      setAuthError(`Đăng ký thất bại: ${res.error}`);
     } else {
-      setAuthSuccess("✅ Đăng ký tài khoản thành công! Hệ thống đang tự động đăng nhập...");
+      setAuthSuccess("Đăng ký tài khoản thành công! Hệ thống đang tự động đăng nhập...");
       setTimeout(() => {
         router.push("/");
       }, 1000);
@@ -595,7 +595,7 @@ export default function AuthPage() {
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
-    setRedeemFeedback("✅ Cập nhật hồ sơ thành công!");
+    setRedeemFeedback("Cập nhật hồ sơ thành công!");
     setTimeout(() => setRedeemFeedback(""), 3000);
   };
 

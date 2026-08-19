@@ -10,7 +10,7 @@ import { useAuth } from "@/context/AuthContext";
 import { PRODUCTS_DATA } from "@/data/products";
 import { formatVND, fixImagePath } from "@/lib/utils";
 
-import { Zap, Search, ShoppingCart } from "lucide-react";
+import { Zap, Search, ShoppingCart, Heart, LogOut } from "lucide-react";
 
 export const Header: React.FC = () => {
   const pathname = usePathname();
@@ -279,7 +279,7 @@ export const Header: React.FC = () => {
               title="Danh sách Yêu thích"
             >
               <div className="btn-stacked-icon">
-                <span className="icon-symbol">♥</span>
+                <Heart style={{ width: 20, height: 20, color: "#ef4444" }} />
                 <sup className="badge-superscript count-red">
                   {totalWishlistItems}
                 </sup>
@@ -330,9 +330,12 @@ export const Header: React.FC = () => {
                       fontSize: "12px",
                       color: "var(--text-muted)",
                       height: "40px",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
-                    🚪
+                    <LogOut className="w-4 h-4 text-slate-600" />
                   </button>
                 </div>
               ) : (
@@ -364,9 +367,12 @@ export const Header: React.FC = () => {
                       fontSize: "12px",
                       color: "var(--text-muted)",
                       height: "40px",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
-                    🚪
+                    <LogOut className="w-4 h-4 text-slate-600" />
                   </button>
                 </div>
               )

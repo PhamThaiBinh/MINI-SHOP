@@ -109,7 +109,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const addToCart = (product: Product, quantity = 1) => {
     const maxStock = product.stock !== undefined ? product.stock : 99;
     if (maxStock <= 0) {
-      showToast(`⚠️ Sản phẩm "${product.name}" hiện đã hết hàng trong kho!`);
+      showToast(`Sản phẩm "${product.name}" hiện đã hết hàng trong kho!`);
       return;
     }
 
@@ -136,7 +136,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     if (isExceeded) {
-      showToast(`⚠️ Kho chỉ còn tối đa ${maxStock} món cho sản phẩm "${product.name}"!`);
+      showToast(`Kho chỉ còn tối đa ${maxStock} món cho sản phẩm "${product.name}"!`);
     }
   };
 
@@ -154,7 +154,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (item.product.id === productId) {
           const maxStock = item.product.stock !== undefined ? item.product.stock : 99;
           if (quantity > maxStock) {
-            showToast(`⚠️ Kho chỉ còn tối đa ${maxStock} món!`);
+            showToast(`Kho chỉ còn tối đa ${maxStock} món!`);
             return { ...item, quantity: maxStock };
           }
           return { ...item, quantity };

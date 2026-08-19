@@ -101,7 +101,7 @@ export const fetchAdminUsers = async (): Promise<AdminUserItem[]> => {
       username: String(u.username),
       email: String(u.email || ""),
       phone: String(u.phone || ""),
-      role: String(u.role || "🛍️ Khách hàng"),
+      role: String(u.role || "Khách hàng"),
       roleType: (u.role_type === "admin" ? "admin" : "customer") as any,
       registeredDate: String(u.registered_date || "01/01/2026"),
       status: (u.status === "Blocked" ? "Blocked" : "Active") as any,
@@ -264,7 +264,7 @@ export const fetchAdminOrders = async (): Promise<UnifiedOrder[]> => {
         id: String(o.id),
         date: String(o.date),
         status: o.status as any,
-        statusText: String(o.status_text || "📦 Đang xử lý"),
+        statusText: String(o.status_text || "Đang xử lý"),
         recipientName: String(o.recipient_name),
         recipientPhone: String(o.recipient_phone),
         address: String(o.address),
@@ -291,11 +291,11 @@ export const updateAdminOrderStatus = async (
   try {
     const supabase = createClient();
     const statusMap = {
-      pending: "📋 Chờ xác nhận",
-      processing: "📦 Đang xử lý đơn hàng",
-      shipping: "🚚 Đang vận chuyển",
-      completed: "✅ Đã giao hàng thành công",
-      cancelled: `❌ Đã hủy đơn${cancelReason ? `: ${cancelReason}` : ""}`,
+      pending: "Chờ xác nhận",
+      processing: "Đang xử lý đơn hàng",
+      shipping: "Đang vận chuyển",
+      completed: "Đã giao hàng thành công",
+      cancelled: `Đã hủy đơn${cancelReason ? `: ${cancelReason}` : ""}`,
     };
 
     const updateObj: any = {

@@ -15,7 +15,7 @@ interface ProductCardProps {
 
 import { IconEye } from "@/components/common/Icons";
 
-import { ShoppingCart, ArrowRight } from "lucide-react";
+import { ShoppingCart, ArrowRight, X } from "lucide-react";
 
 export const ProductCard: React.FC<ProductCardProps> = ({
   product,
@@ -151,18 +151,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               onClick={() => setShowQuickView(false)}
               style={{
                 position: "absolute",
-                top: "14px",
-                right: "14px",
-                border: "none",
+                top: "12px",
+                right: "12px",
                 background: "#f1f5f9",
+                border: "none",
                 borderRadius: "50%",
                 width: "30px",
                 height: "30px",
                 cursor: "pointer",
                 fontWeight: 800,
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
-              ✕
+              <X className="w-4 h-4 text-slate-600" />
             </button>
             <div style={{ display: "flex", gap: "16px" }}>
               <img
@@ -252,9 +255,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                   fontWeight: 800,
                   fontSize: "14px",
                   cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
                 }}
               >
-                🛒 Thêm vào giỏ
+                <ShoppingCart className="w-4 h-4" /> Thêm vào giỏ
               </button>
               <Link
                 href={`/products/${product.id}`}

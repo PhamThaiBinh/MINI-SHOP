@@ -43,7 +43,7 @@ export const lookupOrderFromSupabase = async (
       id: String(matched.id),
       date: String(matched.date),
       status: matched.status as any,
-      statusText: String(matched.status_text || "📋 Đang xử lý"),
+      statusText: String(matched.status_text || "Đang xử lý"),
       recipientName: String(matched.recipient_name),
       recipientPhone: String(matched.recipient_phone),
       address: String(matched.address),

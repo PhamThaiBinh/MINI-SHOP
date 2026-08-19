@@ -2,7 +2,7 @@
 
 import React, { useEffect } from "react";
 import Link from "next/link";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, RotateCcw, Home } from "lucide-react";
 
 export default function GlobalError({
   error,
@@ -75,9 +75,12 @@ export default function GlobalError({
               fontWeight: 700,
               cursor: "pointer",
               fontSize: "14px",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
             }}
           >
-            🔄 Thử Lại
+            <RotateCcw className="w-4 h-4" /> Thử Lại
           </button>
 
           <Link
@@ -91,10 +94,12 @@ export default function GlobalError({
               fontWeight: 700,
               textDecoration: "none",
               fontSize: "14px",
-              display: "inline-block",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
             }}
           >
-            🏠 Về Trang Chủ
+            <Home className="w-4 h-4" /> Về Trang Chủ
           </Link>
         </div>
       </div>

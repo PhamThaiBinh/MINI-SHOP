@@ -7,6 +7,7 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { fixImagePath, formatVND } from "@/lib/utils";
 import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
+import { Edit, Trash2, Plus } from "lucide-react";
 import { saveAdminProduct, deleteAdminProduct, fetchAdminCategories } from "@/lib/supabaseAdmin";
 
 interface ProductItem {
@@ -291,9 +292,12 @@ export default function AdminProductsPage() {
                                   cursor: "pointer",
                                   fontSize: "12px",
                                   fontWeight: 700,
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "4px",
                                 }}
                               >
-                                ✏️ Sửa
+                                <Edit className="w-3.5 h-3.5" /> Sửa
                               </button>
                               <button
                                 onClick={() => handleDeleteProduct(prod.id)}
@@ -306,9 +310,12 @@ export default function AdminProductsPage() {
                                   cursor: "pointer",
                                   fontSize: "12px",
                                   fontWeight: 700,
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "4px",
                                 }}
                               >
-                                🗑️ Xóa
+                                <Trash2 className="w-3.5 h-3.5" /> Xóa
                               </button>
                             </div>
                           </td>
@@ -443,7 +450,7 @@ export default function AdminProductsPage() {
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
               <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", margin: 0 }}>
-                {editingProduct ? "✏️ Chỉnh Sửa Sản Phẩm" : "🛍️ Form Sản Phẩm Mới"}
+                {editingProduct ? "Chỉnh Sửa Sản Phẩm" : "Form Sản Phẩm Mới"}
               </h3>
               <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer" }}>&times;</button>
             </div>

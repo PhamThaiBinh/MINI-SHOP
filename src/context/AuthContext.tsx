@@ -169,7 +169,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         if (blockedListStr) {
           const blockedEmails: string[] = JSON.parse(blockedListStr);
           if (Array.isArray(blockedEmails) && blockedEmails.includes(currentUser.email)) {
-            alert("🔒 Tài khoản của bạn đã bị Quản trị viên khóa. Hệ thống tự động đăng xuất!");
+            alert("Tài khoản của bạn đã bị Quản trị viên khóa. Hệ thống tự động đăng xuất!");
             logout();
             return true;
           }
@@ -277,7 +277,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         username: "@" + cleanName.toLowerCase().replace(/\s+/g, "_"),
         email: cleanEmail,
         phone: "0988.123.456",
-        role: role === "admin" ? "👑 Administrator" : "🛍️ Khách hàng",
+        role: role === "admin" ? "Administrator" : "Khách hàng",
         role_type: role,
         registered_date: new Date().toLocaleDateString("vi-VN"),
         status: "Active",

@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { ShoppingCart, AlertTriangle, UserCheck, MessageSquare } from "lucide-react";
+import { ShoppingCart, AlertTriangle, UserCheck, MessageSquare, Menu, Bell, Settings, Users, LogOut } from "lucide-react";
 
 interface AdminHeaderProps {
   title: string;
@@ -101,8 +101,9 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
           className="btn-menu-toggle"
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
           title="Ẩn/Hiện Sidebar Menu"
+          style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}
         >
-          ☰
+          <Menu className="w-5 h-5 text-slate-700" />
         </button>
         <h1 className="admin-page-title">{title}</h1>
       </div>
@@ -128,10 +129,10 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
               setShowNotifications(!showNotifications);
               setShowProfileMenu(false);
             }}
-            style={{ cursor: "pointer", userSelect: "none" }}
+            style={{ cursor: "pointer", userSelect: "none", display: "inline-flex", alignItems: "center", justifyContent: "center" }}
             title="Xem thông báo hệ thống"
           >
-            🔔
+            <Bell className="w-5 h-5 text-slate-700" />
             {unreadCount > 0 && <span className="bell-badge">{unreadCount}</span>}
           </div>
 
@@ -160,8 +161,8 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
                   alignItems: "center",
                 }}
               >
-                <strong style={{ fontSize: "14px", color: "#0f172a" }}>
-                  🔔 Thông Báo Hệ Thống
+                <strong style={{ fontSize: "14px", color: "#0f172a", display: "flex", alignItems: "center", gap: "6px" }}>
+                  <Bell className="w-4 h-4 text-emerald-700" /> Thông Báo Hệ Thống
                 </strong>
                 {unreadCount > 0 && (
                   <button
@@ -298,7 +299,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
                     textDecoration: "none",
                   }}
                 >
-                  ⚙️ Cài đặt hệ thống
+                  <Settings className="w-4 h-4 text-slate-600" /> Cài đặt hệ thống
                 </Link>
                 <Link
                   href="/admin/users"
@@ -314,7 +315,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
                     textDecoration: "none",
                   }}
                 >
-                  👥 Quản lý người dùng
+                  <Users className="w-4 h-4 text-slate-600" /> Quản lý người dùng
                 </Link>
                 <div
                   onClick={handleLogout}
@@ -331,7 +332,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
                     marginTop: "4px",
                   }}
                 >
-                  🚪 Đăng xuất khỏi hệ thống
+                  <LogOut className="w-4 h-4 text-red-600" /> Đăng xuất khỏi hệ thống
                 </div>
               </div>
             </div>

@@ -45,13 +45,13 @@ export const fetchProductsFromSupabase = async (): Promise<Product[]> => {
 
 export const fetchCategoriesFromSupabase = async (): Promise<SupabaseCategory[]> => {
   const defaultCategories: SupabaseCategory[] = [
-    { id: "All", label: "Tất cả", icon: "📁" },
-    { id: "Living Room", label: "Phòng khách", icon: "🛋️" },
-    { id: "Bedroom", label: "Phòng ngủ", icon: "🛏️" },
-    { id: "Kitchen", label: "Nhà bếp", icon: "🍳" },
-    { id: "Lighting", label: "Đèn", icon: "💡" },
-    { id: "Decor", label: "Trang trí", icon: "🖼️" },
-    { id: "Storage", label: "Lưu trữ", icon: "📦" },
+    { id: "All", label: "Tất cả", icon: "Package" },
+    { id: "Living Room", label: "Phòng khách", icon: "Sofa" },
+    { id: "Bedroom", label: "Phòng ngủ", icon: "Bed" },
+    { id: "Kitchen", label: "Nhà bếp", icon: "Utensils" },
+    { id: "Lighting", label: "Đèn", icon: "Lamp" },
+    { id: "Decor", label: "Trang trí", icon: "Sparkles" },
+    { id: "Storage", label: "Lưu trữ", icon: "Box" },
   ];
 
   try {
@@ -68,7 +68,7 @@ export const fetchCategoriesFromSupabase = async (): Promise<SupabaseCategory[]>
     return data.map((row: any) => ({
       id: String(row.category_id),
       label: String(row.name),
-      icon: String(row.icon || "📁"),
+      icon: String(row.icon || "Folder"),
     }));
   } catch (err) {
     console.error("Error fetching categories from Supabase:", err);
