@@ -5,6 +5,7 @@ import Link from "next/link";
 import { formatVND, fixImagePath } from "@/lib/utils";
 import { UnifiedOrder } from "@/utils/orderStorage";
 import { lookupOrderFromSupabase } from "@/lib/supabaseOrders";
+import { Search } from "lucide-react";
 
 export default function TrackOrderPage() {
   const [searchCode, setSearchCode] = useState("");
@@ -58,7 +59,7 @@ export default function TrackOrderPage() {
               gap: "8px",
             }}
           >
-            🔍 TRA CỨU ĐƠN HÀNG NHANH
+            <Search style={{ width: 22, height: 22, color: "var(--primary-color)" }} /> TRA CỨU ĐƠN HÀNG NHANH
           </h1>
           <p style={{ fontSize: "14px", color: "var(--text-muted)", marginTop: "6px" }}>
             Nhập Mã đơn hàng hoặc Số điện thoại để tra cứu hành trình vận chuyển tức thì.
@@ -121,9 +122,13 @@ export default function TrackOrderPage() {
               fontSize: "15px",
               fontWeight: 800,
               cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "6px",
             }}
           >
-            🔍 Tra Cứu Ngay
+            <Search style={{ width: 16, height: 16 }} /> Tra Cứu Ngay
           </button>
         </form>
 

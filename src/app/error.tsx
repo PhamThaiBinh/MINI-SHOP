@@ -2,6 +2,7 @@
 
 import React, { useEffect } from "react";
 import Link from "next/link";
+import { AlertTriangle } from "lucide-react";
 
 export default function GlobalError({
   error,
@@ -38,7 +39,9 @@ export default function GlobalError({
           boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.05)",
         }}
       >
-        <div style={{ fontSize: "48px", marginBottom: "16px" }}>⚠️</div>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: "16px" }}>
+          <AlertTriangle className="w-12 h-12 text-amber-500" />
+        </div>
         <h2
           style={{
             fontSize: "20px",

@@ -216,7 +216,7 @@ export default function CheckoutPage() {
           const label = found.fixedDiscount
             ? `Giảm ${found.fixedDiscount.toLocaleString("vi-VN")}đ`
             : `Giảm ${found.percent}%`;
-          setVoucherMsg(`✅ Áp dụng thành công mã ${found.code} (${label})`);
+          setVoucherMsg(`Áp dụng thành công mã ${found.code} (${label})`);
         }
       }
     } catch (e) {
@@ -233,7 +233,7 @@ export default function CheckoutPage() {
       id: finalCode,
       date: fullDateStr,
       status: "processing",
-      statusText: "📦 Đang xử lý đơn hàng",
+      statusText: "Đang xử lý đơn hàng",
       recipientName: fullname,
       recipientPhone: phone,
       address: address,

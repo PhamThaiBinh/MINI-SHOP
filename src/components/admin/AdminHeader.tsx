@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { ShoppingCart, AlertTriangle, UserCheck, MessageSquare } from "lucide-react";
 
 interface AdminHeaderProps {
   title: string;
@@ -36,7 +37,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
   const notifications = [
     {
       id: 1,
-      icon: "🛒",
+      icon: <ShoppingCart className="w-4 h-4 text-emerald-600" />,
       title: "Đơn hàng mới #MS-9824",
       desc: "Khách hàng Bình Nguyễn vừa đặt 3.539.000đ",
       time: "Vừa xong",
@@ -45,7 +46,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
     },
     {
       id: 2,
-      icon: "⚠️",
+      icon: <AlertTriangle className="w-4 h-4 text-amber-600" />,
       title: "Cảnh báo tồn kho thấp",
       desc: "Sản phẩm Kệ gỗ đa năng còn dưới 10 món",
       time: "15 phút trước",
@@ -54,12 +55,21 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
     },
     {
       id: 3,
-      icon: "👤",
+      icon: <UserCheck className="w-4 h-4 text-blue-600" />,
       title: "Thành viên VIP mới",
       desc: "Tài khoản @binh_nguyen vừa kích hoạt VIP",
       time: "1 giờ trước",
       unread: true,
       link: "/admin/users",
+    },
+    {
+      id: 4,
+      icon: <MessageSquare className="w-4 h-4 text-purple-600" />,
+      title: "Đánh giá 5 sao mới",
+      desc: "Đánh giá tuyệt vời cho Bàn ăn gỗ sồi",
+      time: "3 giờ trước",
+      unread: false,
+      link: "/admin/products",
     },
   ];
 

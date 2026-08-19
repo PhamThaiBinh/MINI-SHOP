@@ -10,7 +10,7 @@ import { useAuth } from "@/context/AuthContext";
 import { PRODUCTS_DATA } from "@/data/products";
 import { formatVND, fixImagePath } from "@/lib/utils";
 
-import { Zap, Search } from "lucide-react";
+import { Zap, Search, ShoppingCart } from "lucide-react";
 
 export const Header: React.FC = () => {
   const pathname = usePathname();
@@ -292,7 +292,7 @@ export const Header: React.FC = () => {
               title="Giỏ hàng"
             >
               <div className="btn-stacked-icon">
-                <span className="icon-symbol">🛒</span>
+                <ShoppingCart style={{ width: 20, height: 20, color: "var(--primary-color)" }} />
                 <sup className="badge-superscript count-green">
                   {totalItems}
                 </sup>

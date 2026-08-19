@@ -5,6 +5,7 @@ import Link from "next/link";
 import "@/styles/contact.css";
 import { sendContactMessageToSupabase } from "@/lib/supabaseContact";
 import { getStoreSettings, StoreSettings } from "@/lib/storeSettings";
+import { MapPin, Phone, Mail, Clock, Send, CheckCircle2 } from "lucide-react";
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -83,7 +84,7 @@ export default function ContactPage() {
               <h2 className="contact-info-title">Thông Tin Trụ Sở</h2>
 
               <div className="contact-item">
-                <div className="contact-icon">📍</div>
+                <div className="contact-icon"><MapPin style={{ width: 18, height: 18, color: "var(--primary-color)" }} /></div>
                 <div className="contact-text">
                   <strong>Địa chỉ showroom:</strong>
                   <span>{storeInfo.address}</span>
@@ -91,7 +92,7 @@ export default function ContactPage() {
               </div>
 
               <div className="contact-item">
-                <div className="contact-icon">📞</div>
+                <div className="contact-icon"><Phone style={{ width: 18, height: 18, color: "var(--primary-color)" }} /></div>
                 <div className="contact-text">
                   <strong>Hotline tư vấn:</strong>
                   <span>{storeInfo.phone}</span>
@@ -99,7 +100,7 @@ export default function ContactPage() {
               </div>
 
               <div className="contact-item">
-                <div className="contact-icon">✉️</div>
+                <div className="contact-icon"><Mail style={{ width: 18, height: 18, color: "var(--primary-color)" }} /></div>
                 <div className="contact-text">
                   <strong>Email hỗ trợ:</strong>
                   <span>{storeInfo.email}</span>
@@ -107,7 +108,7 @@ export default function ContactPage() {
               </div>
 
               <div className="contact-item">
-                <div className="contact-icon">⏰</div>
+                <div className="contact-icon"><Clock style={{ width: 18, height: 18, color: "var(--primary-color)" }} /></div>
                 <div className="contact-text">
                   <strong>Giờ mở cửa:</strong>
                   <span>{storeInfo.workingHours}</span>
@@ -119,8 +120,8 @@ export default function ContactPage() {
             <div className="contact-form-card">
               <h2 className="contact-info-title">Gửi Tin Nhắn Cho Chúng Tôi</h2>
               {submitted && (
-                <div style={{ padding: "12px 16px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "6px", color: "#166534", fontSize: "14px", fontWeight: 700, marginBottom: "16px" }}>
-                  ✅ Cảm ơn bạn! Tin nhắn đã được gửi và lưu trực tiếp vào hệ thống. Bộ phận CSKH sẽ phản hồi trong 2 giờ.
+                <div style={{ padding: "12px 16px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "6px", color: "#166534", fontSize: "14px", fontWeight: 700, marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <CheckCircle2 style={{ width: 18, height: 18 }} /> Cảm ơn bạn! Tin nhắn đã được gửi và lưu trực tiếp vào hệ thống. Bộ phận CSKH sẽ phản hồi trong 2 giờ.
                 </div>
               )}
               <form className="contact-form" onSubmit={handleSubmit}>

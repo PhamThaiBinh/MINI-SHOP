@@ -8,6 +8,7 @@ import { PRODUCTS_DATA } from "@/data/products";
 import { Product } from "@/types/product";
 import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
 import "@/styles/product-list.css";
+import { Zap, ShoppingCart } from "lucide-react";
 
 // Generate 10 Flash Sale items per time slot guaranteed to be lower than original price
 const getSlotProducts = (productsList: Product[], slotIndex: number) => {
@@ -167,7 +168,7 @@ export default function FlashSalePage() {
               gap: "10px",
             }}
           >
-            ⚡ FLASH SALE SĂN DEAL GIỜ VÀNG
+            <Zap style={{ width: 28, height: 28, color: "#fef08a", fill: "#fef08a" }} /> FLASH SALE SĂN DEAL GIỜ VÀNG
           </h1>
           <p style={{ margin: "8px 0 0", fontSize: "14px", opacity: 0.9 }}>
             Khung giờ Việt Nam (UTC+7) - Ràng buộc giá FLASH SALE nhỏ hơn Giá Gốc 100%!

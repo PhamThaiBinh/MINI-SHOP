@@ -3,6 +3,7 @@
 import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { fetchFaqsFromSupabase, FaqItem } from "@/lib/supabasePolicy";
+import { ShieldCheck, RefreshCw, Truck, Lock, FileText, HelpCircle } from "lucide-react";
 
 function PolicyContent() {
   const searchParams = useSearchParams();
@@ -59,8 +60,8 @@ function PolicyContent() {
           boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
         }}
       >
-        <h1 style={{ fontSize: "26px", fontWeight: 900, margin: 0 }}>
-          🛡️ TRUNG TÂM CHÍNH SÁCH & ĐIỀU KHOẢN DỊCH VỤ
+        <h1 style={{ fontSize: "26px", fontWeight: 900, margin: 0, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+          <ShieldCheck className="w-7 h-7 text-emerald-400" /> TRUNG TÂM CHÍNH SÁCH & ĐIỀU KHOẢN DỊCH VỤ
         </h1>
         <p style={{ margin: "8px 0 0", fontSize: "14px", opacity: 0.85 }}>
           MINI-SHOP cam kết mang lại trải nghiệm mua sắm an tâm, minh bạch và bảo vệ tối đa quyền lợi khách hàng chuẩn Thương mại điện tử.
@@ -88,10 +89,14 @@ function PolicyContent() {
             fontWeight: 800,
             fontSize: "13px",
             textAlign: "center",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "6px",
             boxShadow: activeTab === "returns" ? "0 4px 12px rgba(46, 125, 50, 0.3)" : "none",
           }}
         >
-          🔄 Đổi Trả & Bảo Hành
+          <RefreshCw className="w-4 h-4" /> Đổi Trả & Bảo Hành
         </button>
 
         <button
@@ -106,10 +111,14 @@ function PolicyContent() {
             fontWeight: 800,
             fontSize: "13px",
             textAlign: "center",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "6px",
             boxShadow: activeTab === "shipping" ? "0 4px 12px rgba(46, 125, 50, 0.3)" : "none",
           }}
         >
-          🚚 Giao Hàng & Đồng Kiểm
+          <Truck className="w-4 h-4" /> Vận Chuyển & Giao Hàng
         </button>
 
         <button
@@ -124,10 +133,14 @@ function PolicyContent() {
             fontWeight: 800,
             fontSize: "13px",
             textAlign: "center",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "6px",
             boxShadow: activeTab === "privacy" ? "0 4px 12px rgba(46, 125, 50, 0.3)" : "none",
           }}
         >
-          🔒 Bảo Mật Thông Tin
+          <Lock className="w-4 h-4" /> Bảo Mật Thông Tin
         </button>
 
         <button
@@ -142,10 +155,14 @@ function PolicyContent() {
             fontWeight: 800,
             fontSize: "13px",
             textAlign: "center",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "6px",
             boxShadow: activeTab === "terms" ? "0 4px 12px rgba(46, 125, 50, 0.3)" : "none",
           }}
         >
-          📜 Điều Khoản Sử Dụng
+          <FileText className="w-4 h-4" /> Điều Khoản Dịch Vụ
         </button>
 
         <button
@@ -160,14 +177,16 @@ function PolicyContent() {
             fontWeight: 800,
             fontSize: "13px",
             textAlign: "center",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "6px",
             boxShadow: activeTab === "faq" ? "0 4px 12px rgba(46, 125, 50, 0.3)" : "none",
           }}
         >
-          ❓ Câu Hỏi Thường Gặp
+          <HelpCircle className="w-4 h-4" /> FAQ Câu Hỏi Thường Gặp
         </button>
       </div>
-
-
 
       {/* Content Container */}
       <div

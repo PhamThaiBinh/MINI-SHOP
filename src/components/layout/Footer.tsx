@@ -105,7 +105,7 @@ export const Footer: React.FC = () => {
                 <Link href="/track-order">Tra cứu đơn hàng nhanh</Link>
               </li>
               <li>
-                <Link href="/flash-sale">⚡ Săn Deal Flash Sale</Link>
+                <Link href="/flash-sale">Săn Deal Flash Sale</Link>
               </li>
               <li>
                 <Link href="/policy?tab=faq">Câu hỏi thường gặp (FAQ)</Link>
@@ -120,22 +120,22 @@ export const Footer: React.FC = () => {
           <div className="footer-col">
             <h4>Thông Tin Liên Hệ</h4>
             <ul className="contact-info">
-              <li>📍 {storeInfo.address}</li>
-              <li>📞 {storeInfo.phone} - Hotline hỗ trợ</li>
-              <li>✉️ {storeInfo.email}</li>
-              <li>⏰ {storeInfo.workingHours}</li>
+              <li>{storeInfo.address}</li>
+              <li>{storeInfo.phone} - Hotline hỗ trợ</li>
+              <li>{storeInfo.email}</li>
+              <li>{storeInfo.workingHours}</li>
             </ul>
             <div style={{ marginTop: "16px" }}>
-              <h4 style={{ fontSize: "14px", marginBottom: "8px" }}>📩 Đăng ký nhận bản tin ưu đãi</h4>
+              <h4 style={{ fontSize: "14px", marginBottom: "8px" }}>Đăng ký nhận bản tin ưu đãi</h4>
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
                   const trimmed = emailInput.trim();
                   if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
-                    setSubscribeMsg("⚠️ Vui lòng nhập email đúng định dạng (VD: name@domain.com)!");
+                    setSubscribeMsg("Vui lòng nhập email đúng định dạng (VD: name@domain.com)!");
                     return;
                   }
-                  setSubscribeMsg("✅ Đăng ký nhận tin ưu đãi thành công!");
+                  setSubscribeMsg("Đăng ký nhận tin ưu đãi thành công!");
                   setEmailInput("");
                   setTimeout(() => setSubscribeMsg(""), 4000);
                 }}

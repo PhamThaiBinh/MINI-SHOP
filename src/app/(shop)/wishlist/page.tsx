@@ -43,7 +43,7 @@ export default function WishlistPage() {
     wishlistProducts.forEach((p) => {
       addToCart(p, 1);
     });
-    setToastMsg(`🛒 Đã chuyển toàn bộ ${wishlistProducts.length} sản phẩm yêu thích vào giỏ hàng thành công!`);
+    setToastMsg(`Đã chuyển toàn bộ ${wishlistProducts.length} sản phẩm yêu thích vào giỏ hàng thành công!`);
     setTimeout(() => setToastMsg(""), 3500);
   };
 
