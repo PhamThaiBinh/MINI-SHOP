@@ -27,8 +27,6 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 
-import { CatalogHeroBanner } from "@/components/shop/CatalogHeroBanner";
-import { QuickFilterBar, QuickFilterType } from "@/components/shop/QuickFilterBar";
 import { CatalogFaqGuide } from "@/components/shop/CatalogFaqGuide";
 
 function ProductsContent() {
@@ -49,7 +47,6 @@ function ProductsContent() {
   const [sortBy, setSortBy] = useState<string>("newest");
   const [inStockOnly, setInStockOnly] = useState<boolean>(false);
   const [selectedMaterial, setSelectedMaterial] = useState<string>("all");
-  const [quickFilter, setQuickFilter] = useState<QuickFilterType>("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [pageSize, setPageSize] = useState<number>(12);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -156,16 +153,6 @@ function ProductsContent() {
     return true;
   };
 
-  const matchesQuickFilter = (product: Product, qf: QuickFilterType) => {
-    if (qf === "all") return true;
-    if (qf === "flashSale") return !!product.oldPrice && product.oldPrice > product.price;
-    if (qf === "bestseller") return (product.reviews || 0) >= 35 || product.badge === "Hot";
-    if (qf === "new") return product.badge === "Mới" || product.id >= 5;
-    if (qf === "wood") return `${product.name} ${product.description || ""}`.toLowerCase().match(/(gỗ|tre|mây|sồi)/);
-    if (qf === "fastDelivery") return (product.stock ?? 50) > 0;
-    return true;
-  };
-
   // Helper count for category items
   const getCategoryCount = (catId: string) => {
     return products.filter(
@@ -173,7 +160,6 @@ function ProductsContent() {
         matchesCategory(p.category, catId, p.categoryName) &&
         matchesPriceRange(p.price, currentPriceRange) &&
         matchesMaterial(p, selectedMaterial) &&
-        matchesQuickFilter(p, quickFilter) &&
         p.name.toLowerCase().includes(searchQuery.toLowerCase())
     ).length;
   };
@@ -185,7 +171,6 @@ function ProductsContent() {
         matchesCategory(p.category, currentCategory, p.categoryName) &&
         matchesPriceRange(p.price, rangeId) &&
         matchesMaterial(p, selectedMaterial) &&
-        matchesQuickFilter(p, quickFilter) &&
         p.name.toLowerCase().includes(searchQuery.toLowerCase())
     ).length;
   };
@@ -196,10 +181,9 @@ function ProductsContent() {
       const matchSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchPrice = matchesPriceRange(product.price, currentPriceRange);
       const matchMat = matchesMaterial(product, selectedMaterial);
-      const matchQF = matchesQuickFilter(product, quickFilter);
       const matchStock = inStockOnly ? (product.stock ?? 50) > 0 : true;
 
-      return matchCat && matchSearch && matchPrice && matchMat && matchQF && matchStock;
+      return matchCat && matchSearch && matchPrice && matchMat && matchStock;
     });
 
     if (sortBy === "price-asc") {
@@ -208,10 +192,12 @@ function ProductsContent() {
       result.sort((a, b) => b.price - a.price);
     } else if (sortBy === "bestselling") {
       result.sort((a, b) => (b.reviews || 0) - (a.reviews || 0));
+    } else if (sortBy === "newest") {
+      result.sort((a, b) => b.id - a.id);
     }
 
     return result;
-  }, [products, currentCategory, currentPriceRange, searchQuery, selectedMaterial, quickFilter, inStockOnly, sortBy]);
+  }, [products, currentCategory, currentPriceRange, searchQuery, selectedMaterial, inStockOnly, sortBy]);
 
   const currentCategoryLabel =
     categories.find((c) => c.id === currentCategory)?.label || "Tất cả sản phẩm";
@@ -220,19 +206,7 @@ function ProductsContent() {
     <>
       {/* Container 1300px */}
       <div className="container" style={{ paddingTop: "24px" }}>
-        {/* 1. Catalog Hero Banner Section */}
-        <CatalogHeroBanner />
-
-        {/* 2. Smart Quick Filter Badges Bar */}
-        <QuickFilterBar
-          activeFilter={quickFilter}
-          onFilterChange={(filter) => {
-            setQuickFilter(filter);
-            setCurrentPage(1);
-          }}
-        />
-
-        {/* 3. Main Product Catalogue Layout (2 Columns) */}
+        {/* Main Product Catalogue Layout (2 Columns) */}
         <div className="product-page-layout">
           {/* Left Filter Sidebar */}
           <aside className="filter-sidebar">
@@ -457,14 +431,13 @@ function ProductsContent() {
                       </svg>
                     </div>
 
-                    {(searchQuery || currentCategory !== "All" || currentPriceRange !== "all" || selectedMaterial !== "all" || quickFilter !== "all" || inStockOnly) && (
+                    {(searchQuery || currentCategory !== "All" || currentPriceRange !== "all" || selectedMaterial !== "all" || inStockOnly) && (
                       <button
                         onClick={() => {
                           setSearchQuery("");
                           setCurrentCategory("All");
                           setCurrentPriceRange("all");
                           setSelectedMaterial("all");
-                          setQuickFilter("all");
                           setInStockOnly(false);
                           setCurrentPage(1);
                         }}
@@ -547,7 +520,6 @@ function ProductsContent() {
                         setCurrentCategory("All");
                         setCurrentPriceRange("all");
                         setSelectedMaterial("all");
-                        setQuickFilter("all");
                         setSearchQuery("");
                       }}
                       style={{
@@ -787,7 +759,7 @@ function ProductsContent() {
           })()}
         </div>
 
-        {/* 4. Buyer's Guide & FAQ Section */}
+        {/* Buyer's Guide & FAQ Section */}
         <CatalogFaqGuide />
       </div>
     </>
