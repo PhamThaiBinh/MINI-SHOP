@@ -1,5 +1,6 @@
 import { createClient } from "@/utils/supabase/client";
 import { BLOG_ARTICLES, BlogArticle } from "@/data/blogs";
+export type { BlogArticle };
 
 export const fetchBlogsFromSupabase = async (): Promise<BlogArticle[]> => {
   try {

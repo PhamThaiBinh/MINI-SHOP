@@ -4,11 +4,18 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import "@/styles/home.css";
 import "@/styles/product-list.css";
+import { HeroShoppableSlider } from "@/components/home/HeroShoppableSlider";
+import { ValuePropositionBar } from "@/components/home/ValuePropositionBar";
+import { HomeFlashSale } from "@/components/home/HomeFlashSale";
+import { BentoLookbook } from "@/components/home/BentoLookbook";
+import { VoucherMarketplace } from "@/components/home/VoucherMarketplace";
+import { HomeBlogJournal } from "@/components/home/HomeBlogJournal";
+import { CustomerTestimonials } from "@/components/home/CustomerTestimonials";
 import { ProductCard } from "@/components/shop/ProductCard";
-import { fixImagePath } from "@/lib/utils";
 import { Product } from "@/types/product";
 import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
-import { Package, Sofa, Bed, Utensils, Lamp, Sparkles, Box, Truck, ShieldCheck, Headphones, ArrowRight } from "lucide-react";
+import { PRODUCTS_DATA } from "@/data/products";
+import { Package, Sofa, Bed, Utensils, Lamp, Sparkles, Box, ArrowRight } from "lucide-react";
 
 export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
@@ -19,7 +26,7 @@ export default function Home() {
     async function loadData() {
       setLoading(true);
       const data = await fetchProductsFromSupabase();
-      setProducts(data);
+      setProducts(data.length > 0 ? data : PRODUCTS_DATA);
       setLoading(false);
     }
     loadData();
@@ -84,59 +91,18 @@ export default function Home() {
 
   return (
     <>
-      {/* 2. Hero Banner Section */}
-      <section className="hero-section">
-        <div className="container">
-          <div className="hero-banner">
-            <div className="hero-content">
-              <h1 className="hero-title">Sống đẹp mỗi ngày cùng Mini Shop</h1>
-              <p className="hero-subtitle">Sản phẩm chất lượng cho tổ ấm của bạn.</p>
-              <Link href="/products" className="btn-hero-cta" id="hero-cta-btn">
-                Mua sắm ngay
-              </Link>
+      {/* 1. Hero Shoppable Slider Section */}
+      <div className="container">
+        <HeroShoppableSlider />
+      </div>
 
-              {/* Trust Badges */}
-              <div className="hero-badges">
-                <div className="badge-item">
-                  <div className="badge-icon">
-                    <Truck className="w-5 h-5 text-emerald-700" />
-                  </div>
-                  <div className="badge-text">
-                    <strong>Giao hàng nhanh</strong>
-                    <span>Toàn quốc</span>
-                  </div>
-                </div>
-                <div className="badge-item">
-                  <div className="badge-icon">
-                    <ShieldCheck className="w-5 h-5 text-emerald-700" />
-                  </div>
-                  <div className="badge-text">
-                    <strong>Bảo hành chính hãng</strong>
-                    <span>7 ngày đổi trả</span>
-                  </div>
-                </div>
-                <div className="badge-item">
-                  <div className="badge-icon">
-                    <Headphones className="w-5 h-5 text-emerald-700" />
-                  </div>
-                  <div className="badge-text">
-                    <strong>Hỗ trợ 24/7</strong>
-                    <span>Tư vấn tận tâm</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="hero-image-wrapper">
-              <img
-                src={fixImagePath("assets/images/banner/banner-trang-chu-mini-shop.webp")}
-                alt="Sống đẹp mỗi ngày cùng Mini Shop"
-              />
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* 2. Value Proposition VIP Bar */}
+      <ValuePropositionBar />
 
-      {/* 3. Category Pill Bar / Filter */}
+      {/* 3. Flash Sale Deals Stream */}
+      <HomeFlashSale />
+
+      {/* 4. Category Filter Bar */}
       <section className="categories-section">
         <div className="container">
           <div className="categories-bar">
@@ -154,8 +120,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. Featured Products Grid Section */}
-      <section className="products-section">
+      {/* 5. Featured Products Grid */}
+      <section className="products-section" style={{ marginBottom: "48px" }}>
         <div className="container">
           <div className="section-header">
             <h2 className="section-title">Sản phẩm nổi bật</h2>
@@ -181,6 +147,18 @@ export default function Home() {
           )}
         </div>
       </section>
+
+      {/* 6. Bento Grid Editorial Lookbook */}
+      <BentoLookbook />
+
+      {/* 7. Voucher Marketplace */}
+      <VoucherMarketplace />
+
+      {/* 8. Mini-Shop Decor Journal */}
+      <HomeBlogJournal />
+
+      {/* 9. Customer Testimonials & Instagram Wall */}
+      <CustomerTestimonials />
     </>
   );
 }
