@@ -23,11 +23,7 @@ import {
   ArrowRight,
   LayoutGrid,
   List as ListIcon,
-  Trees,
-  SlidersHorizontal,
 } from "lucide-react";
-
-import { CatalogFaqGuide } from "@/components/shop/CatalogFaqGuide";
 
 function ProductsContent() {
   const { addToCart } = useCart();
@@ -212,10 +208,7 @@ function ProductsContent() {
           <aside className="filter-sidebar">
             {/* Category Filter Group */}
             <div className="filter-group">
-              <div className="filter-group-title">
-                <span>Danh mục sản phẩm</span>
-                <SlidersHorizontal className="w-4 h-4 text-emerald-700" />
-              </div>
+              <div className="filter-group-title">Danh mục sản phẩm</div>
               <ul className="filter-list" id="category-filter-list">
                 {categories.map((cat) => (
                   <li
@@ -285,35 +278,33 @@ function ProductsContent() {
 
             {/* Material Filter Group */}
             <div className="filter-group">
-              <div className="filter-group-title">
-                <span>Chất liệu đặc trưng</span>
-                <Trees className="w-4 h-4 text-emerald-700" />
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <div className="filter-group-title">Chất liệu đặc trưng</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }} id="material-filter-list">
                 {materials.map((mat) => (
                   <label
                     key={mat.id}
+                    className="filter-option"
                     style={{
                       display: "flex",
+                      justifyContent: "space-between",
                       alignItems: "center",
-                      gap: "8px",
-                      fontSize: "14px",
-                      color: "var(--text-main)",
                       cursor: "pointer",
                     }}
                   >
-                    <input
-                      type="radio"
-                      name="material"
-                      value={mat.id}
-                      checked={selectedMaterial === mat.id}
-                      onChange={(e) => {
-                        setSelectedMaterial(e.target.value);
-                        setCurrentPage(1);
-                      }}
-                      style={{ cursor: "pointer" }}
-                    />
-                    <span>{mat.label}</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <input
+                        type="radio"
+                        name="material"
+                        value={mat.id}
+                        checked={selectedMaterial === mat.id}
+                        onChange={(e) => {
+                          setSelectedMaterial(e.target.value);
+                          setCurrentPage(1);
+                        }}
+                        style={{ cursor: "pointer" }}
+                      />
+                      <span style={{ fontSize: "14px", color: "var(--text-main)" }}>{mat.label}</span>
+                    </div>
                   </label>
                 ))}
               </div>
@@ -324,7 +315,15 @@ function ProductsContent() {
             {/* Stock Availability Group */}
             <div className="filter-group">
               <div className="filter-group-title">Trạng thái kho hàng</div>
-              <label className="filter-option" style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+              <label
+                className="filter-option"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  cursor: "pointer",
+                }}
+              >
                 <input
                   type="checkbox"
                   id="stock-checkbox"
@@ -335,7 +334,7 @@ function ProductsContent() {
                   }}
                   style={{ cursor: "pointer" }}
                 />
-                <span style={{ fontSize: "14px", color: "var(--text-main)", fontWeight: 600 }}>Chỉ hiện sản phẩm còn hàng</span>
+                <span style={{ fontSize: "14px", color: "var(--text-main)" }}>Chỉ hiện sản phẩm còn hàng</span>
               </label>
             </div>
           </aside>
@@ -758,9 +757,6 @@ function ProductsContent() {
             );
           })()}
         </div>
-
-        {/* Buyer's Guide & FAQ Section */}
-        <CatalogFaqGuide />
       </div>
     </>
   );
