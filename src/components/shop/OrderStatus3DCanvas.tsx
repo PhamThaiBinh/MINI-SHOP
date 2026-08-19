@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { CheckCircle2, Truck, Package, Check, Sparkles, RotateCw, Box } from "lucide-react";
+import { CheckCircle2, Truck, Check, Sparkles, RotateCw, Box } from "lucide-react";
 
 interface OrderStatus3DCanvasProps {
   status: "pending" | "processing" | "shipping" | "completed" | "cancelled" | string;
@@ -27,18 +27,18 @@ export const OrderStatus3DCanvas: React.FC<OrderStatus3DCanvasProps> = ({
 
     // Width & Height of container
     const width = container.clientWidth || 600;
-    const height = 320;
+    const height = 340;
 
-    // 1. Scene
+    // 1. Scene - Soft Studio Background
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xfcfbf9);
 
-    // 2. Camera
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    camera.position.set(0, 4, 9);
-    camera.lookAt(0, 0.8, 0);
+    // 2. Camera Setup
+    const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 1000);
+    camera.position.set(0, 3.8, 8.5);
+    camera.lookAt(0, 1.1, 0);
 
-    // 3. Renderer
+    // 3. WebGL Renderer with High Quality Shadows & Antialiasing
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -49,483 +49,492 @@ export const OrderStatus3DCanvas: React.FC<OrderStatus3DCanvasProps> = ({
     container.innerHTML = "";
     container.appendChild(renderer.domElement);
 
-    // 4. Lighting System
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+    // 4. Pixar Studio Lighting System
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.1);
     scene.add(ambientLight);
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1.8);
-    dirLight.position.set(5, 10, 7);
-    dirLight.castShadow = true;
-    dirLight.shadow.mapSize.width = 1024;
-    dirLight.shadow.mapSize.height = 1024;
-    dirLight.shadow.bias = -0.0001;
-    scene.add(dirLight);
+    const hemiLight = new THREE.HemisphereLight(0xfffbeb, 0xe2e8f0, 0.9);
+    hemiLight.position.set(0, 10, 0);
+    scene.add(hemiLight);
 
-    const pointLight = new THREE.PointLight(0x2e7d32, 2, 10);
-    pointLight.position.set(0, 3, 2);
-    scene.add(pointLight);
+    // Key Light (Warm Sunlight)
+    const keyLight = new THREE.DirectionalLight(0xfff7ed, 2.2);
+    keyLight.position.set(6, 12, 8);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.width = 2048;
+    keyLight.shadow.mapSize.height = 2048;
+    keyLight.shadow.bias = -0.0001;
+    keyLight.shadow.radius = 3;
+    scene.add(keyLight);
 
-    // 5. Ground Shadow Plane
-    const planeGeo = new THREE.PlaneGeometry(20, 20);
-    const planeMat = new THREE.MeshStandardMaterial({
+    // Rim Light (Cyan/Emerald backlight for Pixar glow edges)
+    const rimLight = new THREE.DirectionalLight(0x38bdf8, 1.5);
+    rimLight.position.set(-6, 8, -6);
+    scene.add(rimLight);
+
+    // 5. Soft Ground Shadow Disk
+    const groundGeo = new THREE.CylinderGeometry(3.5, 3.5, 0.04, 64);
+    const groundMat = new THREE.MeshStandardMaterial({
       color: 0xf1f5f9,
-      roughness: 0.8,
+      roughness: 0.9,
     });
-    const shadowPlane = new THREE.Mesh(planeGeo, planeMat);
-    shadowPlane.rotation.x = -Math.PI / 2;
-    shadowPlane.position.y = 0;
-    shadowPlane.receiveShadow = true;
-    scene.add(shadowPlane);
+    const groundDisk = new THREE.Mesh(groundGeo, groundMat);
+    groundDisk.position.set(0, 0, 0);
+    groundDisk.receiveShadow = true;
+    scene.add(groundDisk);
 
-    // 6. Dynamic Group Container for Stage Models
+    // 6. Stage Container Group
     const stageGroup = new THREE.Group();
     scene.add(stageGroup);
 
-    // Track Animation Handles
     let animFrameId: number;
     let clock = new THREE.Clock();
 
-    // Helper: Build Stage 1 (Pending / Order Placed Invoice & Seal Stamp)
+    // =========================================================================
+    // STAGE 1: Pending / Order Confirmation (Pixar Toy Receipt & Seal Stamp)
+    // =========================================================================
     const buildStagePending = () => {
-      // Paper Sheet
-      const paperGeo = new THREE.BoxGeometry(2.2, 0.05, 3.2);
+      const receiptGroup = new THREE.Group();
+
+      // Soft Rounded Toy Paper Sheet
+      const paperGeo = new THREE.BoxGeometry(2.4, 0.08, 3.4);
       const paperMat = new THREE.MeshStandardMaterial({
         color: 0xffffff,
-        roughness: 0.3,
+        roughness: 0.2,
       });
       const paper = new THREE.Mesh(paperGeo, paperMat);
       paper.position.set(0, 1.2, 0);
       paper.castShadow = true;
-      stageGroup.add(paper);
+      receiptGroup.add(paper);
 
-      // Textlines on paper
-      const lineMat = new THREE.MeshBasicMaterial({ color: 0xcbd5e1 });
-      for (let i = 0; i < 4; i++) {
-        const lineGeo = new THREE.BoxGeometry(1.6, 0.06, 0.15);
+      // Printed Lines
+      const lineMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.4 });
+      for (let i = 0; i < 5; i++) {
+        const lineGeo = new THREE.BoxGeometry(1.6, 0.04, 0.18);
         const line = new THREE.Mesh(lineGeo, lineMat);
-        line.position.set(0, 1.24, -1 + i * 0.5);
-        stageGroup.add(line);
+        line.position.set(0, 1.25, -1.1 + i * 0.45);
+        receiptGroup.add(line);
       }
 
-      // Green Confirmed Seal Stamp Badge
-      const stampGeo = new THREE.CylinderGeometry(0.65, 0.65, 0.2, 32);
+      // Pixar Emerald Confirmed Stamp Seal
+      const stampGeo = new THREE.CylinderGeometry(0.7, 0.7, 0.22, 32);
       const stampMat = new THREE.MeshStandardMaterial({
-        color: 0x15803d,
-        metalness: 0.3,
+        color: 0x10b981,
         roughness: 0.2,
+        metalness: 0.1,
       });
       const stamp = new THREE.Mesh(stampGeo, stampMat);
-      stamp.position.set(0, 1.4, 0.4);
+      stamp.position.set(0, 1.45, 0.5);
       stamp.castShadow = true;
-      stageGroup.add(stamp);
+      receiptGroup.add(stamp);
 
       // Glowing Inner Ring
-      const ringGeo = new THREE.TorusGeometry(0.5, 0.04, 16, 32);
-      const ringMat = new THREE.MeshBasicMaterial({ color: 0x86efac });
+      const ringGeo = new THREE.TorusGeometry(0.52, 0.05, 16, 32);
+      const ringMat = new THREE.MeshStandardMaterial({
+        color: 0xa7f3d0,
+        emissive: 0x34d399,
+        emissiveIntensity: 0.5,
+      });
       const ring = new THREE.Mesh(ringGeo, ringMat);
       ring.rotation.x = Math.PI / 2;
-      ring.position.set(0, 1.51, 0.4);
-      stageGroup.add(ring);
+      ring.position.set(0, 1.57, 0.5);
+      receiptGroup.add(ring);
 
-      // Star Particles
-      const particlesGroup = new THREE.Group();
-      const particleGeo = new THREE.OctahedronGeometry(0.08);
-      const particleMat = new THREE.MeshStandardMaterial({
-        color: 0xeab308,
-        emissive: 0xca8a04,
+      // Floating Toy Star Particles
+      const starsGroup = new THREE.Group();
+      const starGeo = new THREE.OctahedronGeometry(0.12);
+      const starMat = new THREE.MeshStandardMaterial({
+        color: 0xf59e0b,
+        emissive: 0xfbbf24,
+        emissiveIntensity: 0.6,
       });
       for (let i = 0; i < 8; i++) {
-        const p = new THREE.Mesh(particleGeo, particleMat);
+        const star = new THREE.Mesh(starGeo, starMat);
         const angle = (i / 8) * Math.PI * 2;
-        p.position.set(Math.cos(angle) * 1.6, 1.5 + (i % 2) * 0.3, Math.sin(angle) * 1.6);
-        particlesGroup.add(p);
+        star.position.set(Math.cos(angle) * 1.8, 1.6 + (i % 2) * 0.3, Math.sin(angle) * 1.8);
+        starsGroup.add(star);
       }
-      stageGroup.add(particlesGroup);
+      receiptGroup.add(starsGroup);
+
+      stageGroup.add(receiptGroup);
 
       return (delta: number, time: number) => {
-        paper.position.y = 1.2 + Math.sin(time * 2) * 0.08;
-        stamp.position.y = paper.position.y + 0.16;
-        ring.position.y = paper.position.y + 0.27;
-        particlesGroup.rotation.y = time * 0.8;
+        receiptGroup.position.y = Math.sin(time * 2.5) * 0.08;
+        starsGroup.rotation.y = time * 1.2;
       };
     };
 
-    // Helper: Build Stage 2 (Processing / Cardboard Box Warehouse & Tape Machine)
+    // =========================================================================
+    // STAGE 2: Processing / Packing (Pixar Toy Cardboard Box)
+    // =========================================================================
     const buildStageProcessing = () => {
-      // Conveyor Belt Frame
-      const beltGeo = new THREE.BoxGeometry(4.5, 0.2, 1.8);
-      const beltMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.5 });
-      const belt = new THREE.Mesh(beltGeo, beltMat);
-      belt.position.set(0, 0.1, 0);
-      belt.receiveShadow = true;
-      stageGroup.add(belt);
+      const packingGroup = new THREE.Group();
 
-      // Cardboard Box
-      const boxGeo = new THREE.BoxGeometry(2, 1.6, 2);
-      const boxMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.7 });
+      // Conveyor Platform
+      const platformGeo = new THREE.BoxGeometry(4.2, 0.25, 2.2);
+      const platformMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.5 });
+      const platform = new THREE.Mesh(platformGeo, platformMat);
+      platform.position.set(0, 0.12, 0);
+      platform.receiveShadow = true;
+      packingGroup.add(platform);
+
+      // Pixar Toy Cardboard Box (Warm Orange Clay)
+      const boxGeo = new THREE.BoxGeometry(2.2, 1.8, 2.2);
+      const boxMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.4 });
       const box = new THREE.Mesh(boxGeo, boxMat);
-      box.position.set(0, 1.0, 0);
+      box.position.set(0, 1.15, 0);
       box.castShadow = true;
-      stageGroup.add(box);
+      packingGroup.add(box);
 
-      // Green Tape Sealer Roll
-      const tapeGeo = new THREE.BoxGeometry(2.05, 0.06, 0.3);
-      const tapeMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.3 });
+      // Emerald Tape Strip
+      const tapeGeo = new THREE.BoxGeometry(2.25, 0.08, 0.35);
+      const tapeMat = new THREE.MeshStandardMaterial({ color: 0x10b981, roughness: 0.2 });
       const tape = new THREE.Mesh(tapeGeo, tapeMat);
-      tape.position.set(0, 1.84, 0);
-      stageGroup.add(tape);
+      tape.position.set(0, 2.06, 0);
+      packingGroup.add(tape);
 
-      // Barcode Label Sticker
-      const labelGeo = new THREE.BoxGeometry(0.02, 0.6, 0.8);
-      const labelMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-      const label = new THREE.Mesh(labelGeo, labelMat);
-      label.position.set(1.02, 1.0, 0);
-      stageGroup.add(label);
+      // Barcode Sticker
+      const stickerGeo = new THREE.BoxGeometry(0.04, 0.7, 0.9);
+      const stickerMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+      const sticker = new THREE.Mesh(stickerGeo, stickerMat);
+      sticker.position.set(1.12, 1.15, 0);
+      packingGroup.add(sticker);
+
+      stageGroup.add(packingGroup);
 
       return (delta: number, time: number) => {
-        box.position.y = 1.0 + Math.abs(Math.sin(time * 3)) * 0.05;
-        tape.position.y = box.position.y + 0.84;
-        label.position.y = box.position.y;
+        box.position.y = 1.15 + Math.abs(Math.sin(time * 3)) * 0.06;
+        tape.position.y = box.position.y + 0.91;
+        sticker.position.y = box.position.y;
       };
     };
 
-    // Helper: Build Stage 3 (Shipping / Moving Anime Shipper & Detailed Scooter Road)
+    // =========================================================================
+    // STAGE 3: Shipping (MATCHING REFERENCE IMAGE: Pixar Yellow Vespa & Purple Rider)
+    // =========================================================================
     const buildStageShipping = () => {
+      const shippingGroup = new THREE.Group();
+
       // Road Strip
       const roadGeo = new THREE.BoxGeometry(9, 0.08, 2.6);
       const roadMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.8 });
       const road = new THREE.Mesh(roadGeo, roadMat);
       road.position.set(0, 0.04, 0);
       road.receiveShadow = true;
-      stageGroup.add(road);
+      shippingGroup.add(road);
 
-      // Moving White Lane Markers
+      // Moving Road Dashes
       const dashesGroup = new THREE.Group();
       const dashMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-      for (let i = -4; i <= 4; i += 2) {
-        const dashGeo = new THREE.BoxGeometry(0.8, 0.09, 0.15);
+      for (let i = -4.5; i <= 4.5; i += 2.2) {
+        const dashGeo = new THREE.BoxGeometry(0.9, 0.09, 0.16);
         const dash = new THREE.Mesh(dashGeo, dashMat);
         dash.position.set(i, 0.05, 0);
         dashesGroup.add(dash);
       }
-      stageGroup.add(dashesGroup);
+      shippingGroup.add(dashesGroup);
 
-      // Main Scooter & Rider Group
-      const scooterGroup = new THREE.Group();
-      scooterGroup.position.set(0, 0.65, 0);
+      // Scooter + Rider Assembly
+      const scooterRiderGroup = new THREE.Group();
+      scooterRiderGroup.position.set(0, 0.65, 0);
 
-      // --- 1. DETAILED ANIME SCOOTER BODY ---
-      // Scooter Base Frame / Floorboard
-      const floorGeo = new THREE.BoxGeometry(2.4, 0.25, 0.9);
-      const floorMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.7 });
-      const floorboard = new THREE.Mesh(floorGeo, floorMat);
-      floorboard.position.set(0, 0.1, 0);
-      floorboard.castShadow = true;
-      scooterGroup.add(floorboard);
+      // --- A. RETRO PIXAR YELLOW VESPA SCOOTER ---
+      const vespaYellow = 0xfacc15; // Vibrant Yellow matching reference
+      const vespaMat = new THREE.MeshStandardMaterial({ color: vespaYellow, roughness: 0.3, metalness: 0.1 });
+      const blackMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.7 });
+      const chromeMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.8, roughness: 0.2 });
 
-      // Front Fairing / Apron
-      const apronGeo = new THREE.BoxGeometry(0.6, 0.9, 0.85);
-      const apronMat = new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.2, metalness: 0.1 });
-      const apron = new THREE.Mesh(apronGeo, apronMat);
-      apron.position.set(0.9, 0.55, 0);
-      apron.rotation.z = -0.15;
+      // Curved Front Apron
+      const apronGeo = new THREE.CylinderGeometry(0.45, 0.55, 1.1, 24);
+      const apron = new THREE.Mesh(apronGeo, vespaMat);
+      apron.rotation.z = -0.3;
+      apron.position.set(0.85, 0.65, 0);
       apron.castShadow = true;
-      scooterGroup.add(apron);
+      scooterRiderGroup.add(apron);
 
-      // Twin Anime LED Headlights
-      const lightMat = new THREE.MeshStandardMaterial({
+      // 3 VERTICAL GLOWING LED FRONT LIGHTS (EXACTLY MATCHING REFERENCE IMAGE)
+      const ledMat = new THREE.MeshStandardMaterial({
         color: 0xffffff,
-        emissive: 0xfef08a,
-        emissiveIntensity: 0.8,
+        emissive: 0xf59e0b,
+        emissiveIntensity: 1.8,
       });
-      const headlightGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.1, 16);
-      const headlightLeft = new THREE.Mesh(headlightGeo, lightMat);
-      headlightLeft.rotation.z = Math.PI / 2;
-      headlightLeft.position.set(1.22, 0.65, 0.2);
-      scooterGroup.add(headlightLeft);
-
-      const headlightRight = new THREE.Mesh(headlightGeo, lightMat);
-      headlightRight.rotation.z = Math.PI / 2;
-      headlightRight.position.set(1.22, 0.65, -0.2);
-      scooterGroup.add(headlightRight);
-
-      // Handlebars
-      const barGeo = new THREE.CylinderGeometry(0.04, 0.04, 1.1, 12);
-      const barMat = new THREE.MeshStandardMaterial({ color: 0x0f172a });
-      const handlebar = new THREE.Mesh(barGeo, barMat);
-      handlebar.position.set(0.75, 1.05, 0);
-      scooterGroup.add(handlebar);
-
-      // Mirrors
-      const mirrorStemGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.3);
-      const mirrorGlassGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.02, 16);
-      const mirrorMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8 });
-
-      const mirrorLeft = new THREE.Mesh(mirrorGlassGeo, mirrorMat);
-      mirrorLeft.position.set(0.7, 1.3, 0.5);
-      scooterGroup.add(mirrorLeft);
-
-      const mirrorRight = new THREE.Mesh(mirrorGlassGeo, mirrorMat);
-      mirrorRight.position.set(0.7, 1.3, -0.5);
-      scooterGroup.add(mirrorRight);
-
-      // Seat Cushion
-      const seatGeo = new THREE.BoxGeometry(1.2, 0.3, 0.75);
-      const seatMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.9 });
-      const seat = new THREE.Mesh(seatGeo, seatMat);
-      seat.position.set(-0.2, 0.35, 0);
-      seat.castShadow = true;
-      scooterGroup.add(seat);
-
-      // Wheels & Star Rims
-      const tireGeo = new THREE.CylinderGeometry(0.42, 0.42, 0.22, 24);
-      const tireMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.9 });
-      const rimGeo = new THREE.CylinderGeometry(0.25, 0.25, 0.23, 12);
-      const rimMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.7, roughness: 0.2 });
-
-      // Front Wheel Assembly
-      const wheelFrontGroup = new THREE.Group();
-      wheelFrontGroup.position.set(0.95, -0.22, 0);
-      const tireFront = new THREE.Mesh(tireGeo, tireMat);
-      tireFront.rotation.x = Math.PI / 2;
-      const rimFront = new THREE.Mesh(rimGeo, rimMat);
-      rimFront.rotation.x = Math.PI / 2;
-      wheelFrontGroup.add(tireFront);
-      wheelFrontGroup.add(rimFront);
-      scooterGroup.add(wheelFrontGroup);
-
-      // Back Wheel Assembly
-      const wheelBackGroup = new THREE.Group();
-      wheelBackGroup.position.set(-0.85, -0.22, 0);
-      const tireBack = new THREE.Mesh(tireGeo, tireMat);
-      tireBack.rotation.x = Math.PI / 2;
-      const rimBack = new THREE.Mesh(rimGeo, rimMat);
-      rimBack.rotation.x = Math.PI / 2;
-      wheelBackGroup.add(tireBack);
-      wheelBackGroup.add(rimBack);
-      scooterGroup.add(wheelBackGroup);
-
-      // MINI-SHOP Delivery Box on Rack
-      const cargoGeo = new THREE.BoxGeometry(1.1, 1.1, 1.1);
-      const cargoMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.5 });
-      const cargoBox = new THREE.Mesh(cargoGeo, cargoMat);
-      cargoBox.position.set(-0.85, 1.05, 0);
-      cargoBox.castShadow = true;
-      scooterGroup.add(cargoBox);
-
-      // Reflective Box Tape Logo Stripe
-      const stripeGeo = new THREE.BoxGeometry(1.12, 0.2, 1.12);
-      const stripeMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.3 });
-      const boxStripe = new THREE.Mesh(stripeGeo, stripeMat);
-      boxStripe.position.set(-0.85, 1.15, 0);
-      scooterGroup.add(boxStripe);
-
-      // --- 2. DETAILED ANIME SHIPPER CHARACTER ---
-      const riderGroup = new THREE.Group();
-      riderGroup.position.set(0.2, 0.45, 0);
-
-      // Skin Tone Material
-      const skinMat = new THREE.MeshStandardMaterial({ color: 0xffe0bd, roughness: 0.6 });
-
-      // Torso / Courier Jacket
-      const jacketGeo = new THREE.BoxGeometry(0.55, 0.75, 0.65);
-      const jacketMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.4 });
-      const jacket = new THREE.Mesh(jacketGeo, jacketMat);
-      jacket.position.set(0, 0.38, 0);
-      jacket.castShadow = true;
-      riderGroup.add(jacket);
-
-      // Reflective Safety Vest Stripe on Chest
-      const vestGeo = new THREE.BoxGeometry(0.57, 0.15, 0.67);
-      const vestMat = new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.2 });
-      const vestStripe = new THREE.Mesh(vestGeo, vestMat);
-      vestStripe.position.set(0, 0.45, 0);
-      riderGroup.add(vestStripe);
-
-      // Anime Head Base
-      const headGeo = new THREE.SphereGeometry(0.28, 20, 20);
-      const head = new THREE.Mesh(headGeo, skinMat);
-      head.position.set(0.1, 0.95, 0);
-      riderGroup.add(head);
-
-      // Big Anime Eyes
-      const eyeGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.02, 16);
-      const eyeMat = new THREE.MeshStandardMaterial({ color: 0x10b981 });
-      const eyeLeft = new THREE.Mesh(eyeGeo, eyeMat);
-      eyeLeft.rotation.z = Math.PI / 2;
-      eyeLeft.position.set(0.35, 0.98, 0.12);
-      riderGroup.add(eyeLeft);
-
-      const eyeRight = new THREE.Mesh(eyeGeo, eyeMat);
-      eyeRight.rotation.z = Math.PI / 2;
-      eyeRight.position.set(0.35, 0.98, -0.12);
-      riderGroup.add(eyeRight);
-
-      // Anime Spiky Hair Clusters (10 Spiky Locks)
-      const hairMat = new THREE.MeshStandardMaterial({ color: 0x4b5563, roughness: 0.5 });
-      for (let i = 0; i < 8; i++) {
-        const hairLockGeo = new THREE.ConeGeometry(0.08, 0.35, 4);
-        const hairLock = new THREE.Mesh(hairLockGeo, hairMat);
-        const angle = (i / 8) * Math.PI * 1.6 - Math.PI * 0.8;
-        hairLock.rotation.z = -0.5;
-        hairLock.rotation.y = angle;
-        hairLock.position.set(0.1 + Math.cos(angle) * 0.22, 1.12, Math.sin(angle) * 0.22);
-        riderGroup.add(hairLock);
+      for (let i = 0; i < 3; i++) {
+        const ledGeo = new THREE.SphereGeometry(0.07, 16, 16);
+        const led = new THREE.Mesh(ledGeo, ledMat);
+        led.position.set(1.15, 0.82 - i * 0.18, 0);
+        scooterRiderGroup.add(led);
       }
 
-      // Sports Helmet with Visor
-      const helmetGeo = new THREE.SphereGeometry(0.32, 20, 20, 0, Math.PI * 2, 0, Math.PI * 0.65);
-      const helmetMat = new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.3, metalness: 0.2 });
-      const helmet = new THREE.Mesh(helmetGeo, helmetMat);
-      helmet.position.set(0.08, 1.02, 0);
+      // Front Mudguard
+      const mudguardGeo = new THREE.SphereGeometry(0.38, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.5);
+      const mudguard = new THREE.Mesh(mudguardGeo, vespaMat);
+      mudguard.position.set(1.05, 0.2, 0);
+      scooterRiderGroup.add(mudguard);
+
+      // Rear Body Shell (Yellow Curve & Black Side Pod Covers)
+      const rearBodyGeo = new THREE.SphereGeometry(0.7, 24, 24);
+      const rearBody = new THREE.Mesh(rearBodyGeo, vespaMat);
+      rearBody.scale.set(1.4, 0.95, 1.0);
+      rearBody.position.set(-0.5, 0.5, 0);
+      rearBody.castShadow = true;
+      scooterRiderGroup.add(rearBody);
+
+      // Black Side Pod Covers
+      const sidePodGeo = new THREE.SphereGeometry(0.5, 16, 16);
+      const sidePodLeft = new THREE.Mesh(sidePodGeo, blackMat);
+      sidePodLeft.scale.set(1.2, 0.8, 0.4);
+      sidePodLeft.position.set(-0.5, 0.4, 0.52);
+      scooterRiderGroup.add(sidePodLeft);
+
+      const sidePodRight = new THREE.Mesh(sidePodGeo, blackMat);
+      sidePodRight.scale.set(1.2, 0.8, 0.4);
+      sidePodRight.position.set(-0.5, 0.4, -0.52);
+      scooterRiderGroup.add(sidePodRight);
+
+      // Handlebars & Headlight Cowl
+      const cowlGeo = new THREE.SphereGeometry(0.25, 16, 16);
+      const cowl = new THREE.Mesh(cowlGeo, vespaMat);
+      cowl.position.set(0.68, 1.25, 0);
+      scooterRiderGroup.add(cowl);
+
+      const mainHeadlightGeo = new THREE.CylinderGeometry(0.14, 0.14, 0.1, 16);
+      const mainHeadlight = new THREE.Mesh(mainHeadlightGeo, ledMat);
+      mainHeadlight.rotation.z = Math.PI / 2;
+      mainHeadlight.position.set(0.9, 1.25, 0);
+      scooterRiderGroup.add(mainHeadlight);
+
+      // Wheels
+      const tireGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.22, 24);
+      const rimGeo = new THREE.CylinderGeometry(0.24, 0.24, 0.23, 16);
+
+      const wheelFront = new THREE.Group();
+      wheelFront.position.set(1.05, -0.22, 0);
+      const tF = new THREE.Mesh(tireGeo, blackMat);
+      tF.rotation.x = Math.PI / 2;
+      const rF = new THREE.Mesh(rimGeo, chromeMat);
+      rF.rotation.x = Math.PI / 2;
+      wheelFront.add(tF, rF);
+      scooterRiderGroup.add(wheelFront);
+
+      const wheelBack = new THREE.Group();
+      wheelBack.position.set(-0.85, -0.22, 0);
+      const tB = new THREE.Mesh(tireGeo, blackMat);
+      tB.rotation.x = Math.PI / 2;
+      const rB = new THREE.Mesh(rimGeo, chromeMat);
+      rB.rotation.x = Math.PI / 2;
+      wheelBack.add(tB, rB);
+      scooterRiderGroup.add(wheelBack);
+
+      // Yellow Delivery Box / Backpack on Back Rack (Matching Reference)
+      const deliveryBoxGeo = new THREE.BoxGeometry(1.1, 1.1, 1.1);
+      const deliveryBox = new THREE.Mesh(deliveryBoxGeo, vespaMat);
+      deliveryBox.position.set(-0.9, 1.25, 0);
+      deliveryBox.castShadow = true;
+      scooterRiderGroup.add(deliveryBox);
+
+      // Black Padded Cushion Slats on Box
+      for (let i = 0; i < 3; i++) {
+        const slatGeo = new THREE.BoxGeometry(0.06, 0.15, 0.75);
+        const slat = new THREE.Mesh(slatGeo, blackMat);
+        slat.position.set(-0.33, 1.4 - i * 0.25, 0);
+        scooterRiderGroup.add(slat);
+      }
+
+      // --- B. PIXAR TOY RIDER CHARACTER (PURPLE SHIRT, YELLOW HELMET, GREEN SHOES) ---
+      const riderGroup = new THREE.Group();
+      riderGroup.position.set(0.1, 0.55, 0);
+
+      const skinMat = new THREE.MeshStandardMaterial({ color: 0xfed7aa, roughness: 0.6 }); // Soft peach skin
+      const purpleMat = new THREE.MeshStandardMaterial({ color: 0x9333ea, roughness: 0.5 }); // Vibrant Purple Shirt
+      const hairMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.8 }); // Mop Brown Hair
+      const greenShoesMat = new THREE.MeshStandardMaterial({ color: 0x166534, roughness: 0.4 }); // Green Sneakers
+
+      // Purple Torso / T-Shirt
+      const shirtGeo = new THREE.CylinderGeometry(0.32, 0.36, 0.8, 16);
+      const shirt = new THREE.Mesh(shirtGeo, purpleMat);
+      shirt.position.set(0, 0.45, 0);
+      shirt.castShadow = true;
+      riderGroup.add(shirt);
+
+      // Cute Rounded Head
+      const headGeo = new THREE.SphereGeometry(0.32, 20, 20);
+      const head = new THREE.Mesh(headGeo, skinMat);
+      head.position.set(0.08, 1.1, 0);
+      riderGroup.add(head);
+
+      // Red Nose Dot (Pixar Toy Detail)
+      const noseGeo = new THREE.SphereGeometry(0.05, 12, 12);
+      const noseMat = new THREE.MeshStandardMaterial({ color: 0xef4444 });
+      const nose = new THREE.Mesh(noseGeo, noseMat);
+      nose.position.set(0.38, 1.12, 0);
+      riderGroup.add(nose);
+
+      // Brown Toy Mop Hair
+      const hairGeo = new THREE.SphereGeometry(0.34, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.55);
+      const hair = new THREE.Mesh(hairGeo, hairMat);
+      hair.position.set(0.06, 1.18, 0);
+      riderGroup.add(hair);
+
+      // Yellow Pixar Helmet
+      const helmetGeo = new THREE.SphereGeometry(0.36, 20, 20, 0, Math.PI * 2, 0, Math.PI * 0.5);
+      const helmet = new THREE.Mesh(helmetGeo, vespaMat);
+      helmet.position.set(0.05, 1.25, 0);
       helmet.castShadow = true;
       riderGroup.add(helmet);
 
-      // Blue Visor Shield
-      const visorGeo = new THREE.SphereGeometry(0.33, 16, 16, 0, Math.PI, Math.PI * 0.25, Math.PI * 0.35);
-      const visorMat = new THREE.MeshStandardMaterial({
-        color: 0x38bdf8,
-        transparent: true,
-        opacity: 0.7,
-        roughness: 0.1,
-      });
-      const visor = new THREE.Mesh(visorGeo, visorMat);
+      // Black Visor Shield
+      const visorGeo = new THREE.SphereGeometry(0.37, 16, 16, 0, Math.PI, Math.PI * 0.2, Math.PI * 0.35);
+      const visor = new THREE.Mesh(visorGeo, blackMat);
       visor.rotation.y = Math.PI / 2;
-      visor.position.set(0.08, 1.02, 0);
+      visor.position.set(0.05, 1.25, 0);
       riderGroup.add(visor);
 
-      // Face Mask
-      const maskGeo = new THREE.BoxGeometry(0.15, 0.12, 0.28);
-      const maskMat = new THREE.MeshStandardMaterial({ color: 0x0f172a });
-      const mask = new THREE.Mesh(maskGeo, maskMat);
-      mask.position.set(0.3, 0.88, 0);
-      riderGroup.add(mask);
-
-      // Arms Angled Forward to Handlebars
-      const armGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.55, 12);
-      const gloveMat = new THREE.MeshStandardMaterial({ color: 0x0f172a });
-
-      const armLeft = new THREE.Mesh(armGeo, jacketMat);
-      armLeft.rotation.z = -1.0;
+      // Arms Holding Handlebars
+      const armGeo = new THREE.CylinderGeometry(0.09, 0.09, 0.65, 12);
+      const armLeft = new THREE.Mesh(armGeo, purpleMat);
+      armLeft.rotation.z = -1.1;
       armLeft.rotation.y = 0.3;
-      armLeft.position.set(0.3, 0.45, 0.35);
+      armLeft.position.set(0.32, 0.58, 0.35);
       riderGroup.add(armLeft);
 
-      const armRight = new THREE.Mesh(armGeo, jacketMat);
-      armRight.rotation.z = -1.0;
+      const armRight = new THREE.Mesh(armGeo, purpleMat);
+      armRight.rotation.z = -1.1;
       armRight.rotation.y = -0.3;
-      armRight.position.set(0.3, 0.45, -0.35);
+      armRight.position.set(0.32, 0.58, -0.35);
       riderGroup.add(armRight);
 
-      // Jogger Legs & Anime Sneakers
-      const legGeo = new THREE.CylinderGeometry(0.1, 0.09, 0.6, 12);
-      const legMat = new THREE.MeshStandardMaterial({ color: 0x334155 });
+      // Chunky Green Retro Sneakers (Matching Reference Image)
+      const shoeGeo = new THREE.BoxGeometry(0.42, 0.26, 0.26);
+      const soleMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
 
-      const legLeft = new THREE.Mesh(legGeo, legMat);
-      legLeft.rotation.z = -0.2;
-      legLeft.position.set(-0.05, 0.0, 0.32);
-      riderGroup.add(legLeft);
+      const shoeLeftGroup = new THREE.Group();
+      shoeLeftGroup.position.set(0.1, -0.18, 0.42);
+      const shoeL = new THREE.Mesh(shoeGeo, greenShoesMat);
+      const soleL = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.08, 0.28), soleMat);
+      soleL.position.y = -0.12;
+      shoeLeftGroup.add(shoeL, soleL);
+      riderGroup.add(shoeLeftGroup);
 
-      const legRight = new THREE.Mesh(legGeo, legMat);
-      legRight.rotation.z = -0.2;
-      legRight.position.set(-0.05, 0.0, -0.32);
-      riderGroup.add(legRight);
+      const shoeRightGroup = new THREE.Group();
+      shoeRightGroup.position.set(0.1, -0.18, -0.42);
+      const shoeR = new THREE.Mesh(shoeGeo, greenShoesMat);
+      const soleR = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.08, 0.28), soleMat);
+      soleR.position.y = -0.12;
+      shoeRightGroup.add(shoeR, soleR);
+      riderGroup.add(shoeRightGroup);
 
-      scooterGroup.add(riderGroup);
-      stageGroup.add(scooterGroup);
+      scooterRiderGroup.add(riderGroup);
+      shippingGroup.add(scooterRiderGroup);
+      stageGroup.add(shippingGroup);
 
       return (delta: number, time: number) => {
-        // Move road dashes to simulate speed
+        // Move road dashes
         dashesGroup.children.forEach((dash) => {
           dash.position.x -= delta * 6;
           if (dash.position.x < -4.5) dash.position.x += 9;
         });
 
-        // Bouncing Anime Scooter & Rider Animation
-        scooterGroup.position.y = 0.65 + Math.sin(time * 14) * 0.035;
-        wheelFrontGroup.rotation.z -= delta * 14;
-        wheelBackGroup.rotation.z -= delta * 14;
-        riderGroup.rotation.z = Math.sin(time * 14) * 0.02;
+        // Soft Pixar Scooter Bouncing & Wheel Rotation
+        scooterRiderGroup.position.y = 0.65 + Math.sin(time * 6) * 0.04;
+        wheelFront.rotation.z -= delta * 12;
+        wheelBack.rotation.z -= delta * 12;
+        riderGroup.rotation.z = Math.sin(time * 6) * 0.02;
       };
     };
 
-    // Helper: Build Stage 4 (Completed / Delivered House & Unboxing Glow)
+    // =========================================================================
+    // STAGE 4: Completed / Delivered (Pixar Toy House & Celebration Glow)
+    // =========================================================================
     const buildStageCompleted = () => {
-      // House Body
-      const houseGeo = new THREE.BoxGeometry(3, 2.2, 2.6);
-      const houseMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 });
-      const house = new THREE.Mesh(houseGeo, houseMat);
-      house.position.set(0, 1.1, -0.5);
-      house.castShadow = true;
-      stageGroup.add(house);
+      const houseGroup = new THREE.Group();
 
-      // Green Roof
-      const roofGeo = new THREE.ConeGeometry(2.6, 1.2, 4);
-      const roofMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.3 });
+      // White Toy House Body
+      const houseGeo = new THREE.BoxGeometry(3.2, 2.4, 2.8);
+      const houseMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
+      const house = new THREE.Mesh(houseGeo, houseMat);
+      house.position.set(0, 1.2, -0.5);
+      house.castShadow = true;
+      houseGroup.add(house);
+
+      // Emerald Roof
+      const roofGeo = new THREE.ConeGeometry(2.8, 1.3, 4);
+      const roofMat = new THREE.MeshStandardMaterial({ color: 0x166534, roughness: 0.3 });
       const roof = new THREE.Mesh(roofGeo, roofMat);
       roof.rotation.y = Math.PI / 4;
-      roof.position.set(0, 2.8, -0.5);
+      roof.position.set(0, 3.0, -0.5);
       roof.castShadow = true;
-      stageGroup.add(roof);
+      houseGroup.add(roof);
 
-      // Delivered Parcel Box on Porch
-      const parcelGeo = new THREE.BoxGeometry(1.2, 0.9, 1.2);
-      const parcelMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.6 });
-      const parcel = new THREE.Mesh(parcelGeo, parcelMat);
-      parcel.position.set(0, 0.45, 1.2);
-      parcel.castShadow = true;
-      stageGroup.add(parcel);
+      // Delivered Gift Parcel
+      const giftGeo = new THREE.BoxGeometry(1.3, 1.0, 1.3);
+      const giftMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.4 });
+      const gift = new THREE.Mesh(giftGeo, giftMat);
+      gift.position.set(0, 0.5, 1.3);
+      gift.castShadow = true;
+      houseGroup.add(gift);
 
-      // Glowing Diamond Gems
+      // Ribbon
+      const ribbonMat = new THREE.MeshStandardMaterial({ color: 0xdc2626 });
+      const rib1 = new THREE.Mesh(new THREE.BoxGeometry(1.32, 1.02, 0.2), ribbonMat);
+      rib1.position.set(0, 0.5, 1.3);
+      houseGroup.add(rib1);
+
+      // Floating Gem Crystals
       const gemGroup = new THREE.Group();
       const gemGeo = new THREE.OctahedronGeometry(0.18);
       const gemMat = new THREE.MeshStandardMaterial({
-        color: 0x86efac,
-        emissive: 0x22c55e,
-        roughness: 0.1,
+        color: 0x38bdf8,
+        emissive: 0x0284c7,
+        emissiveIntensity: 0.5,
       });
       for (let i = 0; i < 6; i++) {
         const gem = new THREE.Mesh(gemGeo, gemMat);
         const angle = (i / 6) * Math.PI * 2;
-        gem.position.set(Math.cos(angle) * 1.4, 1.2 + (i % 2) * 0.4, 1.2 + Math.sin(angle) * 0.8);
+        gem.position.set(Math.cos(angle) * 1.5, 1.3 + (i % 2) * 0.4, 1.3 + Math.sin(angle) * 0.8);
         gemGroup.add(gem);
       }
-      stageGroup.add(gemGroup);
+      houseGroup.add(gemGroup);
+
+      stageGroup.add(houseGroup);
 
       return (delta: number, time: number) => {
-        parcel.position.y = 0.45 + Math.sin(time * 3) * 0.04;
-        gemGroup.rotation.y = time * 1.2;
+        gift.position.y = 0.5 + Math.sin(time * 3) * 0.05;
+        rib1.position.y = gift.position.y;
+        gemGroup.rotation.y = time * 1.4;
       };
     };
 
-    // Helper: Build Stage 5 (Cancelled)
+    // =========================================================================
+    // STAGE 5: Cancelled (Pastel Grey Toy Box & Red Cross Seal)
+    // =========================================================================
     const buildStageCancelled = () => {
-      const boxGeo = new THREE.BoxGeometry(2, 1.6, 2);
-      const boxMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.8 });
+      const cancelGroup = new THREE.Group();
+
+      const boxGeo = new THREE.BoxGeometry(2.2, 1.8, 2.2);
+      const boxMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.7 });
       const box = new THREE.Mesh(boxGeo, boxMat);
-      box.position.set(0, 1.0, 0);
-      stageGroup.add(box);
+      box.position.set(0, 1.15, 0);
+      cancelGroup.add(box);
 
-      // Red X Mark Cross
-      const crossMat = new THREE.MeshBasicMaterial({ color: 0xdc2626 });
-      const bar1Geo = new THREE.BoxGeometry(1.8, 0.2, 0.2);
-      const bar1 = new THREE.Mesh(bar1Geo, crossMat);
+      const crossMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.3 });
+      const bar1 = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.22, 0.22), crossMat);
       bar1.rotation.z = Math.PI / 4;
-      bar1.position.set(0, 1.0, 1.02);
-      stageGroup.add(bar1);
+      bar1.position.set(0, 1.15, 1.12);
+      cancelGroup.add(bar1);
 
-      const bar2Geo = new THREE.BoxGeometry(1.8, 0.2, 0.2);
-      const bar2 = new THREE.Mesh(bar2Geo, crossMat);
+      const bar2 = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.22, 0.22), crossMat);
       bar2.rotation.z = -Math.PI / 4;
-      bar2.position.set(0, 1.0, 1.02);
-      stageGroup.add(bar2);
+      bar2.position.set(0, 1.15, 1.12);
+      cancelGroup.add(bar2);
+
+      stageGroup.add(cancelGroup);
 
       return (delta: number, time: number) => {
-        box.rotation.y = Math.sin(time) * 0.15;
+        box.rotation.y = Math.sin(time * 1.5) * 0.15;
       };
     };
 
-    // Select Stage Builder
+    // Select Active Stage Builder
     let stageUpdater: ((delta: number, time: number) => void) | null = null;
     if (activeStage === "pending") {
       stageUpdater = buildStagePending();
@@ -541,7 +550,7 @@ export const OrderStatus3DCanvas: React.FC<OrderStatus3DCanvasProps> = ({
       stageUpdater = buildStagePending();
     }
 
-    // Interactive Drag Orbit System
+    // Drag Rotation Controls
     let isDragging = false;
     let previousMouseX = 0;
     let targetRotationY = 0;
@@ -575,7 +584,7 @@ export const OrderStatus3DCanvas: React.FC<OrderStatus3DCanvasProps> = ({
       const time = clock.getElapsedTime();
 
       // Smooth Rotation Lerp
-      stageGroup.rotation.y += (targetRotationY - stageGroup.rotation.y) * 0.1;
+      stageGroup.rotation.y += (targetRotationY - stageGroup.rotation.y) * 0.08;
 
       if (stageUpdater) {
         stageUpdater(delta, time);
@@ -586,7 +595,6 @@ export const OrderStatus3DCanvas: React.FC<OrderStatus3DCanvasProps> = ({
 
     animate();
 
-    // Responsive Resize Handler
     const handleResize = () => {
       if (!container) return;
       const w = container.clientWidth || 600;
@@ -597,7 +605,6 @@ export const OrderStatus3DCanvas: React.FC<OrderStatus3DCanvasProps> = ({
 
     window.addEventListener("resize", handleResize);
 
-    // Clean up Three.js WebGL context on unmount
     return () => {
       cancelAnimationFrame(animFrameId);
       window.removeEventListener("resize", handleResize);
@@ -647,10 +654,10 @@ export const OrderStatus3DCanvas: React.FC<OrderStatus3DCanvasProps> = ({
             </div>
             <div>
               <div style={{ fontSize: "14px", fontWeight: 900, color: "#0f172a" }}>
-                HÀNH TRÌNH ĐƠN HÀNG 3D INTERACTIVE
+                HÀNH TRÌNH ĐƠN HÀNG 3D TOY PIXAR
               </div>
               <div style={{ fontSize: "11px", color: "#64748b" }}>
-                Kéo chuột để xoay 360° quan sát mô hình 3D thời gian thực
+                Kéo chuột xoay 360° xem mô hình 3D Pixar cực dễ thương
               </div>
             </div>
           </div>
@@ -668,7 +675,7 @@ export const OrderStatus3DCanvas: React.FC<OrderStatus3DCanvasProps> = ({
               gap: "4px",
             }}
           >
-            <RotateCw className="w-3 h-3 animate-spin" /> Three.js 3D WebGL Live
+            <RotateCw className="w-3 h-3 animate-spin" /> Three.js Pixar 3D Live
           </div>
         </div>
 
@@ -677,7 +684,7 @@ export const OrderStatus3DCanvas: React.FC<OrderStatus3DCanvasProps> = ({
           ref={containerRef}
           style={{
             width: "100%",
-            height: "320px",
+            height: "340px",
             borderRadius: "1.25rem",
             overflow: "hidden",
             background: "#fcfbf9",
