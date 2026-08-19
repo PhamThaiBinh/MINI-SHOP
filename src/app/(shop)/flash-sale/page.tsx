@@ -144,45 +144,11 @@ export default function FlashSalePage() {
       style={{
         backgroundColor: "var(--bg-main, #fcfbf9)",
         minHeight: "100dvh",
-        padding: "40px 16px 80px",
+        padding: "30px 16px 80px",
         fontFamily: "'Plus Jakarta Sans', sans-serif",
       }}
     >
       <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
-        {/* Header Title Section */}
-        <div style={{ marginBottom: "24px" }}>
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "4px 12px",
-              borderRadius: "999px",
-              background: "#fee2e2",
-              color: "#dc2626",
-              fontSize: "11px",
-              fontWeight: 800,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              marginBottom: "8px",
-            }}
-          >
-            <Zap className="w-3.5 h-3.5 fill-red-600" />
-            <span>SĂN DEAL GIỜ VÀNG - ƯU ĐÃI KHỦNG</span>
-          </div>
-
-          <h1
-            style={{
-              fontSize: "28px",
-              fontWeight: 900,
-              color: "#0f172a",
-              margin: 0,
-              letterSpacing: "-0.02em",
-            }}
-          >
-            Flash Sale Săn Deal Giờ Vàng
-          </h1>
-        </div>
 
         {/* Header Banner Flash Sale */}
       <div

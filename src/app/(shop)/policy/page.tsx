@@ -58,26 +58,6 @@ function PolicyContent() {
       <div style={{ maxWidth: "1050px", margin: "0 auto" }}>
         {/* Header Title Section */}
         <div style={{ marginBottom: "28px", textAlign: "left" }}>
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "4px 12px",
-              borderRadius: "999px",
-              background: "#e0f2fe",
-              color: "#0369a1",
-              fontSize: "11px",
-              fontWeight: 800,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              marginBottom: "8px",
-            }}
-          >
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>TRUNG TÂM HỖ TRỢ & CHÍNH SÁCH MINI-SHOP</span>
-          </div>
-
           <h1
             style={{
               fontSize: "28px",

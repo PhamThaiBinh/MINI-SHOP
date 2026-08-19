@@ -50,27 +50,6 @@ export default function NotFound() {
               boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
             }}
           >
-            {/* Micro Eyebrow Badge */}
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "4px 12px",
-                borderRadius: "999px",
-                background: "#fee2e2",
-                color: "#dc2626",
-                fontSize: "11px",
-                fontWeight: 800,
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-                marginBottom: "16px",
-              }}
-            >
-              <AlertCircle className="w-3.5 h-3.5" />
-              <span>LỖI 404 - KHÔNG TÌM THẤY TRANG</span>
-            </div>
-
             <div
               style={{
                 fontSize: "64px",

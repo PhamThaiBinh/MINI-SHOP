@@ -2830,7 +2830,7 @@ export default function AuthPage() {
               </div>
 
               <SearchableDropdown
-                label="Tỉnh / Thành phố (OpenAdminData API) *"
+                label="Tỉnh / Thành phố *"
                 value={addrProvince}
                 options={provincesList}
                 placeholderSearch="Nhập từ khóa tìm nhanh Tỉnh / Thành phố..."
@@ -2838,7 +2838,7 @@ export default function AuthPage() {
               />
 
               <SearchableDropdown
-                label="Xã / Phường (OpenAdminData API - Phụ thuộc Tỉnh thành) *"
+                label="Xã / Phường *"
                 value={addrWard}
                 options={wardsList}
                 placeholderSearch="Nhập từ khóa tìm nhanh Xã / Phường..."

@@ -338,26 +338,6 @@ export default function CheckoutPage() {
       <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
         {/* Header Title Section */}
         <div style={{ marginBottom: "28px", textAlign: "left" }}>
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "4px 12px",
-              borderRadius: "999px",
-              background: "#e0f2fe",
-              color: "#0369a1",
-              fontSize: "11px",
-              fontWeight: 800,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              marginBottom: "8px",
-            }}
-          >
-            <CreditCard className="w-3.5 h-3.5" />
-            <span>HOÀN TẤT ĐƠN HÀNG & THAO TÁC THANH TOÁN</span>
-          </div>
-
           <h1
             style={{
               fontSize: "28px",

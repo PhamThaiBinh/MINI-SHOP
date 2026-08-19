@@ -82,26 +82,6 @@ export default function WishlistPage() {
         {/* Header Title Section */}
         <div style={{ marginBottom: "28px", display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: "16px" }}>
           <div>
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "4px 12px",
-                borderRadius: "999px",
-                background: "#fee2e2",
-                color: "#dc2626",
-                fontSize: "11px",
-                fontWeight: 800,
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-                marginBottom: "8px",
-              }}
-            >
-              <Heart className="w-3.5 h-3.5 fill-red-600" />
-              <span>BỘ SƯU TẬP YÊU THÍCH</span>
-            </div>
-
             <h1
               style={{
                 fontSize: "28px",

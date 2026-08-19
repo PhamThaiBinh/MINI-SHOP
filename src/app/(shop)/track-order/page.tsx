@@ -31,7 +31,6 @@ import {
   ChevronRight,
   FileText,
 } from "lucide-react";
-import { OrderStatus3DCanvas } from "@/components/shop/OrderStatus3DCanvas";
 
 export default function TrackOrderPage() {
   const { user } = useAuth();
@@ -1017,12 +1016,6 @@ export default function TrackOrderPage() {
                     </div>
                   </div>
                 )}
-
-                {/* 3D WebGL Order Status Canvas */}
-                <OrderStatus3DCanvas
-                  status={selectedOrderModal.status}
-                  orderId={selectedOrderModal.id}
-                />
 
                 {/* Recipient Information Card */}
                 <div
