@@ -14,7 +14,7 @@ export const BLOG_ARTICLES: BlogArticle[] = [
   {
     id: 1,
     title: "5 Cách Phối Màu Sofa Nordic Cho Phòng Khách Tối Giản",
-    category: "Mẹo Decor Phòng Khách",
+    category: "Phòng khách",
     date: "18/08/2026",
     excerpt: "Tìm hiểu bí quyết kết hợp gam màu xám ghi, kem đất và xanh Navy với khung gỗ tự nhiên tạo nên không gian Bắc Âu tinh tế, ấm cúng và tràn ngập tính nghệ thuật.",
     img: "assets/images/products/noi-that-gia-dung/sofa-phong-khach.webp",
@@ -56,7 +56,7 @@ export const BLOG_ARTICLES: BlogArticle[] = [
   {
     id: 2,
     title: "Bảo Quản Đồ Tre Đan & Sơn Mài Không Lo Mối Mọt",
-    category: "Bảo Quản Đồ Gỗ",
+    category: "Trang trí",
     date: "15/08/2026",
     excerpt: "Những thói quen đơn giản giúp duy trì độ bóng của khay sơn mài khảm xà cừ và kéo dài tuổi thọ chống ẩm mốc cho các loại đèn lồng tre thủ công.",
     img: "assets/images/products/do-my-nghe/den-tre-thu-cong.webp",
@@ -91,7 +91,7 @@ export const BLOG_ARTICLES: BlogArticle[] = [
   {
     id: 3,
     title: "Tại Sao Nên Chọn Bàn Ăn Gỗ Sồi Tự Nhiên Cho Căn Bếp?",
-    category: "Gia Dụng",
+    category: "Nhà bếp",
     date: "12/08/2026",
     excerpt: "Đánh giá chi tiết độ bền vượt trội, khả năng chống va đập, vân gỗ sồi mộc mạc và giá trị thẩm mỹ ấm cúng của bộ bàn ăn gỗ sồi Mỹ nhập khẩu trong sinh hoạt gia đình.",
     img: "assets/images/products/noi-that-gia-dung/bo-ban-an-go.webp",
@@ -124,7 +124,7 @@ export const BLOG_ARTICLES: BlogArticle[] = [
   {
     id: 4,
     title: "Xu Hướng Đèn Decor Mây Tre Cho Không Gian Hiện Đại",
-    category: "Đồ Mỹ Nghệ",
+    category: "Đèn chiếu sáng",
     date: "10/08/2026",
     excerpt: "Khám phá nghệ thuật kết hợp ánh sáng vàng ấm từ các mẫu đèn lồng tre thủ công mộc mạc tạo điểm nhấn tinh tế sang trọng cho phòng ăn và phòng khách.",
     img: "assets/images/products/do-my-nghe/den-long-tre.webp",
@@ -148,7 +148,7 @@ export const BLOG_ARTICLES: BlogArticle[] = [
   {
     id: 5,
     title: "Giải Pháp Thiết Kế Căn Hộ Nhỏ 35m2 Tối Ưu Không Gian",
-    category: "Giải Pháp Căn Hộ Nhỏ",
+    category: "Lưu trữ",
     date: "08/08/2026",
     excerpt: "Khám phá nghệ thuật bài trí nội thất đa năng, sử dụng vách ngăn thoáng mây tre và gam màu sáng giúp hô biến căn hộ diện tích nhỏ trở nên rộng rãi gấp đôi.",
     img: "assets/images/products/noi-that-gia-dung/ke-go-trang-tri.webp",
@@ -176,7 +176,7 @@ export const BLOG_ARTICLES: BlogArticle[] = [
   {
     id: 6,
     title: "Xu Hướng Thiết Kế Nội Thất Tối Giản Bắc Âu Nordic 2026",
-    category: "Xu Hướng Nội Thất 2026",
+    category: "Phòng khách",
     date: "05/08/2026",
     excerpt: "Cập nhật các phong cách thiết kế bùng nổ năm 2026: Đồ gốm men mờ, chất liệu vải dạ thô mộc kết hợp cùng xu hướng sống xanh bền vững.",
     img: "assets/images/banner/banner-trang-chu-mini-shop.webp",
@@ -196,7 +196,7 @@ export const BLOG_ARTICLES: BlogArticle[] = [
   {
     id: 7,
     title: "Bí Quyết Chọn Chậu Cây Decor Đạt Chuẩn Phong Thủy",
-    category: "Trang Trí",
+    category: "Trang trí",
     date: "02/08/2026",
     excerpt: "Top các loại cây trồng trong nhà giúp thanh lọc không khí, mang lại giấc ngủ ngon và đem đến tài lộc vượng khí cho gia chủ.",
     img: "assets/images/products/noi-that-gia-dung/chau-cay-de-ban.webp",
@@ -216,7 +216,7 @@ export const BLOG_ARTICLES: BlogArticle[] = [
   {
     id: 8,
     title: "Nghệ Thuật Khử Mùi & Đánh Bóng Đồ Gỗ Sồi Tự Nhiên",
-    category: "Mẹo Nội Thất",
+    category: "Phòng ngủ",
     date: "30/07/2026",
     excerpt: "Hướng dẫn các bước lau chùi, đánh bóng bằng sáp tự nhiên giúp giữ nguyên vẻ đẹp mộc mạc và vân gỗ quyến rũ của bộ bàn ghế gỗ sồi.",
     img: "assets/images/products/noi-that-gia-dung/bo-ban-an-go.webp",
@@ -235,7 +235,7 @@ export const BLOG_ARTICLES: BlogArticle[] = [
   {
     id: 9,
     title: "Tối Ưu Góc Làm Việc Nhỏ Gọn Tại Nhà Phong Cách Nordic",
-    category: "Mẹo Nội Thất",
+    category: "Phòng ngủ",
     date: "26/07/2026",
     excerpt: "Thiết kế góc làm việc tại nhà chuẩn Ergonomic tối giản, truyền cảm hứng sáng tạo và tập trung cao độ mỗi ngày.",
     img: "assets/images/products/do-thu-cong/khay-go-trang-tri.webp",
@@ -254,7 +254,7 @@ export const BLOG_ARTICLES: BlogArticle[] = [
   {
     id: 10,
     title: "Quy Trình Chống Ẩm Mốc Đồ Tre Mây Vào Mùa Nồm Ẩm",
-    category: "Bảo Quản Đồ Gỗ",
+    category: "Lưu trữ",
     date: "22/07/2026",
     excerpt: "Các mẹo dân gian và khoa học giúp bảo vệ đồ mây tre đan luôn khô ráo, không bị mốc trắng hay bốc mùi trong thời tiết nồm ẩm.",
     img: "assets/images/products/do-thu-cong/tranh-treo-macrame.webp",

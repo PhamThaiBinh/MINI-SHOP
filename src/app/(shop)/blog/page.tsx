@@ -24,23 +24,22 @@ export default function BlogListPage() {
     loadBlogs();
   }, []);
 
+  // Categories matching Product Page exactly
   const topics = [
     "Tất cả",
-    "Mẹo Nội Thất",
-    "Gia Dụng",
-    "Đồ Mỹ Nghệ",
-    "Trang Trí",
-    "Giải Pháp Căn Hộ Nhỏ",
-    "Mẹo Decor Phòng Khách",
-    "Bảo Quản Đồ Gỗ",
-    "Xu Hướng Nội Thất 2026",
+    "Phòng khách",
+    "Phòng ngủ",
+    "Nhà bếp",
+    "Đèn chiếu sáng",
+    "Trang trí",
+    "Lưu trữ",
   ];
 
   const featuredArticle = articles[0] || {
     id: 1,
     title: "5 Cách Phối Màu Sofa Nordic Cho Phòng Khách Tối Giản",
     excerpt: "Tìm hiểu bí quyết kết hợp gam màu xám ghi, kem đất và xanh Navy với khung gỗ tự nhiên tạo nên không gian Bắc Âu tinh tế, ấm cúng.",
-    category: "Mẹo Decor Phòng Khách",
+    category: "Phòng khách",
     date: "18/08/2026",
     author: "KTS. Lê Hoàng Nam",
     img: "/assets/images/products/noi-that-gia-dung/sofa-phong-khach.webp",
@@ -51,9 +50,11 @@ export default function BlogListPage() {
       const matchesSearch =
         art.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         art.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
+      
       const matchesTopic =
         selectedTopic === "Tất cả" ||
         art.category.toLowerCase().trim() === selectedTopic.toLowerCase().trim();
+      
       return matchesSearch && matchesTopic;
     });
   }, [articles, searchQuery, selectedTopic]);
@@ -94,7 +95,7 @@ export default function BlogListPage() {
               fontSize: "32px",
               fontWeight: 900,
               color: "#0f172a",
-              margin: "8px 0 4px",
+              margin: "0 0 4px",
               letterSpacing: "-0.02em",
             }}
           >
@@ -191,7 +192,7 @@ export default function BlogListPage() {
             flexWrap: "wrap",
           }}
         >
-          {/* Filter Pills */}
+          {/* Filter Pills matching Product Categories */}
           <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
             {topics.map((top) => (
               <button
