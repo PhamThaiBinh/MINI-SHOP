@@ -219,7 +219,10 @@ export default function Home() {
         <div className="container">
           <div className="section-header">
             <h2 className="section-title">Sản phẩm nổi bật</h2>
-            <Link href="/products" className="view-all-link">
+            <Link
+              href={selectedCategory !== "All" ? `/products?category=${selectedCategory}` : "/products"}
+              className="view-all-link"
+            >
               Xem tất cả &rarr;
             </Link>
           </div>

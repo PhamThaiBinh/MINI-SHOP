@@ -32,6 +32,16 @@ function ProductsContent() {
   const [pageSize, setPageSize] = useState<number>(10);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
+  // Sync searchParams URL -> State
+  useEffect(() => {
+    const cat = searchParams.get("category");
+    if (cat) setCurrentCategory(cat);
+    const pr = searchParams.get("price");
+    if (pr) setCurrentPriceRange(pr);
+    const q = searchParams.get("search");
+    if (q !== null) setSearchQuery(q);
+  }, [searchParams]);
+
   // Sync state changes to URL SearchParams
   useEffect(() => {
     const params = new URLSearchParams();
