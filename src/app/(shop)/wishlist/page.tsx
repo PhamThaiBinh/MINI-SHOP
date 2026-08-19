@@ -10,6 +10,7 @@ import { useWishlist } from "@/context/WishlistContext";
 import { useCart } from "@/context/CartContext";
 import { Product } from "@/types/product";
 import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
+import { ShoppingCart, Heart, Flame } from "lucide-react";
 
 export default function WishlistPage() {
   const { wishlistIds, toggleWishlist } = useWishlist();
@@ -98,9 +99,12 @@ export default function WishlistPage() {
                     fontSize: "13px",
                     cursor: "pointer",
                     boxShadow: "0 4px 12px rgba(46, 125, 50, 0.2)",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
                   }}
                 >
-                  🛒 Chuyển tất cả vào Giỏ hàng
+                  <ShoppingCart className="w-4 h-4" /> Chuyển tất cả vào Giỏ hàng
                 </button>
               )}
             </div>
@@ -108,24 +112,28 @@ export default function WishlistPage() {
             {/* Empty State */}
             {wishlistProducts.length === 0 ? (
               <div className="cart-empty-box" id="wishlist-empty-state">
-                <div className="cart-empty-icon">❤️</div>
+                <div className="cart-empty-icon">
+                  <Heart className="w-12 h-12 text-red-500 fill-red-500" />
+                </div>
                 <h2 className="cart-empty-title">
                   Chưa có sản phẩm yêu thích nào!
                 </h2>
                 <p className="cart-empty-desc">
-                  Hãy bấm nút thả tim ♥ trên các sản phẩm bạn thích để lưu trữ
+                  Hãy bấm nút thả tim trên các sản phẩm bạn thích để lưu trữ
                   tại đây nhé.
                 </p>
                 <Link
                   href="/products"
                   className="btn-checkout"
                   style={{
-                    display: "inline-block",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
                     width: "auto",
                     padding: "12px 28px",
                   }}
                 >
-                  🔥 Khám phá sản phẩm HOT ngay &rarr;
+                  <Flame className="w-4 h-4 text-amber-400" /> Khám phá sản phẩm HOT ngay &rarr;
                 </Link>
               </div>
             ) : (

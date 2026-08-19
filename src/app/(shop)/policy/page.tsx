@@ -242,8 +242,8 @@ function PolicyContent() {
         {/* TAB 2: SHIPPING */}
         {activeTab === "shipping" && (
           <div>
-            <h2 style={{ fontSize: "20px", fontWeight: 800, color: "#0f172a", marginTop: 0 }}>
-              🚚 Chính Sách Giao Hàng & Kiểm Hàng (Đồng Kiểm)
+            <h2 style={{ fontSize: "20px", fontWeight: 800, color: "#0f172a", marginTop: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+              <Truck className="w-5 h-5 text-emerald-700" /> Chính Sách Giao Hàng & Kiểm Hàng (Đồng Kiểm)
             </h2>
             <p>
               MINI-SHOP hợp tác cùng các đối tác vận chuyển uy tín toàn quốc để mang sản phẩm đến tay bạn nhanh chóng và an toàn nhất.
@@ -277,8 +277,8 @@ function PolicyContent() {
         {/* TAB 3: PRIVACY */}
         {activeTab === "privacy" && (
           <div>
-            <h2 style={{ fontSize: "20px", fontWeight: 800, color: "#0f172a", marginTop: 0 }}>
-              🔒 Chính Sách Bảo Mật Thông Tin Khách Hàng
+            <h2 style={{ fontSize: "20px", fontWeight: 800, color: "#0f172a", marginTop: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+              <Lock className="w-5 h-5 text-emerald-700" /> Chính Sách Bảo Mật Thông Tin Khách Hàng
             </h2>
             <p>
               MINI-SHOP tôn trọng tuyệt đối sự riêng tư và cam kết bảo vệ thông tin cá nhân của quý khách hàng tuân thủ Nghị định 13/2023/NĐ-CP về Bảo vệ dữ liệu cá nhân.
@@ -307,8 +307,8 @@ function PolicyContent() {
         {/* TAB 4: TERMS OF USE */}
         {activeTab === "terms" && (
           <div>
-            <h2 style={{ fontSize: "20px", fontWeight: 800, color: "#0f172a", marginTop: 0 }}>
-              📜 Điều Khoản Sử Dụng Dịch Vụ
+            <h2 style={{ fontSize: "20px", fontWeight: 800, color: "#0f172a", marginTop: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+              <FileText className="w-5 h-5 text-emerald-700" /> Điều Khoản Sử Dụng Dịch Vụ
             </h2>
             <p>
               Chào mừng bạn đến với MINI-SHOP. Khi truy cập và thực hiện giao dịch mua sắm trên website, bạn mặc nhiên đồng ý với các điều khoản pháp lý dưới đây:
@@ -336,8 +336,8 @@ function PolicyContent() {
         {/* TAB 5: FAQ */}
         {activeTab === "faq" && (
           <div>
-            <h2 style={{ fontSize: "20px", fontWeight: 800, color: "#0f172a", marginTop: 0, marginBottom: "20px" }}>
-              ❓ Câu Hỏi Thường Gặp (FAQ)
+            <h2 style={{ fontSize: "20px", fontWeight: 800, color: "#0f172a", marginTop: 0, marginBottom: "20px", display: "flex", alignItems: "center", gap: "8px" }}>
+              <HelpCircle className="w-5 h-5 text-emerald-700" /> Câu Hỏi Thường Gặp (FAQ)
             </h2>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>

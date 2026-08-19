@@ -10,7 +10,7 @@ import { formatVND, fixImagePath } from "@/lib/utils";
 import { getSystemVouchers } from "@/utils/voucherStorage";
 import { addPlacedOrder as addUnifiedPlacedOrder, formatFullTimestamp, UnifiedOrder } from "@/utils/orderStorage";
 import { createOrderInSupabase } from "@/lib/supabaseOrders";
-import { CreditCard, ShieldCheck } from "lucide-react";
+import { CreditCard, ShieldCheck, ShoppingCart, MapPin, Ticket, Gift, Home, CheckCircle2, AlertTriangle, Check, X } from "lucide-react";
 
 interface Coupon {
   code: string;
@@ -162,7 +162,7 @@ export default function CheckoutPage() {
       // REQUIREMENT 1: Check minOrder
       if (found.minOrder && subtotal < found.minOrder) {
         setVoucherMsg(
-          `⚠️ Mã này chỉ áp dụng cho đơn hàng từ ${found.minOrder.toLocaleString(
+          `Mã này chỉ áp dụng cho đơn hàng từ ${found.minOrder.toLocaleString(
             "vi-VN"
           )}đ trở lên!`
         );
@@ -179,10 +179,10 @@ export default function CheckoutPage() {
       const label = found.fixedDiscount
         ? `Giảm ${found.fixedDiscount.toLocaleString("vi-VN")}đ`
         : `Giảm ${found.percent}%`;
-      setVoucherMsg(`✅ Áp dụng thành công mã ${found.code} (${label})`);
+      setVoucherMsg(`Áp dụng thành công mã ${found.code} (${label})`);
       setShowCouponModal(false);
     } else {
-      setVoucherMsg("❌ Mã ưu đãi không hợp lệ hoặc không có trong Kho quà!");
+      setVoucherMsg("Mã ưu đãi không hợp lệ hoặc không có trong Kho quà!");
     }
   };
 
@@ -197,7 +197,7 @@ export default function CheckoutPage() {
         console.error(e);
       }
       setVoucherMsg(
-        `⚠️ Mã ${appliedVoucher.code} đã bị hủy do tổng tiền đơn hàng (${subtotal.toLocaleString("vi-VN")}đ) chưa đạt mức tối thiểu ${appliedVoucher.minOrder.toLocaleString("vi-VN")}đ!`
+        `Mã ${appliedVoucher.code} đã bị hủy do tổng tiền đơn hàng (${subtotal.toLocaleString("vi-VN")}đ) chưa đạt mức tối thiểu ${appliedVoucher.minOrder.toLocaleString("vi-VN")}đ!`
       );
     }
   }, [subtotal, appliedVoucher]);
@@ -290,7 +290,7 @@ export default function CheckoutPage() {
   const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isValidVnPhone(phone)) {
-      alert("⚠️ Số điện thoại không hợp lệ! Vui lòng nhập số điện thoại Việt Nam chuẩn 10 chữ số (đầu 03, 05, 07, 08, 09).");
+      alert("Số điện thoại không hợp lệ! Vui lòng nhập số điện thoại Việt Nam chuẩn 10 chữ số (đầu 03, 05, 07, 08, 09).");
       return;
     }
 
@@ -335,7 +335,9 @@ export default function CheckoutPage() {
           {/* Empty Cart Warning */}
           {cart.length === 0 && !showSuccessModal ? (
             <div className="cart-empty-box" id="checkout-empty-state">
-              <div className="cart-empty-icon">🛒</div>
+              <div className="cart-empty-icon">
+                <ShoppingCart className="w-12 h-12 text-slate-400" />
+              </div>
               <h2 className="cart-empty-title">Giỏ hàng của bạn đang trống!</h2>
               <p className="cart-empty-desc">
                 Vui lòng chọn sản phẩm vào giỏ hàng trước khi tiến hành đặt hàng.
@@ -358,7 +360,9 @@ export default function CheckoutPage() {
               {/* Left Column: Shipping Info & Payment Methods */}
               <div className="checkout-form-card">
                 <div>
-                  <h2 className="form-section-title">📍 Thông tin giao hàng</h2>
+                  <h2 className="form-section-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <MapPin className="w-5 h-5 text-emerald-700" /> Thông tin giao hàng
+                  </h2>
 
                   <div className="form-grid-2col">
                     <div className="form-group">
@@ -612,16 +616,17 @@ export default function CheckoutPage() {
                 {/* Voucher Box */}
                 <div style={{ margin: "12px 0" }}>
                   <div className="coupon-header-line">
-                    <label className="coupon-label-title">
-                      🎟️ Mã ưu đãi:
+                    <label className="coupon-label-title" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <Ticket className="w-4 h-4 text-emerald-700" /> Mã ưu đãi:
                     </label>
                     <button
                       type="button"
                       className="btn-kho-qua-pill"
                       onClick={() => setShowCouponModal(true)}
                       title="Mở danh sách mã ưu đãi & quà đã đổi"
+                      style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
                     >
-                      📋 Chọn từ Kho Quà ({totalAvailableItemsCount})
+                      <Gift className="w-3.5 h-3.5" /> Chọn từ Kho Quà ({totalAvailableItemsCount})
                     </button>
                   </div>
                   <div className="coupon-box">
@@ -709,14 +714,18 @@ export default function CheckoutPage() {
                       fontSize: "12px",
                       textAlign: "center",
                       marginTop: "10px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "6px",
                     }}
                   >
-                    🎁 Đơn hàng của bạn được miễn phí 100% nhờ Voucher!
+                    <Gift className="w-4 h-4 text-emerald-600" /> Đơn hàng của bạn được miễn phí 100% nhờ Voucher!
                   </div>
                 )}
 
-                <button type="submit" className="btn-place-order">
-                  🛍️ ĐẶT HÀNG NGAY
+                <button type="submit" className="btn-place-order" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+                  <ShoppingCart className="w-5 h-5" /> ĐẶT HÀNG NGAY
                 </button>
               </aside>
             </form>
@@ -780,12 +789,14 @@ export default function CheckoutPage() {
                 href="/"
                 className="btn-checkout"
                 style={{
-                  display: "inline-block",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
                   width: "auto",
                   padding: "12px 24px",
                 }}
               >
-                🏠 Quay Về Trang Chủ
+                <Home className="w-4 h-4" /> Quay Về Trang Chủ
               </Link>
               <button
                 type="button"
@@ -851,9 +862,12 @@ export default function CheckoutPage() {
                   fontWeight: 800,
                   color: "#0f172a",
                   margin: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
                 }}
               >
-                📋 Kho Mã Ưu Đãi & Quà Đã Đổi của {user?.name || "bạn"}
+                <Ticket className="w-5 h-5 text-emerald-700" /> Kho Mã Ưu Đãi & Quà Đã Đổi của {user?.name || "bạn"}
               </h3>
               <button
                 type="button"
@@ -950,9 +964,12 @@ export default function CheckoutPage() {
                                 fontWeight: 700,
                                 padding: "1px 6px",
                                 borderRadius: "4px",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "3px",
                               }}
                             >
-                              🎁 Quà đã đổi
+                              <Gift className="w-3 h-3" /> Quà đã đổi
                             </span>
                           )}
                         </div>
@@ -985,11 +1002,18 @@ export default function CheckoutPage() {
                         fontSize: "12px",
                         fontWeight: 700,
                         cursor: "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "4px",
                       }}
                     >
-                      {appliedVoucher?.code === coupon.code
-                        ? "✅ Đã chọn"
-                        : "Dùng Mã"}
+                      {appliedVoucher?.code === coupon.code ? (
+                        <>
+                          <Check className="w-3.5 h-3.5" /> Đã chọn
+                        </>
+                      ) : (
+                        "Dùng Mã"
+                      )}
                     </button>
                   </div>
                 ))

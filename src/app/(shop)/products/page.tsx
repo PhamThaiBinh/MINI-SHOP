@@ -10,7 +10,7 @@ import { Product } from "@/types/product";
 import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { Package, Sofa, Bed, Utensils, Lamp, Sparkles, Box } from "lucide-react";
+import { Package, Sofa, Bed, Utensils, Lamp, Sparkles, Box, X, Search } from "lucide-react";
 
 function ProductsContent() {
   const { addToCart } = useCart();
@@ -328,7 +328,7 @@ function ProductsContent() {
                         }}
                         title="Xóa tất cả bộ lọc"
                       >
-                        ❌
+                        <X className="w-3.5 h-3.5 text-red-600" />
                       </button>
                     )}
 
@@ -374,8 +374,8 @@ function ProductsContent() {
                     color: "var(--text-muted)",
                   }}
                 >
-                  <div style={{ fontSize: "40px", marginBottom: "12px" }}>
-                    🔍
+                  <div style={{ fontSize: "40px", marginBottom: "12px", display: "flex", justifyContent: "center" }}>
+                    <Search className="w-12 h-12 text-slate-400" />
                   </div>
                   <p style={{ fontSize: "16px", fontWeight: 600 }}>
                     Không tìm thấy sản phẩm phù hợp!

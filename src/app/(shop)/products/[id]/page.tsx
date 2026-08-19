@@ -10,7 +10,7 @@ import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { Product } from "@/types/product";
 import { fetchProductByIdFromSupabase, fetchProductsFromSupabase } from "@/lib/supabaseProducts";
-import { ShoppingCart, Zap, Heart, Truck, ShieldCheck, RefreshCw, Award } from "lucide-react";
+import { ShoppingCart, Zap, Heart, Truck, ShieldCheck, RefreshCw, Award, Copy, Check, AlertCircle, Flame, Bell, Star, Edit3 } from "lucide-react";
 
 interface ReviewItem {
   id: number;
@@ -323,9 +323,9 @@ function ProductDetailPageContent({
                           setTimeout(() => setCopied(false), 3000);
                         }
                       }}
-                      style={{ padding: "6px 4px", background: copied ? "#166534" : "#ffffff", color: copied ? "#fff" : "#334155", border: "1px solid #cbd5e1", borderRadius: "6px", fontSize: "11px", fontWeight: 700, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "4px" }}
+                      style={{ padding: "6px 8px", background: copied ? "#166534" : "#ffffff", color: copied ? "#fff" : "#334155", border: "1px solid #cbd5e1", borderRadius: "6px", fontSize: "11px", fontWeight: 700, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "4px" }}
                     >
-                      📋 {copied ? "Đã chép!" : "Sao chép link"}
+                      {copied ? <Check className="w-3.5 h-3.5 text-white" /> : <Copy className="w-3.5 h-3.5" />} {copied ? "Đã chép!" : "Sao chép link"}
                     </button>
                   </div>
                 </div>
@@ -336,12 +336,12 @@ function ProductDetailPageContent({
             <div className="product-info-col">
               <div className="product-meta-tags">
                 {(product.stock ?? 50) === 0 ? (
-                  <span className="badge-stock" style={{ background: "#fee2e2", color: "#b91c1c" }}>
-                    ❌ Hết hàng trong kho
+                  <span className="badge-stock" style={{ background: "#fee2e2", color: "#b91c1c", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                    <AlertCircle className="w-3.5 h-3.5" /> Hết hàng trong kho
                   </span>
                 ) : (
-                  <span className="badge-stock">
-                    🔥 Chỉ còn {product.stock ?? 50} sản phẩm trong kho
+                  <span className="badge-stock" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                    <Flame className="w-3.5 h-3.5 text-amber-500" /> Chỉ còn {product.stock ?? 50} sản phẩm trong kho
                   </span>
                 )}
                 <span className="tag-category">{product.categoryName}</span>
@@ -369,15 +369,14 @@ function ProductDetailPageContent({
                   <div
                     style={{
                       fontSize: "12px",
+                      fontWeight: 800,
                       color: "#dc2626",
-                      fontWeight: 900,
-                      marginBottom: "6px",
                       display: "flex",
                       alignItems: "center",
-                      gap: "6px",
+                      gap: "4px",
                     }}
                   >
-                    ⚡ ƯU ĐÃI DEAL GIỜ VÀNG FLASH SALE
+                    <Zap className="w-3.5 h-3.5 fill-red-600 text-red-600" /> ƯU ĐÃI DEAL GIỜ VÀNG FLASH SALE
                   </div>
                   <div className="price-detail-box" style={{ margin: 0 }}>
                     <span
@@ -543,15 +542,15 @@ function ProductDetailPageContent({
                     borderRadius: "var(--radius-md)",
                   }}
                 >
-                  <div style={{ fontWeight: 800, fontSize: "14px", color: "#c2410c", marginBottom: "6px" }}>
-                    🔔 Nhận thông báo ngay khi có hàng trở lại
+                  <div style={{ fontWeight: 800, fontSize: "14px", color: "#c2410c", marginBottom: "6px", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <Bell className="w-4 h-4 text-orange-600" /> Nhận thông báo ngay khi có hàng trở lại
                   </div>
                   <p style={{ fontSize: "13px", color: "#7c2d12", margin: "0 0 10px 0" }}>
                     Sản phẩm hiện đang tạm hết hàng. Nhập email của bạn để hệ thống tự động gửi tin nhắn ngay khi hàng vừa xuất kho lại:
                   </p>
                   {subscribed ? (
-                    <div style={{ color: "#166534", fontWeight: 800, fontSize: "13px" }}>
-                      ✅ Cảm ơn bạn! Chúng tôi sẽ gửi email thông báo ngay khi sản phẩm có hàng.
+                    <div style={{ color: "#166534", fontWeight: 800, fontSize: "13px", display: "flex", alignItems: "center", gap: "6px" }}>
+                      <Check className="w-4 h-4 text-emerald-600" /> Cảm ơn bạn! Chúng tôi sẽ gửi email thông báo ngay khi sản phẩm có hàng.
                     </div>
                   ) : (
                     <form
@@ -814,7 +813,7 @@ function ProductDetailPageContent({
             <div style={{ gridColumn: "1 / -1", marginTop: "32px", padding: "28px", background: "#ffffff", borderRadius: "16px", border: "1px solid #e2e8f0", boxShadow: "0 4px 16px rgba(0,0,0,0.04)" }}>
               <div style={{ borderBottom: "2px solid #f1f5f9", paddingBottom: "16px", marginBottom: "24px" }}>
                 <h3 style={{ fontSize: "20px", fontWeight: 900, color: "#0f172a", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span>⭐</span> ĐÁNH GIÁ & NHẬN XÉT TỪ KHÁCH HÀNG
+                  <Star className="w-5 h-5 fill-amber-500 text-amber-500" /> ĐÁNH GIÁ & NHẬN XÉT TỪ KHÁCH HÀNG
                 </h3>
               </div>
 
@@ -877,7 +876,7 @@ function ProductDetailPageContent({
                   <form
                     onSubmit={(e) => {
                       e.preventDefault();
-                      alert("✅ Cảm ơn bạn đã gửi đánh giá! Nhận xét của bạn đã được ghi nhận.");
+                      alert("Cảm ơn bạn đã gửi đánh giá! Nhận xét của bạn đã được ghi nhận.");
                       setProduct((prev) => ({
                         ...prev,
                         reviews: (prev.reviews || 0) + 1,
@@ -885,7 +884,9 @@ function ProductDetailPageContent({
                     }}
                     style={{ background: "#f8fafc", padding: "20px", borderRadius: "12px", border: "1px solid #e2e8f0", display: "flex", flexDirection: "column", gap: "14px" }}
                   >
-                    <div style={{ fontSize: "14px", fontWeight: 800, color: "#1e293b" }}>✍️ Viết đánh giá của bạn:</div>
+                    <div style={{ fontSize: "14px", fontWeight: 800, color: "#1e293b", display: "flex", alignItems: "center", gap: "6px" }}>
+                      <Edit3 className="w-4 h-4 text-emerald-700" /> Viết đánh giá của bạn:
+                    </div>
 
                     <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                       <span style={{ fontSize: "13px", fontWeight: 700, color: "#334155" }}>Chọn số sao:</span>
@@ -893,11 +894,11 @@ function ProductDetailPageContent({
                         defaultValue="5"
                         style={{ padding: "8px 14px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "14px", fontFamily: "inherit", cursor: "pointer" }}
                       >
-                        <option value="5">⭐⭐⭐⭐⭐</option>
-                        <option value="4">⭐⭐⭐⭐</option>
-                        <option value="3">⭐⭐⭐</option>
-                        <option value="2">⭐⭐</option>
-                        <option value="1">⭐</option>
+                        <option value="5">5 Sao (Tuyệt vời)</option>
+                        <option value="4">4 Sao (Rất tốt)</option>
+                        <option value="3">3 Sao (Bình thường)</option>
+                        <option value="2">2 Sao (Kém)</option>
+                        <option value="1">1 Sao (Rất kém)</option>
                       </select>
                     </div>
 

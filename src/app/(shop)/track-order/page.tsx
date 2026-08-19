@@ -5,7 +5,7 @@ import Link from "next/link";
 import { formatVND, fixImagePath } from "@/lib/utils";
 import { UnifiedOrder } from "@/utils/orderStorage";
 import { lookupOrderFromSupabase } from "@/lib/supabaseOrders";
-import { Search } from "lucide-react";
+import { Search, AlertTriangle, XCircle, Truck, User, MapPin, CreditCard, Package } from "lucide-react";
 
 export default function TrackOrderPage() {
   const [searchCode, setSearchCode] = useState("");
@@ -138,16 +138,20 @@ export default function TrackOrderPage() {
             {!orderResult ? (
               <div
                 style={{
-                  padding: "24px",
-                  background: "#fff5f5",
-                  border: "1px solid #fecaca",
+                  padding: "14px 16px",
+                  background: "#fef2f2",
+                  border: "1px solid #fca5a5",
                   borderRadius: "var(--radius-md)",
                   color: "#991b1b",
                   textAlign: "center",
                   fontSize: "14px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "6px",
                 }}
               >
-                ⚠️ Không tìm thấy thông tin đơn hàng với mã <strong>{searchCode}</strong> và SĐT{" "}
+                <AlertTriangle className="w-4 h-4 text-red-600" /> Không tìm thấy thông tin đơn hàng với mã <strong>{searchCode}</strong> và SĐT{" "}
                 <strong>{searchPhone}</strong>. Vui lòng kiểm tra lại thông tin!
               </div>
             ) : (
@@ -215,9 +219,13 @@ export default function TrackOrderPage() {
                       fontSize: "14px",
                       textAlign: "center",
                       marginBottom: "24px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "6px",
                     }}
                   >
-                    ❌ ĐƠN HÀNG ĐÃ BỊ HỦY BỎ
+                    <XCircle className="w-5 h-5 text-red-600" /> ĐƠN HÀNG ĐÃ BỊ HỦY BỎ
                     {orderResult.cancelReason && (
                       <div style={{ fontSize: "13px", fontWeight: 600, marginTop: "6px", color: "#991b1b" }}>
                         Lý do hủy: {orderResult.cancelReason}
@@ -226,8 +234,8 @@ export default function TrackOrderPage() {
                   </div>
                 ) : (
                   <div style={{ marginBottom: "24px" }}>
-                  <div style={{ fontSize: "14px", fontWeight: 800, marginBottom: "12px" }}>
-                    🚚 Lộ Trình Giao Hàng:
+                  <div style={{ fontSize: "14px", fontWeight: 800, marginBottom: "12px", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <Truck className="w-4 h-4 text-emerald-700" /> Lộ Trình Giao Hàng:
                   </div>
                   <div
                     style={{
@@ -344,23 +352,26 @@ export default function TrackOrderPage() {
                     padding: "12px 16px",
                     borderRadius: "6px",
                     border: "1px solid #e2e8f0",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "6px",
                   }}
                 >
-                  <div>
-                    👤 <strong>Người nhận:</strong> {orderResult.recipientName} (
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <User className="w-4 h-4 text-slate-500" /> <strong>Người nhận:</strong> {orderResult.recipientName} (
                     {orderResult.recipientPhone})
                   </div>
-                  <div>
-                    📍 <strong>Địa chỉ giao:</strong> {orderResult.address}
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <MapPin className="w-4 h-4 text-slate-500" /> <strong>Địa chỉ giao:</strong> {orderResult.address}
                   </div>
-                  <div>
-                    💳 <strong>Thanh toán:</strong> {orderResult.paymentMethod}
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <CreditCard className="w-4 h-4 text-slate-500" /> <strong>Thanh toán:</strong> {orderResult.paymentMethod}
                   </div>
                 </div>
 
                 {/* Items */}
-                <div style={{ fontSize: "13px", fontWeight: 800, marginBottom: "8px" }}>
-                  📦 Sản Phẩm Trong Đơn:
+                <div style={{ fontSize: "13px", fontWeight: 800, marginBottom: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
+                  <Package className="w-4 h-4 text-emerald-700" /> Sản Phẩm Trong Đơn:
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
                   {orderResult.items.map((it, idx) => (

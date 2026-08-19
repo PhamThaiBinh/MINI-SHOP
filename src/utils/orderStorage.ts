@@ -109,7 +109,7 @@ export const DEFAULT_UNIFIED_ORDERS: UnifiedOrder[] = [
     id: "#MS-1024",
     date: "08/08/2026 11:15:20",
     status: "completed",
-    statusText: "✅ Đã hoàn thành",
+    statusText: "Đã hoàn thành",
     recipientName: "Nguyễn Văn An",
     recipientPhone: "0901.234.567",
     address: "456 Đường Lê Lợi, Phường Hải Châu 1, Quận Hải Châu, TP. Đà Nẵng",
@@ -134,17 +134,17 @@ const STORAGE_KEY = "minishop_all_orders";
 export const getStatusText = (status: UnifiedOrder["status"]): string => {
   switch (status) {
     case "pending":
-      return "📋 Đã tiếp nhận đơn";
+      return "Đã tiếp nhận đơn";
     case "processing":
-      return "📦 Đang chuẩn bị hàng";
+      return "Đang chuẩn bị hàng";
     case "shipping":
-      return "🚚 Đang vận chuyển";
+      return "Đang vận chuyển";
     case "completed":
-      return "✅ Giao hàng thành công";
+      return "Giao hàng thành công";
     case "cancelled":
-      return "❌ Đã hủy đơn";
+      return "Đã hủy đơn";
     default:
-      return "📋 Đang xử lý";
+      return "Đang xử lý";
   }
 };
 
@@ -211,7 +211,7 @@ export const cancelOrderWithReason = (orderId: string, reason: string) => {
       return {
         ...o,
         status: "cancelled" as const,
-        statusText: "❌ Đã hủy đơn",
+        statusText: "Đã hủy đơn",
         cancelReason: reason,
       };
     }
