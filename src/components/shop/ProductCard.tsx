@@ -15,7 +15,7 @@ interface ProductCardProps {
 
 import { IconEye } from "@/components/common/Icons";
 
-import { ShoppingCart, ArrowRight, X } from "lucide-react";
+import { ShoppingCart, ArrowRight, X, ChevronLeft, ChevronRight } from "lucide-react";
 
 export const ProductCard: React.FC<ProductCardProps> = ({
   product,
@@ -217,9 +217,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                         borderRadius: "8px",
                         fontWeight: 800,
                         cursor: "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "4px",
                       }}
                     >
-                      &lsaquo; Trước
+                      <ChevronLeft className="w-4 h-4" /> Trước
                     </button>
                   )}
                   {onNextProduct && (
@@ -233,9 +236,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                         borderRadius: "8px",
                         fontWeight: 800,
                         cursor: "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "4px",
                       }}
                     >
-                      Tiếp &rsaquo;
+                      Tiếp <ChevronRight className="w-4 h-4" />
                     </button>
                   )}
                 </div>
@@ -257,6 +263,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                   cursor: "pointer",
                   display: "inline-flex",
                   alignItems: "center",
+                  justifyContent: "center",
                   gap: "6px",
                 }}
               >
@@ -274,11 +281,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                   fontWeight: 800,
                   fontSize: "13px",
                   textDecoration: "none",
-                  display: "inline-block",
-                  textAlign: "center",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px",
                 }}
               >
-                Chi tiết &rarr;
+                Chi tiết <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
           </div>
