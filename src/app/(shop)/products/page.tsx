@@ -334,7 +334,7 @@ function ProductsContent() {
                   }}
                   style={{ cursor: "pointer" }}
                 />
-                <span style={{ fontSize: "14px", color: "var(--text-main)" }}>Chỉ hiện sản phẩm còn hàng</span>
+                <span style={{ fontSize: "14px", color: "var(--text-main)" }}>Còn hàng</span>
               </label>
             </div>
           </aside>
