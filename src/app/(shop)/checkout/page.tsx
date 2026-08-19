@@ -10,6 +10,7 @@ import { formatVND, fixImagePath } from "@/lib/utils";
 import { getSystemVouchers } from "@/utils/voucherStorage";
 import { addPlacedOrder as addUnifiedPlacedOrder, formatFullTimestamp, UnifiedOrder } from "@/utils/orderStorage";
 import { createOrderInSupabase } from "@/lib/supabaseOrders";
+import { CreditCard, ShieldCheck } from "lucide-react";
 
 interface Coupon {
   code: string;
@@ -433,8 +434,8 @@ export default function CheckoutPage() {
 
                 {/* Payment Method Section */}
                 <div>
-                  <h2 className="form-section-title">
-                    💳 Phương thức thanh toán
+                  <h2 className="form-section-title" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <CreditCard style={{ width: 20, height: 20, color: "var(--primary-color)" }} /> Phương thức thanh toán
                   </h2>
                   <div className="payment-methods-list">
                     <label

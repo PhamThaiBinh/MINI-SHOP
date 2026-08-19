@@ -7,6 +7,7 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { formatVND, fixImagePath } from "@/lib/utils";
 import { getSystemVouchers } from "@/utils/voucherStorage";
+import { Truck, ShieldCheck, ShoppingCart, ShoppingBag, ArrowRight } from "lucide-react";
 
 interface Coupon {
   code: string;
@@ -209,8 +210,50 @@ export default function CartPage() {
               </div>
             ) : (
               <>
+                {/* Free Shipping Progress Bar */}
+                {(() => {
+                  const freeShipThreshold = 1500000;
+                  const progressPct = Math.min(100, Math.round((subtotal / freeShipThreshold) * 100));
+                  const needed = freeShipThreshold - subtotal;
+                  return (
+                    <div
+                      style={{
+                        background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
+                        border: "1px solid #bbf7d0",
+                        borderRadius: "var(--radius-lg)",
+                        padding: "16px 20px",
+                        marginBottom: "24px",
+                        boxShadow: "0 4px 12px rgba(46, 125, 50, 0.08)",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+                        <div style={{ fontSize: "14px", fontWeight: 800, color: "#166534", display: "flex", alignItems: "center", gap: "8px" }}>
+                          <Truck className="w-5 h-5 text-emerald-700" />
+                          {subtotal >= freeShipThreshold ? (
+                            <span>🎉 Chúc mừng! Đơn hàng của bạn đã đủ điều kiện <strong>Miễn phí vận chuyển toàn quốc</strong>!</span>
+                          ) : (
+                            <span>Mua thêm <strong>{formatVND(needed)}</strong> để nhận ưu đãi <strong>MIỄN PHÍ VẬN CHUYỂN</strong></span>
+                          )}
+                        </div>
+                        <span style={{ fontSize: "12px", fontWeight: 800, color: "#166534" }}>{progressPct}%</span>
+                      </div>
+                      <div style={{ width: "100%", height: "8px", background: "rgba(22, 101, 52, 0.15)", borderRadius: "999px", overflow: "hidden" }}>
+                        <div
+                          style={{
+                            width: `${progressPct}%`,
+                            height: "100%",
+                            background: "linear-gradient(90deg, #2e7d32 0%, #16a34a 100%)",
+                            borderRadius: "999px",
+                            transition: "width 0.4s ease",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 {/* Main Cart Layout (2 Columns) */}
-              <div className="cart-layout" id="cart-main-layout">
+                <div className="cart-layout" id="cart-main-layout">
                 {/* Left: Products List Table */}
                 <div className="cart-table-card">
                   <table className="cart-table">

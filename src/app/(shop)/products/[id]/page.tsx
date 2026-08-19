@@ -10,6 +10,7 @@ import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { Product } from "@/types/product";
 import { fetchProductByIdFromSupabase, fetchProductsFromSupabase } from "@/lib/supabaseProducts";
+import { ShoppingCart, Zap, Heart, Truck, ShieldCheck, RefreshCw, Award } from "lucide-react";
 
 interface ReviewItem {
   id: number;
@@ -455,7 +456,7 @@ function ProductDetailPageContent({
                 </div>
               </div>
 
-              {/* Action CTA Buttons (3 Equal Buttons) */}
+              {/* Action CTA Buttons (3 Equal Buttons with Island Architecture) */}
               <div className="action-buttons-group" style={{ display: "flex", gap: "10px", width: "100%", marginTop: "20px" }}>
                 <button
                   className="btn-add-cart"
@@ -469,13 +470,18 @@ function ProductDetailPageContent({
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    gap: "6px",
+                    gap: "8px",
                     fontWeight: 800,
                     fontSize: "14px",
                     opacity: (product.stock ?? 50) === 0 ? 0.5 : 1,
+                    borderRadius: "var(--radius-md)",
+                    boxShadow: "0 4px 12px rgba(46, 125, 50, 0.2)",
                   }}
                 >
-                  <span>🛒</span> Thêm vào giỏ hàng
+                  <span style={{ display: "inline-flex", padding: "4px", background: "rgba(255,255,255,0.2)", borderRadius: "999px" }}>
+                    <ShoppingCart className="w-4 h-4" />
+                  </span>
+                  Thêm vào giỏ
                 </button>
                 <button
                   className="btn-add-cart"
@@ -491,13 +497,18 @@ function ProductDetailPageContent({
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    gap: "6px",
+                    gap: "8px",
                     fontWeight: 800,
                     fontSize: "14px",
                     opacity: (product.stock ?? 50) === 0 ? 0.5 : 1,
+                    borderRadius: "var(--radius-md)",
+                    boxShadow: "0 4px 12px rgba(239, 68, 68, 0.2)",
                   }}
                 >
-                  <span>⚡</span> Mua ngay
+                  <span style={{ display: "inline-flex", padding: "4px", background: "rgba(255,255,255,0.2)", borderRadius: "999px" }}>
+                    <Zap className="w-4 h-4 text-amber-300 fill-amber-300" />
+                  </span>
+                  Mua ngay
                 </button>
                 <button
                   className="btn-detail-wishlist"
