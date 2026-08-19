@@ -130,6 +130,8 @@ function ProductDetailPageContent({
   const [notifyEmail, setNotifyEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
   const [selectedStarFilter, setSelectedStarFilter] = useState<number | "all">("all");
+  const [newReviewRating, setNewReviewRating] = useState<number>(5);
+  const [hoverRating, setHoverRating] = useState<number>(0);
 
   const totalReviewsCount = currentProduct.reviews || 20;
   const allMockReviews = useMemo(
@@ -895,18 +897,41 @@ function ProductDetailPageContent({
                       <Edit3 className="w-4 h-4 text-emerald-700" /> Viết đánh giá của bạn:
                     </div>
 
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                       <span style={{ fontSize: "13px", fontWeight: 700, color: "#334155" }}>Chọn số sao:</span>
-                      <select
-                        defaultValue="5"
-                        style={{ padding: "8px 14px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "14px", fontFamily: "inherit", cursor: "pointer" }}
-                      >
-                        <option value="5">5 Sao (Tuyệt vời)</option>
-                        <option value="4">4 Sao (Rất tốt)</option>
-                        <option value="3">3 Sao (Bình thường)</option>
-                        <option value="2">2 Sao (Kém)</option>
-                        <option value="1">1 Sao (Rất kém)</option>
-                      </select>
+                      <div style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                        {[1, 2, 3, 4, 5].map((starVal) => {
+                          const active = starVal <= (hoverRating || newReviewRating);
+                          return (
+                            <button
+                              key={starVal}
+                              type="button"
+                              onClick={() => setNewReviewRating(starVal)}
+                              onMouseEnter={() => setHoverRating(starVal)}
+                              onMouseLeave={() => setHoverRating(0)}
+                              style={{
+                                background: "none",
+                                border: "none",
+                                padding: "2px",
+                                cursor: "pointer",
+                                display: "inline-flex",
+                                alignItems: "center",
+                              }}
+                              title={`${starVal} Sao`}
+                            >
+                              <Star
+                                style={{
+                                  width: "22px",
+                                  height: "22px",
+                                  color: active ? "#f59e0b" : "#cbd5e1",
+                                  fill: active ? "#f59e0b" : "#f1f5f9",
+                                  transition: "all 0.15s ease",
+                                }}
+                              />
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
 
                     <textarea
