@@ -128,7 +128,7 @@ export const BentoLookbook: React.FC = () => {
               }}
             >
               <img
-                src={fixImagePath("assets/images/products/product-1.jpg")}
+                src={fixImagePath("assets/images/products/noi-that-gia-dung/sofa-phong-khach.webp")}
                 alt="Sofa Nordic Hiện Đại"
                 style={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", inset: 0 }}
               />
@@ -178,7 +178,7 @@ export const BentoLookbook: React.FC = () => {
               }}
             >
               <img
-                src={fixImagePath("assets/images/products/product-6.jpg")}
+                src={fixImagePath("assets/images/products/noi-that-gia-dung/chau-cay-de-ban.webp")}
                 alt="Chậu Cây Trồng Trong Nhà"
                 style={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", inset: 0 }}
               />

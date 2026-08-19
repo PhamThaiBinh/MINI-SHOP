@@ -8,7 +8,6 @@ import { HeroShoppableSlider } from "@/components/home/HeroShoppableSlider";
 import { ValuePropositionBar } from "@/components/home/ValuePropositionBar";
 import { HomeFlashSale } from "@/components/home/HomeFlashSale";
 import { BentoLookbook } from "@/components/home/BentoLookbook";
-import { VoucherMarketplace } from "@/components/home/VoucherMarketplace";
 import { HomeBlogJournal } from "@/components/home/HomeBlogJournal";
 import { CustomerTestimonials } from "@/components/home/CustomerTestimonials";
 import { ProductCard } from "@/components/shop/ProductCard";
@@ -151,13 +150,10 @@ export default function Home() {
       {/* 6. Bento Grid Editorial Lookbook */}
       <BentoLookbook />
 
-      {/* 7. Voucher Marketplace */}
-      <VoucherMarketplace />
-
-      {/* 8. Mini-Shop Decor Journal */}
+      {/* 7. Mini-Shop Decor Journal */}
       <HomeBlogJournal />
 
-      {/* 9. Customer Testimonials & Instagram Wall */}
+      {/* 8. Customer Testimonials */}
       <CustomerTestimonials />
     </>
   );
