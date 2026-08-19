@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import "@/styles/home.css";
+import "@/styles/product-list.css";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { fixImagePath } from "@/lib/utils";
 import { Product } from "@/types/product";
