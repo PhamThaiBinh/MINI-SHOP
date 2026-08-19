@@ -350,12 +350,10 @@ function ProductDetailPageContent({
               <h1 className="product-detail-title">{product.name}</h1>
 
               <div className="rating-box">
-                <span className="stars" style={{ display: "inline-flex", alignItems: "center", gap: "2px", color: "#eab308" }}>
-                  <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
-                  <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
-                  <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
-                  <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
-                  <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
+                <span className="stars" style={{ display: "inline-flex", alignItems: "center", gap: "3px" }}>
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} style={{ width: "16px", height: "16px", color: "#f59e0b", fill: "#f59e0b" }} />
+                  ))}
                 </span>
                 <span className="review-count">
                   ({product.reviews || 48} đánh giá)
@@ -820,7 +818,7 @@ function ProductDetailPageContent({
             <div style={{ gridColumn: "1 / -1", marginTop: "32px", padding: "28px", background: "#ffffff", borderRadius: "16px", border: "1px solid #e2e8f0", boxShadow: "0 4px 16px rgba(0,0,0,0.04)" }}>
               <div style={{ borderBottom: "2px solid #f1f5f9", paddingBottom: "16px", marginBottom: "24px" }}>
                 <h3 style={{ fontSize: "20px", fontWeight: 900, color: "#0f172a", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
-                  <Star className="w-5 h-5 fill-amber-500 text-amber-500" /> ĐÁNH GIÁ & NHẬN XÉT TỪ KHÁCH HÀNG
+                  <Star style={{ width: "20px", height: "20px", color: "#f59e0b", fill: "#f59e0b" }} /> ĐÁNH GIÁ & NHẬN XÉT TỪ KHÁCH HÀNG
                 </h3>
               </div>
 
@@ -830,12 +828,10 @@ function ProductDetailPageContent({
                   <div style={{ fontSize: "44px", fontWeight: 900, color: "#0f172a", lineHeight: 1 }}>
                     4.9
                   </div>
-                  <div style={{ color: "#eab308", fontSize: "16px", margin: "8px 0 4px", display: "inline-flex", justifyContent: "center", gap: "2px" }}>
-                    <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
-                    <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
-                    <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
-                    <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
-                    <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
+                  <div style={{ margin: "8px 0 4px", display: "inline-flex", justifyContent: "center", gap: "3px" }}>
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} style={{ width: "16px", height: "16px", color: "#f59e0b", fill: "#f59e0b" }} />
+                    ))}
                   </div>
                   <div style={{ fontSize: "13px", color: "#64748b", fontWeight: 600 }}>
                     Dựa trên {totalReviewsCount} đánh giá xác thực
@@ -1017,15 +1013,16 @@ function ProductDetailPageContent({
                               </div>
                               <span style={{ fontSize: "12px", color: "#94a3b8" }}>{rev.date}</span>
                             </div>
-                            <div style={{ color: "#eab308", fontSize: "13px", marginBottom: "6px", display: "inline-flex", alignItems: "center", gap: "2px" }}>
+                            <div style={{ fontSize: "13px", marginBottom: "6px", display: "inline-flex", alignItems: "center", gap: "2px" }}>
                               {[...Array(5)].map((_, i) => (
                                 <Star
                                   key={i}
-                                  className={`w-3.5 h-3.5 ${
-                                    i < rev.rating
-                                      ? "text-amber-500 fill-amber-500"
-                                      : "text-slate-300 fill-slate-100"
-                                  }`}
+                                  style={{
+                                    width: "14px",
+                                    height: "14px",
+                                    color: i < rev.rating ? "#f59e0b" : "#cbd5e1",
+                                    fill: i < rev.rating ? "#f59e0b" : "#f1f5f9",
+                                  }}
                                 />
                               ))}
                             </div>
