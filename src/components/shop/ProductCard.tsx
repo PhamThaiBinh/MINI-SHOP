@@ -15,6 +15,8 @@ interface ProductCardProps {
 
 import { IconEye } from "@/components/common/Icons";
 
+import { ShoppingCart, ArrowRight } from "lucide-react";
+
 export const ProductCard: React.FC<ProductCardProps> = ({
   product,
   onPrevProduct,
@@ -105,12 +107,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               color: "#fff",
               border: "none",
               fontWeight: 700,
+              gap: "4px",
             }}
           >
-            + Giỏ hàng
+            <ShoppingCart style={{ width: 14, height: 14 }} /> Thêm giỏ
           </button>
-          <Link href={`/products/${product.id}`} className="btn-card-action">
-            Chi tiết &rarr;
+          <Link href={`/products/${product.id}`} className="btn-card-action" style={{ gap: "4px" }}>
+            Chi tiết <ArrowRight style={{ width: 14, height: 14 }} />
           </Link>
         </div>
       </div>

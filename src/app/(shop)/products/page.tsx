@@ -10,6 +10,7 @@ import { Product } from "@/types/product";
 import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
 
 import { useSearchParams, useRouter } from "next/navigation";
+import { Package, Sofa, Bed, Utensils, Lamp, Sparkles, Box } from "lucide-react";
 
 function ProductsContent() {
   const { addToCart } = useCart();
@@ -66,13 +67,13 @@ function ProductsContent() {
   }, []);
 
   const categories = [
-    { id: "All", label: "Tất cả sản phẩm", icon: "📦" },
-    { id: "C0001", label: "Phòng khách", icon: "🛋️" },
-    { id: "C0002", label: "Phòng ngủ", icon: "🛏️" },
-    { id: "C0003", label: "Nhà bếp", icon: "🍳" },
-    { id: "C0004", label: "Đèn chiếu sáng", icon: "💡" },
-    { id: "C0005", label: "Trang trí", icon: "🪴" },
-    { id: "C0006", label: "Lưu trữ", icon: "🧺" },
+    { id: "All", label: "Tất cả sản phẩm", icon: <Package className="w-4 h-4" /> },
+    { id: "C0001", label: "Phòng khách", icon: <Sofa className="w-4 h-4" /> },
+    { id: "C0002", label: "Phòng ngủ", icon: <Bed className="w-4 h-4" /> },
+    { id: "C0003", label: "Nhà bếp", icon: <Utensils className="w-4 h-4" /> },
+    { id: "C0004", label: "Đèn chiếu sáng", icon: <Lamp className="w-4 h-4" /> },
+    { id: "C0005", label: "Trang trí", icon: <Sparkles className="w-4 h-4" /> },
+    { id: "C0006", label: "Lưu trữ", icon: <Box className="w-4 h-4" /> },
   ];
 
   const priceRanges = [

@@ -10,6 +10,8 @@ import { useAuth } from "@/context/AuthContext";
 import { PRODUCTS_DATA } from "@/data/products";
 import { formatVND, fixImagePath } from "@/lib/utils";
 
+import { Zap, Search } from "lucide-react";
+
 export const Header: React.FC = () => {
   const pathname = usePathname();
   const router = useRouter();
@@ -121,9 +123,9 @@ export const Header: React.FC = () => {
                   }`}
                   style={{ color: "#ef4444", fontWeight: 800 }}
                 >
-                  <span className="nav-two-lines">
-                    <span>⚡ Flash</span>
-                    <span>Sale</span>
+                  <span className="nav-two-lines" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                    <Zap style={{ width: 14, height: 14, color: "#f59e0b", fill: "#f59e0b" }} />
+                    <span>Flash Sale</span>
                   </span>
                 </Link>
               </li>
@@ -134,9 +136,9 @@ export const Header: React.FC = () => {
                     pathname === "/track-order" ? "active" : ""
                   }`}
                 >
-                  <span className="nav-two-lines">
-                    <span>🔍 Tra cứu</span>
-                    <span>đơn</span>
+                  <span className="nav-two-lines" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                    <Search style={{ width: 14, height: 14 }} />
+                    <span>Tra cứu đơn</span>
                   </span>
                 </Link>
               </li>
