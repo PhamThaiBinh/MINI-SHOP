@@ -5,12 +5,14 @@ import Link from "next/link";
 import "@/styles/blog.css";
 import { fixImagePath } from "@/lib/utils";
 import { fetchBlogsFromSupabase, BlogArticle } from "@/lib/supabaseBlogs";
-import { Calendar, BookOpen, ArrowRight, Search, Sparkles, User, Clock } from "lucide-react";
+import { Calendar, BookOpen, ArrowRight, Search, Sparkles, User, Clock, ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function BlogListPage() {
   const [articles, setArticles] = useState<BlogArticle[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTopic, setSelectedTopic] = useState("Tất cả");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
 
   useEffect(() => {
     async function loadBlogs() {
@@ -24,9 +26,13 @@ export default function BlogListPage() {
 
   const topics = [
     "Tất cả",
+    "Mẹo Nội Thất",
+    "Gia Dụng",
+    "Đồ Mỹ Nghệ",
+    "Trang Trí",
+    "Giải Pháp Căn Hộ Nhỏ",
     "Mẹo Decor Phòng Khách",
     "Bảo Quản Đồ Gỗ",
-    "Giải Pháp Căn Hộ Nhỏ",
     "Xu Hướng Nội Thất 2026",
   ];
 
@@ -51,6 +57,25 @@ export default function BlogListPage() {
       return matchesSearch && matchesTopic;
     });
   }, [articles, searchQuery, selectedTopic]);
+
+  // Reset to page 1 when search or topic changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedTopic]);
+
+  // Pagination Math
+  const totalPages = Math.ceil(filteredArticles.length / itemsPerPage) || 1;
+  const paginatedArticles = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredArticles.slice(start, start + itemsPerPage);
+  }, [filteredArticles, currentPage, itemsPerPage]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 300, behavior: "smooth" });
+    }
+  };
 
   return (
     <main
@@ -217,7 +242,7 @@ export default function BlogListPage() {
 
         {/* 3. Articles Grid Stream */}
         <div className="blog-grid">
-          {filteredArticles.map((article) => (
+          {paginatedArticles.map((article) => (
             <div key={article.id} className="doppelrand-outer">
               <div className="doppelrand-inner" style={{ padding: "16px", display: "flex", flexDirection: "column", height: "100%", boxSizing: "border-box" }}>
                 <div style={{ borderRadius: "1rem", overflow: "hidden", aspectRatio: "16 / 10", marginBottom: "14px" }}>
@@ -262,6 +287,79 @@ export default function BlogListPage() {
             </div>
           ))}
         </div>
+
+        {/* 4. Pagination Controls */}
+        {totalPages > 1 && (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginTop: "36px" }}>
+            <button
+              type="button"
+              disabled={currentPage === 1}
+              onClick={() => handlePageChange(currentPage - 1)}
+              style={{
+                padding: "8px 14px",
+                borderRadius: "8px",
+                border: "1px solid #cbd5e1",
+                background: "#ffffff",
+                fontSize: "13px",
+                fontWeight: 700,
+                color: currentPage === 1 ? "#cbd5e1" : "#334155",
+                cursor: currentPage === 1 ? "not-allowed" : "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "4px",
+              }}
+            >
+              <ChevronLeft className="w-4 h-4" /> Trang trước
+            </button>
+
+            {[...Array(totalPages)].map((_, i) => {
+              const p = i + 1;
+              const isActive = currentPage === p;
+              return (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => handlePageChange(p)}
+                  style={{
+                    width: "36px",
+                    height: "36px",
+                    borderRadius: "8px",
+                    border: "1px solid",
+                    borderColor: isActive ? "var(--primary-color, #2e7d32)" : "#cbd5e1",
+                    background: isActive ? "var(--primary-color, #2e7d32)" : "#ffffff",
+                    color: isActive ? "#ffffff" : "#334155",
+                    fontSize: "13px",
+                    fontWeight: 800,
+                    cursor: "pointer",
+                  }}
+                >
+                  {p}
+                </button>
+              );
+            })}
+
+            <button
+              type="button"
+              disabled={currentPage === totalPages}
+              onClick={() => handlePageChange(currentPage + 1)}
+              style={{
+                padding: "8px 14px",
+                borderRadius: "8px",
+                border: "1px solid #cbd5e1",
+                background: "#ffffff",
+                fontSize: "13px",
+                fontWeight: 700,
+                color: currentPage === totalPages ? "#cbd5e1" : "#334155",
+                cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "4px",
+              }}
+            >
+              Trang sau <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </div>
     </main>
   );
