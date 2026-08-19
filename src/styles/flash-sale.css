@@ -1,0 +1,114 @@
+/* ==========================================================================
+   MINI-SHOP - FLASH SALE PAGE STYLES (NEXT.JS)
+   Cyber-Crimson Doppelrand Architecture
+   ========================================================================== */
+
+@keyframes glowPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 12px rgba(239, 68, 68, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+    }
+}
+
+@keyframes liquidFlow {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+@keyframes flameFlicker {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.15); opacity: 0.85; }
+}
+
+.glow-active-slot {
+    animation: glowPulse 2s infinite;
+}
+
+.flame-anim {
+    animation: flameFlicker 1.2s infinite ease-in-out;
+}
+
+/* 3D Ribbon Badge */
+.ribbon-badge-3d {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+    color: #ffffff;
+    font-weight: 900;
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35);
+    z-index: 10;
+    letter-spacing: 0.05em;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Liquid Thermal Tube Bar */
+.thermal-tube-container {
+    height: 18px;
+    background: #fee2e2;
+    border-radius: 999px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.thermal-tube-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ef4444 0%, #f97316 50%, #eab308 100%);
+    background-size: 200% 200%;
+    animation: liquidFlow 3s ease infinite;
+    border-radius: 999px;
+    transition: width 0.5s ease;
+}
+
+.thermal-tube-text {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10.5px;
+    font-weight: 900;
+    color: #ffffff;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+    gap: 4px;
+}
+
+/* Digital LED Flip Clock Box */
+.led-flip-digit {
+    background: #0f172a;
+    color: #fbbf24;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-weight: 900;
+    font-size: 18px;
+    font-family: monospace, monospace;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8), 0 2px 8px rgba(251, 191, 36, 0.2);
+    border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+/* Hero Super Deal Spotlight Container */
+.hero-deal-card {
+    background: linear-gradient(135deg, #ffffff 0%, #fff7ed 100%);
+    border: 2px solid #f97316;
+    border-radius: 1.5rem;
+    padding: 24px;
+    box-shadow: 0 12px 32px rgba(249, 115, 22, 0.12);
+}
