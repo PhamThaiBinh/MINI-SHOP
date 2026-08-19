@@ -89,9 +89,6 @@ export default function BlogListPage() {
       <div className="container" style={{ padding: "30px 16px 0" }}>
         {/* Title Header */}
         <div style={{ marginBottom: "28px", textAlign: "left" }}>
-          <span style={{ fontSize: "11px", fontWeight: 800, color: "var(--primary-color, #2e7d32)", background: "#e8f5e9", padding: "4px 12px", borderRadius: "999px", textTransform: "uppercase", letterSpacing: "0.1em" }}>
-            MINI-SHOP EDITORIAL JOURNAL
-          </span>
           <h1
             style={{
               fontSize: "32px",
