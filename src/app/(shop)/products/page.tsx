@@ -57,12 +57,12 @@ function ProductsContent() {
 
   const categories = [
     { id: "All", label: "Tất cả sản phẩm", icon: "📦" },
-    { id: "Living Room", label: "Phòng khách", icon: "🛋️" },
-    { id: "Bedroom", label: "Phòng ngủ", icon: "🛏️" },
-    { id: "Kitchen", label: "Nhà bếp", icon: "🍳" },
-    { id: "Decor", label: "Trang trí", icon: "🪴" },
-    { id: "Storage", label: "Lưu trữ", icon: "🧺" },
-    { id: "Lighting", label: "Đèn chiếu sáng", icon: "💡" },
+    { id: "C0001", label: "Phòng khách", icon: "🛋️" },
+    { id: "C0002", label: "Phòng ngủ", icon: "🛏️" },
+    { id: "C0003", label: "Nhà bếp", icon: "🍳" },
+    { id: "C0004", label: "Đèn chiếu sáng", icon: "💡" },
+    { id: "C0005", label: "Trang trí", icon: "🪴" },
+    { id: "C0006", label: "Lưu trữ", icon: "🧺" },
   ];
 
   const priceRanges = [
@@ -83,16 +83,44 @@ function ProductsContent() {
 
   const matchesCategory = (category: string, activeCategory: string, categoryName?: string) => {
     if (!activeCategory || activeCategory === "All" || activeCategory === "all") return true;
-    const catLower = activeCategory.toLowerCase();
-    const prodCatLower = (category || "").toLowerCase();
-    const prodNameLower = (categoryName || "").toLowerCase();
+    const target = activeCategory.toLowerCase().trim();
+    const prodCat = (category || "").toLowerCase().trim();
+    const prodName = (categoryName || "").toLowerCase().trim();
 
-    return (
-      prodCatLower === catLower ||
-      prodNameLower === catLower ||
-      prodNameLower.includes(catLower) ||
-      (prodCatLower !== "" && catLower.includes(prodCatLower))
-    );
+    if (prodCat === target || prodName === target) return true;
+
+    const synonymMap: Record<string, string[]> = {
+      "c0001": ["c0001", "living room", "phòng khách", "phong khach", "phong-khach"],
+      "living room": ["c0001", "living room", "phòng khách", "phong khach", "phong-khach"],
+      "phòng khách": ["c0001", "living room", "phòng khách", "phong khach", "phong-khach"],
+
+      "c0002": ["c0002", "bedroom", "phòng ngủ", "phong ngu", "phong-ngu"],
+      "bedroom": ["c0002", "bedroom", "phòng ngủ", "phong ngu", "phong-ngu"],
+      "phòng ngủ": ["c0002", "bedroom", "phòng ngủ", "phong ngu", "phong-ngu"],
+
+      "c0003": ["c0003", "kitchen", "nhà bếp", "nha bep", "nha-bep", "phòng ăn"],
+      "kitchen": ["c0003", "kitchen", "nhà bếp", "nha bep", "nha-bep", "phòng ăn"],
+      "nhà bếp": ["c0003", "kitchen", "nhà bếp", "nha bep", "nha-bep", "phòng ăn"],
+
+      "c0004": ["c0004", "lighting", "đèn chiếu sáng", "den chieu sang", "den-chieu-sang", "đèn"],
+      "lighting": ["c0004", "lighting", "đèn chiếu sáng", "den chieu sang", "den-chieu-sang", "đèn"],
+      "đèn chiếu sáng": ["c0004", "lighting", "đèn chiếu sáng", "den chieu sang", "den-chieu-sang", "đèn"],
+
+      "c0005": ["c0005", "decor", "trang trí", "trang tri", "trang-tri"],
+      "decor": ["c0005", "decor", "trang trí", "trang tri", "trang-tri"],
+      "trang trí": ["c0005", "decor", "trang trí", "trang tri", "trang-tri"],
+
+      "c0006": ["c0006", "storage", "lưu trữ", "luu tru", "luu-tru"],
+      "storage": ["c0006", "storage", "lưu trữ", "luu tru", "luu-tru"],
+      "lưu trữ": ["c0006", "storage", "lưu trữ", "luu tru", "luu-tru"],
+    };
+
+    const synonyms = synonymMap[target];
+    if (synonyms) {
+      return synonyms.includes(prodCat) || synonyms.includes(prodName);
+    }
+
+    return prodCat.includes(target) || prodName.includes(target) || target.includes(prodCat);
   };
 
   // Helper count for category items
