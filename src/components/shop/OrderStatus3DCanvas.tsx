@@ -189,10 +189,10 @@ export const OrderStatus3DCanvas: React.FC<OrderStatus3DCanvasProps> = ({
       };
     };
 
-    // Helper: Build Stage 3 (Shipping / Moving Shipper & Scooter Road)
+    // Helper: Build Stage 3 (Shipping / Moving Anime Shipper & Detailed Scooter Road)
     const buildStageShipping = () => {
       // Road Strip
-      const roadGeo = new THREE.BoxGeometry(8, 0.08, 2.4);
+      const roadGeo = new THREE.BoxGeometry(9, 0.08, 2.6);
       const roadMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.8 });
       const road = new THREE.Mesh(roadGeo, roadMat);
       road.position.set(0, 0.04, 0);
@@ -210,58 +210,242 @@ export const OrderStatus3DCanvas: React.FC<OrderStatus3DCanvasProps> = ({
       }
       stageGroup.add(dashesGroup);
 
-      // Scooter Body Group
-      const scooter = new THREE.Group();
-      scooter.position.set(0, 0.6, 0);
+      // Main Scooter & Rider Group
+      const scooterGroup = new THREE.Group();
+      scooterGroup.position.set(0, 0.65, 0);
 
-      // Main Chassis
-      const chassisGeo = new THREE.BoxGeometry(2.4, 0.4, 0.8);
-      const chassisMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.3 });
-      const chassis = new THREE.Mesh(chassisGeo, chassisMat);
-      chassis.castShadow = true;
-      scooter.add(chassis);
+      // --- 1. DETAILED ANIME SCOOTER BODY ---
+      // Scooter Base Frame / Floorboard
+      const floorGeo = new THREE.BoxGeometry(2.4, 0.25, 0.9);
+      const floorMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.7 });
+      const floorboard = new THREE.Mesh(floorGeo, floorMat);
+      floorboard.position.set(0, 0.1, 0);
+      floorboard.castShadow = true;
+      scooterGroup.add(floorboard);
 
-      // Wheels
-      const wheelGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.2, 16);
-      const wheelMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.9 });
-      const wheelFront = new THREE.Mesh(wheelGeo, wheelMat);
-      wheelFront.rotation.x = Math.PI / 2;
-      wheelFront.position.set(0.9, -0.3, 0);
-      scooter.add(wheelFront);
+      // Front Fairing / Apron
+      const apronGeo = new THREE.BoxGeometry(0.6, 0.9, 0.85);
+      const apronMat = new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.2, metalness: 0.1 });
+      const apron = new THREE.Mesh(apronGeo, apronMat);
+      apron.position.set(0.9, 0.55, 0);
+      apron.rotation.z = -0.15;
+      apron.castShadow = true;
+      scooterGroup.add(apron);
 
-      const wheelBack = new THREE.Mesh(wheelGeo, wheelMat);
-      wheelBack.rotation.x = Math.PI / 2;
-      wheelBack.position.set(-0.9, -0.3, 0);
-      scooter.add(wheelBack);
+      // Twin Anime LED Headlights
+      const lightMat = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        emissive: 0xfef08a,
+        emissiveIntensity: 0.8,
+      });
+      const headlightGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.1, 16);
+      const headlightLeft = new THREE.Mesh(headlightGeo, lightMat);
+      headlightLeft.rotation.z = Math.PI / 2;
+      headlightLeft.position.set(1.22, 0.65, 0.2);
+      scooterGroup.add(headlightLeft);
 
-      // Cargo Box on Back Rack
-      const cargoGeo = new THREE.BoxGeometry(1.0, 1.0, 1.0);
-      const cargoMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.6 });
+      const headlightRight = new THREE.Mesh(headlightGeo, lightMat);
+      headlightRight.rotation.z = Math.PI / 2;
+      headlightRight.position.set(1.22, 0.65, -0.2);
+      scooterGroup.add(headlightRight);
+
+      // Handlebars
+      const barGeo = new THREE.CylinderGeometry(0.04, 0.04, 1.1, 12);
+      const barMat = new THREE.MeshStandardMaterial({ color: 0x0f172a });
+      const handlebar = new THREE.Mesh(barGeo, barMat);
+      handlebar.position.set(0.75, 1.05, 0);
+      scooterGroup.add(handlebar);
+
+      // Mirrors
+      const mirrorStemGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.3);
+      const mirrorGlassGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.02, 16);
+      const mirrorMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8 });
+
+      const mirrorLeft = new THREE.Mesh(mirrorGlassGeo, mirrorMat);
+      mirrorLeft.position.set(0.7, 1.3, 0.5);
+      scooterGroup.add(mirrorLeft);
+
+      const mirrorRight = new THREE.Mesh(mirrorGlassGeo, mirrorMat);
+      mirrorRight.position.set(0.7, 1.3, -0.5);
+      scooterGroup.add(mirrorRight);
+
+      // Seat Cushion
+      const seatGeo = new THREE.BoxGeometry(1.2, 0.3, 0.75);
+      const seatMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.9 });
+      const seat = new THREE.Mesh(seatGeo, seatMat);
+      seat.position.set(-0.2, 0.35, 0);
+      seat.castShadow = true;
+      scooterGroup.add(seat);
+
+      // Wheels & Star Rims
+      const tireGeo = new THREE.CylinderGeometry(0.42, 0.42, 0.22, 24);
+      const tireMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.9 });
+      const rimGeo = new THREE.CylinderGeometry(0.25, 0.25, 0.23, 12);
+      const rimMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.7, roughness: 0.2 });
+
+      // Front Wheel Assembly
+      const wheelFrontGroup = new THREE.Group();
+      wheelFrontGroup.position.set(0.95, -0.22, 0);
+      const tireFront = new THREE.Mesh(tireGeo, tireMat);
+      tireFront.rotation.x = Math.PI / 2;
+      const rimFront = new THREE.Mesh(rimGeo, rimMat);
+      rimFront.rotation.x = Math.PI / 2;
+      wheelFrontGroup.add(tireFront);
+      wheelFrontGroup.add(rimFront);
+      scooterGroup.add(wheelFrontGroup);
+
+      // Back Wheel Assembly
+      const wheelBackGroup = new THREE.Group();
+      wheelBackGroup.position.set(-0.85, -0.22, 0);
+      const tireBack = new THREE.Mesh(tireGeo, tireMat);
+      tireBack.rotation.x = Math.PI / 2;
+      const rimBack = new THREE.Mesh(rimGeo, rimMat);
+      rimBack.rotation.x = Math.PI / 2;
+      wheelBackGroup.add(tireBack);
+      wheelBackGroup.add(rimBack);
+      scooterGroup.add(wheelBackGroup);
+
+      // MINI-SHOP Delivery Box on Rack
+      const cargoGeo = new THREE.BoxGeometry(1.1, 1.1, 1.1);
+      const cargoMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.5 });
       const cargoBox = new THREE.Mesh(cargoGeo, cargoMat);
-      cargoBox.position.set(-0.6, 0.7, 0);
+      cargoBox.position.set(-0.85, 1.05, 0);
       cargoBox.castShadow = true;
-      scooter.add(cargoBox);
+      scooterGroup.add(cargoBox);
 
-      // Shipper Helmet Figure
-      const helmetGeo = new THREE.SphereGeometry(0.4, 16, 16);
-      const helmetMat = new THREE.MeshStandardMaterial({ color: 0x16a34a });
+      // Reflective Box Tape Logo Stripe
+      const stripeGeo = new THREE.BoxGeometry(1.12, 0.2, 1.12);
+      const stripeMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.3 });
+      const boxStripe = new THREE.Mesh(stripeGeo, stripeMat);
+      boxStripe.position.set(-0.85, 1.15, 0);
+      scooterGroup.add(boxStripe);
+
+      // --- 2. DETAILED ANIME SHIPPER CHARACTER ---
+      const riderGroup = new THREE.Group();
+      riderGroup.position.set(0.2, 0.45, 0);
+
+      // Skin Tone Material
+      const skinMat = new THREE.MeshStandardMaterial({ color: 0xffe0bd, roughness: 0.6 });
+
+      // Torso / Courier Jacket
+      const jacketGeo = new THREE.BoxGeometry(0.55, 0.75, 0.65);
+      const jacketMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.4 });
+      const jacket = new THREE.Mesh(jacketGeo, jacketMat);
+      jacket.position.set(0, 0.38, 0);
+      jacket.castShadow = true;
+      riderGroup.add(jacket);
+
+      // Reflective Safety Vest Stripe on Chest
+      const vestGeo = new THREE.BoxGeometry(0.57, 0.15, 0.67);
+      const vestMat = new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.2 });
+      const vestStripe = new THREE.Mesh(vestGeo, vestMat);
+      vestStripe.position.set(0, 0.45, 0);
+      riderGroup.add(vestStripe);
+
+      // Anime Head Base
+      const headGeo = new THREE.SphereGeometry(0.28, 20, 20);
+      const head = new THREE.Mesh(headGeo, skinMat);
+      head.position.set(0.1, 0.95, 0);
+      riderGroup.add(head);
+
+      // Big Anime Eyes
+      const eyeGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.02, 16);
+      const eyeMat = new THREE.MeshStandardMaterial({ color: 0x10b981 });
+      const eyeLeft = new THREE.Mesh(eyeGeo, eyeMat);
+      eyeLeft.rotation.z = Math.PI / 2;
+      eyeLeft.position.set(0.35, 0.98, 0.12);
+      riderGroup.add(eyeLeft);
+
+      const eyeRight = new THREE.Mesh(eyeGeo, eyeMat);
+      eyeRight.rotation.z = Math.PI / 2;
+      eyeRight.position.set(0.35, 0.98, -0.12);
+      riderGroup.add(eyeRight);
+
+      // Anime Spiky Hair Clusters (10 Spiky Locks)
+      const hairMat = new THREE.MeshStandardMaterial({ color: 0x4b5563, roughness: 0.5 });
+      for (let i = 0; i < 8; i++) {
+        const hairLockGeo = new THREE.ConeGeometry(0.08, 0.35, 4);
+        const hairLock = new THREE.Mesh(hairLockGeo, hairMat);
+        const angle = (i / 8) * Math.PI * 1.6 - Math.PI * 0.8;
+        hairLock.rotation.z = -0.5;
+        hairLock.rotation.y = angle;
+        hairLock.position.set(0.1 + Math.cos(angle) * 0.22, 1.12, Math.sin(angle) * 0.22);
+        riderGroup.add(hairLock);
+      }
+
+      // Sports Helmet with Visor
+      const helmetGeo = new THREE.SphereGeometry(0.32, 20, 20, 0, Math.PI * 2, 0, Math.PI * 0.65);
+      const helmetMat = new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.3, metalness: 0.2 });
       const helmet = new THREE.Mesh(helmetGeo, helmetMat);
-      helmet.position.set(0.4, 0.8, 0);
-      scooter.add(helmet);
+      helmet.position.set(0.08, 1.02, 0);
+      helmet.castShadow = true;
+      riderGroup.add(helmet);
 
-      stageGroup.add(scooter);
+      // Blue Visor Shield
+      const visorGeo = new THREE.SphereGeometry(0.33, 16, 16, 0, Math.PI, Math.PI * 0.25, Math.PI * 0.35);
+      const visorMat = new THREE.MeshStandardMaterial({
+        color: 0x38bdf8,
+        transparent: true,
+        opacity: 0.7,
+        roughness: 0.1,
+      });
+      const visor = new THREE.Mesh(visorGeo, visorMat);
+      visor.rotation.y = Math.PI / 2;
+      visor.position.set(0.08, 1.02, 0);
+      riderGroup.add(visor);
+
+      // Face Mask
+      const maskGeo = new THREE.BoxGeometry(0.15, 0.12, 0.28);
+      const maskMat = new THREE.MeshStandardMaterial({ color: 0x0f172a });
+      const mask = new THREE.Mesh(maskGeo, maskMat);
+      mask.position.set(0.3, 0.88, 0);
+      riderGroup.add(mask);
+
+      // Arms Angled Forward to Handlebars
+      const armGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.55, 12);
+      const gloveMat = new THREE.MeshStandardMaterial({ color: 0x0f172a });
+
+      const armLeft = new THREE.Mesh(armGeo, jacketMat);
+      armLeft.rotation.z = -1.0;
+      armLeft.rotation.y = 0.3;
+      armLeft.position.set(0.3, 0.45, 0.35);
+      riderGroup.add(armLeft);
+
+      const armRight = new THREE.Mesh(armGeo, jacketMat);
+      armRight.rotation.z = -1.0;
+      armRight.rotation.y = -0.3;
+      armRight.position.set(0.3, 0.45, -0.35);
+      riderGroup.add(armRight);
+
+      // Jogger Legs & Anime Sneakers
+      const legGeo = new THREE.CylinderGeometry(0.1, 0.09, 0.6, 12);
+      const legMat = new THREE.MeshStandardMaterial({ color: 0x334155 });
+
+      const legLeft = new THREE.Mesh(legGeo, legMat);
+      legLeft.rotation.z = -0.2;
+      legLeft.position.set(-0.05, 0.0, 0.32);
+      riderGroup.add(legLeft);
+
+      const legRight = new THREE.Mesh(legGeo, legMat);
+      legRight.rotation.z = -0.2;
+      legRight.position.set(-0.05, 0.0, -0.32);
+      riderGroup.add(legRight);
+
+      scooterGroup.add(riderGroup);
+      stageGroup.add(scooterGroup);
 
       return (delta: number, time: number) => {
         // Move road dashes to simulate speed
         dashesGroup.children.forEach((dash) => {
-          dash.position.x -= delta * 5;
-          if (dash.position.x < -4) dash.position.x += 8;
+          dash.position.x -= delta * 6;
+          if (dash.position.x < -4.5) dash.position.x += 9;
         });
 
-        // Bouncing Scooter Animation
-        scooter.position.y = 0.6 + Math.sin(time * 12) * 0.03;
-        wheelFront.rotation.z -= delta * 12;
-        wheelBack.rotation.z -= delta * 12;
+        // Bouncing Anime Scooter & Rider Animation
+        scooterGroup.position.y = 0.65 + Math.sin(time * 14) * 0.035;
+        wheelFrontGroup.rotation.z -= delta * 14;
+        wheelBackGroup.rotation.z -= delta * 14;
+        riderGroup.rotation.z = Math.sin(time * 14) * 0.02;
       };
     };
 
