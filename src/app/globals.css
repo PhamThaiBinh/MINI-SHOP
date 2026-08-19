@@ -71,11 +71,9 @@ body {
     padding-top: 76px; /* Giữ khoảng trống bằng đúng độ cao của Header cố định */
 }
 
-/* Site Header Fixed Sticky with Glassmorphism */
+/* Site Header Fixed Sticky with Solid High-Contrast Background */
 .site-header {
-    background-color: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background-color: #ffffff;
     border-bottom: 1px solid var(--border-color);
     position: fixed;
     top: 0;
@@ -83,11 +81,7 @@ body {
     right: 0;
     width: 100%;
     z-index: 1000;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-    transform: translateZ(0);
-    will-change: transform;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
 .header-inner {
