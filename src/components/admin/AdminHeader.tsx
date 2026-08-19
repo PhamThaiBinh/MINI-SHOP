@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { ShoppingCart, AlertTriangle, UserCheck, MessageSquare, Menu, Bell, Settings, Users, LogOut } from "lucide-react";
+import { ShoppingCart, AlertTriangle, UserCheck, MessageSquare, Menu, Bell, Settings, Users, LogOut, ArrowRight } from "lucide-react";
 
 interface AdminHeaderProps {
   title: string;
@@ -230,9 +230,12 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
                     fontWeight: 700,
                     color: "var(--primary-color)",
                     textDecoration: "none",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "4px",
                   }}
                 >
-                  Xem tất cả hoạt động ➔
+                  Xem tất cả hoạt động <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
             </div>

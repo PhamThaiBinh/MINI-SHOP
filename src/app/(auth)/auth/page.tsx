@@ -19,6 +19,7 @@ import {
   fetchUserRewardsFromSupabase,
   syncUserRewardsToSupabase,
 } from "@/lib/supabaseUserFeatures";
+import { User, Gift, Package, MapPin, LogOut, Eye, EyeOff, Key, Save, Check, Crown, ListCheck, Disc, Ticket, History, Gem, Award, Star, Calendar, Link2, AlertTriangle, Truck, Sofa } from "lucide-react";
 
 interface AddressItem {
   id: number;
@@ -606,7 +607,7 @@ export default function AuthPage() {
       points: 100,
       discount: 50000,
       code: "MINISHOP50",
-      icon: "🎟️",
+      icon: "Ticket",
     },
     {
       id: 2,
@@ -614,7 +615,7 @@ export default function AuthPage() {
       points: 200,
       discount: 100000,
       code: "MINISHOP100",
-      icon: "🎁",
+      icon: "Gift",
     },
     {
       id: 3,
@@ -622,7 +623,7 @@ export default function AuthPage() {
       points: 50,
       discount: 30000,
       code: "FREESHIP30",
-      icon: "🚚",
+      icon: "Truck",
     },
     {
       id: 4,
@@ -630,7 +631,7 @@ export default function AuthPage() {
       points: 500,
       discount: 150000,
       code: "GOISOFAPREMIUM",
-      icon: "🛋️",
+      icon: "Sofa",
     },
   ];
 
@@ -654,7 +655,7 @@ export default function AuthPage() {
   };
 
   const handleDeleteAddress = async (id: number) => {
-    if (confirm("⚠️ Bạn có chắc chắn muốn xóa địa chỉ này không?")) {
+    if (confirm("Bạn có chắc chắn muốn xóa địa chỉ này không?")) {
       await deleteUserAddressFromSupabase(id);
       await loadAddresses();
     }
@@ -667,7 +668,7 @@ export default function AuthPage() {
     const cleanPhone = addrPhone.trim().replace(/\s+/g, "").replace(/\./g, "");
     const isValidVnPhone = /^(03|05|07|08|09)\d{8}$/.test(cleanPhone);
     if (!isValidVnPhone) {
-      alert("⚠️ Số điện thoại không hợp lệ! Vui lòng nhập số điện thoại Việt Nam chuẩn 10 chữ số (đầu 03, 05, 07, 08, 09).");
+      alert("Số điện thoại không hợp lệ! Vui lòng nhập số điện thoại Việt Nam chuẩn 10 chữ số (đầu 03, 05, 07, 08, 09).");
       return;
     }
 
@@ -784,29 +785,32 @@ export default function AuthPage() {
                             border: "none",
                             cursor: "pointer",
                             fontSize: "16px",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
                           }}
                           title={showLoginPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                         >
-                          {showLoginPassword ? "🙈" : "👁️"}
+                          {showLoginPassword ? <EyeOff className="w-4 h-4 text-slate-500" /> : <Eye className="w-4 h-4 text-slate-500" />}
                         </button>
                       </div>
                       <div style={{ textAlign: "right", marginTop: "6px" }}>
                         <button
                           type="button"
                           onClick={async () => {
-                            const emailPrompt = prompt("📧 Nhập Email đăng ký của bạn để nhận liên kết khôi phục mật khẩu:", loginEmail || "");
+                            const emailPrompt = prompt("Nhập Email đăng ký của bạn để nhận liên kết khôi phục mật khẩu:", loginEmail || "");
                             if (!emailPrompt) return;
                             const email = emailPrompt.trim();
                             if (!email.includes("@")) {
-                              alert("⚠️ Vui lòng nhập địa chỉ Email hợp lệ!");
+                              alert("Vui lòng nhập địa chỉ Email hợp lệ!");
                               return;
                             }
                             const supabase = createClient();
                             const { error } = await supabase.auth.resetPasswordForEmail(email);
                             if (error) {
-                              alert(`❌ Lỗi: ${error.message}`);
+                              alert(`Lỗi: ${error.message}`);
                             } else {
-                              alert(`📩 Hệ thống đã gửi hướng dẫn khôi phục mật khẩu tới Email "${email}". Vui lòng kiểm tra hộp thư!`);
+                              alert(`Hệ thống đã gửi hướng dẫn khôi phục mật khẩu tới Email "${email}". Vui lòng kiểm tra hộp thư!`);
                             }
                           }}
                           style={{
@@ -817,9 +821,12 @@ export default function AuthPage() {
                             fontWeight: 700,
                             cursor: "pointer",
                             textDecoration: "underline",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px",
                           }}
                         >
-                          🔑 Quên mật khẩu?
+                          <Key className="w-3.5 h-3.5" /> Quên mật khẩu?
                         </button>
                       </div>
                     </div>
@@ -889,10 +896,13 @@ export default function AuthPage() {
                             border: "none",
                             cursor: "pointer",
                             fontSize: "16px",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
                           }}
                           title={showRegPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                         >
-                          {showRegPassword ? "🙈" : "👁️"}
+                          {showRegPassword ? <EyeOff className="w-4 h-4 text-slate-500" /> : <Eye className="w-4 h-4 text-slate-500" />}
                         </button>
                       </div>
                     </div>
@@ -924,10 +934,13 @@ export default function AuthPage() {
                             border: "none",
                             cursor: "pointer",
                             fontSize: "16px",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
                           }}
                           title={showRegConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                         >
-                          {showRegConfirmPassword ? "🙈" : "👁️"}
+                          {showRegConfirmPassword ? <EyeOff className="w-4 h-4 text-slate-500" /> : <Eye className="w-4 h-4 text-slate-500" />}
                         </button>
                       </div>
                     </div>
@@ -1051,7 +1064,7 @@ export default function AuthPage() {
                           gap: "10px",
                         }}
                       >
-                        <span>👤 Hồ sơ cá nhân</span>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}><User className="w-4 h-4 text-emerald-700" /> Hồ sơ cá nhân</span>
                       </button>
                     </li>
                     <li>
@@ -1082,7 +1095,7 @@ export default function AuthPage() {
                           gap: "10px",
                         }}
                       >
-                        <span>🎁 Tích điểm & Đổi quà</span>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}><Gift className="w-4 h-4 text-emerald-700" /> Tích điểm & Đổi quà</span>
                       </button>
                     </li>
                     <li>
@@ -1113,7 +1126,7 @@ export default function AuthPage() {
                           gap: "10px",
                         }}
                       >
-                        <span>📦 Quản lý đơn hàng</span>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}><Package className="w-4 h-4 text-emerald-700" /> Quản lý đơn hàng</span>
                       </button>
                     </li>
                     <li>
@@ -1144,7 +1157,7 @@ export default function AuthPage() {
                           gap: "10px",
                         }}
                       >
-                        <span>📍 Sổ địa chỉ nhận hàng</span>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}><MapPin className="w-4 h-4 text-emerald-700" /> Sổ địa chỉ nhận hàng</span>
                       </button>
                     </li>
                     <li
@@ -1172,7 +1185,7 @@ export default function AuthPage() {
                           gap: "8px",
                         }}
                       >
-                        <span>🚪 Đăng xuất tài khoản</span>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}><LogOut className="w-4 h-4 text-red-600" /> Đăng xuất tài khoản</span>
                       </button>
                     </li>
                   </ul>
@@ -1360,9 +1373,11 @@ export default function AuthPage() {
                             opacity: hasCheckedIn ? 0.5 : 1,
                           }}
                         >
-                          {hasCheckedIn
-                            ? "✅ Đã điểm danh (+50 điểm)"
-                            : "🎁 Điểm danh hàng ngày (+50 điểm)"}
+                          {hasCheckedIn ? (
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}><Check className="w-4 h-4" /> Đã điểm danh (+50 điểm)</span>
+                          ) : (
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}><Gift className="w-4 h-4" /> Điểm danh hàng ngày (+50 điểm)</span>
+                          )}
                         </button>
                       </div>
 
@@ -1398,9 +1413,12 @@ export default function AuthPage() {
                             background: "none",
                             cursor: "pointer",
                             whiteSpace: "nowrap",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px",
                           }}
                         >
-                          👑 Hạng Thành Viên
+                          <Crown className="w-4 h-4 text-amber-500" /> Hạng Thành Viên
                         </button>
                         <button
                           className={`reward-subtab ${
@@ -1423,9 +1441,12 @@ export default function AuthPage() {
                             background: "none",
                             cursor: "pointer",
                             whiteSpace: "nowrap",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px",
                           }}
                         >
-                          📋 Nhiệm Vụ Hàng Ngày
+                          <ListCheck className="w-4 h-4 text-emerald-700" /> Nhiệm Vụ Hàng Ngày
                         </button>
                         <button
                           className={`reward-subtab ${
@@ -1448,9 +1469,12 @@ export default function AuthPage() {
                             background: "none",
                             cursor: "pointer",
                             whiteSpace: "nowrap",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px",
                           }}
                         >
-                          🎰 Vòng Quay May Mắn
+                          <Disc className="w-4 h-4 text-purple-600" /> Vòng Quay May Mắn
                         </button>
                         <button
                           className={`reward-subtab ${
@@ -1473,9 +1497,12 @@ export default function AuthPage() {
                             background: "none",
                             cursor: "pointer",
                             whiteSpace: "nowrap",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px",
                           }}
                         >
-                          🎁 Đổi Quà Tặng
+                          <Gift className="w-4 h-4 text-pink-600" /> Đổi Quà Tặng
                         </button>
                         <button
                           className={`reward-subtab ${
@@ -1498,9 +1525,12 @@ export default function AuthPage() {
                             background: "none",
                             cursor: "pointer",
                             whiteSpace: "nowrap",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px",
                           }}
                         >
-                          📋 Quản Lý Quà ({totalVouchersCount})
+                          <Ticket className="w-4 h-4 text-emerald-700" /> Quản Lý Quà ({totalVouchersCount})
                         </button>
                         <button
                           className={`reward-subtab ${
@@ -1523,9 +1553,12 @@ export default function AuthPage() {
                             background: "none",
                             cursor: "pointer",
                             whiteSpace: "nowrap",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px",
                           }}
                         >
-                          📜 Lịch Sử Đổi Quà
+                          <History className="w-4 h-4 text-slate-600" /> Lịch Sử Đổi Quà
                         </button>
                       </div>
 
@@ -1537,12 +1570,12 @@ export default function AuthPage() {
                         );
                         const tierInfo =
                           totalSpent >= 15000000
-                            ? { name: "💎 HẠNG KIM CƯƠNG", icon: "💎", bg: "linear-gradient(135deg, #0284c7, #0369a1)", target: 15000000, nextName: "Tối Đa" }
+                            ? { name: "HẠNG KIM CƯƠNG", icon: "Gem", bg: "linear-gradient(135deg, #0284c7, #0369a1)", target: 15000000, nextName: "Tối Đa" }
                             : totalSpent >= 5000000
-                            ? { name: "🥇 HẠNG VÀNG", icon: "🥇", bg: "linear-gradient(135deg, #f59e0b, #d97706)", target: 15000000, nextName: "Kim Cương" }
+                            ? { name: "HẠNG VÀNG", icon: "Crown", bg: "linear-gradient(135deg, #f59e0b, #d97706)", target: 15000000, nextName: "Kim Cương" }
                             : totalSpent >= 2000000
-                            ? { name: "🥈 HẠNG BẠC", icon: "🥈", bg: "linear-gradient(135deg, #94a3b8, #64748b)", target: 5000000, nextName: "Vàng" }
-                            : { name: "🥉 HẠNG ĐỒNG", icon: "🥉", bg: "linear-gradient(135deg, #78716c, #44403c)", target: 2000000, nextName: "Bạc" };
+                            ? { name: "HẠNG BẠC", icon: "Award", bg: "linear-gradient(135deg, #94a3b8, #64748b)", target: 5000000, nextName: "Vàng" }
+                            : { name: "HẠNG ĐỒNG", icon: "Award", bg: "linear-gradient(135deg, #78716c, #44403c)", target: 2000000, nextName: "Bạc" };
 
                         const progressPercent = Math.min(100, Math.round((totalSpent / tierInfo.target) * 100));
 
@@ -1582,12 +1615,15 @@ export default function AuthPage() {
                                       fontSize: "24px",
                                       fontWeight: 900,
                                       margin: "4px 0 0",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: "8px",
                                     }}
                                   >
-                                    {tierInfo.name}
+                                    <Crown className="w-6 h-6 text-amber-300" /> {tierInfo.name}
                                   </h3>
                                 </div>
-                                <div style={{ fontSize: "36px" }}>{tierInfo.icon}</div>
+                                <div style={{ fontSize: "36px" }}><Crown className="w-9 h-9 text-white" /></div>
                               </div>
 
                               {/* Rank progress */}
@@ -1628,9 +1664,12 @@ export default function AuthPage() {
                                 fontSize: "16px",
                                 fontWeight: 800,
                                 marginBottom: "12px",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "6px",
                               }}
                             >
-                              🌟 Điều Kiện Thăng Hạng & Đặc Quyền Chi Tiêu:
+                              <Star className="w-4 h-4 text-amber-500 fill-amber-500" /> Điều Kiện Thăng Hạng & Đặc Quyền Chi Tiêu:
                             </h4>
                             <div
                               style={{
@@ -1648,8 +1687,8 @@ export default function AuthPage() {
                                   background: "#fff",
                                 }}
                               >
-                                <div style={{ fontWeight: 800, color: "#64748b" }}>
-                                  🥈 Hạng Bạc (Từ 2.000.000đ mua hàng)
+                                <div style={{ fontWeight: 800, color: "#64748b", display: "flex", alignItems: "center", gap: "6px" }}>
+                                  <Award className="w-4 h-4 text-slate-500" /> Hạng Bạc (Từ 2.000.000đ mua hàng)
                                 </div>
                                 <ul
                                   style={{
@@ -1672,8 +1711,8 @@ export default function AuthPage() {
                                   background: "#fff",
                                 }}
                               >
-                                <div style={{ fontWeight: 800, color: "#d97706" }}>
-                                  🥇 Hạng Vàng (Từ 5.000.000đ mua hàng)
+                                <div style={{ fontWeight: 800, color: "#d97706", display: "flex", alignItems: "center", gap: "6px" }}>
+                                  <Crown className="w-4 h-4 text-amber-500" /> Hạng Vàng (Từ 5.000.000đ mua hàng)
                                 </div>
                                 <ul
                                   style={{
@@ -1697,8 +1736,8 @@ export default function AuthPage() {
                                   background: "#fff",
                                 }}
                               >
-                                <div style={{ fontWeight: 800, color: "#0284c7" }}>
-                                  💎 Hạng Kim Cương (Từ 15.000.000đ mua hàng)
+                                <div style={{ fontWeight: 800, color: "#0284c7", display: "flex", alignItems: "center", gap: "6px" }}>
+                                  <Gem className="w-4 h-4 text-sky-500" /> Hạng Kim Cương (Từ 15.000.000đ mua hàng)
                                 </div>
                                 <ul
                                   style={{
@@ -1740,8 +1779,8 @@ export default function AuthPage() {
                             }}
                           >
                             <div>
-                              <strong style={{ fontSize: "14px" }}>
-                                📅 Điểm danh hàng ngày
+                              <strong style={{ fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
+                                <Calendar className="w-4 h-4 text-emerald-700" /> Điểm danh hàng ngày
                               </strong>
                               <div
                                 style={{
@@ -1768,9 +1807,18 @@ export default function AuthPage() {
                                 cursor: hasCheckedIn
                                   ? "not-allowed"
                                   : "pointer",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "4px",
                               }}
                             >
-                              {hasCheckedIn ? "✅ Đã nhận" : "+50 Điểm"}
+                              {hasCheckedIn ? (
+                                <>
+                                  <Check className="w-4 h-4" /> Đã nhận
+                                </>
+                              ) : (
+                                "+50 Điểm"
+                              )}
                             </button>
                           </div>
 
@@ -1786,8 +1834,8 @@ export default function AuthPage() {
                             }}
                           >
                             <div>
-                              <strong style={{ fontSize: "14px" }}>
-                                🔗 Chia sẻ Mini Shop lên MXH
+                              <strong style={{ fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
+                                <Link2 className="w-4 h-4 text-blue-600" /> Chia sẻ Mini Shop lên MXH
                               </strong>
                               <div
                                 style={{
@@ -1810,9 +1858,12 @@ export default function AuthPage() {
                                   borderRadius: "var(--radius-md)",
                                   fontWeight: 700,
                                   cursor: "pointer",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "4px",
                                 }}
                               >
-                                🔗 Thực hiện
+                                <Link2 className="w-4 h-4" /> Thực hiện
                               </button>
                             )}
                             {shareTaskStatus === "performed" && (
@@ -1827,9 +1878,12 @@ export default function AuthPage() {
                                   fontWeight: 700,
                                   cursor: "pointer",
                                   boxShadow: "0 0 10px rgba(22, 163, 74, 0.4)",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "4px",
                                 }}
                               >
-                                🎁 Nhận quà (+100 điểm)
+                                <Gift className="w-4 h-4" /> Nhận quà (+100 điểm)
                               </button>
                             )}
                             {shareTaskStatus === "claimed" && (

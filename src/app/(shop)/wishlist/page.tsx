@@ -157,9 +157,9 @@ export default function WishlistPage() {
                         className="btn-wishlist active"
                         onClick={() => handleRemoveWishlist(product.id)}
                         title="Bỏ yêu thích"
-                        style={{ color: "#ef4444" }}
+                        style={{ color: "#ef4444", display: "inline-flex", alignItems: "center", justifyContent: "center" }}
                       >
-                        ♥
+                        <Heart className="w-4 h-4 text-red-500 fill-red-500" />
                       </button>
                       <div className="catalog-img-wrapper">
                         <img
