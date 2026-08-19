@@ -59,31 +59,36 @@ export const HeroShoppableSlider: React.FC = () => {
 
   return (
     <section className="hero-section" style={{ marginTop: "16px", marginBottom: "40px" }}>
-      <div className="hero-banner">
-        {/* Left Column: Content */}
-        <div className="hero-content">
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "4px 12px",
-              borderRadius: "999px",
-              background: "#e8f5e9",
-              color: "var(--primary-color, #2e7d32)",
-              fontSize: "11px",
-              fontWeight: 800,
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              marginBottom: "16px",
-            }}
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>{slide.tag}</span>
+      <div className="hero-banner" style={{ minHeight: "450px", height: "450px", boxSizing: "border-box", display: "grid", gridTemplateColumns: "1fr 1fr", alignItems: "center", padding: "40px 48px" }}>
+        {/* Left Column: Content (Fixed Height & Structure) */}
+        <div className="hero-content" style={{ display: "flex", flexDirection: "column", justifyContent: "center", height: "100%" }}>
+          <div style={{ height: "26px", marginBottom: "12px" }}>
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "4px 12px",
+                borderRadius: "999px",
+                background: "#e8f5e9",
+                color: "var(--primary-color, #2e7d32)",
+                fontSize: "11px",
+                fontWeight: 800,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+              }}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>{slide.tag}</span>
+            </div>
           </div>
 
-          <h1 className="hero-title">{slide.title}</h1>
-          <p className="hero-subtitle">{slide.subtitle}</p>
+          <h1 className="hero-title" style={{ minHeight: "105px", margin: "0 0 10px", display: "flex", alignItems: "center" }}>
+            {slide.title}
+          </h1>
+          <p className="hero-subtitle" style={{ minHeight: "52px", margin: "0 0 20px", display: "flex", alignItems: "center" }}>
+            {slide.subtitle}
+          </p>
 
           <div style={{ display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap" }}>
             <Link href="/products" className="btn-hero-cta">
@@ -107,7 +112,7 @@ export const HeroShoppableSlider: React.FC = () => {
           </div>
 
           {/* Slider Controls Dots */}
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "32px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "24px" }}>
             {HERO_SLIDES.map((s, idx) => (
               <button
                 key={s.id}
@@ -127,12 +132,12 @@ export const HeroShoppableSlider: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Column: Hero Image Carousel */}
-        <div className="hero-image-wrapper" style={{ position: "relative", minHeight: "360px" }}>
+        {/* Right Column: Hero Image Carousel (Fixed 360px Height) */}
+        <div className="hero-image-wrapper" style={{ position: "relative", height: "360px", minHeight: "360px", maxHeight: "360px", borderRadius: "16px", overflow: "hidden" }}>
           <img
             src={fixImagePath(slide.image)}
             alt={slide.title}
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            style={{ width: "100%", height: "360px", objectFit: "cover", display: "block" }}
           />
 
           {/* Slider Prev / Next Overlay Buttons */}

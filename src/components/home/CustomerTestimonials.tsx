@@ -83,7 +83,7 @@ export const CustomerTestimonials: React.FC = () => {
               {/* Vibrant Gold Stars */}
               <div style={{ display: "flex", gap: "4px", marginBottom: "12px" }}>
                 {[...Array(rev.rating)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 text-amber-500 fill-amber-400" />
+                  <Star key={i} style={{ width: "18px", height: "18px", color: "#f59e0b", fill: "#f59e0b" }} />
                 ))}
               </div>
 
