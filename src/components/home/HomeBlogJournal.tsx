@@ -137,8 +137,8 @@ export const HomeBlogJournal: React.FC = () => {
             </div>
           </div>
 
-          {/* Side Articles Stack (5 Cols) */}
-          <div style={{ gridColumn: "span 5", display: "flex", flexDirection: "column", gap: "16px" }}>
+          {/* Side Articles Stack (5 Cols - Stretched to match left card height 100%) */}
+          <div style={{ gridColumn: "span 5", display: "flex", flexDirection: "column", justifyContent: "space-between", gap: "16px", height: "100%" }}>
             {sideArticles.map((article) => (
               <div
                 key={article.id}
@@ -146,29 +146,30 @@ export const HomeBlogJournal: React.FC = () => {
                   background: "#ffffff",
                   border: "1px solid #e2e8f0",
                   borderRadius: "1.25rem",
-                  padding: "16px",
+                  padding: "18px 20px",
                   display: "flex",
-                  gap: "14px",
+                  gap: "16px",
                   alignItems: "center",
                   boxShadow: "0 4px 12px rgba(0,0,0,0.02)",
+                  flex: 1,
                 }}
               >
                 <img
                   src={fixImagePath(article.img)}
                   alt={article.title}
-                  style={{ width: "90px", height: "90px", borderRadius: "1rem", objectFit: "cover", flexShrink: 0 }}
+                  style={{ width: "100px", height: "100px", borderRadius: "1rem", objectFit: "cover", flexShrink: 0 }}
                 />
-                <div>
-                  <span style={{ fontSize: "10px", fontWeight: 800, color: "#0369a1", background: "#e0f2fe", padding: "2px 8px", borderRadius: "999px" }}>
+                <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", height: "100%" }}>
+                  <span style={{ fontSize: "10px", fontWeight: 800, color: "#0369a1", background: "#e0f2fe", padding: "3px 10px", borderRadius: "999px", width: "fit-content", marginBottom: "4px" }}>
                     {article.category}
                   </span>
-                  <h4 style={{ fontSize: "14px", fontWeight: 800, color: "#0f172a", margin: "6px 0 4px", lineHeight: 1.35 }}>
+                  <h4 style={{ fontSize: "14.5px", fontWeight: 800, color: "#0f172a", margin: "4px 0 6px", lineHeight: 1.35 }}>
                     <Link href={`/blog/${article.id}`} style={{ color: "inherit", textDecoration: "none" }}>
                       {article.title}
                     </Link>
                   </h4>
                   <div style={{ fontSize: "11px", color: "#64748b", display: "flex", alignItems: "center", gap: "4px" }}>
-                    <Calendar className="w-3 h-3" /> {article.date}
+                    <Calendar className="w-3.5 h-3.5" /> {article.date}
                   </div>
                 </div>
               </div>
