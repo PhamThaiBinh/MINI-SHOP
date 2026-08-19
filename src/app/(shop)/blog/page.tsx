@@ -13,11 +13,10 @@ export default async function BlogListPage() {
       style={{
         backgroundColor: "var(--bg-main, #fcfbf9)",
         minHeight: "100dvh",
-        padding: "40px 16px 80px",
         fontFamily: "'Plus Jakarta Sans', sans-serif",
       }}
     >
-      <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
+      <div className="container" style={{ padding: "30px 16px 60px" }}>
         {/* Header Title Section */}
         <div style={{ marginBottom: "28px" }}>
           <h1

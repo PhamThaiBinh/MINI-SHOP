@@ -119,11 +119,10 @@ export default function TrackOrderPage() {
       style={{
         backgroundColor: "var(--bg-main, #fcfbf9)",
         minHeight: "100dvh",
-        padding: "36px 16px 80px",
         fontFamily: "'Plus Jakarta Sans', sans-serif",
       }}
     >
-      <div style={{ maxWidth: "1050px", margin: "0 auto" }}>
+      <div className="container" style={{ padding: "30px 16px 60px" }}>
         
         {/* =========================================================================
            MAIN CONTENT AREA (LOGGED-IN CUSTOMER VS GUEST LOOKUP)
