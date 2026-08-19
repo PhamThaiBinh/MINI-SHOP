@@ -536,8 +536,8 @@ export default function CartPage() {
                   {/* Shipping Row */}
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px", color: "#475569" }}>
                     <span>Phí giao hàng:</span>
-                    <strong style={{ color: subtotal >= 1500000 ? "var(--primary-color, #2e7d32)" : "#0f172a" }}>
-                      {subtotal >= 1500000 ? "Miễn phí" : "20.000đ - 30.000đ"}
+                    <strong style={{ color: subtotal >= 500000 ? "var(--primary-color, #2e7d32)" : "#0f172a" }}>
+                      {subtotal >= 500000 ? "Miễn phí" : "20.000đ - 30.000đ"}
                     </strong>
                   </div>
 
