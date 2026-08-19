@@ -20,7 +20,7 @@ export const HomeBlogJournal: React.FC = () => {
   if (blogs.length === 0) return null;
 
   const mainArticle = blogs[0];
-  const sideArticles = blogs.slice(1, 4);
+  const sideArticles = blogs.slice(1, 5);
 
   return (
     <section style={{ marginBottom: "48px" }}>
