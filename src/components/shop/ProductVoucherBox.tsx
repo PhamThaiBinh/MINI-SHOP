@@ -102,7 +102,7 @@ export const ProductVoucherBox: React.FC = () => {
                 }}
               >
                 {isCopied ? <Check className="w-3 h-3 text-white" /> : <Copy className="w-3 h-3" />}
-                {isCopied ? "Đã lưu mã!" : "Lưu mã 1-Click"}
+                {isCopied ? "Đã lưu mã!" : "Lưu mã"}
               </button>
             </div>
           );

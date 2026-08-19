@@ -402,7 +402,7 @@ export default function FlashSalePage() {
                       {addedId === heroSuperDeal.product.id ? (
                         <><Check className="w-5 h-5" /> Đã Thêm Giỏ Hàng!</>
                       ) : (
-                        <><Zap className="w-5 h-5 text-amber-300 fill-amber-300" /> ⚡ SĂN DEAL SIÊU TỐC 1-CLICK</>
+                        <><Zap className="w-5 h-5 text-amber-300 fill-amber-300" /> ⚡ SĂN DEAL SIÊU TỐC</>
                       )}
                     </button>
                   ) : (
@@ -564,45 +564,6 @@ export default function FlashSalePage() {
               </div>
             );
           })}
-        </div>
-
-        {/* 5. Policy Transparency Footer Grid */}
-        <div className="doppelrand-outer" style={{ marginTop: "32px" }}>
-          <div className="doppelrand-inner" style={{ padding: "24px" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "20px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <ShieldCheck className="w-8 h-8 text-emerald-700" />
-                <div>
-                  <div style={{ fontSize: "14px", fontWeight: 800, color: "#0f172a" }}>Chính Hãng 100%</div>
-                  <div style={{ fontSize: "12px", color: "#64748b" }}>Bảo hành 12 tháng gỗ sồi</div>
-                </div>
-              </div>
-
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <Zap className="w-8 h-8 text-amber-600" />
-                <div>
-                  <div style={{ fontSize: "14px", fontWeight: 800, color: "#0f172a" }}>Giảm Thật 100%</div>
-                  <div style={{ fontSize: "12px", color: "#64748b" }}>Giá thấp hơn niêm yết</div>
-                </div>
-              </div>
-
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <Truck className="w-8 h-8 text-emerald-700" />
-                <div>
-                  <div style={{ fontSize: "14px", fontWeight: 800, color: "#0f172a" }}>Freeship Đơn Từ 500k</div>
-                  <div style={{ fontSize: "12px", color: "#64748b" }}>Giao hỏa tốc toàn quốc</div>
-                </div>
-              </div>
-
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <RefreshCw className="w-8 h-8 text-emerald-700" />
-                <div>
-                  <div style={{ fontSize: "14px", fontWeight: 800, color: "#0f172a" }}>Đổi Trả 1-Đổi-1</div>
-                  <div style={{ fontSize: "12px", color: "#64748b" }}>30 ngày nếu có lỗi</div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </main>

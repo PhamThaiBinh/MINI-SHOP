@@ -156,7 +156,7 @@ export const VoucherMarketplace: React.FC = () => {
                       {isSaved ? (
                         <><Check className="w-3.5 h-3.5" /> Đã lưu</>
                       ) : (
-                        <><Gift className="w-3.5 h-3.5" /> Lưu mã 1-Click</>
+                        <><Gift className="w-3.5 h-3.5" /> Lưu mã</>
                       )}
                     </button>
                   </div>

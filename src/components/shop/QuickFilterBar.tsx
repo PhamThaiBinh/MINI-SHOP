@@ -36,7 +36,7 @@ export const QuickFilterBar: React.FC<QuickFilterBarProps> = ({
       }}
     >
       <span style={{ fontSize: "13px", fontWeight: 800, color: "#475569", whiteSpace: "nowrap", flexShrink: 0 }}>
-        Lọc nhanh 1-Click:
+        Lọc nhanh:
       </span>
       {filterOptions.map((opt) => {
         const isActive = activeFilter === opt.id;
