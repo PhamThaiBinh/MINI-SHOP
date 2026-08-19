@@ -74,5 +74,33 @@ export const BLOG_ARTICLES: BlogArticle[] = [
       <h2>2. Vân Gỗ Tự Nhiên Ấm Cúng</h2>
       <p>Từng đường vân gỗ sồi cuộn sóng tự nhiên mang lại cảm giác thân thiện, gắn kết các thành viên trong gia đình trong từng khoảnh khắc sinh hoạt.</p>
     `
+  },
+  {
+    id: 4,
+    title: "Xu Hướng Đèn Decor Mây Tre Cho Không Gian Hiện Đại",
+    category: "Trang Trí",
+    date: "02/08/2026",
+    excerpt: "Khám phá cách lựa chọn ánh sáng vàng ấm từ chất liệu mây tre thủ công tạo điểm nhấn tinh tế cho phòng ăn và phòng khách.",
+    img: "assets/images/products/San_pham/den-long-tre-original.webp",
+    author: "Biên tập viên Mini Shop",
+    readTime: "4 phút đọc",
+    content: `
+      <p>Ánh sáng là linh hồn của mọi không gian sống. Việc kết hợp các kiểu đèn lồng tre thủ công mộc mạc với kiến trúc Bắc Âu Nordic mang lại hiệu ứng thị giác vô cùng ấm áp và sang trọng.</p>
+      <h2>1. Chọn Kích Thước Đèn Phù Hợp Bàn Ăn</h2>
+      <p>Chiếc đèn thả tre nên treo cách mặt bàn ăn khoảng 70-80cm để ánh sáng tỏa đều mà không gây chói mắt người ngồi.</p>
+    `
+  },
+  {
+    id: 5,
+    title: "Bí Quyết Chọn Chậu Cây Decor Đạt Chuẩn Phong Thủy",
+    category: "Mẹo Nội Thất",
+    date: "28/07/2026",
+    excerpt: "Top 5 loại cây trồng trong nhà giúp thanh lọc không khí, mang lại giấc ngủ ngon và đem đến tài lộc bình an.",
+    img: "assets/images/products/noi-that-gia-dung/chau-cay-de-ban.webp",
+    author: "Biên tập viên Mini Shop",
+    readTime: "5 phút đọc",
+    content: `
+      <p>Cây xanh không chỉ làm mát góc làm việc hay phòng ngủ mà còn mang ý nghĩa phong thủy tốt lành cho gia chủ.</p>
+    `
   }
 ];

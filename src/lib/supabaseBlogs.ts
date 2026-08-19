@@ -15,7 +15,7 @@ export const fetchBlogsFromSupabase = async (): Promise<BlogArticle[]> => {
       return BLOG_ARTICLES;
     }
 
-    return data.map((row: any) => ({
+    const fetched: BlogArticle[] = data.map((row: any) => ({
       id: Number(row.id),
       title: String(row.title),
       category: String(row.category),
@@ -26,6 +26,14 @@ export const fetchBlogsFromSupabase = async (): Promise<BlogArticle[]> => {
       readTime: String(row.read_time || row.readTime),
       content: String(row.content),
     }));
+
+    if (fetched.length < 4) {
+      const existingIds = new Set(fetched.map((b) => b.id));
+      const needed = BLOG_ARTICLES.filter((b) => !existingIds.has(b.id));
+      return [...fetched, ...needed];
+    }
+
+    return fetched;
   } catch (err) {
     console.error("Error fetching blogs from Supabase:", err);
     return BLOG_ARTICLES;
