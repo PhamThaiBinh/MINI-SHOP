@@ -25,7 +25,11 @@ import {
   RefreshCw,
   Calendar,
   ShieldCheck,
+  Eye,
+  X,
+  ChevronLeft,
   ChevronRight,
+  FileText,
 } from "lucide-react";
 
 export default function TrackOrderPage() {
@@ -36,6 +40,13 @@ export default function TrackOrderPage() {
   const [userOrdersLoading, setUserOrdersLoading] = useState<boolean>(true);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [filterKeyword, setFilterKeyword] = useState<string>("");
+
+  // Pagination State (10 items per page)
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const pageSize = 10;
+
+  // Selected Order Detail Modal State
+  const [selectedOrderModal, setSelectedOrderModal] = useState<UnifiedOrder | null>(null);
 
   // Guest Search Form State
   const [searchCode, setSearchCode] = useState("");
@@ -56,6 +67,11 @@ export default function TrackOrderPage() {
     }
     loadCustomerOrders();
   }, [user]);
+
+  // Reset pagination when filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, filterKeyword]);
 
   const normalizePhone = (phone: string) => {
     let cleaned = phone.replace(/\D/g, "");
@@ -90,151 +106,70 @@ export default function TrackOrderPage() {
     return matchStatus && matchKw;
   });
 
+  // Pagination calculation
+  const totalPages = Math.max(1, Math.ceil(filteredUserOrders.length / pageSize));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedOrders = filteredUserOrders.slice(
+    (safeCurrentPage - 1) * pageSize,
+    safeCurrentPage * pageSize
+  );
+
   return (
     <main
       style={{
         backgroundColor: "var(--bg-main, #fcfbf9)",
         minHeight: "100dvh",
-        padding: "48px 16px 80px",
+        padding: "36px 16px 80px",
         fontFamily: "'Plus Jakarta Sans', sans-serif",
       }}
     >
-      <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
+      <div style={{ maxWidth: "1050px", margin: "0 auto" }}>
         
         {/* =========================================================================
-           1. HERO SECTION & HEADER CARD (DOUBLE-BEZEL / DOPPELRAND ARCHITECTURE)
-           ========================================================================= */}
-        <div
-          style={{
-            background: "rgba(15, 23, 42, 0.03)",
-            border: "1px solid rgba(15, 23, 42, 0.08)",
-            borderRadius: "2rem",
-            padding: "8px",
-            marginBottom: "32px",
-          }}
-        >
-          <div
-            style={{
-              background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
-              borderRadius: "calc(2rem - 0.5rem)",
-              padding: "40px 32px",
-              color: "#ffffff",
-              boxShadow: "0 20px 40px rgba(15, 23, 42, 0.12)",
-              textAlign: "center",
-              position: "relative",
-              overflow: "hidden",
-            }}
-          >
-            {/* Background Ambient Mesh Orb */}
-            <div
-              style={{
-                position: "absolute",
-                top: "-40px",
-                right: "-40px",
-                width: "220px",
-                height: "220px",
-                background: "radial-gradient(circle, rgba(46, 125, 50, 0.35) 0%, rgba(0,0,0,0) 70%)",
-                borderRadius: "50%",
-                pointerEvents: "none",
-              }}
-            />
-
-            {/* Micro Eyebrow Badge */}
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "4px 14px",
-                borderRadius: "999px",
-                background: "rgba(255, 255, 255, 0.1)",
-                border: "1px solid rgba(255, 255, 255, 0.15)",
-                fontSize: "11px",
-                fontWeight: 700,
-                letterSpacing: "0.15em",
-                textTransform: "uppercase",
-                color: "#86efac",
-                marginBottom: "16px",
-              }}
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              <span>HỆ THỐNG TRA CỨU HÀNH TRÌNH ĐƠN HÀNG</span>
-            </div>
-
-            <h1
-              style={{
-                fontSize: "30px",
-                fontWeight: 900,
-                letterSpacing: "-0.02em",
-                margin: "0 0 10px 0",
-                color: "#ffffff",
-              }}
-            >
-              {user ? `LỊCH SỬ ĐƠN HÀNG CỦA ${user.name.toUpperCase()}` : "TRA CỨU HÀNH TRÌNH ĐƠN HÀNG"}
-            </h1>
-            
-            <p
-              style={{
-                fontSize: "15px",
-                color: "#94a3b8",
-                maxWidth: "600px",
-                margin: "0 auto",
-                lineHeight: 1.6,
-              }}
-            >
-              {user
-                ? `Hệ thống tự động đồng bộ tất cả đơn hàng đã mua liên kết với tài khoản ${user.email}.`
-                : "Nhập Mã đơn hàng (#MS-XXXX) và Số điện thoại mua hàng để kiểm tra lộ trình vận chuyển tức thì."}
-            </p>
-          </div>
-        </div>
-
-        {/* =========================================================================
-           2. MAIN CONTENT AREA (LOGGED-IN CUSTOMER VS GUEST LOOKUP)
+           MAIN CONTENT AREA (LOGGED-IN CUSTOMER VS GUEST LOOKUP)
            ========================================================================= */}
         {user ? (
           /* -----------------------------------------------------------------------
-             A. LOGGED-IN CUSTOMER ARCHETYPE (FULL ORDERS MANAGEMENT STREAM)
+             A. LOGGED-IN CUSTOMER VIEW (SLEEK COMPACT LIST WITH PAGINATION)
              ----------------------------------------------------------------------- */
           <div>
             {/* Customer Status Summary Bar */}
             <div
               style={{
-                background: "rgba(255, 255, 255, 0.8)",
+                background: "#ffffff",
                 border: "1px solid var(--border-color, #e2e8f0)",
-                borderRadius: "1.5rem",
+                borderRadius: "1.25rem",
                 padding: "20px 24px",
-                marginBottom: "28px",
+                marginBottom: "24px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
                 flexWrap: "wrap",
                 gap: "16px",
                 boxShadow: "0 4px 12px rgba(0,0,0,0.03)",
-                backdropFilter: "blur(12px)",
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
                 <div
                   style={{
-                    width: "48px",
-                    height: "48px",
+                    width: "46px",
+                    height: "46px",
                     borderRadius: "50%",
                     background: "linear-gradient(135deg, #15803d 0%, #166534 100%)",
                     color: "#ffffff",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    boxShadow: "0 4px 10px rgba(21, 128, 61, 0.25)",
+                    boxShadow: "0 4px 10px rgba(21, 128, 61, 0.2)",
                   }}
                 >
                   <UserIcon className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <div style={{ fontSize: "16px", fontWeight: 800, color: "#0f172a" }}>
-                    {user.name}
-                  </div>
-                  <div style={{ fontSize: "13px", color: "#64748b", display: "flex", alignItems: "center", gap: "6px" }}>
+                  <h1 style={{ fontSize: "18px", fontWeight: 900, color: "#0f172a", margin: 0 }}>
+                    Quản Lý Đơn Hàng Của {user.name}
+                  </h1>
+                  <div style={{ fontSize: "13px", color: "#64748b", marginTop: "2px", display: "flex", alignItems: "center", gap: "6px" }}>
                     <span>{user.email}</span>
                     <span>•</span>
                     <span>{user.phone || "0988.123.456"}</span>
@@ -253,7 +188,7 @@ export default function TrackOrderPage() {
                     color: "#334155",
                   }}
                 >
-                  Tổng: <strong style={{ color: "var(--primary-color, #2e7d32)" }}>{userOrders.length} đơn hàng</strong>
+                  Tổng đơn: <strong style={{ color: "var(--primary-color, #2e7d32)" }}>{userOrders.length}</strong>
                 </div>
 
                 <Link
@@ -286,9 +221,9 @@ export default function TrackOrderPage() {
                 alignItems: "center",
                 justifyContent: "space-between",
                 gap: "14px",
-                marginBottom: "24px",
+                marginBottom: "20px",
                 background: "#ffffff",
-                padding: "14px 18px",
+                padding: "12px 18px",
                 borderRadius: "1.25rem",
                 border: "1px solid var(--border-color, #e2e8f0)",
                 boxShadow: "0 2px 8px rgba(0,0,0,0.02)",
@@ -317,7 +252,7 @@ export default function TrackOrderPage() {
                       background: statusFilter === st.key ? "var(--primary-color, #2e7d32)" : "#f1f5f9",
                       color: statusFilter === st.key ? "#ffffff" : "#475569",
                       cursor: "pointer",
-                      transition: "all 0.2s ease-[cubic-bezier(0.32,0.72,0,1)]",
+                      transition: "all 0.2s ease",
                     }}
                   >
                     {st.label}
@@ -326,10 +261,10 @@ export default function TrackOrderPage() {
               </div>
 
               {/* Keyword Search Input */}
-              <div style={{ position: "relative", minWidth: "240px", flex: 1, maxWidth: "320px" }}>
+              <div style={{ position: "relative", minWidth: "240px", flex: 1, maxWidth: "300px" }}>
                 <input
                   type="text"
-                  placeholder="Lọc mã đơn hoặc sản phẩm..."
+                  placeholder="Lọc mã đơn hoặc tên sản phẩm..."
                   value={filterKeyword}
                   onChange={(e) => setFilterKeyword(e.target.value)}
                   style={{
@@ -356,7 +291,7 @@ export default function TrackOrderPage() {
               </div>
             </div>
 
-            {/* Orders Stream Cards */}
+            {/* SLEEK & COMPACT ORDERS LIST */}
             {userOrdersLoading ? (
               <div
                 style={{
@@ -366,20 +301,20 @@ export default function TrackOrderPage() {
                   fontWeight: 700,
                   fontSize: "14px",
                   background: "#ffffff",
-                  borderRadius: "1.5rem",
+                  borderRadius: "1.25rem",
                   border: "1px solid var(--border-color, #e2e8f0)",
                 }}
               >
                 <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-700" />
-                Đang đồng bộ và nạp dữ liệu đơn hàng...
+                Đang nạp danh sách đơn hàng...
               </div>
             ) : filteredUserOrders.length === 0 ? (
               <div
                 style={{
-                  padding: "56px 20px",
+                  padding: "50px 20px",
                   textAlign: "center",
                   background: "#ffffff",
-                  borderRadius: "1.5rem",
+                  borderRadius: "1.25rem",
                   border: "1px solid var(--border-color, #e2e8f0)",
                   boxShadow: "0 4px 12px rgba(0,0,0,0.03)",
                 }}
@@ -387,11 +322,11 @@ export default function TrackOrderPage() {
                 <ShoppingBag className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                 <div style={{ fontSize: "16px", fontWeight: 800, color: "#0f172a" }}>
                   {filterKeyword || statusFilter !== "all"
-                    ? "Không tìm thấy đơn hàng nào phù hợp với bộ lọc hiện tại."
-                    : "Bạn chưa có đơn hàng nào tại MINI-SHOP."}
+                    ? "Không tìm thấy đơn hàng nào phù hợp với lọc."
+                    : "Bạn chưa có đơn hàng nào."}
                 </div>
-                <p style={{ fontSize: "14px", color: "#64748b", marginTop: "6px", marginBottom: "20px" }}>
-                  Hãy khám phá hàng ngàn sản phẩm nội thất & gia dụng cao cấp để mua sắm ngay!
+                <p style={{ fontSize: "14px", color: "#64748b", marginTop: "4px", marginBottom: "20px" }}>
+                  Khám phá các sản phẩm nội thất & gia dụng tuyệt đẹp để đặt sắm ngay!
                 </p>
                 <Link
                   href="/products"
@@ -408,312 +343,225 @@ export default function TrackOrderPage() {
                     textDecoration: "none",
                   }}
                 >
-                  Khám phá ngay <ArrowRight className="w-4 h-4" />
+                  Khám phá sản phẩm ngay <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-                {filteredUserOrders.map((ord) => (
+              <div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  {paginatedOrders.map((ord) => {
+                    const firstItem = ord.items[0];
+                    const otherItemsCount = ord.items.length - 1;
+                    return (
+                      <div
+                        key={ord.id}
+                        style={{
+                          background: "#ffffff",
+                          border: "1px solid var(--border-color, #e2e8f0)",
+                          borderRadius: "1.25rem",
+                          padding: "16px 20px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          flexWrap: "wrap",
+                          gap: "14px",
+                          boxShadow: "0 2px 8px rgba(0,0,0,0.02)",
+                          transition: "all 0.2s ease",
+                        }}
+                      >
+                        {/* Column 1: Order Code & Date */}
+                        <div style={{ minWidth: "160px" }}>
+                          <div style={{ fontSize: "16px", fontWeight: 900, color: "#0f172a" }}>
+                            {ord.id}
+                          </div>
+                          <div style={{ fontSize: "12px", color: "#64748b", marginTop: "2px", display: "flex", alignItems: "center", gap: "4px" }}>
+                            <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                            <span>{ord.date}</span>
+                          </div>
+                        </div>
+
+                        {/* Column 2: Items Summary Preview */}
+                        <div style={{ flex: 1, minWidth: "220px", display: "flex", alignItems: "center", gap: "12px" }}>
+                          {firstItem && (
+                            <img
+                              src={fixImagePath(firstItem.image)}
+                              alt={firstItem.name}
+                              style={{
+                                width: "42px",
+                                height: "42px",
+                                borderRadius: "8px",
+                                objectFit: "cover",
+                                border: "1px solid #e2e8f0",
+                                flexShrink: 0,
+                              }}
+                            />
+                          )}
+                          <div>
+                            <div style={{ fontSize: "13px", fontWeight: 800, color: "#0f172a", lineHeight: 1.3 }}>
+                              {firstItem ? firstItem.name : "Sản phẩm"}
+                            </div>
+                            <div style={{ fontSize: "12px", color: "#64748b", marginTop: "2px" }}>
+                              {otherItemsCount > 0 ? `và ${otherItemsCount} sản phẩm khác` : `Số lượng: x${firstItem?.qty || 1}`}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Column 3: Status Badge */}
+                        <div style={{ textAlign: "center" }}>
+                          <span
+                            style={{
+                              background:
+                                ord.status === "cancelled"
+                                  ? "#fee2e2"
+                                  : ord.status === "completed"
+                                  ? "#dcfce7"
+                                  : "#e0f2fe",
+                              color:
+                                ord.status === "cancelled"
+                                  ? "#dc2626"
+                                  : ord.status === "completed"
+                                  ? "#15803d"
+                                  : "#0369a1",
+                              padding: "5px 12px",
+                              borderRadius: "999px",
+                              fontWeight: 800,
+                              fontSize: "12px",
+                              display: "inline-block",
+                            }}
+                          >
+                            {ord.statusText}
+                          </span>
+                        </div>
+
+                        {/* Column 4: Total Price */}
+                        <div style={{ textAlign: "right", minWidth: "120px" }}>
+                          <div style={{ fontSize: "16px", fontWeight: 900, color: "var(--primary-color, #2e7d32)" }}>
+                            {formatVND(ord.total)}
+                          </div>
+                          <div style={{ fontSize: "11px", color: "#94a3b8" }}>{ord.paymentMethod}</div>
+                        </div>
+
+                        {/* Column 5: Action Button (Xem chi tiết) */}
+                        <div>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedOrderModal(ord)}
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "6px",
+                              padding: "8px 16px",
+                              borderRadius: "999px",
+                              fontSize: "12px",
+                              fontWeight: 800,
+                              background: "#f1f5f9",
+                              color: "#0f172a",
+                              border: "1px solid #cbd5e1",
+                              cursor: "pointer",
+                              transition: "all 0.2s ease",
+                            }}
+                          >
+                            <Eye className="w-4 h-4 text-emerald-700" /> Xem chi tiết
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* PAGINATION CONTROLS (10 items / page) */}
+                {totalPages > 1 && (
                   <div
-                    key={ord.id}
                     style={{
-                      background: "rgba(241, 245, 249, 0.7)",
-                      border: "1px solid rgba(226, 232, 240, 0.9)",
-                      borderRadius: "1.75rem",
-                      padding: "6px",
-                      transition: "all 0.3s ease",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      marginTop: "24px",
+                      padding: "16px 20px",
+                      background: "#ffffff",
+                      borderRadius: "1.25rem",
+                      border: "1px solid var(--border-color, #e2e8f0)",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.02)",
+                      flexWrap: "wrap",
+                      gap: "12px",
                     }}
                   >
-                    <div
-                      style={{
-                        background: "#ffffff",
-                        borderRadius: "calc(1.75rem - 0.375rem)",
-                        padding: "24px",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.04)",
-                      }}
-                    >
-                      {/* Card Header: Order Code & Status Badge */}
-                      <div
+                    <div style={{ fontSize: "13px", color: "#64748b", fontWeight: 700 }}>
+                      Hiển thị <strong>{(safeCurrentPage - 1) * pageSize + 1} - {Math.min(safeCurrentPage * pageSize, filteredUserOrders.length)}</strong> trên tổng số <strong>{filteredUserOrders.length} đơn hàng</strong>
+                    </div>
+
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <button
+                        type="button"
+                        disabled={safeCurrentPage <= 1}
+                        onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                         style={{
-                          display: "flex",
-                          justifyContent: "space-between",
+                          padding: "6px 12px",
+                          borderRadius: "8px",
+                          border: "1px solid #cbd5e1",
+                          background: "#ffffff",
+                          fontSize: "13px",
+                          fontWeight: 700,
+                          color: safeCurrentPage <= 1 ? "#cbd5e1" : "#0f172a",
+                          cursor: safeCurrentPage <= 1 ? "not-allowed" : "pointer",
+                          display: "inline-flex",
                           alignItems: "center",
-                          borderBottom: "1px solid #f1f5f9",
-                          paddingBottom: "16px",
-                          marginBottom: "20px",
-                          flexWrap: "wrap",
-                          gap: "12px",
+                          gap: "4px",
                         }}
                       >
-                        <div>
-                          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                            <h3 style={{ fontSize: "17px", fontWeight: 900, color: "#0f172a", margin: 0 }}>
-                              Đơn hàng: {ord.id}
-                            </h3>
-                            <span
-                              style={{
-                                fontSize: "11px",
-                                fontWeight: 700,
-                                padding: "2px 8px",
-                                borderRadius: "6px",
-                                background: "#f1f5f9",
-                                color: "#475569",
-                              }}
-                            >
-                              {ord.paymentMethod}
-                            </span>
-                          </div>
-                          <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px", display: "flex", alignItems: "center", gap: "4px" }}>
-                            <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                            <span>Ngày đặt: {ord.date}</span>
-                          </div>
-                        </div>
+                        <ChevronLeft className="w-4 h-4" /> Trước
+                      </button>
 
-                        <span
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((pg) => (
+                        <button
+                          key={pg}
+                          type="button"
+                          onClick={() => setCurrentPage(pg)}
                           style={{
-                            background:
-                              ord.status === "cancelled"
-                                ? "#fee2e2"
-                                : ord.status === "completed"
-                                ? "#dcfce7"
-                                : "#e0f2fe",
-                            color:
-                              ord.status === "cancelled"
-                                ? "#dc2626"
-                                : ord.status === "completed"
-                                ? "#15803d"
-                                : "#0369a1",
-                            padding: "6px 16px",
-                            borderRadius: "999px",
-                            fontWeight: 800,
-                            fontSize: "12px",
-                            letterSpacing: "0.02em",
-                          }}
-                        >
-                          {ord.statusText}
-                        </span>
-                      </div>
-
-                      {/* Stepper Roadmap / Timeline */}
-                      {ord.status === "cancelled" ? (
-                        <div
-                          style={{
-                            padding: "14px 18px",
-                            background: "#fef2f2",
-                            border: "1px solid #fca5a5",
-                            borderRadius: "1rem",
-                            color: "#dc2626",
+                            width: "34px",
+                            height: "34px",
+                            borderRadius: "8px",
+                            border: pg === safeCurrentPage ? "none" : "1px solid #cbd5e1",
+                            background: pg === safeCurrentPage ? "var(--primary-color, #2e7d32)" : "#ffffff",
+                            color: pg === safeCurrentPage ? "#ffffff" : "#0f172a",
                             fontWeight: 800,
                             fontSize: "13px",
-                            marginBottom: "20px",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
+                            cursor: "pointer",
                           }}
                         >
-                          <XCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-                          <div>
-                            <div>ĐƠN HÀNG ĐÃ BỊ HỦY BỎ</div>
-                            {ord.cancelReason && (
-                              <div style={{ fontSize: "12px", fontWeight: 600, color: "#991b1b", marginTop: "2px" }}>
-                                Lý do: {ord.cancelReason}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ) : (
-                        <div style={{ marginBottom: "20px", background: "#f8fafc", padding: "16px", borderRadius: "1rem", border: "1px solid #f1f5f9" }}>
-                          <div style={{ fontSize: "13px", fontWeight: 800, color: "#334155", marginBottom: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
-                            <Truck className="w-4 h-4 text-emerald-700" />
-                            <span>Lộ Trình Vận Chuyển:</span>
-                          </div>
-                          
-                          <div
-                            style={{
-                              display: "grid",
-                              gridTemplateColumns: "repeat(4, 1fr)",
-                              gap: "8px",
-                              textAlign: "center",
-                            }}
-                          >
-                            {/* Step 1 */}
-                            <div>
-                              <div
-                                style={{
-                                  width: "28px",
-                                  height: "28px",
-                                  borderRadius: "50%",
-                                  background: "#15803d",
-                                  color: "#ffffff",
-                                  margin: "0 auto 6px",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  fontWeight: 800,
-                                }}
-                              >
-                                <Check className="w-3.5 h-3.5" />
-                              </div>
-                              <div style={{ fontSize: "11px", fontWeight: 800, color: "#0f172a" }}>Đã Đặt Hàng</div>
-                            </div>
+                          {pg}
+                        </button>
+                      ))}
 
-                            {/* Step 2 */}
-                            <div>
-                              <div
-                                style={{
-                                  width: "28px",
-                                  height: "28px",
-                                  borderRadius: "50%",
-                                  background:
-                                    ord.status === "processing" || ord.status === "shipping" || ord.status === "completed"
-                                      ? "#15803d"
-                                      : "#cbd5e1",
-                                  color: "#ffffff",
-                                  margin: "0 auto 6px",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  fontWeight: 800,
-                                  fontSize: "12px",
-                                }}
-                              >
-                                {ord.status === "processing" || ord.status === "shipping" || ord.status === "completed" ? (
-                                  <Check className="w-3.5 h-3.5" />
-                                ) : (
-                                  "2"
-                                )}
-                              </div>
-                              <div style={{ fontSize: "11px", fontWeight: 800, color: "#0f172a" }}>Chuẩn Bị Hàng</div>
-                            </div>
-
-                            {/* Step 3 */}
-                            <div>
-                              <div
-                                style={{
-                                  width: "28px",
-                                  height: "28px",
-                                  borderRadius: "50%",
-                                  background:
-                                    ord.status === "shipping" || ord.status === "completed"
-                                      ? "#15803d"
-                                      : "#cbd5e1",
-                                  color: "#ffffff",
-                                  margin: "0 auto 6px",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  fontWeight: 800,
-                                  fontSize: "12px",
-                                }}
-                              >
-                                {ord.status === "shipping" || ord.status === "completed" ? (
-                                  <Check className="w-3.5 h-3.5" />
-                                ) : (
-                                  "3"
-                                )}
-                              </div>
-                              <div style={{ fontSize: "11px", fontWeight: 800, color: "#0f172a" }}>Đang Giao Hàng</div>
-                            </div>
-
-                            {/* Step 4 */}
-                            <div>
-                              <div
-                                style={{
-                                  width: "28px",
-                                  height: "28px",
-                                  borderRadius: "50%",
-                                  background: ord.status === "completed" ? "#15803d" : "#cbd5e1",
-                                  color: "#ffffff",
-                                  margin: "0 auto 6px",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  fontWeight: 800,
-                                  fontSize: "12px",
-                                }}
-                              >
-                                {ord.status === "completed" ? <Check className="w-3.5 h-3.5" /> : "4"}
-                              </div>
-                              <div style={{ fontSize: "11px", fontWeight: 800, color: "#0f172a" }}>Hoàn Thành</div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Product Items Breakdown */}
-                      <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "16px" }}>
-                        {ord.items.map((it, idx) => (
-                          <div
-                            key={idx}
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                              padding: "10px 14px",
-                              borderRadius: "0.75rem",
-                              background: "#f8fafc",
-                              border: "1px solid #e2e8f0",
-                            }}
-                          >
-                            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                              <img
-                                src={fixImagePath(it.image)}
-                                alt={it.name}
-                                style={{
-                                  width: "44px",
-                                  height: "44px",
-                                  borderRadius: "8px",
-                                  objectFit: "cover",
-                                  border: "1px solid var(--border-color, #e2e8f0)",
-                                }}
-                              />
-                              <div>
-                                <div style={{ fontSize: "14px", fontWeight: 800, color: "#0f172a" }}>
-                                  {it.name}
-                                </div>
-                                <div style={{ fontSize: "12px", color: "#64748b" }}>
-                                  Số lượng: x{it.qty}
-                                </div>
-                              </div>
-                            </div>
-
-                            <div style={{ fontSize: "14px", fontWeight: 800, color: "#0f172a" }}>
-                              {formatVND(it.price * it.qty)}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Address & Total Footer */}
-                      <div
+                      <button
+                        type="button"
+                        disabled={safeCurrentPage >= totalPages}
+                        onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
                         style={{
-                          display: "flex",
-                          justifyContent: "space-between",
+                          padding: "6px 12px",
+                          borderRadius: "8px",
+                          border: "1px solid #cbd5e1",
+                          background: "#ffffff",
+                          fontSize: "13px",
+                          fontWeight: 700,
+                          color: safeCurrentPage >= totalPages ? "#cbd5e1" : "#0f172a",
+                          cursor: safeCurrentPage >= totalPages ? "not-allowed" : "pointer",
+                          display: "inline-flex",
                           alignItems: "center",
-                          flexWrap: "wrap",
-                          gap: "12px",
-                          borderTop: "1px solid #f1f5f9",
-                          paddingTop: "16px",
+                          gap: "4px",
                         }}
                       >
-                        <div style={{ fontSize: "13px", color: "#475569", display: "flex", alignItems: "center", gap: "6px" }}>
-                          <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                          <span>Giao tới: <strong>{ord.recipientName}</strong> ({ord.recipientPhone}) - {ord.address}</span>
-                        </div>
-
-                        <div style={{ fontSize: "16px", fontWeight: 900, color: "var(--primary-color, #2e7d32)" }}>
-                          Tổng tiền: {formatVND(ord.total)}
-                        </div>
-                      </div>
+                        Sau <ChevronRight className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
-                ))}
+                )}
               </div>
             )}
           </div>
         ) : (
           /* -----------------------------------------------------------------------
-             B. GUEST LOOKUP ARCHETYPE (DOUPLE-BEZEL SEARCH FORM & RESULTS)
+             B. GUEST LOOKUP VIEW
              ----------------------------------------------------------------------- */
           <div>
             {/* Login Suggestion Banner */}
@@ -723,7 +571,7 @@ export default function TrackOrderPage() {
                 border: "1px solid #bbf7d0",
                 borderRadius: "1.25rem",
                 padding: "16px 20px",
-                marginBottom: "28px",
+                marginBottom: "24px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
@@ -734,7 +582,7 @@ export default function TrackOrderPage() {
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 <CheckCircle2 className="w-5 h-5 text-emerald-700 flex-shrink-0" />
                 <span style={{ fontSize: "14px", color: "#166534", lineHeight: 1.5 }}>
-                  <strong>Mẹo tiện lợi:</strong> Bạn có thể <strong>Đăng Nhập Ngay</strong> để tự động tra cứu tất cả đơn hàng đã mua mà không cần gõ mã thủ công.
+                  <strong>Mẹo tiện lợi:</strong> Bạn có thể <strong>Đăng Nhập Ngay</strong> để tự động xem toàn bộ lịch sử đơn hàng mà không cần gõ mã thủ công.
                 </span>
               </div>
 
@@ -759,110 +607,91 @@ export default function TrackOrderPage() {
               </Link>
             </div>
 
-            {/* Double-Bezel Search Form Card */}
+            {/* Search Form Card */}
             <div
               style={{
-                background: "rgba(15, 23, 42, 0.03)",
-                border: "1px solid rgba(15, 23, 42, 0.08)",
-                borderRadius: "2rem",
-                padding: "8px",
-                marginBottom: "32px",
+                background: "#ffffff",
+                border: "1px solid var(--border-color, #e2e8f0)",
+                borderRadius: "1.5rem",
+                padding: "32px",
+                boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
+                marginBottom: "28px",
               }}
             >
-              <div
-                style={{
-                  background: "#ffffff",
-                  borderRadius: "calc(2rem - 0.5rem)",
-                  padding: "32px",
-                  boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
-                }}
-              >
-                <form onSubmit={handleSearchOrder}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "20px" }}>
-                    <div>
-                      <label style={{ fontSize: "13px", fontWeight: 800, color: "#0f172a", marginBottom: "8px", display: "block" }}>
-                        Mã Đơn Hàng (Ví dụ: #MS-9824) *
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="Nhập mã đơn hàng..."
-                        required
-                        value={searchCode}
-                        onChange={(e) => setSearchCode(e.target.value)}
-                        style={{
-                          width: "100%",
-                          padding: "12px 16px",
-                          fontSize: "14px",
-                          borderRadius: "0.75rem",
-                          border: "1px solid var(--border-color, #cbd5e1)",
-                          outline: "none",
-                          boxSizing: "border-box",
-                        }}
-                      />
-                    </div>
-
-                    <div>
-                      <label style={{ fontSize: "13px", fontWeight: 800, color: "#0f172a", marginBottom: "8px", display: "block" }}>
-                        Số Điện Thoại Mua Hàng *
-                      </label>
-                      <input
-                        type="tel"
-                        placeholder="Ví dụ: 0988123456"
-                        required
-                        value={searchPhone}
-                        onChange={(e) => setSearchPhone(e.target.value)}
-                        style={{
-                          width: "100%",
-                          padding: "12px 16px",
-                          fontSize: "14px",
-                          borderRadius: "0.75rem",
-                          border: "1px solid var(--border-color, #cbd5e1)",
-                          outline: "none",
-                          boxSizing: "border-box",
-                        }}
-                      />
-                    </div>
+              <h2 style={{ fontSize: "20px", fontWeight: 900, color: "#0f172a", marginBottom: "16px" }}>
+                Tra Cứu Nhanh Đơn Hàng
+              </h2>
+              <form onSubmit={handleSearchOrder}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "20px" }}>
+                  <div>
+                    <label style={{ fontSize: "13px", fontWeight: 800, color: "#0f172a", marginBottom: "8px", display: "block" }}>
+                      Mã Đơn Hàng (Ví dụ: #MS-9824) *
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Nhập mã đơn hàng..."
+                      required
+                      value={searchCode}
+                      onChange={(e) => setSearchCode(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "12px 16px",
+                        fontSize: "14px",
+                        borderRadius: "0.75rem",
+                        border: "1px solid var(--border-color, #cbd5e1)",
+                        outline: "none",
+                        boxSizing: "border-box",
+                      }}
+                    />
                   </div>
 
-                  {/* Island Button Trailing Icon CTA */}
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    style={{
-                      width: "100%",
-                      padding: "10px 24px",
-                      background: "var(--primary-color, #2e7d32)",
-                      color: "#ffffff",
-                      border: "none",
-                      borderRadius: "999px",
-                      fontSize: "15px",
-                      fontWeight: 800,
-                      cursor: "pointer",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "10px",
-                      boxShadow: "0 6px 20px rgba(46, 125, 50, 0.25)",
-                      transition: "all 0.3s ease-[cubic-bezier(0.32,0.72,0,1)]",
-                    }}
-                  >
-                    <span>{loading ? "Đang Tra Cứu..." : "Tra Cứu Đơn Hàng Ngay"}</span>
-                    <div
+                  <div>
+                    <label style={{ fontSize: "13px", fontWeight: 800, color: "#0f172a", marginBottom: "8px", display: "block" }}>
+                      Số Điện Thoại Mua Hàng *
+                    </label>
+                    <input
+                      type="tel"
+                      placeholder="Ví dụ: 0988123456"
+                      required
+                      value={searchPhone}
+                      onChange={(e) => setSearchPhone(e.target.value)}
                       style={{
-                        width: "32px",
-                        height: "32px",
-                        borderRadius: "50%",
-                        background: "rgba(255, 255, 255, 0.2)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
+                        width: "100%",
+                        padding: "12px 16px",
+                        fontSize: "14px",
+                        borderRadius: "0.75rem",
+                        border: "1px solid var(--border-color, #cbd5e1)",
+                        outline: "none",
+                        boxSizing: "border-box",
                       }}
-                    >
-                      <Search className="w-4 h-4 text-white" />
-                    </div>
-                  </button>
-                </form>
-              </div>
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  style={{
+                    width: "100%",
+                    padding: "12px 24px",
+                    background: "var(--primary-color, #2e7d32)",
+                    color: "#ffffff",
+                    border: "none",
+                    borderRadius: "999px",
+                    fontSize: "15px",
+                    fontWeight: 800,
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    boxShadow: "0 6px 20px rgba(46, 125, 50, 0.2)",
+                  }}
+                >
+                  <Search className="w-4 h-4 text-white" />
+                  <span>{loading ? "Đang Tra Cứu..." : "Tra Cứu Đơn Hàng Ngay"}</span>
+                </button>
+              </form>
             </div>
 
             {/* Guest Search Results Container */}
@@ -893,152 +722,384 @@ export default function TrackOrderPage() {
                 ) : (
                   <div
                     style={{
-                      background: "rgba(241, 245, 249, 0.7)",
-                      border: "1px solid rgba(226, 232, 240, 0.9)",
-                      borderRadius: "1.75rem",
-                      padding: "6px",
+                      background: "#ffffff",
+                      border: "1px solid var(--border-color, #e2e8f0)",
+                      borderRadius: "1.5rem",
+                      padding: "24px",
+                      boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
                     }}
                   >
-                    <div
-                      style={{
-                        background: "#ffffff",
-                        borderRadius: "calc(1.75rem - 0.375rem)",
-                        padding: "28px",
-                        boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
-                      }}
-                    >
-                      {/* Header Info */}
-                      <div
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                      <div>
+                        <h3 style={{ fontSize: "18px", fontWeight: 900, color: "#0f172a", margin: 0 }}>
+                          Đơn hàng: {orderResult.id}
+                        </h3>
+                        <div style={{ fontSize: "13px", color: "#64748b", marginTop: "2px" }}>
+                          Ngày đặt: {orderResult.date}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedOrderModal(orderResult)}
                         style={{
-                          display: "flex",
-                          justifyContent: "space-between",
+                          display: "inline-flex",
                           alignItems: "center",
-                          borderBottom: "1px solid #f1f5f9",
-                          paddingBottom: "16px",
-                          marginBottom: "20px",
-                          flexWrap: "wrap",
-                          gap: "12px",
+                          gap: "6px",
+                          padding: "8px 16px",
+                          borderRadius: "999px",
+                          fontSize: "13px",
+                          fontWeight: 800,
+                          background: "var(--primary-color, #2e7d32)",
+                          color: "#ffffff",
+                          border: "none",
+                          cursor: "pointer",
                         }}
                       >
-                        <div>
-                          <h3 style={{ fontSize: "18px", fontWeight: 900, color: "#0f172a", margin: 0 }}>
-                            Đơn hàng: {orderResult.id}
-                          </h3>
-                          <div style={{ fontSize: "13px", color: "#64748b", marginTop: "4px" }}>
-                            Ngày đặt: {orderResult.date}
-                          </div>
-                        </div>
-
-                        <span
-                          style={{
-                            background:
-                              orderResult.status === "cancelled"
-                                ? "#fee2e2"
-                                : orderResult.status === "completed"
-                                ? "#dcfce7"
-                                : "#e0f2fe",
-                            color:
-                              orderResult.status === "cancelled"
-                                ? "#dc2626"
-                                : orderResult.status === "completed"
-                                ? "#15803d"
-                                : "#0369a1",
-                            padding: "6px 16px",
-                            borderRadius: "999px",
-                            fontWeight: 800,
-                            fontSize: "13px",
-                          }}
-                        >
-                          {orderResult.statusText}
-                        </span>
-                      </div>
-
-                      {/* Recipient Details */}
-                      <div
-                        style={{
-                          fontSize: "14px",
-                          lineHeight: 1.6,
-                          marginBottom: "20px",
-                          background: "#f8fafc",
-                          padding: "16px",
-                          borderRadius: "1rem",
-                          border: "1px solid #e2e8f0",
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: "8px",
-                        }}
-                      >
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <UserIcon className="w-4 h-4 text-slate-500" />
-                          <span><strong>Người nhận:</strong> {orderResult.recipientName} ({orderResult.recipientPhone})</span>
-                        </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <MapPin className="w-4 h-4 text-slate-500" />
-                          <span><strong>Địa chỉ giao:</strong> {orderResult.address}</span>
-                        </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <CreditCard className="w-4 h-4 text-slate-500" />
-                          <span><strong>Phương thức thanh toán:</strong> {orderResult.paymentMethod}</span>
-                        </div>
-                      </div>
-
-                      {/* Products */}
-                      <div style={{ fontSize: "14px", fontWeight: 800, color: "#0f172a", marginBottom: "12px", display: "flex", alignItems: "center", gap: "6px" }}>
-                        <Package className="w-4 h-4 text-emerald-700" /> Sản Phẩm Trong Đơn:
-                      </div>
-
-                      <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
-                        {orderResult.items.map((it, idx) => (
-                          <div
-                            key={idx}
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                              padding: "12px 16px",
-                              borderRadius: "0.75rem",
-                              background: "#f8fafc",
-                              border: "1px solid #e2e8f0",
-                            }}
-                          >
-                            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                              <img
-                                src={fixImagePath(it.image)}
-                                alt={it.name}
-                                style={{ width: "48px", height: "48px", borderRadius: "8px", objectFit: "cover" }}
-                              />
-                              <div>
-                                <div style={{ fontSize: "14px", fontWeight: 800, color: "#0f172a" }}>{it.name}</div>
-                                <div style={{ fontSize: "12px", color: "#64748b" }}>Số lượng: x{it.qty}</div>
-                              </div>
-                            </div>
-                            <div style={{ fontSize: "14px", fontWeight: 800, color: "#0f172a" }}>
-                              {formatVND(it.price * it.qty)}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Total */}
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          fontSize: "18px",
-                          fontWeight: 900,
-                          color: "var(--primary-color, #2e7d32)",
-                          borderTop: "1px solid #f1f5f9",
-                          paddingTop: "16px",
-                        }}
-                      >
-                        <span>Tổng tiền thanh toán:</span>
-                        <span>{formatVND(orderResult.total)}</span>
-                      </div>
+                        <Eye className="w-4 h-4" /> Xem chi tiết đầy đủ
+                      </button>
                     </div>
                   </div>
                 )}
               </div>
             )}
+          </div>
+        )}
+
+        {/* =========================================================================
+           HIGH-END ORDER DETAIL MODAL (XEM CHI TIẾT ĐƠN HÀNG)
+           ========================================================================= */}
+        {selectedOrderModal && (
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(15, 23, 42, 0.6)",
+              backdropFilter: "blur(6px)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 9999,
+              padding: "16px",
+            }}
+          >
+            <div
+              style={{
+                background: "#ffffff",
+                borderRadius: "1.75rem",
+                width: "100%",
+                maxWidth: "720px",
+                maxHeight: "90vh",
+                overflowY: "auto",
+                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+                border: "1px solid #e2e8f0",
+              }}
+            >
+              {/* Modal Header */}
+              <div
+                style={{
+                  padding: "20px 24px",
+                  borderBottom: "1px solid #f1f5f9",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  background: "#f8fafc",
+                  borderTopLeftRadius: "1.75rem",
+                  borderTopRightRadius: "1.75rem",
+                }}
+              >
+                <div>
+                  <h3 style={{ fontSize: "18px", fontWeight: 900, color: "#0f172a", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+                    <FileText className="w-5 h-5 text-emerald-700" />
+                    Chi Tiết Đơn Hàng {selectedOrderModal.id}
+                  </h3>
+                  <div style={{ fontSize: "12px", color: "#64748b", marginTop: "2px" }}>
+                    Ngày đặt hàng: {selectedOrderModal.date}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedOrderModal(null)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: "4px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <X className="w-5 h-5 text-slate-400 hover:text-slate-600" />
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div style={{ padding: "24px" }}>
+                {/* Status Pill */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                  <span style={{ fontSize: "14px", fontWeight: 700, color: "#334155" }}>Trạng thái đơn:</span>
+                  <span
+                    style={{
+                      background:
+                        selectedOrderModal.status === "cancelled"
+                          ? "#fee2e2"
+                          : selectedOrderModal.status === "completed"
+                          ? "#dcfce7"
+                          : "#e0f2fe",
+                      color:
+                        selectedOrderModal.status === "cancelled"
+                          ? "#dc2626"
+                          : selectedOrderModal.status === "completed"
+                          ? "#15803d"
+                          : "#0369a1",
+                      padding: "6px 16px",
+                      borderRadius: "999px",
+                      fontWeight: 800,
+                      fontSize: "13px",
+                    }}
+                  >
+                    {selectedOrderModal.statusText}
+                  </span>
+                </div>
+
+                {/* Timeline Stepper Roadmap */}
+                {selectedOrderModal.status === "cancelled" ? (
+                  <div
+                    style={{
+                      padding: "14px 18px",
+                      background: "#fef2f2",
+                      border: "1px solid #fca5a5",
+                      borderRadius: "1rem",
+                      color: "#dc2626",
+                      fontWeight: 800,
+                      fontSize: "13px",
+                      marginBottom: "20px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                  >
+                    <XCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+                    <div>
+                      <div>ĐƠN HÀNG ĐÃ HỦY BỎ</div>
+                      {selectedOrderModal.cancelReason && (
+                        <div style={{ fontSize: "12px", fontWeight: 600, color: "#991b1b", marginTop: "2px" }}>
+                          Lý do: {selectedOrderModal.cancelReason}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ marginBottom: "20px", background: "#f8fafc", padding: "16px", borderRadius: "1rem", border: "1px solid #f1f5f9" }}>
+                    <div style={{ fontSize: "13px", fontWeight: 800, color: "#334155", marginBottom: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
+                      <Truck className="w-4 h-4 text-emerald-700" />
+                      <span>Lộ Trình Vận Chuyển:</span>
+                    </div>
+
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(4, 1fr)",
+                        gap: "8px",
+                        textAlign: "center",
+                      }}
+                    >
+                      {/* Step 1 */}
+                      <div>
+                        <div
+                          style={{
+                            width: "28px",
+                            height: "28px",
+                            borderRadius: "50%",
+                            background: "#15803d",
+                            color: "#ffffff",
+                            margin: "0 auto 6px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontWeight: 800,
+                          }}
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                        </div>
+                        <div style={{ fontSize: "11px", fontWeight: 800, color: "#0f172a" }}>Đã Đặt</div>
+                      </div>
+
+                      {/* Step 2 */}
+                      <div>
+                        <div
+                          style={{
+                            width: "28px",
+                            height: "28px",
+                            borderRadius: "50%",
+                            background:
+                              selectedOrderModal.status === "processing" ||
+                              selectedOrderModal.status === "shipping" ||
+                              selectedOrderModal.status === "completed"
+                                ? "#15803d"
+                                : "#cbd5e1",
+                            color: "#ffffff",
+                            margin: "0 auto 6px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontWeight: 800,
+                            fontSize: "12px",
+                          }}
+                        >
+                          {selectedOrderModal.status === "processing" ||
+                          selectedOrderModal.status === "shipping" ||
+                          selectedOrderModal.status === "completed" ? (
+                            <Check className="w-3.5 h-3.5" />
+                          ) : (
+                            "2"
+                          )}
+                        </div>
+                        <div style={{ fontSize: "11px", fontWeight: 800, color: "#0f172a" }}>Chuẩn Bị</div>
+                      </div>
+
+                      {/* Step 3 */}
+                      <div>
+                        <div
+                          style={{
+                            width: "28px",
+                            height: "28px",
+                            borderRadius: "50%",
+                            background:
+                              selectedOrderModal.status === "shipping" ||
+                              selectedOrderModal.status === "completed"
+                                ? "#15803d"
+                                : "#cbd5e1",
+                            color: "#ffffff",
+                            margin: "0 auto 6px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontWeight: 800,
+                            fontSize: "12px",
+                          }}
+                        >
+                          {selectedOrderModal.status === "shipping" || selectedOrderModal.status === "completed" ? (
+                            <Check className="w-3.5 h-3.5" />
+                          ) : (
+                            "3"
+                          )}
+                        </div>
+                        <div style={{ fontSize: "11px", fontWeight: 800, color: "#0f172a" }}>Vận Chuyển</div>
+                      </div>
+
+                      {/* Step 4 */}
+                      <div>
+                        <div
+                          style={{
+                            width: "28px",
+                            height: "28px",
+                            borderRadius: "50%",
+                            background: selectedOrderModal.status === "completed" ? "#15803d" : "#cbd5e1",
+                            color: "#ffffff",
+                            margin: "0 auto 6px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontWeight: 800,
+                            fontSize: "12px",
+                          }}
+                        >
+                          {selectedOrderModal.status === "completed" ? <Check className="w-3.5 h-3.5" /> : "4"}
+                        </div>
+                        <div style={{ fontSize: "11px", fontWeight: 800, color: "#0f172a" }}>Giao Hàng</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Recipient Information Card */}
+                <div
+                  style={{
+                    fontSize: "13px",
+                    lineHeight: 1.6,
+                    marginBottom: "20px",
+                    background: "#f8fafc",
+                    padding: "16px",
+                    borderRadius: "1rem",
+                    border: "1px solid #e2e8f0",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "8px",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <UserIcon className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                    <span><strong>Người nhận:</strong> {selectedOrderModal.recipientName} ({selectedOrderModal.recipientPhone})</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <MapPin className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                    <span><strong>Địa chỉ giao:</strong> {selectedOrderModal.address}</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <CreditCard className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                    <span><strong>Thanh toán:</strong> {selectedOrderModal.paymentMethod}</span>
+                  </div>
+                </div>
+
+                {/* Product Breakdown List */}
+                <div style={{ fontSize: "14px", fontWeight: 800, color: "#0f172a", marginBottom: "12px", display: "flex", alignItems: "center", gap: "6px" }}>
+                  <Package className="w-4 h-4 text-emerald-700" /> Danh Sách Sản Phẩm (x{selectedOrderModal.items.length}):
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
+                  {selectedOrderModal.items.map((it, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "10px 14px",
+                        borderRadius: "0.75rem",
+                        background: "#f8fafc",
+                        border: "1px solid #e2e8f0",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <img
+                          src={fixImagePath(it.image)}
+                          alt={it.name}
+                          style={{ width: "46px", height: "46px", borderRadius: "8px", objectFit: "cover", border: "1px solid #e2e8f0" }}
+                        />
+                        <div>
+                          <div style={{ fontSize: "14px", fontWeight: 800, color: "#0f172a" }}>{it.name}</div>
+                          <div style={{ fontSize: "12px", color: "#64748b" }}>Số lượng: x{it.qty} • Đơn giá: {formatVND(it.price)}</div>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: "14px", fontWeight: 800, color: "#0f172a" }}>
+                        {formatVND(it.price * it.qty)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Total */}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    fontSize: "18px",
+                    fontWeight: 900,
+                    color: "var(--primary-color, #2e7d32)",
+                    borderTop: "1px solid #f1f5f9",
+                    paddingTop: "16px",
+                  }}
+                >
+                  <span>TỔNG TIỀN THANH TOÁN:</span>
+                  <span>{formatVND(selectedOrderModal.total)}</span>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
