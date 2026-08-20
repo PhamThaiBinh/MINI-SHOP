@@ -19,7 +19,7 @@ import {
   fetchUserRewardsFromSupabase,
   syncUserRewardsToSupabase,
 } from "@/lib/supabaseUserFeatures";
-import { User, Gift, Package, MapPin, LogOut, Eye, EyeOff, Key, Save, Check, Crown, ListCheck, Disc, Ticket, History, Gem, Award, Star, Calendar, Link2, AlertTriangle, Truck, Sofa, Edit3, CheckCircle2, Trash2, Copy, Send, X, Search, Share2, ChevronUp, ChevronDown, Sparkles, ShieldCheck } from "lucide-react";
+import { User, Gift, Package, MapPin, LogOut, Eye, EyeOff, Key, Save, Check, Crown, ListCheck, Disc, Ticket, History, Gem, Award, Star, Calendar, Link2, AlertTriangle, Truck, Sofa, Edit3, CheckCircle2, Trash2, Copy, Send, X, Search, Share2, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Sparkles, ShieldCheck } from "lucide-react";
 
 interface AddressItem {
   id: number;
@@ -281,6 +281,33 @@ const MOCK_ORDERS: CustomerOrder[] = [
   },
 ];
 
+const SPOTLIGHT_SLIDES = [
+  {
+    image: "/assets/images/products/San_pham/hero-home-decor-pexels-original.webp",
+    tag: "✨ MINI-SHOP DECOR 2026",
+    title: "Không Gian Sống Đẳng Cấp",
+    desc: "Khám phá bộ sưu tập nội thất gia dụng tinh tế & hiện đại dành riêng cho ngôi nhà của bạn.",
+  },
+  {
+    image: "/assets/images/products/San_pham/bo-binh-gom-minimal-original.webp",
+    tag: "🎁 TÍCH ĐIỂM ĐỔI QUÀ",
+    title: "Gốm Sứ Thủ Công Tinh Tế",
+    desc: "Tích điểm thưởng sau mỗi đơn hàng để nhận voucher ưu đãi độc quyền từ Mini Shop.",
+  },
+  {
+    image: "/assets/images/products/San_pham/sofa-phong-khach-original.webp",
+    tag: "🚚 MIỄN PHÍ VẬN CHUYỂN",
+    title: "Sofa Phòng Khách Sang Trọng",
+    desc: "Miễn phí giao hàng hỏa tốc toàn quốc cho tất cả đơn hàng từ 500.000đ trở lên.",
+  },
+  {
+    image: "/assets/images/products/San_pham/bo-ban-an-go-original.webp",
+    tag: "🔒 BẢO MẬT & ĐỒNG BỘ",
+    title: "Nội Thất Gỗ Tự Nhiên",
+    desc: "Đồng bộ giỏ hàng, danh sách yêu thích và sổ địa chỉ an toàn trên mọi thiết bị.",
+  },
+];
+
 export default function AuthPage() {
   const router = useRouter();
   const { user, signUp, signIn, logout, redeemGift, addPointsAndHistory } = useAuth();
@@ -289,6 +316,15 @@ export default function AuthPage() {
   const [authError, setAuthError] = useState("");
   const [authSuccess, setAuthSuccess] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [spotlightIndex, setSpotlightIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSpotlightIndex((prev) => (prev + 1) % SPOTLIGHT_SLIDES.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, []);
 
   React.useEffect(() => {
     if (user && user.role === "admin") {
@@ -703,18 +739,6 @@ export default function AuthPage() {
     <main className="main-content" style={{ backgroundColor: "var(--bg-main, #fcfbf9)", minHeight: "100dvh", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       <div className="container" style={{ padding: "30px 16px 60px" }}>
         
-        {/* 1. Flush-Left Directory Header (Guest view only) */}
-        {!user && (
-          <div style={{ marginBottom: "28px" }}>
-            <h1 style={{ fontSize: "32px", fontWeight: 900, color: "#0f172a", margin: "0 0 6px", letterSpacing: "-0.02em" }}>
-              Tài Khoản Khách Hàng & Đăng Nhập
-            </h1>
-            <p style={{ fontSize: "14px", color: "#64748b", margin: 0, maxWidth: "600px" }}>
-              Đăng nhập hoặc đăng ký tài khoản để theo dõi đơn hàng, tích điểm đổi quà và quản lý địa chỉ giao hàng.
-            </p>
-          </div>
-        )}
-
         <div className="auth-page-section">
           {!user ? (
             /* KHI CHƯA ĐĂNG NHẬP (Split-Screen Doppelrand Hardware Architecture) */
@@ -728,153 +752,168 @@ export default function AuthPage() {
                     alignItems: "stretch",
                   }}
                 >
-                  {/* LEFT COLUMN: BRAND BENEFITS & MEMBER PERKS BENTO CARD */}
+                  {/* LEFT COLUMN: SPOTLIGHT ANIMATED IMAGE CAROUSEL */}
                   <div
                     style={{
-                      background: "linear-gradient(145deg, #15803d 0%, #166534 60%, #052e16 100%)",
                       borderRadius: "1.5rem",
-                      padding: "36px 28px",
-                      color: "#ffffff",
+                      position: "relative",
+                      overflow: "hidden",
+                      boxShadow: "0 12px 36px rgba(0, 0, 0, 0.15)",
+                      minHeight: "520px",
                       display: "flex",
                       flexDirection: "column",
                       justifyContent: "space-between",
-                      position: "relative",
-                      overflow: "hidden",
-                      boxShadow: "0 10px 30px rgba(21, 128, 61, 0.25)",
+                      padding: "32px 28px",
+                      background: "#0f172a",
                     }}
                   >
-                    {/* Background Decorative Glow */}
+                    {/* Background Slide Images with smooth transition */}
+                    {SPOTLIGHT_SLIDES.map((slide, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          backgroundImage: `url(${slide.image})`,
+                          backgroundSize: "cover",
+                          backgroundPosition: "center",
+                          opacity: idx === spotlightIndex ? 1 : 0,
+                          transition: "opacity 0.8s ease-in-out, transform 1.2s ease-in-out",
+                          transform: idx === spotlightIndex ? "scale(1)" : "scale(1.06)",
+                        }}
+                      />
+                    ))}
+
+                    {/* Dark Gradient Overlay */}
                     <div
                       style={{
                         position: "absolute",
-                        top: "-50px",
-                        right: "-50px",
-                        width: "180px",
-                        height: "180px",
-                        borderRadius: "50%",
-                        background: "rgba(255, 255, 255, 0.08)",
-                        filter: "blur(30px)",
+                        inset: 0,
+                        background: "linear-gradient(180deg, rgba(15,23,42,0.3) 0%, rgba(15,23,42,0.85) 100%)",
                       }}
                     />
 
-                    <div>
-                      {/* Badge Header */}
+                    {/* Top Tag Badge */}
+                    <div style={{ position: "relative", zIndex: 10 }}>
                       <div
                         style={{
                           display: "inline-flex",
                           alignItems: "center",
                           gap: "6px",
-                          background: "rgba(255, 255, 255, 0.15)",
-                          backdropFilter: "blur(8px)",
-                          padding: "6px 14px",
+                          background: "rgba(255, 255, 255, 0.2)",
+                          backdropFilter: "blur(12px)",
+                          padding: "6px 16px",
                           borderRadius: "999px",
                           fontSize: "12px",
                           fontWeight: 800,
+                          color: "#ffffff",
                           letterSpacing: "0.04em",
-                          marginBottom: "20px",
-                          border: "1px solid rgba(255,255,255,0.2)",
+                          border: "1px solid rgba(255,255,255,0.3)",
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
                         }}
                       >
                         <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
-                        <span>QUYỀN LỢI THÀNH VIÊN MINI-SHOP</span>
+                        <span>{SPOTLIGHT_SLIDES[spotlightIndex].tag}</span>
                       </div>
+                    </div>
 
+                    {/* Bottom Caption Overlay & Nav Controls */}
+                    <div style={{ position: "relative", zIndex: 10, color: "#ffffff" }}>
                       <h2
                         style={{
                           fontSize: "26px",
                           fontWeight: 900,
                           lineHeight: "1.3",
-                          marginBottom: "14px",
+                          marginBottom: "10px",
                           letterSpacing: "-0.02em",
+                          textShadow: "0 2px 10px rgba(0,0,0,0.6)",
                         }}
                       >
-                        Trải Nghiệm Mua Sắm Thông Minh & Đẳng Cấp
+                        {SPOTLIGHT_SLIDES[spotlightIndex].title}
                       </h2>
 
                       <p
                         style={{
                           fontSize: "13.5px",
-                          color: "#dcfce7",
+                          color: "#e2e8f0",
                           lineHeight: "1.6",
-                          marginBottom: "28px",
+                          marginBottom: "24px",
+                          maxWidth: "380px",
+                          textShadow: "0 1px 4px rgba(0,0,0,0.6)",
                         }}
                       >
-                        Đăng nhập ngay để mở khóa trọn bộ đặc quyền tích điểm, nhận quà tặng và miễn phí giao hàng hỏa tốc.
+                        {SPOTLIGHT_SLIDES[spotlightIndex].desc}
                       </p>
 
-                      {/* Perk Bullet Cards */}
-                      <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-                        <div
-                          style={{
-                            background: "rgba(255, 255, 255, 0.08)",
-                            borderRadius: "1rem",
-                            padding: "12px 16px",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "12px",
-                            border: "1px solid rgba(255,255,255,0.12)",
-                          }}
-                        >
-                          <Gift className="w-5 h-5 text-amber-300 flex-shrink-0" />
-                          <div>
-                            <div style={{ fontSize: "13px", fontWeight: 800 }}>Tích Điểm Vòng Quay</div>
-                            <div style={{ fontSize: "12px", color: "#bbf7d0" }}>Nhận mã giảm giá & voucher độc quyền mỗi đơn</div>
-                          </div>
+                      {/* Navigation Controls: Dots & Chevrons */}
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        {/* Dot Indicators */}
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                          {SPOTLIGHT_SLIDES.map((_, i) => (
+                            <button
+                              key={i}
+                              type="button"
+                              onClick={() => setSpotlightIndex(i)}
+                              style={{
+                                width: i === spotlightIndex ? "24px" : "8px",
+                                height: "8px",
+                                borderRadius: "999px",
+                                background: i === spotlightIndex ? "var(--primary-color, #2e7d32)" : "rgba(255,255,255,0.4)",
+                                border: "none",
+                                cursor: "pointer",
+                                transition: "all 0.3s ease",
+                              }}
+                              title={`Slide ${i + 1}`}
+                            />
+                          ))}
                         </div>
 
-                        <div
-                          style={{
-                            background: "rgba(255, 255, 255, 0.08)",
-                            borderRadius: "1rem",
-                            padding: "12px 16px",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "12px",
-                            border: "1px solid rgba(255,255,255,0.12)",
-                          }}
-                        >
-                          <Truck className="w-5 h-5 text-emerald-300 flex-shrink-0" />
-                          <div>
-                            <div style={{ fontSize: "13px", fontWeight: 800 }}>Miễn Phí Vận Chuyển</div>
-                            <div style={{ fontSize: "12px", color: "#bbf7d0" }}>Freeship toàn quốc đơn từ 500.000đ</div>
-                          </div>
-                        </div>
-
-                        <div
-                          style={{
-                            background: "rgba(255, 255, 255, 0.08)",
-                            borderRadius: "1rem",
-                            padding: "12px 16px",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "12px",
-                            border: "1px solid rgba(255,255,255,0.12)",
-                          }}
-                        >
-                          <ShieldCheck className="w-5 h-5 text-cyan-300 flex-shrink-0" />
-                          <div>
-                            <div style={{ fontSize: "13px", fontWeight: 800 }}>Đồng Bộ Dữ Liệu An Toàn</div>
-                            <div style={{ fontSize: "12px", color: "#bbf7d0" }}>Lưu trữ giỏ hàng & sản phẩm yêu thích 24/7</div>
-                          </div>
+                        {/* Arrows */}
+                        <div style={{ display: "flex", gap: "8px" }}>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setSpotlightIndex((prev) => (prev - 1 + SPOTLIGHT_SLIDES.length) % SPOTLIGHT_SLIDES.length)
+                            }
+                            style={{
+                              width: "34px",
+                              height: "34px",
+                              borderRadius: "50%",
+                              background: "rgba(255,255,255,0.2)",
+                              backdropFilter: "blur(8px)",
+                              border: "1px solid rgba(255,255,255,0.3)",
+                              color: "#ffffff",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <ChevronLeft className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setSpotlightIndex((prev) => (prev + 1) % SPOTLIGHT_SLIDES.length)
+                            }
+                            style={{
+                              width: "34px",
+                              height: "34px",
+                              borderRadius: "50%",
+                              background: "rgba(255,255,255,0.2)",
+                              backdropFilter: "blur(8px)",
+                              border: "1px solid rgba(255,255,255,0.3)",
+                              color: "#ffffff",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <ChevronRight className="w-4 h-4" />
+                          </button>
                         </div>
                       </div>
-                    </div>
-
-                    {/* Trust Footer */}
-                    <div
-                      style={{
-                        marginTop: "32px",
-                        paddingTop: "20px",
-                        borderTop: "1px solid rgba(255,255,255,0.15)",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "10px",
-                        fontSize: "12.5px",
-                        color: "#dcfce7",
-                      }}
-                    >
-                      <CheckCircle2 className="w-4 h-4 text-emerald-300" />
-                      <span>Hơn 50.000+ Khách hàng tin tưởng đồng hành</span>
                     </div>
                   </div>
 
