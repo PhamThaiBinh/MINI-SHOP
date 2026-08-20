@@ -772,10 +772,22 @@ export default function AuthPage() {
     user?.vouchers.reduce((sum, v) => sum + (v.quantity || 1), 0) || 0;
 
   return (
-    <main className="main-content" style={{ backgroundColor: "var(--bg-main, #fcfbf9)", minHeight: "100dvh", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-      <div className="container" style={{ padding: "0 16px 40px", maxWidth: "1300px" }}>
+    <main
+      className="main-content"
+      style={{
+        backgroundColor: "var(--bg-main, #fcfbf9)",
+        minHeight: "calc(100vh - 76px)",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+        padding: "30px 0",
+      }}
+    >
+      <div className="container" style={{ padding: "0 16px", maxWidth: "1300px", width: "100%", margin: "0 auto" }}>
         
-        <div className="auth-page-section" style={{ padding: "0 0 40px", width: "100%" }}>
+        <div className="auth-page-section" style={{ padding: "0", width: "100%", display: "flex", justifyContent: "center", alignItems: "center" }}>
           {!user ? (
             /* KHI CHƯA ĐĂNG NHẬP (Wide Spotlight Image & Fixed Form Architecture) */
             <div className="doppelrand-outer" style={{ maxWidth: "1300px", width: "100%", margin: "0 auto" }}>
