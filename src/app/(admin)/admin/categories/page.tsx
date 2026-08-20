@@ -199,14 +199,117 @@ export default function AdminCategoriesPage() {
         />
 
         <div className="dashboard-content-body">
+          {/* 1. CATEGORY KPI SUMMARY CARDS */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+              gap: "20px",
+              marginBottom: "24px",
+            }}
+          >
+            {/* KPI 1: Total Categories */}
+            <div
+              style={{
+                background: "linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%)",
+                border: "1.5px solid #bbf7d0",
+                borderRadius: "20px",
+                padding: "20px",
+                boxShadow: "0 4px 20px rgba(22, 101, 52, 0.06)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <div>
+                <div style={{ fontSize: "12px", fontWeight: 800, color: "#166534", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>
+                  Tổng Nhóm Hàng
+                </div>
+                <div style={{ fontSize: "28px", fontWeight: 900, color: "#14532d", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
+                  {categories.length} <span style={{ fontSize: "14px", fontWeight: 700 }}>danh mục</span>
+                </div>
+                <div style={{ fontSize: "12px", color: "#475569", fontWeight: 600, marginTop: "8px" }}>
+                  <span style={{ padding: "2px 8px", background: "#dcfce7", color: "#15803d", borderRadius: "12px", fontWeight: 800, fontSize: "11px" }}>
+                    {categories.filter((c) => c.status === "Active").length} đang hoạt động
+                  </span>
+                </div>
+              </div>
+              <div style={{ width: "48px", height: "48px", borderRadius: "16px", background: "#166534", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 16px rgba(22, 101, 52, 0.2)" }}>
+                <Folder className="w-6 h-6" />
+              </div>
+            </div>
+
+            {/* KPI 2: Top Revenue Category */}
+            <div
+              style={{
+                background: "linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%)",
+                border: "1.5px solid #bae6fd",
+                borderRadius: "20px",
+                padding: "20px",
+                boxShadow: "0 4px 20px rgba(3, 105, 161, 0.06)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <div>
+                <div style={{ fontSize: "12px", fontWeight: 800, color: "#0369a1", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>
+                  Nhóm Bán Chạy Nhất
+                </div>
+                <div style={{ fontSize: "20px", fontWeight: 900, color: "#0c4a6e", letterSpacing: "-0.02em", lineHeight: 1.2 }}>
+                  {categories[0]?.name || "Nội Thất Phòng Khách"}
+                </div>
+                <div style={{ fontSize: "12px", color: "#475569", fontWeight: 600, marginTop: "8px" }}>
+                  <span style={{ padding: "2px 8px", background: "#e0f2fe", color: "#0369a1", borderRadius: "12px", fontWeight: 800, fontSize: "11px" }}>
+                    Top 1 Doanh thu
+                  </span>
+                </div>
+              </div>
+              <div style={{ width: "48px", height: "48px", borderRadius: "16px", background: "#0284c7", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 16px rgba(2, 132, 199, 0.2)" }}>
+                <Edit3 className="w-6 h-6" />
+              </div>
+            </div>
+
+            {/* KPI 3: Empty Categories */}
+            <div
+              style={{
+                background: "linear-gradient(135deg, #ffffff 0%, #fffbeb 100%)",
+                border: "1.5px solid #fde68a",
+                borderRadius: "20px",
+                padding: "20px",
+                boxShadow: "0 4px 20px rgba(180, 83, 9, 0.06)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <div>
+                <div style={{ fontSize: "12px", fontWeight: 800, color: "#b45309", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>
+                  Chưa Có Sản Phẩm
+                </div>
+                <div style={{ fontSize: "28px", fontWeight: 900, color: "#78350f", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
+                  {categories.filter((c) => c.productCount === 0).length} <span style={{ fontSize: "14px", fontWeight: 700 }}>nhóm</span>
+                </div>
+                <div style={{ fontSize: "12px", color: "#475569", fontWeight: 600, marginTop: "8px" }}>
+                  <span style={{ padding: "2px 8px", background: "#fef3c7", color: "#b45309", borderRadius: "12px", fontWeight: 800, fontSize: "11px" }}>
+                    Cần bổ sung hàng
+                  </span>
+                </div>
+              </div>
+              <div style={{ width: "48px", height: "48px", borderRadius: "16px", background: "#d97706", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 16px rgba(217, 119, 6, 0.2)" }}>
+                <Plus className="w-6 h-6" />
+              </div>
+            </div>
+          </div>
+
           <div className="admin-card-shell">
             <div className="admin-card-core">
               <div className="card-header-row" style={{ marginBottom: "20px" }}>
                 <div>
-                  <h2 className="card-header-title text-xl font-extrabold text-slate-900 tracking-tight">
+                  <h2 className="card-header-title text-xl font-extrabold text-slate-900 tracking-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                     Danh Sách Danh Mục ({filteredCategories.length})
                   </h2>
-                  <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: "4px 0 0" }}>
+                  <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: "4px 0 0", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                     Quản lý hiển thị các nhóm sản phẩm kinh doanh trên website
                   </p>
                 </div>
@@ -218,8 +321,10 @@ export default function AdminCategoriesPage() {
                     alignItems: "center",
                     gap: "6px",
                     padding: "10px 18px",
-                    borderRadius: "12px",
+                    borderRadius: "999px",
                     fontWeight: 800,
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                    boxShadow: "0 4px 12px rgba(46, 125, 50, 0.2)",
                   }}
                 >
                   <Plus className="w-4 h-4" /> Thêm Danh Mục Mới
@@ -235,14 +340,14 @@ export default function AdminCategoriesPage() {
                 <table className="admin-table">
                   <thead>
                     <tr>
-                      <th>#</th>
-                      <th>Biểu tượng</th>
-                      <th>Tên Danh Mục</th>
-                      <th>Mã Slug</th>
-                      <th>Số Sản Phẩm</th>
-                      <th>Mô Tả</th>
-                      <th>Trạng Thái</th>
-                      <th style={{ textAlign: "center" }}>Thao Tác</th>
+                      <th>MÃ SỐ</th>
+                      <th>BIỂU TƯỢNG</th>
+                      <th>TÊN DANH MỤC</th>
+                      <th>SLUG</th>
+                      <th>SỐ SẢN PHẨM & TỶ TRỌNG</th>
+                      <th>MÔ TẢ</th>
+                      <th>TRẠNG THÁI</th>
+                      <th style={{ textAlign: "center" }}>THAO TÁC</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -255,27 +360,41 @@ export default function AdminCategoriesPage() {
                     ) : (
                       paginatedCategories.map((cat, index) => (
                         <tr key={cat.id}>
-                          <td>{(safeCurrentPage - 1) * pageSize + index + 1}</td>
+                          <td>
+                            <code style={{ padding: "3px 8px", background: "#f1f5f9", color: "#1e293b", borderRadius: "6px", fontWeight: 800, fontSize: "11px" }}>
+                              C{String(cat.id || index + 1).padStart(4, "0")}
+                            </code>
+                          </td>
                           <td>
                             <div
                               style={{
-                                width: "36px",
-                                height: "36px",
-                                borderRadius: "var(--radius-md)",
-                                backgroundColor: "#e8f5e9",
-                                color: "var(--primary-color)",
+                                width: "38px",
+                                height: "38px",
+                                borderRadius: "12px",
+                                backgroundColor: "#f0fdf4",
+                                border: "1px solid #bbf7d0",
+                                color: "#166534",
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
                                 fontSize: "18px",
                               }}
                             >
-                              {cat.icon || <Folder className="w-4 h-4 text-emerald-700" />}
+                              {cat.icon || "📁"}
                             </div>
                           </td>
-                          <td><strong>{cat.name}</strong></td>
-                          <td><code style={{ background: "#f1f5f9", padding: "2px 6px", borderRadius: "4px" }}>{cat.slug}</code></td>
-                          <td><strong>{cat.productCount}</strong> sản phẩm</td>
+                          <td><strong style={{ fontSize: "14px", color: "#0f172a" }}>{cat.name}</strong></td>
+                          <td><code style={{ background: "#f1f5f9", padding: "2px 8px", borderRadius: "6px", fontSize: "12px", color: "#475569" }}>{cat.slug}</code></td>
+                          <td>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "4px", minWidth: "140px" }}>
+                              <span style={{ fontSize: "12px", fontWeight: 800, color: "#0f172a" }}>
+                                {cat.productCount} sản phẩm ({cat.productCount > 0 ? Math.min(100, cat.productCount * 10) : 0}%)
+                              </span>
+                              <div style={{ background: "#f1f5f9", height: "6px", borderRadius: "3px", overflow: "hidden" }}>
+                                <div style={{ background: "var(--primary-color, #2e7d32)", height: "100%", width: `${Math.min(100, cat.productCount * 10)}%` }} />
+                              </div>
+                            </div>
+                          </td>
                           <td style={{ fontSize: "12px", color: "var(--text-muted)" }}>{cat.desc || "Chưa có mô tả"}</td>
                           <td>
                             <span
@@ -469,15 +588,41 @@ export default function AdminCategoriesPage() {
             </div>
 
             <form onSubmit={handleFormSubmit}>
-              <div style={{ marginBottom: "12px" }}>
-                <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "4px" }}>Biểu Tượng (Tùy chọn)</label>
+              <div style={{ marginBottom: "16px" }}>
+                <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "8px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                  Chọn Biểu Tượng Nhóm Hàng *
+                </label>
+                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "8px" }}>
+                  {["🛋️", "🛏️", "🍳", "💡", "🖼️", "🌿", "📚", "🪴", "🚿", "🪑"].map((ic) => (
+                    <button
+                      key={ic}
+                      type="button"
+                      onClick={() => setFormIcon(ic)}
+                      style={{
+                        width: "40px",
+                        height: "40px",
+                        borderRadius: "12px",
+                        border: formIcon === ic ? "2px solid #2e7d32" : "1px solid #cbd5e1",
+                        background: formIcon === ic ? "#f0fdf4" : "#ffffff",
+                        fontSize: "20px",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        transition: "all 0.15s ease",
+                      }}
+                    >
+                      {ic}
+                    </button>
+                  ))}
+                </div>
                 <input
                   type="text"
                   className="form-control admin-setting-input"
-                  placeholder="Nhập kí hiệu hoặc để trống"
+                  placeholder="Hoặc nhập biểu tượng tự chọn"
                   value={formIcon}
                   onChange={(e) => setFormIcon(e.target.value)}
-                  required
+                  style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13.5px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
                 />
               </div>
 

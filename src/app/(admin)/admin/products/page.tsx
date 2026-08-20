@@ -7,7 +7,7 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { fixImagePath, formatVND } from "@/lib/utils";
 import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
-import { Edit, Trash2, Plus, X } from "lucide-react";
+import { Edit, Trash2, Plus, X, Package, AlertTriangle } from "lucide-react";
 import { saveAdminProduct, deleteAdminProduct, fetchAdminCategories } from "@/lib/supabaseAdmin";
 
 interface ProductItem {
@@ -194,14 +194,117 @@ export default function AdminProductsPage() {
         />
 
         <div className="dashboard-content-body">
+          {/* 1. INVENTORY MATRIX STATUS BAR */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+              gap: "20px",
+              marginBottom: "24px",
+            }}
+          >
+            {/* Matrix 1: Active Products */}
+            <div
+              style={{
+                background: "linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%)",
+                border: "1.5px solid #bbf7d0",
+                borderRadius: "20px",
+                padding: "20px",
+                boxShadow: "0 4px 20px rgba(22, 101, 52, 0.06)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <div>
+                <div style={{ fontSize: "12px", fontWeight: 800, color: "#166534", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>
+                  Đang Kinh Doanh
+                </div>
+                <div style={{ fontSize: "28px", fontWeight: 900, color: "#14532d", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
+                  {products.filter((p) => p.status === "Active").length} <span style={{ fontSize: "14px", fontWeight: 700 }}>mặt hàng</span>
+                </div>
+                <div style={{ fontSize: "12px", color: "#475569", fontWeight: 600, marginTop: "8px" }}>
+                  <span style={{ padding: "2px 8px", background: "#dcfce7", color: "#15803d", borderRadius: "12px", fontWeight: 800, fontSize: "11px" }}>
+                    Hiển thị công khai
+                  </span>
+                </div>
+              </div>
+              <div style={{ width: "48px", height: "48px", borderRadius: "16px", background: "#166534", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 16px rgba(22, 101, 52, 0.2)" }}>
+                <Package className="w-6 h-6" />
+              </div>
+            </div>
+
+            {/* Matrix 2: Low Stock Warning */}
+            <div
+              style={{
+                background: "linear-gradient(135deg, #ffffff 0%, #fffbeb 100%)",
+                border: "1.5px solid #fde68a",
+                borderRadius: "20px",
+                padding: "20px",
+                boxShadow: "0 4px 20px rgba(180, 83, 9, 0.06)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <div>
+                <div style={{ fontSize: "12px", fontWeight: 800, color: "#b45309", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>
+                  Cảnh Báo Tồn Thấp (&le;10)
+                </div>
+                <div style={{ fontSize: "28px", fontWeight: 900, color: "#78350f", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
+                  {products.filter((p) => (p.stock !== undefined ? p.stock : 15) <= 10).length} <span style={{ fontSize: "14px", fontWeight: 700 }}>mặt hàng</span>
+                </div>
+                <div style={{ fontSize: "12px", color: "#475569", fontWeight: 600, marginTop: "8px" }}>
+                  <span style={{ padding: "2px 8px", background: "#fef3c7", color: "#b45309", borderRadius: "12px", fontWeight: 800, fontSize: "11px" }}>
+                    Cần nhập thêm hàng
+                  </span>
+                </div>
+              </div>
+              <div style={{ width: "48px", height: "48px", borderRadius: "16px", background: "#d97706", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 16px rgba(217, 119, 6, 0.2)" }}>
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+            </div>
+
+            {/* Matrix 3: Hidden Products */}
+            <div
+              style={{
+                background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
+                border: "1.5px solid #cbd5e1",
+                borderRadius: "20px",
+                padding: "20px",
+                boxShadow: "0 4px 20px rgba(100, 116, 139, 0.06)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <div>
+                <div style={{ fontSize: "12px", fontWeight: 800, color: "#475569", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>
+                  Tạm Ẩn / Hết Hàng
+                </div>
+                <div style={{ fontSize: "28px", fontWeight: 900, color: "#1e293b", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
+                  {products.filter((p) => p.status === "Hidden").length} <span style={{ fontSize: "14px", fontWeight: 700 }}>mặt hàng</span>
+                </div>
+                <div style={{ fontSize: "12px", color: "#475569", fontWeight: 600, marginTop: "8px" }}>
+                  <span style={{ padding: "2px 8px", background: "#f1f5f9", color: "#475569", borderRadius: "12px", fontWeight: 800, fontSize: "11px" }}>
+                    Tạm ngừng hiển thị
+                  </span>
+                </div>
+              </div>
+              <div style={{ width: "48px", height: "48px", borderRadius: "16px", background: "#64748b", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 16px rgba(100, 116, 139, 0.2)" }}>
+                <Package className="w-6 h-6" />
+              </div>
+            </div>
+          </div>
+
           <div className="admin-card-shell">
             <div className="admin-card-core">
               <div className="card-header-row" style={{ marginBottom: "20px" }}>
                 <div>
-                  <h2 className="card-header-title text-xl font-extrabold text-slate-900 tracking-tight">
+                  <h2 className="card-header-title text-xl font-extrabold text-slate-900 tracking-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                     Danh Sách Sản Phẩm Kinh Doanh ({filteredProducts.length})
                   </h2>
-                  <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: "4px 0 0" }}>
+                  <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: "4px 0 0", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                     Quản lý giá bán, hình ảnh và tồn kho sản phẩm trực tuyến
                   </p>
                 </div>
@@ -209,17 +312,18 @@ export default function AdminProductsPage() {
                   <button
                     onClick={() => setOnlyLowStock(!onlyLowStock)}
                     style={{
-                      padding: "8px 14px",
+                      padding: "8px 16px",
                       fontSize: "13px",
                       fontWeight: 700,
-                      border: "1px solid #fecaca",
-                      borderRadius: "12px",
-                      background: onlyLowStock ? "#fef2f2" : "#fff",
-                      color: onlyLowStock ? "#ef4444" : "#64748b",
+                      fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      border: "1px solid #fde68a",
+                      borderRadius: "999px",
+                      background: onlyLowStock ? "#fffbeb" : "#fff",
+                      color: onlyLowStock ? "#b45309" : "#64748b",
                       cursor: "pointer",
                     }}
                   >
-                    {onlyLowStock ? "⚠️ Đang lọc: Sắp hết hàng" : "⚠️ Cảnh báo tồn thấp"}
+                    {onlyLowStock ? "⚠️ Đang lọc: Tồn kho thấp" : "⚠️ Cảnh báo tồn thấp"}
                   </button>
                   <button
                     className="btn-add-product-green"
@@ -229,8 +333,10 @@ export default function AdminProductsPage() {
                       alignItems: "center",
                       gap: "6px",
                       padding: "10px 18px",
-                      borderRadius: "12px",
+                      borderRadius: "999px",
                       fontWeight: 800,
+                      fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      boxShadow: "0 4px 12px rgba(46, 125, 50, 0.2)",
                     }}
                   >
                     <Plus className="w-4 h-4" /> Thêm Sản Phẩm Mới
@@ -247,51 +353,81 @@ export default function AdminProductsPage() {
                 <table className="admin-table">
                   <thead>
                     <tr>
-                      <th>#</th>
-                      <th>Hình ảnh</th>
-                      <th>Tên Sản Phẩm</th>
-                      <th>Danh mục</th>
-                      <th>Giá bán</th>
-                      <th>Trạng thái</th>
-                      <th style={{ textAlign: "center" }}>Thao Tác</th>
+                      <th>MÃ SỐ</th>
+                      <th>HÌNH ẢNH HD</th>
+                      <th>TÊN SẢN PHẨM</th>
+                      <th>DANH MỤC</th>
+                      <th>GIÁ BÁN</th>
+                      <th>TỔN KHO</th>
+                      <th>BẬT / TẮT BÁN</th>
+                      <th style={{ textAlign: "center" }}>THAO TÁC</th>
                     </tr>
                   </thead>
                   <tbody>
                     {paginatedProducts.length === 0 ? (
                       <tr>
-                        <td colSpan={7} style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)" }}>
+                        <td colSpan={8} style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)" }}>
                           Không có sản phẩm nào khớp với tìm kiếm.
                         </td>
                       </tr>
                     ) : (
                       paginatedProducts.map((prod, index) => (
                         <tr key={prod.id}>
-                          <td>{(safeCurrentPage - 1) * pageSize + index + 1}</td>
                           <td>
-                            <img
-                              src={fixImagePath(prod.image)}
-                              alt={prod.name}
-                              style={{ width: "40px", height: "40px", borderRadius: "6px", objectFit: "cover" }}
-                            />
+                            <code style={{ padding: "3px 8px", background: "#f1f5f9", color: "#1e293b", borderRadius: "6px", fontWeight: 800, fontSize: "11px" }}>
+                              P{String(prod.id || index + 1).padStart(4, "0")}
+                            </code>
                           </td>
-                          <td><strong>{prod.name}</strong></td>
                           <td>
-                            <span className="cat-badge cat-furniture">{prod.categoryName}</span>
+                            <div style={{ overflow: "hidden", borderRadius: "12px", width: "44px", height: "44px", border: "1px solid #e2e8f0" }}>
+                              <img
+                                src={fixImagePath(prod.image)}
+                                alt={prod.name}
+                                style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.3s ease" }}
+                                onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.15)")}
+                                onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1.0)")}
+                              />
+                            </div>
                           </td>
-                          <td style={{ fontWeight: 800, color: "var(--primary-color)" }}>{formatVND(prod.price)}</td>
+                          <td><strong style={{ fontSize: "14px", color: "#0f172a" }}>{prod.name}</strong></td>
                           <td>
-                            <span
+                            <span className="cat-badge cat-furniture" style={{ borderRadius: "8px", fontSize: "11px", fontWeight: 700 }}>
+                              {prod.categoryName}
+                            </span>
+                          </td>
+                          <td style={{ fontWeight: 900, color: "var(--primary-color, #2e7d32)", fontSize: "14px" }}>
+                            {formatVND(prod.price)}
+                          </td>
+                          <td>
+                            <span style={{ fontWeight: 800, fontSize: "13px", color: (prod.stock !== undefined ? prod.stock : 15) <= 10 ? "#b45309" : "#1e293b" }}>
+                              {prod.stock !== undefined ? prod.stock : 15} món
+                            </span>
+                          </td>
+                          <td>
+                            {/* Inline Switch Toggle */}
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                const newStatus = prod.status === "Active" ? "Hidden" : "Active";
+                                await saveAdminProduct({ ...prod, status: newStatus });
+                                await loadData();
+                              }}
                               style={{
-                                padding: "4px 8px",
-                                borderRadius: "6px",
+                                padding: "4px 10px",
+                                borderRadius: "999px",
+                                border: prod.status === "Active" ? "1px solid #bbf7d0" : "1px solid #cbd5e1",
+                                background: prod.status === "Active" ? "#f0fdf4" : "#f8fafc",
+                                color: prod.status === "Active" ? "#16532d" : "#64748b",
                                 fontSize: "11px",
-                                fontWeight: 700,
-                                background: prod.status === "Active" ? "#dcfce7" : "#fee2e2",
-                                color: prod.status === "Active" ? "#166534" : "#991b1b",
+                                fontWeight: 800,
+                                cursor: "pointer",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "4px",
                               }}
                             >
-                              {prod.status === "Active" ? "● Đang bán" : "○ Đã ẩn"}
-                            </span>
+                              {prod.status === "Active" ? "🟢 Đang bán" : "⚪ Đã ẩn"}
+                            </button>
                           </td>
                           <td style={{ textAlign: "center" }}>
                             <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
@@ -439,13 +575,14 @@ export default function AdminProductsPage() {
         </div>
       </main>
 
-      {/* FORM MODAL SẢN PHẨM MỚI / CHỈNH SỬA */}
+      {/* 2-COLUMN HIGH-END FORM MODAL SẢN PHẨM MỚI / CHỈNH SỬA */}
       {showModal && (
         <div
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(0,0,0,0.5)",
+            background: "rgba(15, 23, 42, 0.65)",
+            backdropFilter: "blur(10px)",
             zIndex: 3000,
             display: "flex",
             alignItems: "center",
@@ -454,131 +591,189 @@ export default function AdminProductsPage() {
           }}
         >
           <div
+            className="admin-card-shell"
             style={{
-              background: "#fff",
               width: "100%",
-              maxWidth: "520px",
-              borderRadius: "var(--radius-lg)",
-              padding: "24px",
-              boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
+              maxWidth: "760px",
+              borderRadius: "24px",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-              <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", margin: 0 }}>
-                {editingProduct ? "Chỉnh Sửa Sản Phẩm" : "Form Sản Phẩm Mới"}
-              </h3>
-              <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", cursor: "pointer" }}><X className="w-5 h-5 text-slate-400 hover:text-slate-600" /></button>
-            </div>
-
-            <form onSubmit={handleFormSubmit}>
-              <div style={{ marginBottom: "12px" }}>
-                <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "4px" }}>Tên Sản Phẩm *</label>
-                <input
-                  type="text"
-                  className="form-control admin-setting-input"
-                  placeholder="Ví dụ: Bàn Ăn Gỗ Sồi Tự Nhiên"
-                  value={formName}
-                  onChange={(e) => setFormName(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
-                <div>
-                  <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "4px" }}>Danh Mục (Tải Từ DB) *</label>
-                  <select
-                    className="form-control admin-setting-input"
-                    value={formCategory}
-                    onChange={(e) => setFormCategory(e.target.value)}
-                    required
-                  >
-                    {dbCategories.map((c) => (
-                      <option key={c.id} value={c.name}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "4px" }}>Giá Bán (VNĐ) *</label>
-                  <input
-                    type="number"
-                    className="form-control admin-setting-input"
-                    placeholder="Ví dụ: 3500000"
-                    value={formPrice}
-                    onChange={(e) => setFormPrice(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div style={{ marginBottom: "12px" }}>
-                <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "4px" }}>Đường Dẫn Hình Ảnh (URL hoặc Assets)</label>
-                <input
-                  type="text"
-                  className="form-control admin-setting-input"
-                  placeholder="/assets/images/products/... hoặc https://..."
-                  value={formImageUrl}
-                  onChange={(e) => setFormImageUrl(e.target.value)}
-                />
-              </div>
-
-              <div style={{ marginBottom: "12px" }}>
-                <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "4px" }}>Trạng Thái Bán</label>
-                <select
-                  className="form-control admin-setting-input"
-                  value={formStatus}
-                  onChange={(e) => setFormStatus(e.target.value as any)}
-                >
-                  <option value="Active">● Đang bán (Hiển thị công khai)</option>
-                  <option value="Hidden">○ Đã ẩn (Không hiển thị)</option>
-                </select>
-              </div>
-
-              <div style={{ marginBottom: "20px" }}>
-                <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "4px" }}>Mô Tả Sản Phẩm</label>
-                <textarea
-                  rows={3}
-                  className="form-control admin-setting-input"
-                  placeholder="Nhập mô tả chi tiết chất liệu, kích thước..."
-                  value={formDesc}
-                  onChange={(e) => setFormDesc(e.target.value)}
-                />
-              </div>
-
-              <div style={{ display: "flex", gap: "10px" }}>
+            <div className="admin-card-core" style={{ padding: "28px", borderRadius: "calc(24px - 6px)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                <h3 style={{ fontSize: "20px", fontWeight: 900, color: "#0f172a", margin: 0, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                  {editingProduct ? "Chỉnh Sửa Sản Phẩm" : "Form Thêm Sản Phẩm Mới"}
+                </h3>
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  style={{
-                    flex: 1,
-                    padding: "10px",
-                    background: "#f1f5f9",
-                    border: "none",
-                    borderRadius: "var(--radius-md)",
-                    fontWeight: 700,
-                    cursor: "pointer",
-                  }}
+                  style={{ background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: "50%", width: "32px", height: "32px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
                 >
-                  Hủy Bỏ
-                </button>
-                <button
-                  type="submit"
-                  style={{
-                    flex: 1,
-                    padding: "10px",
-                    background: "var(--primary-color)",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: "var(--radius-md)",
-                    fontWeight: 700,
-                    cursor: "pointer",
-                  }}
-                >
-                  {editingProduct ? "Lưu Cập Nhật" : "Tạo Sản Phẩm Mới"}
+                  <X className="w-4 h-4 text-slate-500" />
                 </button>
               </div>
-            </form>
+
+              <form onSubmit={handleFormSubmit}>
+                <div style={{ display: "grid", gridTemplateColumns: "240px 1fr", gap: "24px", marginBottom: "24px" }}>
+                  {/* Left Column: Image Live Preview Box */}
+                  <div>
+                    <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "6px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                      Xem Trước Hình Ảnh
+                    </label>
+                    <div
+                      style={{
+                        width: "100%",
+                        height: "220px",
+                        borderRadius: "16px",
+                        border: "2px dashed #cbd5e1",
+                        background: "#f8fafc",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        overflow: "hidden",
+                        position: "relative",
+                      }}
+                    >
+                      {formImageUrl ? (
+                        <img
+                          src={fixImagePath(formImageUrl)}
+                          alt="Preview"
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                          onError={(e) => {
+                            (e.currentTarget as any).src = "/assets/images/products/noi-that-gia-dung/sofa-phong-khach.webp";
+                          }}
+                        />
+                      ) : (
+                        <div style={{ textAlign: "center", padding: "16px", color: "#94a3b8" }}>
+                          <Package className="w-10 h-10 stroke-1 mb-2 text-slate-400" />
+                          <span style={{ fontSize: "12px", fontWeight: 600 }}>Dán URL ảnh để xem trước</span>
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ marginTop: "10px" }}>
+                      <label style={{ fontSize: "12px", fontWeight: 700, color: "#475569", display: "block", marginBottom: "4px" }}>URL Hình Ảnh *</label>
+                      <input
+                        type="text"
+                        className="form-control admin-setting-input"
+                        placeholder="/assets/images/... hoặc https://..."
+                        value={formImageUrl}
+                        onChange={(e) => setFormImageUrl(e.target.value)}
+                        style={{ fontSize: "12px", borderRadius: "10px", padding: "8px 12px" }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Right Column: Product Metadata Fields */}
+                  <div>
+                    <div style={{ marginBottom: "14px" }}>
+                      <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "4px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Tên Sản Phẩm *</label>
+                      <input
+                        type="text"
+                        className="form-control admin-setting-input"
+                        placeholder="Ví dụ: Bàn Ăn Gỗ Sồi Tự Nhiên"
+                        value={formName}
+                        onChange={(e) => setFormName(e.target.value)}
+                        required
+                        style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "14px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                      />
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "14px" }}>
+                      <div>
+                        <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "4px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Danh Mục *</label>
+                        <select
+                          className="form-control admin-setting-input"
+                          value={formCategory}
+                          onChange={(e) => setFormCategory(e.target.value)}
+                          required
+                          style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13.5px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                        >
+                          {dbCategories.map((c) => (
+                            <option key={c.id} value={c.name}>
+                              {c.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "4px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Giá Bán (VNĐ) *</label>
+                        <input
+                          type="number"
+                          className="form-control admin-setting-input"
+                          placeholder="Ví dụ: 3500000"
+                          value={formPrice}
+                          onChange={(e) => setFormPrice(e.target.value)}
+                          required
+                          style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13.5px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ marginBottom: "14px" }}>
+                      <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "4px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Trạng Thái Hiển Thị</label>
+                      <select
+                        className="form-control admin-setting-input"
+                        value={formStatus}
+                        onChange={(e) => setFormStatus(e.target.value as any)}
+                        style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13.5px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                      >
+                        <option value="Active">🟢 Đang bán (Hiển thị công khai)</option>
+                        <option value="Hidden">⚪ Đã ẩn (Không hiển thị)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "4px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Mô Tả Sản Phẩm</label>
+                      <textarea
+                        rows={3}
+                        className="form-control admin-setting-input"
+                        placeholder="Nhập mô tả chi tiết chất liệu, kích thước..."
+                        value={formDesc}
+                        onChange={(e) => setFormDesc(e.target.value)}
+                        style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowModal(false)}
+                    style={{
+                      padding: "10px 20px",
+                      borderRadius: "999px",
+                      border: "1px solid #cbd5e1",
+                      background: "#fff",
+                      fontWeight: 800,
+                      fontSize: "13px",
+                      fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      cursor: "pointer",
+                      color: "#475569",
+                    }}
+                  >
+                    Hủy Bỏ
+                  </button>
+                  <button
+                    type="submit"
+                    style={{
+                      padding: "10px 24px",
+                      borderRadius: "999px",
+                      border: "none",
+                      background: "var(--primary-color, #2e7d32)",
+                      color: "#fff",
+                      fontWeight: 900,
+                      fontSize: "13px",
+                      fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      cursor: "pointer",
+                      boxShadow: "0 4px 14px rgba(46, 125, 50, 0.25)",
+                    }}
+                  >
+                    {editingProduct ? "Lưu Cập Nhật" : "Tạo Sản Phẩm Mới"}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}

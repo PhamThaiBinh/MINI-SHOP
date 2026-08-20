@@ -398,6 +398,45 @@ export default function AdminSettingsPage() {
               >
                 <ShieldCheck className="w-4 h-4" /> Bảo mật & Phân quyền
               </div>
+
+              {/* System Backup Hub JSON Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  const backupData = {
+                    version: "2.0.0",
+                    exportedAt: new Date().toISOString(),
+                    store: { storeName, phone, email, address, workingHours, description },
+                    shippingRates,
+                  };
+                  const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(backupData, null, 2))}`;
+                  const downloadAnchor = document.createElement("a");
+                  downloadAnchor.setAttribute("href", jsonString);
+                  downloadAnchor.setAttribute("download", `minishop_config_backup_${Date.now()}.json`);
+                  document.body.appendChild(downloadAnchor);
+                  downloadAnchor.click();
+                  downloadAnchor.remove();
+                  setNotification("✅ Tải xuống file sao lưu JSON thành công!");
+                }}
+                style={{
+                  marginLeft: "auto",
+                  padding: "8px 16px",
+                  borderRadius: "999px",
+                  border: "none",
+                  background: "#0284c7",
+                  color: "#ffffff",
+                  fontSize: "12px",
+                  fontWeight: 800,
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  boxShadow: "0 4px 12px rgba(2, 132, 199, 0.2)",
+                }}
+              >
+                💾 Sao Lưu Dữ Liệu JSON
+              </button>
             </div>
 
             {/* TAB 1: THÔNG TIN CỬA HÀNG */}

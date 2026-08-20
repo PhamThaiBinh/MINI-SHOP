@@ -569,6 +569,30 @@ export default function AdminOrdersPage() {
                     />
                   </div>
 
+                  {/* Payment Method Select Filter */}
+                  <select
+                    value={paymentFilter}
+                    onChange={(e) => setPaymentFilter(e.target.value)}
+                    style={{
+                      padding: "8px 14px",
+                      fontSize: "12px",
+                      fontWeight: 800,
+                      fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      borderRadius: "999px",
+                      border: "1px solid #cbd5e1",
+                      background: "#ffffff",
+                      color: "#334155",
+                      outline: "none",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <option value="all">Tất cả thanh toán</option>
+                    <option value="VietQR">Chuyển khoản VietQR</option>
+                    <option value="MoMo">Ví MoMo</option>
+                    <option value="ZaloPay">Ví ZaloPay</option>
+                    <option value="COD">Thanh toán khi nhận hàng (COD)</option>
+                  </select>
+
                   {(searchQuery || paymentFilter !== "all" || fromDate || toDate || activeTab !== "all") && (
                     <button
                       onClick={() => {

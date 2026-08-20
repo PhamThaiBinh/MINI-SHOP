@@ -152,14 +152,60 @@ export default function AdminVouchersPage() {
         />
 
         <div className="dashboard-content-body">
+          {/* 1. TICKET CARD STUDIO (VISUAL COUPON CARDS GRID) */}
+          <div style={{ marginBottom: "24px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
+              <Ticket className="w-5 h-5 text-emerald-700" />
+              <h3 style={{ fontSize: "18px", fontWeight: 900, color: "#0f172a", margin: 0, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                Kho Vé Khuyến Mãi (Ticket Studio)
+              </h3>
+            </div>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                gap: "16px",
+              }}
+            >
+              {vouchers.slice(0, 3).map((v) => (
+                <div
+                  key={v.code}
+                  style={{
+                    background: "linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%)",
+                    border: "1.5px dashed #2e7d32",
+                    borderRadius: "16px",
+                    padding: "16px 20px",
+                    boxShadow: "0 4px 14px rgba(46, 125, 50, 0.08)",
+                    position: "relative",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                    <span style={{ fontSize: "14px", fontWeight: 900, color: "#166534", letterSpacing: "0.05em" }}>
+                      🎟️ {v.code}
+                    </span>
+                    <span style={{ padding: "2px 8px", background: v.isActive ? "#dcfce7" : "#ffe4e6", color: v.isActive ? "#15803d" : "#be123c", borderRadius: "10px", fontSize: "10px", fontWeight: 800 }}>
+                      {v.isActive ? "ĐANG ÁP DỤNG" : "ĐÃ TẠM TẮT"}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: "12px", color: "#334155", fontWeight: 700, marginBottom: "8px" }}>
+                    {v.desc}
+                  </div>
+                  <div style={{ fontSize: "11px", color: "#64748b" }}>
+                    Đơn tối thiểu: <strong>{(v.minOrder || 0).toLocaleString()}đ</strong>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div className="admin-card-shell">
             <div className="admin-card-core">
               <div className="card-header-row" style={{ marginBottom: "20px" }}>
                 <div>
-                  <h2 className="card-header-title text-xl font-extrabold text-slate-900 tracking-tight">
+                  <h2 className="card-header-title text-xl font-extrabold text-slate-900 tracking-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                     Danh Sách Mã Voucher ({filteredVouchers.length})
                   </h2>
-                  <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: "4px 0 0" }}>
+                  <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: "4px 0 0", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                     Tạo và điều chỉnh chính sách ưu đãi chiết khấu khuyến mãi cho cửa hàng
                   </p>
                 </div>
@@ -171,8 +217,10 @@ export default function AdminVouchersPage() {
                     alignItems: "center",
                     gap: "6px",
                     padding: "10px 18px",
-                    borderRadius: "12px",
+                    borderRadius: "999px",
                     fontWeight: 800,
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                    boxShadow: "0 4px 12px rgba(46, 125, 50, 0.2)",
                   }}
                 >
                   <Ticket className="w-4 h-4" /> Tạo Mã Voucher Mới
@@ -188,13 +236,13 @@ export default function AdminVouchersPage() {
                 <table className="admin-table">
                   <thead>
                     <tr>
-                      <th>#</th>
-                      <th>Mã Voucher</th>
-                      <th>Mô Tả Chương Trình</th>
-                      <th>Mức Giảm Giá</th>
-                      <th>Đơn Tối Thiểu</th>
-                      <th>Trạng Thái</th>
-                      <th style={{ textAlign: "center" }}>Thao Tác</th>
+                      <th>MÃ SỐ</th>
+                      <th>MÃ VOUCHER</th>
+                      <th>MÔ TẢ CHƯƠNG TRÌNH</th>
+                      <th>MỨC GIẢM GIÁ</th>
+                      <th>ĐƠN TỐI THIỂU</th>
+                      <th>TRẠNG THÁI</th>
+                      <th style={{ textAlign: "center" }}>THAO TÁC</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -207,16 +255,20 @@ export default function AdminVouchersPage() {
                     ) : (
                       paginatedVouchers.map((v, index) => (
                         <tr key={v.code}>
-                          <td>{(safeCurrentPage - 1) * pageSize + index + 1}</td>
+                          <td>
+                            <code style={{ padding: "3px 8px", background: "#f1f5f9", color: "#1e293b", borderRadius: "6px", fontWeight: 800, fontSize: "11px" }}>
+                              V{String(index + 1).padStart(4, "0")}
+                            </code>
+                          </td>
                           <td>
                             <span
                               style={{
                                 background: "#f0fdf4",
-                                border: "1px dashed var(--primary-color)",
-                                color: "var(--primary-color)",
-                                padding: "4px 8px",
-                                borderRadius: "4px",
-                                fontWeight: 800,
+                                border: "1.5px dashed #2e7d32",
+                                color: "#166534",
+                                padding: "4px 10px",
+                                borderRadius: "8px",
+                                fontWeight: 900,
                                 fontSize: "13px",
                                 display: "inline-flex",
                                 alignItems: "center",
@@ -427,16 +479,44 @@ export default function AdminVouchersPage() {
             </div>
 
             <form onSubmit={handleFormSubmit} style={{ padding: "24px" }}>
-              <div style={{ marginBottom: "12px" }}>
-                <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "4px" }}>Mã Ưu Đãi (Voucher Code) *</label>
+              <div style={{ marginBottom: "16px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                  <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", margin: 0, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                    Mã Ưu Đãi (Voucher Code) *
+                  </label>
+                  {!editingVoucher && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const prefixes = ["MINISHOP", "HE2026", "KM", "DEAL", "SUMMER"];
+                        const randomNum = Math.floor(10 + Math.random() * 90);
+                        const randomPref = prefixes[Math.floor(Math.random() * prefixes.length)];
+                        setFormCode(`${randomPref}${randomNum}`);
+                      }}
+                      style={{
+                        background: "#e0f2fe",
+                        color: "#0369a1",
+                        border: "none",
+                        borderRadius: "8px",
+                        padding: "2px 8px",
+                        fontSize: "11px",
+                        fontWeight: 800,
+                        cursor: "pointer",
+                      }}
+                    >
+                      ✨ Tạo Mã Ngẫu Nhiên
+                    </button>
+                  )}
+                </div>
                 <input
                   type="text"
                   className="form-control admin-setting-input"
                   placeholder="Ví dụ: MINISHOP50, FREESHIP"
                   value={formCode}
-                  onChange={(e) => setFormCode(e.target.value)}
+                  onChange={(e) => setFormCode(e.target.value.toUpperCase())}
                   disabled={Boolean(editingVoucher)}
                   required
+                  style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "14px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
                 />
               </div>
 

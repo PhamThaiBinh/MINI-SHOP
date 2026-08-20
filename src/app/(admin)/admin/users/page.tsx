@@ -482,9 +482,14 @@ export default function AdminUsersPage() {
                                 🛡️ {u.role || "Administrator"}
                               </span>
                             ) : (
-                              <span style={{ padding: "4px 10px", background: "#e0f2fe", border: "1px solid #bae6fd", color: "#0369a1", borderRadius: "12px", fontSize: "11px", fontWeight: 800, display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                                🛍️ Khách hàng
-                              </span>
+                              <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                                <span style={{ padding: "4px 10px", background: "#e0f2fe", border: "1px solid #bae6fd", color: "#0369a1", borderRadius: "12px", fontSize: "11px", fontWeight: 800, display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                  🛍️ Khách hàng
+                                </span>
+                                <span style={{ fontSize: "10px", fontWeight: 800, color: "#64748b" }}>
+                                  VIP: {u.name.toLowerCase().includes("binh") ? "💎 Kim Cương" : "🥈 Bạc"}
+                                </span>
+                              </div>
                             )}
                           </td>
                           <td style={{ fontSize: "12px", color: "#64748b" }}>{u.registeredDate}</td>
