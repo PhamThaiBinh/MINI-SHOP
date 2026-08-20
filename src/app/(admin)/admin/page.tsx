@@ -525,7 +525,7 @@ export default function AdminDashboard() {
                               onClick={() => {
                                 setChartGroup(cat.key as any);
                                 if (cat.key === "day") setChartSubPreset("30d");
-                                else if (cat.key === "month") setChartSubPreset("this_month");
+                                else if (cat.key === "month") setChartSubPreset(`m${new Date().getMonth() + 1}`);
                                 else if (cat.key === "quarter") setChartSubPreset("all_quarters");
                                 else if (cat.key === "year") setChartSubPreset("2026");
                               }}
@@ -581,43 +581,48 @@ export default function AdminDashboard() {
 
                           {chartGroup === "month" && (
                             <>
-                              {[
-                                { key: "this_month", label: "Tháng này" },
-                                { key: "last_month", label: "Tháng trước" },
-                                { key: "3m", label: "3 tháng gần nhất" },
-                                { key: "6m", label: "6 tháng gần nhất" },
-                                { key: "m1", label: "Tháng 1" },
-                                { key: "m2", label: "Tháng 2" },
-                                { key: "m3", label: "Tháng 3" },
-                                { key: "m4", label: "Tháng 4" },
-                                { key: "m5", label: "Tháng 5" },
-                                { key: "m6", label: "Tháng 6" },
-                                { key: "m7", label: "Tháng 7" },
-                                { key: "m8", label: "Tháng 8" },
-                                { key: "m9", label: "Tháng 9" },
-                                { key: "m10", label: "Tháng 10" },
-                                { key: "m11", label: "Tháng 11" },
-                                { key: "m12", label: "Tháng 12" },
-                              ].map((p) => (
-                                <button
-                                  key={p.key}
-                                  type="button"
-                                  onClick={() => setChartSubPreset(p.key)}
-                                  style={{
-                                    padding: "6px 14px",
-                                    borderRadius: "999px",
-                                    border: chartSubPreset === p.key ? "none" : "1px solid #cbd5e1",
-                                    background: chartSubPreset === p.key ? "#0284c7" : "#ffffff",
-                                    color: chartSubPreset === p.key ? "#ffffff" : "#475569",
-                                    fontSize: "12px",
-                                    fontWeight: 800,
-                                    fontFamily: "'Plus Jakarta Sans', sans-serif",
-                                    cursor: "pointer",
-                                  }}
-                                >
-                                  {p.label}
-                                </button>
-                              ))}
+                              {Array.from({ length: 12 }, (_, i) => i + 1).map((monthNum) => {
+                                const key = `m${monthNum}`;
+                                const currentRealMonth = today.getMonth() + 1;
+                                const isFutureMonth = monthNum > currentRealMonth;
+                                const isSelected = chartSubPreset === key;
+
+                                return (
+                                  <button
+                                    key={key}
+                                    type="button"
+                                    disabled={isFutureMonth}
+                                    onClick={() => !isFutureMonth && setChartSubPreset(key)}
+                                    title={isFutureMonth ? `Tháng ${monthNum} chưa diễn ra (Hiện tại: Tháng ${currentRealMonth})` : `Xem báo cáo Tháng ${monthNum}`}
+                                    style={{
+                                      padding: "6px 14px",
+                                      borderRadius: "999px",
+                                      border: isSelected
+                                        ? "none"
+                                        : isFutureMonth
+                                        ? "1px dashed #e2e8f0"
+                                        : "1px solid #cbd5e1",
+                                      background: isSelected
+                                        ? "#0284c7"
+                                        : isFutureMonth
+                                        ? "#f1f5f9"
+                                        : "#ffffff",
+                                      color: isSelected
+                                        ? "#ffffff"
+                                        : isFutureMonth
+                                        ? "#cbd5e1"
+                                        : "#475569",
+                                      fontSize: "12px",
+                                      fontWeight: 800,
+                                      fontFamily: "'Plus Jakarta Sans', sans-serif",
+                                      cursor: isFutureMonth ? "not-allowed" : "pointer",
+                                      opacity: isFutureMonth ? 0.6 : 1,
+                                    }}
+                                  >
+                                    Tháng {monthNum} {isFutureMonth ? "🔒" : ""}
+                                  </button>
+                                );
+                              })}
                             </>
                           )}
 
