@@ -1170,243 +1170,272 @@ export default function AuthPage() {
               </div>
             </div>
           ) : (
-            /* KHI ĐÃ ĐĂNG NHẬP (USER DASHBOARD - Doppelrand Hardware Container) */
-            <div className="doppelrand-outer" style={{ width: "100%" }}>
-              <div className="doppelrand-inner" style={{ padding: "20px" }}>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "260px 1fr",
-                    gap: "20px",
-                    minHeight: "560px",
-                  }}
-                >
-                  {/* Left Navigation Sidebar */}
-                <aside
-                  style={{
-                    background: "#f8fafc",
-                    borderRight: "1px solid var(--border-color)",
-                    padding: "24px 16px",
-                  }}
-                >
+            /* KHI ĐÃ ĐĂNG NHẬP (AUTHENTICATED CUSTOMER DASHBOARD) */
+            <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+              {/* 1. TOP VIP PROFILE HEADER CARD */}
+              <div
+                style={{
+                  background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #2e7d32 100%)",
+                  borderRadius: "20px",
+                  padding: "24px 28px",
+                  marginBottom: "24px",
+                  color: "#ffffff",
+                  boxShadow: "0 10px 30px rgba(0, 0, 0, 0.12)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  flexWrap: "wrap",
+                  gap: "20px",
+                  position: "relative",
+                  overflow: "hidden",
+                }}
+              >
+                {/* Subtle Radial Ambient Glow */}
+                <div style={{ position: "absolute", top: "-60px", right: "-60px", width: "240px", height: "240px", background: "radial-gradient(circle, rgba(74, 222, 128, 0.25) 0%, rgba(0,0,0,0) 70%)", borderRadius: "50%", pointerEvents: "none" }} />
+
+                {/* Left: User Avatar & Info */}
+                <div style={{ display: "flex", alignItems: "center", gap: "18px", zIndex: 2 }}>
                   <div
                     style={{
-                      textAlign: "center",
-                      paddingBottom: "20px",
-                      borderBottom: "1px solid var(--border-color)",
-                      marginBottom: "20px",
+                      width: "68px",
+                      height: "68px",
+                      borderRadius: "50%",
+                      background: "linear-gradient(135deg, #2e7d32, #4ade80)",
+                      color: "#ffffff",
+                      fontSize: "26px",
+                      fontWeight: 900,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      boxShadow: "0 6px 16px rgba(46, 125, 50, 0.4)",
+                      border: "3px solid rgba(255, 255, 255, 0.3)",
+                      flexShrink: 0,
                     }}
                   >
-                    <div
-                      style={{
-                        width: "64px",
-                        height: "64px",
-                        borderRadius: "50%",
-                        background: "var(--primary-color)",
-                        color: "#fff",
-                        fontSize: "24px",
-                        fontWeight: 800,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        margin: "0 auto 12px",
-                      }}
-                    >
-                      {user.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "16px",
-                        fontWeight: 800,
-                        color: "#0f172a",
-                      }}
-                    >
-                      {user.name}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "12px",
-                        color: "var(--text-muted)",
-                        marginTop: "2px",
-                      }}
-                    >
-                      @{user.username} •{" "}
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                      <h2 style={{ fontSize: "22px", fontWeight: 900, margin: 0, color: "#ffffff", letterSpacing: "-0.01em" }}>
+                        {user.name}
+                      </h2>
                       <span
                         style={{
-                          color: "var(--primary-color)",
-                          fontWeight: 700,
+                          padding: "4px 12px",
+                          borderRadius: "999px",
+                          background: "rgba(255, 255, 255, 0.15)",
+                          backdropFilter: "blur(8px)",
+                          border: "1px solid rgba(255, 255, 255, 0.25)",
+                          fontSize: "12px",
+                          fontWeight: 800,
+                          color: "#86efac",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "4px",
                         }}
                       >
-                        {user.points} Điểm
+                        <Crown className="w-3.5 h-3.5 text-emerald-400" /> {(user as any).tier || (user.points >= 500 ? "Thành viên Vàng" : "Thành viên Bạc")}
                       </span>
+                    </div>
+                    <p style={{ fontSize: "13px", color: "#94a3b8", margin: "4px 0 0" }}>
+                      @{user.username || "user"} • {user.email}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Right: 3 Quick Metric Stat Cards */}
+                <div style={{ display: "flex", alignItems: "center", gap: "14px", zIndex: 2, flexWrap: "wrap" }}>
+                  <div style={{ background: "rgba(255,255,255,0.08)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: "14px", padding: "10px 18px", textAlign: "center", minWidth: "110px" }}>
+                    <div style={{ fontSize: "11px", fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>Điểm Thưởng</div>
+                    <div style={{ fontSize: "19px", fontWeight: 900, color: "#86efac", marginTop: "2px", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}>
+                      <Sparkles className="w-4 h-4 text-emerald-400" />
+                      {user.points.toLocaleString("vi-VN")}
                     </div>
                   </div>
 
-                  <ul
-                    style={{
-                      listStyle: "none",
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "6px",
-                    }}
-                  >
+                  <div style={{ background: "rgba(255,255,255,0.08)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: "14px", padding: "10px 18px", textAlign: "center", minWidth: "100px" }}>
+                    <div style={{ fontSize: "11px", fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>Đơn Hàng</div>
+                    <div style={{ fontSize: "19px", fontWeight: 900, color: "#ffffff", marginTop: "2px" }}>
+                      {liveOrders.length}
+                    </div>
+                  </div>
+
+                  <div style={{ background: "rgba(255,255,255,0.08)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: "14px", padding: "10px 18px", textAlign: "center", minWidth: "100px" }}>
+                    <div style={{ fontSize: "11px", fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>Voucher</div>
+                    <div style={{ fontSize: "19px", fontWeight: 900, color: "#ffffff", marginTop: "2px" }}>
+                      {totalVouchersCount}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. MAIN 2-COLUMN DASHBOARD GRID */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "270px 1fr",
+                  gap: "24px",
+                  alignItems: "start",
+                }}
+              >
+                {/* Left Navigation Sidebar Card */}
+                <aside
+                  style={{
+                    background: "#ffffff",
+                    borderRadius: "18px",
+                    border: "1px solid #e2e8f0",
+                    padding: "20px 16px",
+                    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.04)",
+                  }}
+                >
+                  <div style={{ paddingBottom: "14px", marginBottom: "14px", borderBottom: "1px solid #f1f5f9" }}>
+                    <div style={{ fontSize: "11px", fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em", paddingLeft: "10px" }}>
+                      DANH MỤC QUẢN LÝ
+                    </div>
+                  </div>
+
+                  <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "6px", margin: 0, padding: 0 }}>
                     <li>
                       <button
-                        className={`user-menu-btn ${
-                          dashboardTab === "profile" ? "active" : ""
-                        }`}
+                        type="button"
                         onClick={() => setDashboardTab("profile")}
                         style={{
                           width: "100%",
                           textAlign: "left",
                           padding: "12px 14px",
-                          borderRadius: "var(--radius-md)",
+                          borderRadius: "12px",
                           border: "none",
                           fontSize: "14px",
-                          fontWeight: 700,
+                          fontWeight: 800,
                           cursor: "pointer",
-                          background:
-                            dashboardTab === "profile"
-                              ? "#e8f5e9"
-                              : "transparent",
-                          color:
-                            dashboardTab === "profile"
-                              ? "var(--primary-color)"
-                              : "var(--text-main)",
+                          transition: "all 0.2s ease",
+                          background: dashboardTab === "profile" ? "#e8f5e9" : "transparent",
+                          color: dashboardTab === "profile" ? "var(--primary-color, #2e7d32)" : "#334155",
                           display: "flex",
                           alignItems: "center",
                           gap: "10px",
                         }}
                       >
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}><User className="w-4 h-4 text-emerald-700" /> Hồ sơ cá nhân</span>
+                        <User className={`w-4 h-4 ${dashboardTab === "profile" ? "text-emerald-700" : "text-slate-400"}`} />
+                        <span>Hồ sơ cá nhân</span>
                       </button>
                     </li>
                     <li>
                       <button
-                        className={`user-menu-btn ${
-                          dashboardTab === "rewards" ? "active" : ""
-                        }`}
+                        type="button"
                         onClick={() => setDashboardTab("rewards")}
                         style={{
                           width: "100%",
                           textAlign: "left",
                           padding: "12px 14px",
-                          borderRadius: "var(--radius-md)",
+                          borderRadius: "12px",
                           border: "none",
                           fontSize: "14px",
-                          fontWeight: 700,
+                          fontWeight: 800,
                           cursor: "pointer",
-                          background:
-                            dashboardTab === "rewards"
-                              ? "#e8f5e9"
-                              : "transparent",
-                          color:
-                            dashboardTab === "rewards"
-                              ? "var(--primary-color)"
-                              : "var(--text-main)",
+                          transition: "all 0.2s ease",
+                          background: dashboardTab === "rewards" ? "#e8f5e9" : "transparent",
+                          color: dashboardTab === "rewards" ? "var(--primary-color, #2e7d32)" : "#334155",
                           display: "flex",
                           alignItems: "center",
                           gap: "10px",
                         }}
                       >
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}><Gift className="w-4 h-4 text-emerald-700" /> Tích điểm & Đổi quà</span>
+                        <Gift className={`w-4 h-4 ${dashboardTab === "rewards" ? "text-emerald-700" : "text-slate-400"}`} />
+                        <span>Tích điểm & Đổi quà</span>
                       </button>
                     </li>
                     <li>
                       <button
-                        className={`user-menu-btn ${
-                          dashboardTab === "orders" ? "active" : ""
-                        }`}
+                        type="button"
                         onClick={() => setDashboardTab("orders")}
                         style={{
                           width: "100%",
                           textAlign: "left",
                           padding: "12px 14px",
-                          borderRadius: "var(--radius-md)",
+                          borderRadius: "12px",
                           border: "none",
                           fontSize: "14px",
-                          fontWeight: 700,
+                          fontWeight: 800,
                           cursor: "pointer",
-                          background:
-                            dashboardTab === "orders"
-                              ? "#e8f5e9"
-                              : "transparent",
-                          color:
-                            dashboardTab === "orders"
-                              ? "var(--primary-color)"
-                              : "var(--text-main)",
+                          transition: "all 0.2s ease",
+                          background: dashboardTab === "orders" ? "#e8f5e9" : "transparent",
+                          color: dashboardTab === "orders" ? "var(--primary-color, #2e7d32)" : "#334155",
                           display: "flex",
                           alignItems: "center",
                           gap: "10px",
                         }}
                       >
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}><Package className="w-4 h-4 text-emerald-700" /> Quản lý đơn hàng</span>
+                        <Package className={`w-4 h-4 ${dashboardTab === "orders" ? "text-emerald-700" : "text-slate-400"}`} />
+                        <span>Quản lý đơn hàng</span>
                       </button>
                     </li>
                     <li>
                       <button
-                        className={`user-menu-btn ${
-                          dashboardTab === "address" ? "active" : ""
-                        }`}
+                        type="button"
                         onClick={() => setDashboardTab("address")}
                         style={{
                           width: "100%",
                           textAlign: "left",
                           padding: "12px 14px",
-                          borderRadius: "var(--radius-md)",
+                          borderRadius: "12px",
                           border: "none",
                           fontSize: "14px",
-                          fontWeight: 700,
+                          fontWeight: 800,
                           cursor: "pointer",
-                          background:
-                            dashboardTab === "address"
-                              ? "#e8f5e9"
-                              : "transparent",
-                          color:
-                            dashboardTab === "address"
-                              ? "var(--primary-color)"
-                              : "var(--text-main)",
+                          transition: "all 0.2s ease",
+                          background: dashboardTab === "address" ? "#e8f5e9" : "transparent",
+                          color: dashboardTab === "address" ? "var(--primary-color, #2e7d32)" : "#334155",
                           display: "flex",
                           alignItems: "center",
                           gap: "10px",
                         }}
                       >
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}><MapPin className="w-4 h-4 text-emerald-700" /> Sổ địa chỉ nhận hàng</span>
+                        <MapPin className={`w-4 h-4 ${dashboardTab === "address" ? "text-emerald-700" : "text-slate-400"}`} />
+                        <span>Sổ địa chỉ nhận hàng</span>
                       </button>
                     </li>
-                    <li
-                      style={{
-                        marginTop: "16px",
-                        borderTop: "1px solid var(--border-color)",
-                        paddingTop: "16px",
-                      }}
-                    >
+
+                    <li style={{ marginTop: "16px", borderTop: "1px solid #f1f5f9", paddingTop: "14px" }}>
                       <button
+                        type="button"
                         onClick={handleLogoutClick}
                         style={{
                           width: "100%",
                           textAlign: "left",
-                          padding: "10px 14px",
-                          borderRadius: "var(--radius-md)",
+                          padding: "11px 14px",
+                          borderRadius: "12px",
                           border: "1px solid #fecaca",
                           background: "#fef2f2",
-                          color: "#ef4444",
-                          fontSize: "13px",
-                          fontWeight: 700,
+                          color: "#dc2626",
+                          fontSize: "13.5px",
+                          fontWeight: 800,
                           cursor: "pointer",
                           display: "flex",
                           alignItems: "center",
                           gap: "8px",
+                          transition: "all 0.2s ease",
                         }}
                       >
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}><LogOut className="w-4 h-4 text-red-600" /> Đăng xuất tài khoản</span>
+                        <LogOut className="w-4 h-4 text-red-600" />
+                        <span>Đăng xuất tài khoản</span>
                       </button>
                     </li>
                   </ul>
                 </aside>
 
-                {/* Main Content Body */}
-                <div style={{ padding: "28px", overflowY: "auto" }}>
+                {/* Right Content Panel Card */}
+                <div
+                  style={{
+                    background: "#ffffff",
+                    borderRadius: "18px",
+                    border: "1px solid #e2e8f0",
+                    padding: "28px",
+                    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.04)",
+                    minHeight: "560px",
+                  }}
+                >
                   {/* Feedback Notification */}
                   {redeemFeedback && (
                     <div
@@ -1523,11 +1552,21 @@ export default function AuthPage() {
                           fontSize: "20px",
                           fontWeight: 800,
                           color: "#0f172a",
-                          marginBottom: "16px",
+                          marginBottom: "4px",
                         }}
                       >
                         Tích Điểm & Đổi Quà Thưởng
                       </h2>
+                      <p
+                        style={{
+                          fontSize: "13px",
+                          color: "var(--text-muted)",
+                          marginBottom: "20px",
+                        }}
+                      >
+                        Tích lũy điểm khi mua sắm để đổi các voucher giảm giá và
+                        quà tặng độc quyền.
+                      </p>
 
                       {/* Card Điểm Số */}
                       <div
@@ -2825,13 +2864,12 @@ export default function AuthPage() {
                             </div>
                           </div>
                         ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
                 </div>
               </div>
             </div>
-          </div>
           )}
         </div>
       </div>
