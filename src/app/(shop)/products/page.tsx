@@ -23,6 +23,13 @@ import {
   ArrowRight,
   LayoutGrid,
   List as ListIcon,
+  Check,
+  ShoppingCart,
+  ChevronLeft,
+  ChevronRight,
+  SlidersHorizontal,
+  RotateCcw,
+  Zap,
 } from "lucide-react";
 
 function ProductsContent() {
@@ -32,6 +39,7 @@ function ProductsContent() {
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [addedId, setAddedId] = useState<number | null>(null);
 
   const initialCat = searchParams.get("category") || "All";
   const initialPrice = searchParams.get("price") || "all";
@@ -41,11 +49,10 @@ function ProductsContent() {
   const [currentPriceRange, setCurrentPriceRange] = useState<string>(initialPrice);
   const [searchQuery, setSearchQuery] = useState<string>(initialSearch);
   const [sortBy, setSortBy] = useState<string>("newest");
-  const [inStockOnly, setInStockOnly] = useState<boolean>(false);
   const [selectedMaterial, setSelectedMaterial] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [pageSize, setPageSize] = useState<number>(12);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const itemsPerPage = 12;
 
   // Sync searchParams URL -> State
   useEffect(() => {
@@ -149,622 +156,505 @@ function ProductsContent() {
     return true;
   };
 
-  // Helper count for category items
-  const getCategoryCount = (catId: string) => {
-    return products.filter(
-      (p) =>
-        matchesCategory(p.category, catId, p.categoryName) &&
-        matchesPriceRange(p.price, currentPriceRange) &&
-        matchesMaterial(p, selectedMaterial) &&
-        p.name.toLowerCase().includes(searchQuery.toLowerCase())
-    ).length;
-  };
-
-  // Helper count for price items
-  const getPriceCount = (rangeId: string) => {
-    return products.filter(
-      (p) =>
-        matchesCategory(p.category, currentCategory, p.categoryName) &&
-        matchesPriceRange(p.price, rangeId) &&
-        matchesMaterial(p, selectedMaterial) &&
-        p.name.toLowerCase().includes(searchQuery.toLowerCase())
-    ).length;
-  };
-
   const filteredProducts = useMemo(() => {
-    let result = products.filter((product) => {
-      const matchCat = matchesCategory(product.category, currentCategory, product.categoryName);
-      const matchSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchPrice = matchesPriceRange(product.price, currentPriceRange);
-      const matchMat = matchesMaterial(product, selectedMaterial);
-      const matchStock = inStockOnly ? (product.stock ?? 50) > 0 : true;
+    return products
+      .filter((p) => matchesCategory(p.category, currentCategory, p.categoryName))
+      .filter((p) => matchesPriceRange(p.price, currentPriceRange))
+      .filter((p) => matchesMaterial(p, selectedMaterial))
+      .filter((p) => {
+        if (!searchQuery.trim()) return true;
+        const q = searchQuery.toLowerCase().trim();
+        return (
+          p.name.toLowerCase().includes(q) ||
+          (p.description || "").toLowerCase().includes(q) ||
+          (p.categoryName || "").toLowerCase().includes(q)
+        );
+      })
+      .sort((a, b) => {
+        if (sortBy === "price-low") return a.price - b.price;
+        if (sortBy === "price-high") return b.price - a.price;
+        if (sortBy === "name") return a.name.localeCompare(b.name);
+        return b.id - a.id;
+      });
+  }, [products, currentCategory, currentPriceRange, selectedMaterial, searchQuery, sortBy]);
 
-      return matchCat && matchSearch && matchPrice && matchMat && matchStock;
-    });
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [currentCategory, currentPriceRange, selectedMaterial, searchQuery, sortBy]);
 
-    if (sortBy === "price-asc") {
-      result.sort((a, b) => a.price - b.price);
-    } else if (sortBy === "price-desc") {
-      result.sort((a, b) => b.price - a.price);
-    } else if (sortBy === "bestselling") {
-      result.sort((a, b) => (b.reviews || 0) - (a.reviews || 0));
-    } else if (sortBy === "newest") {
-      result.sort((a, b) => b.id - a.id);
+  // Pagination Math
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage) || 1;
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredProducts.slice(start, start + itemsPerPage);
+  }, [filteredProducts, currentPage, itemsPerPage]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 300, behavior: "smooth" });
     }
+  };
 
-    return result;
-  }, [products, currentCategory, currentPriceRange, searchQuery, selectedMaterial, inStockOnly, sortBy]);
+  const handleResetFilters = () => {
+    setCurrentCategory("All");
+    setCurrentPriceRange("all");
+    setSelectedMaterial("all");
+    setSearchQuery("");
+    setSortBy("newest");
+  };
 
-  const currentCategoryLabel =
-    categories.find((c) => c.id === currentCategory)?.label || "Tất cả sản phẩm";
+  const isFilterActive =
+    currentCategory !== "All" ||
+    currentPriceRange !== "all" ||
+    selectedMaterial !== "all" ||
+    searchQuery.trim() !== "";
 
   return (
-    <>
-      {/* Container 1300px */}
-      <div className="container" style={{ paddingTop: "24px" }}>
-        {/* Main Product Catalogue Layout (2 Columns) */}
-        <div className="product-page-layout">
-          {/* Left Filter Sidebar */}
-          <aside className="filter-sidebar">
-            {/* Category Filter Group */}
-            <div className="filter-group">
-              <div className="filter-group-title">Danh mục sản phẩm</div>
-              <ul className="filter-list" id="category-filter-list">
-                {categories.map((cat) => (
-                  <li
-                    key={cat.id}
-                    className={`filter-item ${
-                      currentCategory === cat.id ? "active" : ""
-                    }`}
-                    onClick={() => {
-                      setCurrentCategory(cat.id);
-                      setCurrentPage(1);
-                    }}
-                  >
-                    <div className="filter-item-left">
-                      <span>{cat.icon}</span> {cat.label}
-                    </div>
-                    <span className="filter-count">
-                      {getCategoryCount(cat.id)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+    <main
+      style={{
+        backgroundColor: "var(--bg-main, #fcfbf9)",
+        minHeight: "100dvh",
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+        paddingBottom: "60px",
+      }}
+    >
+      <div className="container" style={{ padding: "30px 16px 0" }}>
 
-            <hr style={{ border: 0, borderTop: "1px solid var(--border-color)" }} />
-
-            {/* Price Filter Group (VND) */}
-            <div className="filter-group">
-              <div className="filter-group-title">Mức giá (VND)</div>
-              <div
-                style={{ display: "flex", flexDirection: "column", gap: "8px" }}
-                id="price-filter-list"
-              >
-                {priceRanges.map((range) => (
-                  <label
-                    key={range.id}
-                    className="filter-option"
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <input
-                        type="radio"
-                        name="price-range"
-                        value={range.id}
-                        checked={currentPriceRange === range.id}
-                        onChange={(e) => {
-                          setCurrentPriceRange(e.target.value);
-                          setCurrentPage(1);
-                        }}
-                        style={{ cursor: "pointer" }}
-                      />
-                      <span style={{ fontSize: "14px", color: "var(--text-main)" }}>{range.label}</span>
-                    </div>
-                    <span className="filter-count">
-                      {getPriceCount(range.id)}
-                    </span>
-                  </label>
-                ))}
+        {/* 1. Doppelrand Header Directory Banner */}
+        <div className="doppelrand-outer" style={{ marginBottom: "32px" }}>
+          <div className="doppelrand-inner" style={{ padding: "28px 32px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "20px" }}>
+              <div>
+                <span style={{ fontSize: "11px", fontWeight: 900, color: "var(--primary-color, #2e7d32)", background: "#e8f5e9", padding: "4px 12px", borderRadius: "999px", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                  MINI-SHOP NORDIC DIRECTORY
+                </span>
+                <h1 style={{ fontSize: "32px", fontWeight: 900, color: "#0f172a", margin: "8px 0 4px", letterSpacing: "-0.02em" }}>
+                  Danh Mục Nội Thất & Đồ Trang Trí Bắc Âu
+                </h1>
+                <p style={{ fontSize: "14px", color: "#64748b", margin: 0, maxWidth: "600px" }}>
+                  Tuyển chọn các thiết kế gỗ sồi Mỹ, mây tre thủ công và gốm sứ mộc mạc cao cấp.
+                </p>
               </div>
-            </div>
 
-            <hr style={{ border: 0, borderTop: "1px solid var(--border-color)" }} />
-
-            {/* Material Filter Group */}
-            <div className="filter-group">
-              <div className="filter-group-title">Chất liệu đặc trưng</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }} id="material-filter-list">
-                {materials.map((mat) => (
-                  <label
-                    key={mat.id}
-                    className="filter-option"
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <input
-                        type="radio"
-                        name="material"
-                        value={mat.id}
-                        checked={selectedMaterial === mat.id}
-                        onChange={(e) => {
-                          setSelectedMaterial(e.target.value);
-                          setCurrentPage(1);
-                        }}
-                        style={{ cursor: "pointer" }}
-                      />
-                      <span style={{ fontSize: "14px", color: "var(--text-main)" }}>{mat.label}</span>
-                    </div>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <hr style={{ border: 0, borderTop: "1px solid var(--border-color)" }} />
-
-            {/* Stock Availability Group */}
-            <div className="filter-group">
-              <div className="filter-group-title">Trạng thái kho hàng</div>
-              <label
-                className="filter-option"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  cursor: "pointer",
-                }}
-              >
+              {/* Search Box inside Header */}
+              <div style={{ position: "relative", minWidth: "280px" }}>
+                <Search className="w-4 h-4 text-slate-400" style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)" }} />
                 <input
-                  type="checkbox"
-                  id="stock-checkbox"
-                  checked={inStockOnly}
-                  onChange={(e) => {
-                    setInStockOnly(e.target.checked);
-                    setCurrentPage(1);
+                  type="text"
+                  placeholder="Tìm kiếm sản phẩm..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 16px 10px 38px",
+                    borderRadius: "999px",
+                    border: "1px solid #cbd5e1",
+                    fontSize: "13px",
+                    outline: "none",
+                    boxSizing: "border-box",
+                    background: "#ffffff",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
                   }}
-                  style={{ cursor: "pointer" }}
                 />
-                <span style={{ fontSize: "14px", color: "var(--text-main)" }}>Còn hàng</span>
-              </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 2. Category Pill Tabs Stream */}
+        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "28px" }}>
+          {categories.map((cat) => {
+            const isActive = currentCategory === cat.id;
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                className={`category-pill-btn ${isActive ? "active" : ""}`}
+                onClick={() => setCurrentCategory(cat.id)}
+              >
+                {cat.icon}
+                {cat.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* 3. Main Split Layout: Doppelrand Sidebar + Product Stream */}
+        <div className="product-page-split" style={{ display: "grid", gridTemplateColumns: "280px 1fr", gap: "32px", alignItems: "start" }}>
+          
+          {/* Left Doppelrand Filter Sidebar */}
+          <aside className="doppelrand-outer" style={{ position: "sticky", top: "90px" }}>
+            <div className="doppelrand-inner" style={{ padding: "20px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px", borderBottom: "1px solid #f1f5f9", paddingBottom: "12px" }}>
+                <h3 style={{ fontSize: "15px", fontWeight: 900, color: "#0f172a", margin: 0, display: "flex", alignItems: "center", gap: "6px" }}>
+                  <SlidersHorizontal className="w-4 h-4 text-emerald-700" /> BỘ LỌC NÂNG CAO
+                </h3>
+                {isFilterActive && (
+                  <button
+                    type="button"
+                    onClick={handleResetFilters}
+                    style={{ background: "none", border: "none", fontSize: "12px", fontWeight: 800, color: "#dc2626", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" /> Đặt lại
+                  </button>
+                )}
+              </div>
+
+              {/* Price Range Filter Group */}
+              <div style={{ marginBottom: "20px" }}>
+                <div style={{ fontSize: "13px", fontWeight: 800, color: "#334155", marginBottom: "10px" }}>
+                  Mức Giá Ưu Đãi:
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  {priceRanges.map((pr) => {
+                    const isActive = currentPriceRange === pr.id;
+                    return (
+                      <button
+                        key={pr.id}
+                        type="button"
+                        className={`filter-chip-btn ${isActive ? "active" : ""}`}
+                        style={{ textAlign: "left" }}
+                        onClick={() => setCurrentPriceRange(pr.id)}
+                      >
+                        {pr.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Material Filter Group */}
+              <div>
+                <div style={{ fontSize: "13px", fontWeight: 800, color: "#334155", marginBottom: "10px" }}>
+                  Chất Liệu Đặc Trưng:
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  {materials.map((mat) => {
+                    const isActive = selectedMaterial === mat.id;
+                    return (
+                      <button
+                        key={mat.id}
+                        type="button"
+                        className={`filter-chip-btn ${isActive ? "active" : ""}`}
+                        style={{ textAlign: "left" }}
+                        onClick={() => setSelectedMaterial(mat.id)}
+                      >
+                        {mat.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </aside>
 
-          {/* Right Main Product Grid / List Content */}
-          {(() => {
-            const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize));
-            const safeCurrentPage = Math.min(currentPage, totalPages);
-            const paginatedProducts = filteredProducts.slice(
-              (safeCurrentPage - 1) * pageSize,
-              safeCurrentPage * pageSize
-            );
+          {/* Right Product Stream Section */}
+          <div>
+            {/* Controls Bar: Results Count + Sort Select + View Switcher */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "20px",
+                background: "#ffffff",
+                padding: "12px 20px",
+                borderRadius: "1.25rem",
+                border: "1px solid #e2e8f0",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.02)",
+                flexWrap: "wrap",
+                gap: "12px",
+              }}
+            >
+              <div style={{ fontSize: "13.5px", fontWeight: 800, color: "#0f172a" }}>
+                Hiển thị <span style={{ color: "var(--primary-color, #2e7d32)" }}>{filteredProducts.length}</span> sản phẩm phù hợp
+              </div>
 
-            return (
-              <section className="products-main-content">
-                {/* Top Toolbar */}
-                <div className="products-main-header" style={{ marginBottom: "20px" }}>
-                  <div>
-                    <h2 className="products-page-title" id="page-title-heading" style={{ fontSize: "22px", margin: 0 }}>
-                      {currentCategoryLabel}
-                    </h2>
-                    <div className="products-count-text" id="products-count-info">
-                      Hiển thị {filteredProducts.length > 0 ? (safeCurrentPage - 1) * pageSize + 1 : 0} -{" "}
-                      {Math.min(safeCurrentPage * pageSize, filteredProducts.length)} trong tổng số{" "}
-                      {filteredProducts.length} sản phẩm
-                    </div>
-                  </div>
-
-                  <div className="toolbar-actions" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    {/* View Mode Switcher Buttons */}
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        background: "#f1f5f9",
-                        padding: "3px",
-                        borderRadius: "8px",
-                        gap: "2px",
-                        marginRight: "6px",
-                      }}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => setViewMode("grid")}
-                        style={{
-                          padding: "6px 10px",
-                          border: "none",
-                          borderRadius: "6px",
-                          background: viewMode === "grid" ? "#ffffff" : "transparent",
-                          color: viewMode === "grid" ? "var(--primary-color)" : "#64748b",
-                          boxShadow: viewMode === "grid" ? "0 2px 6px rgba(0,0,0,0.08)" : "none",
-                          cursor: "pointer",
-                          display: "inline-flex",
-                          alignItems: "center",
-                        }}
-                        title="Xem dạng Lưới 4 Cột"
-                      >
-                        <LayoutGrid className="w-4 h-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setViewMode("list")}
-                        style={{
-                          padding: "6px 10px",
-                          border: "none",
-                          borderRadius: "6px",
-                          background: viewMode === "list" ? "#ffffff" : "transparent",
-                          color: viewMode === "list" ? "var(--primary-color)" : "#64748b",
-                          boxShadow: viewMode === "list" ? "0 2px 6px rgba(0,0,0,0.08)" : "none",
-                          cursor: "pointer",
-                          display: "inline-flex",
-                          alignItems: "center",
-                        }}
-                        title="Xem dạng Danh Sách Hàng Ngang"
-                      >
-                        <ListIcon className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    <div className="toolbar-search">
-                      <input
-                        type="text"
-                        id="catalog-search-input"
-                        placeholder="Tìm sản phẩm..."
-                        value={searchQuery}
-                        onChange={(e) => {
-                          setSearchQuery(e.target.value);
-                          setCurrentPage(1);
-                        }}
-                      />
-                      <svg viewBox="0 0 24 24">
-                        <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
-                      </svg>
-                    </div>
-
-                    {(searchQuery || currentCategory !== "All" || currentPriceRange !== "all" || selectedMaterial !== "all" || inStockOnly) && (
-                      <button
-                        onClick={() => {
-                          setSearchQuery("");
-                          setCurrentCategory("All");
-                          setCurrentPriceRange("all");
-                          setSelectedMaterial("all");
-                          setInStockOnly(false);
-                          setCurrentPage(1);
-                        }}
-                        style={{
-                          background: "#fee2e2",
-                          color: "#b91c1c",
-                          border: "1px solid #fca5a5",
-                          borderRadius: "6px",
-                          padding: "7px 11px",
-                          fontSize: "13px",
-                          fontWeight: 700,
-                          cursor: "pointer",
-                          whiteSpace: "nowrap",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                        title="Xóa tất cả bộ lọc"
-                      >
-                        <X className="w-3.5 h-3.5 text-red-600" />
-                      </button>
-                    )}
-
-                    <select
-                      className="sort-select"
-                      value={pageSize}
-                      onChange={(e) => {
-                        setPageSize(Number(e.target.value));
-                        setCurrentPage(1);
-                      }}
-                      style={{ cursor: "pointer", fontWeight: 700 }}
-                    >
-                      <option value={12}>Hiển thị 12 SP</option>
-                      <option value={24}>Hiển thị 24 SP</option>
-                      <option value={48}>Hiển thị 48 SP</option>
-                    </select>
-
-                    <select
-                      className="sort-select"
-                      id="sort-select-box"
-                      value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value)}
-                      style={{ cursor: "pointer", fontWeight: 700 }}
-                    >
-                      <option value="newest">Mới nhất</option>
-                      <option value="bestselling">Bán chạy nhất</option>
-                      <option value="price-asc">Giá: Thấp đến cao</option>
-                      <option value="price-desc">Giá: Cao đến thấp</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Product Catalog Display (Grid View vs List View) */}
-                {loading ? (
-                  <div style={{ textAlign: "center", padding: "48px 0", color: "var(--text-muted)", fontWeight: 600 }}>
-                    Đang tải danh sách sản phẩm...
-                  </div>
-                ) : filteredProducts.length === 0 ? (
-                  <div
-                    style={{
-                      textAlign: "center",
-                      padding: "48px 0",
-                      color: "var(--text-muted)",
-                      background: "#ffffff",
-                      borderRadius: "1.25rem",
-                      border: "1px solid #e2e8f0",
-                    }}
-                  >
-                    <div style={{ fontSize: "40px", marginBottom: "12px", display: "flex", justifyContent: "center" }}>
-                      <Search className="w-12 h-12 text-slate-400" />
-                    </div>
-                    <p style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>
-                      Không tìm thấy sản phẩm phù hợp!
-                    </p>
-                    <p style={{ fontSize: "13px", marginTop: "4px", marginBottom: "16px", color: "#64748b" }}>
-                      Vui lòng thử chọn bộ lọc khác hoặc bấm nút bên dưới để xem lại tất cả sản phẩm.
-                    </p>
-                    <button
-                      onClick={() => {
-                        setCurrentCategory("All");
-                        setCurrentPriceRange("all");
-                        setSelectedMaterial("all");
-                        setSearchQuery("");
-                      }}
-                      style={{
-                        padding: "8px 18px",
-                        background: "var(--primary-color)",
-                        color: "#fff",
-                        border: "none",
-                        borderRadius: "8px",
-                        fontSize: "13px",
-                        fontWeight: 800,
-                        cursor: "pointer",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "6px",
-                      }}
-                    >
-                      Xem tất cả sản phẩm <ArrowRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                ) : viewMode === "grid" ? (
-                  /* 4-Column Product Grid View */
-                  <div className="catalog-grid" id="product-catalog-grid">
-                    {paginatedProducts.map((product) => {
-                      const wished = isWishlisted(product.id);
-                      return (
-                        <div key={product.id} className="catalog-card">
-                          {product.badge && (
-                            <span className={`card-badge ${product.badgeType || ""}`}>
-                              {product.badge}
-                            </span>
-                          )}
-                          <button
-                            className={`btn-wishlist ${wished ? "active" : ""}`}
-                            onClick={() => toggleWishlist(product.id)}
-                            title="Thêm vào yêu thích"
-                            style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}
-                          >
-                            <Heart className={`w-4 h-4 ${wished ? "text-red-500 fill-red-500" : "text-slate-400"}`} />
-                          </button>
-                          <div className="catalog-img-wrapper">
-                            <Link href={`/products/${product.id}`}>
-                              <img src={fixImagePath(product.image)} alt={product.name} />
-                            </Link>
-                          </div>
-                          <div className="catalog-card-body">
-                            <h3 className="catalog-title">
-                              <Link href={`/products/${product.id}`} style={{ color: "inherit", textDecoration: "none" }}>
-                                {product.name}
-                              </Link>
-                            </h3>
-                            <div className="price-box">
-                              <span className="price-current">{formatVND(product.price)}</span>
-                              {product.oldPrice && (
-                                <span className="price-old">{formatVND(product.oldPrice)}</span>
-                              )}
-                            </div>
-                            <span className="status-badge">Còn hàng</span>
-                            <div className="catalog-card-footer" style={{ display: "flex", gap: "6px", marginTop: "10px" }}>
-                              <button
-                                onClick={() => addToCart(product)}
-                                className="btn-add-cart-sm"
-                                style={{
-                                  flex: 1,
-                                  padding: "7px 10px",
-                                  background: "var(--primary-color)",
-                                  color: "#fff",
-                                  border: "none",
-                                  borderRadius: "6px",
-                                  fontSize: "12px",
-                                  fontWeight: 800,
-                                  cursor: "pointer",
-                                }}
-                              >
-                                + Giỏ hàng
-                              </button>
-                              <Link href={`/products/${product.id}`} className="btn-detail-link" style={{ borderRadius: "6px" }}>
-                                Chi tiết &rsaquo;
-                              </Link>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  /* Horizontal List View Mode */
-                  <div className="catalog-list-view">
-                    {paginatedProducts.map((product) => {
-                      const wished = isWishlisted(product.id);
-                      return (
-                        <div key={product.id} className="catalog-list-card">
-                          <div className="catalog-list-img-wrapper">
-                            <Link href={`/products/${product.id}`}>
-                              <img src={fixImagePath(product.image)} alt={product.name} />
-                            </Link>
-                          </div>
-
-                          <div className="catalog-list-info">
-                            <div className="catalog-list-meta">
-                              <span className="status-badge" style={{ margin: 0 }}>Còn hàng</span>
-                              {product.badge && (
-                                <span className={`card-badge ${product.badgeType || ""}`} style={{ position: "static", borderRadius: "999px" }}>
-                                  {product.badge}
-                                </span>
-                              )}
-                              <span style={{ fontSize: "11.5px", color: "#64748b", fontWeight: 700 }}>
-                                {product.categoryName}
-                              </span>
-                            </div>
-
-                            <h3 className="catalog-list-title">
-                              <Link href={`/products/${product.id}`} style={{ color: "inherit", textDecoration: "none" }}>
-                                {product.name}
-                              </Link>
-                            </h3>
-
-                            <p className="catalog-list-desc">
-                              {product.description || "Sản phẩm nội thất Nordics cao cấp chọn lọc với độ hoàn thiện sắc nét, tạo không gian ấm cúng sang trọng."}
-                            </p>
-                          </div>
-
-                          <div className="catalog-list-action-side">
-                            <button
-                              onClick={() => toggleWishlist(product.id)}
-                              style={{ background: "none", border: "none", cursor: "pointer", padding: "4px" }}
-                              title="Yêu thích"
-                            >
-                              <Heart className={`w-5 h-5 ${wished ? "text-red-500 fill-red-500" : "text-slate-400"}`} />
-                            </button>
-
-                            <div style={{ textAlign: "right" }}>
-                              <div style={{ fontSize: "18px", fontWeight: 900, color: "var(--primary-color)" }}>
-                                {formatVND(product.price)}
-                              </div>
-                              {product.oldPrice && (
-                                <div style={{ fontSize: "12px", color: "#94a3b8", textDecoration: "line-through" }}>
-                                  {formatVND(product.oldPrice)}
-                                </div>
-                              )}
-                            </div>
-
-                            <div style={{ display: "flex", gap: "6px", width: "100%" }}>
-                              <button
-                                onClick={() => addToCart(product)}
-                                style={{
-                                  flex: 1,
-                                  padding: "8px 12px",
-                                  background: "var(--primary-color)",
-                                  color: "#fff",
-                                  border: "none",
-                                  borderRadius: "8px",
-                                  fontSize: "12px",
-                                  fontWeight: 800,
-                                  cursor: "pointer",
-                                  whiteSpace: "nowrap",
-                                }}
-                              >
-                                + Giỏ hàng
-                              </button>
-                              <Link
-                                href={`/products/${product.id}`}
-                                className="btn-detail-link"
-                                style={{ borderRadius: "8px", padding: "8px 10px" }}
-                              >
-                                Chi tiết &rsaquo;
-                              </Link>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {/* Pagination Controls Footer */}
-                <div
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                {/* Sort Dropdown */}
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
                   style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    gap: "8px",
-                    margin: "36px 0 16px 0",
+                    padding: "8px 14px",
+                    borderRadius: "999px",
+                    border: "1px solid #cbd5e1",
+                    fontSize: "12.5px",
+                    fontWeight: 700,
+                    color: "#334155",
+                    outline: "none",
+                    background: "#ffffff",
+                    cursor: "pointer",
                   }}
                 >
+                  <option value="newest">Sắp xếp: Mới nhất</option>
+                  <option value="price-low">Giá: Thấp đến Cao</option>
+                  <option value="price-high">Giá: Cao đến Thấp</option>
+                  <option value="name">Tên sản phẩm A-Z</option>
+                </select>
+
+                {/* View Mode Grid/List Switcher */}
+                <div style={{ display: "flex", gap: "4px" }}>
                   <button
-                    disabled={safeCurrentPage <= 1}
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    type="button"
+                    className={`view-mode-btn ${viewMode === "grid" ? "active" : ""}`}
+                    onClick={() => setViewMode("grid")}
+                    title="Chế độ Lưới"
+                  >
+                    <LayoutGrid className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    className={`view-mode-btn ${viewMode === "list" ? "active" : ""}`}
+                    onClick={() => setViewMode("list")}
+                    title="Chế độ Danh sách"
+                  >
+                    <ListIcon className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Loading Indicator */}
+            {loading ? (
+              <div style={{ padding: "60px 0", textAlign: "center", fontSize: "14px", fontWeight: 800, color: "#64748b" }}>
+                Đang tải dữ liệu sản phẩm...
+              </div>
+            ) : filteredProducts.length === 0 ? (
+              /* Empty State */
+              <div className="doppelrand-outer" style={{ textAlign: "center", padding: "40px 0" }}>
+                <div className="doppelrand-inner" style={{ padding: "40px" }}>
+                  <p style={{ fontSize: "16px", fontWeight: 800, color: "#0f172a", margin: "0 0 12px" }}>
+                    Không tìm thấy sản phẩm nào phù hợp bộ lọc!
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleResetFilters}
                     style={{
-                      padding: "8px 16px",
-                      border: "1px solid var(--border-color)",
-                      borderRadius: "8px",
-                      background: "#fff",
+                      padding: "10px 24px",
+                      borderRadius: "999px",
+                      background: "var(--primary-color, #2e7d32)",
+                      color: "#ffffff",
+                      fontSize: "13px",
                       fontWeight: 800,
-                      cursor: safeCurrentPage <= 1 ? "not-allowed" : "pointer",
-                      opacity: safeCurrentPage <= 1 ? 0.5 : 1,
+                      border: "none",
+                      cursor: "pointer",
                     }}
                   >
-                    &lt; Trang trước
+                    Xóa toàn bộ lọc
                   </button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                </div>
+              </div>
+            ) : (
+              /* Doppelrand Product Cards Stream */
+              <div className={viewMode === "grid" ? "products-grid-layout" : "products-list-layout"}>
+                {paginatedProducts.map((product) => {
+                  const wishlisted = isWishlisted(product.id);
+                  const isAdded = addedId === product.id;
+
+                  return (
+                    <div key={product.id} className="doppelrand-outer">
+                      <div className="doppelrand-inner" style={{ padding: "16px", display: "flex", flexDirection: viewMode === "grid" ? "column" : "row", gap: "16px", height: "100%", boxSizing: "border-box" }}>
+                        
+                        {/* Image Container with Wishlist Heart */}
+                        <div style={{ position: "relative", borderRadius: "1rem", overflow: "hidden", width: viewMode === "grid" ? "100%" : "180px", aspectRatio: "1 / 1", flexShrink: 0, background: "#f8fafc" }}>
+                          <button
+                            type="button"
+                            onClick={() => toggleWishlist(product.id)}
+                            style={{
+                              position: "absolute",
+                              top: "10px",
+                              right: "10px",
+                              width: "32px",
+                              height: "32px",
+                              borderRadius: "999px",
+                              background: "#ffffff",
+                              border: "none",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              cursor: "pointer",
+                              boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
+                              zIndex: 10,
+                            }}
+                          >
+                            <Heart className={`w-4 h-4 ${wishlisted ? "text-red-500 fill-red-500" : "text-slate-400"}`} />
+                          </button>
+
+                          {product.oldPrice && (
+                            <span style={{ position: "absolute", top: "10px", left: "10px", background: "#dc2626", color: "#fff", fontSize: "11px", fontWeight: 900, padding: "2px 8px", borderRadius: "4px", zIndex: 10 }}>
+                              -{Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)}%
+                            </span>
+                          )}
+
+                          <Link href={`/products/${product.id}`}>
+                            <img
+                              src={fixImagePath(product.image)}
+                              alt={product.name}
+                              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = "/assets/images/products/bo-binh-gom-minimal.webp";
+                              }}
+                            />
+                          </Link>
+                        </div>
+
+                        {/* Details Info & Actions */}
+                        <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                          <div>
+                            <span style={{ fontSize: "11px", fontWeight: 800, color: "#64748b", marginBottom: "4px", display: "block" }}>
+                              {product.categoryName}
+                            </span>
+
+                            <h3 style={{ fontSize: "16px", fontWeight: 800, color: "#0f172a", lineHeight: 1.4, margin: "0 0 8px" }}>
+                              <Link href={`/products/${product.id}`} style={{ color: "inherit", textDecoration: "none" }}>
+                                {product.name}
+                              </Link>
+                            </h3>
+
+                            {viewMode === "list" && (
+                              <p style={{ fontSize: "13px", color: "#64748b", margin: "0 0 12px", lineHeight: 1.5 }}>
+                                {product.description}
+                              </p>
+                            )}
+
+                            {/* Price */}
+                            <div style={{ display: "flex", alignItems: "baseline", gap: "8px", marginBottom: "16px" }}>
+                              <span style={{ fontSize: "18px", fontWeight: 900, color: "var(--primary-color, #2e7d32)" }}>
+                                {formatVND(product.price)}
+                              </span>
+                              {product.oldPrice && (
+                                <span style={{ fontSize: "12px", textDecoration: "line-through", color: "#94a3b8", fontWeight: 700 }}>
+                                  {formatVND(product.oldPrice)}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Button-in-Button CTA */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              addToCart(product, 1);
+                              setAddedId(product.id);
+                              setTimeout(() => setAddedId(null), 1800);
+                            }}
+                            style={{
+                              width: "100%",
+                              padding: "10px 16px",
+                              borderRadius: "999px",
+                              background: isAdded ? "#166534" : "var(--primary-color, #2e7d32)",
+                              color: "#ffffff",
+                              fontSize: "13px",
+                              fontWeight: 800,
+                              border: "none",
+                              cursor: "pointer",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "6px",
+                              boxShadow: "0 4px 12px rgba(46, 125, 50, 0.2)",
+                              transition: "all 0.2s ease",
+                            }}
+                          >
+                            {isAdded ? (
+                              <><Check className="w-4 h-4" /> Đã Thêm Giỏ Hàng!</>
+                            ) : (
+                              <><ShoppingCart className="w-4 h-4" /> + Thêm Giỏ Hàng</>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginTop: "36px" }}>
+                <button
+                  type="button"
+                  disabled={currentPage === 1}
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  style={{
+                    padding: "8px 14px",
+                    borderRadius: "8px",
+                    border: "1px solid #cbd5e1",
+                    background: "#ffffff",
+                    fontSize: "13px",
+                    fontWeight: 700,
+                    color: currentPage === 1 ? "#cbd5e1" : "#334155",
+                    cursor: currentPage === 1 ? "not-allowed" : "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "4px",
+                  }}
+                >
+                  <ChevronLeft className="w-4 h-4" /> Trang trước
+                </button>
+
+                {[...Array(totalPages)].map((_, i) => {
+                  const p = i + 1;
+                  const isActive = currentPage === p;
+                  return (
                     <button
                       key={p}
-                      onClick={() => setCurrentPage(p)}
+                      type="button"
+                      onClick={() => handlePageChange(p)}
                       style={{
                         width: "36px",
                         height: "36px",
-                        border: "1px solid",
-                        borderColor: p === safeCurrentPage ? "var(--primary-color)" : "var(--border-color)",
                         borderRadius: "8px",
-                        background: p === safeCurrentPage ? "var(--primary-color)" : "#fff",
-                        color: p === safeCurrentPage ? "#fff" : "var(--text-main)",
+                        border: "1px solid",
+                        borderColor: isActive ? "var(--primary-color, #2e7d32)" : "#cbd5e1",
+                        background: isActive ? "var(--primary-color, #2e7d32)" : "#ffffff",
+                        color: isActive ? "#ffffff" : "#334155",
+                        fontSize: "13px",
                         fontWeight: 800,
                         cursor: "pointer",
                       }}
                     >
                       {p}
                     </button>
-                  ))}
-                  <button
-                    disabled={safeCurrentPage >= totalPages}
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    style={{
-                      padding: "8px 16px",
-                      border: "1px solid var(--border-color)",
-                      borderRadius: "8px",
-                      background: "#fff",
-                      fontWeight: 800,
-                      cursor: safeCurrentPage >= totalPages ? "not-allowed" : "pointer",
-                      opacity: safeCurrentPage >= totalPages ? 0.5 : 1,
-                    }}
-                  >
-                    Trang sau &gt;
-                  </button>
-                </div>
-              </section>
-            );
-          })()}
+                  );
+                })}
+
+                <button
+                  type="button"
+                  disabled={currentPage === totalPages}
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  style={{
+                    padding: "8px 14px",
+                    borderRadius: "8px",
+                    border: "1px solid #cbd5e1",
+                    background: "#ffffff",
+                    fontSize: "13px",
+                    fontWeight: 700,
+                    color: currentPage === totalPages ? "#cbd5e1" : "#334155",
+                    cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "4px",
+                  }}
+                >
+                  Trang sau <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </>
+    </main>
   );
 }
 
 export default function ProductsPage() {
   return (
-    <Suspense fallback={<div className="container" style={{ padding: "40px 15px", textAlign: "center" }}>Đang tải danh sách sản phẩm...</div>}>
+    <Suspense fallback={<div className="container" style={{ padding: "40px 15px", textAlign: "center" }}>Đang tải danh mục sản phẩm...</div>}>
       <ProductsContent />
     </Suspense>
   );
