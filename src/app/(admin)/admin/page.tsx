@@ -32,6 +32,12 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Hierarchical Chart Filter States
+  const [chartGroup, setChartGroup] = useState<"day" | "month" | "quarter" | "year" | "custom">("day");
+  const [chartSubPreset, setChartSubPreset] = useState<string>("30d");
+  const [customStartDate, setCustomStartDate] = useState("2026-01-01");
+  const [customEndDate, setCustomEndDate] = useState("2026-02-28");
+
   // Raw Database States
   const [orders, setOrders] = useState<UnifiedOrder[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -149,11 +155,6 @@ export default function AdminDashboard() {
       o.paymentMethod.toLowerCase().includes(q)
     );
   });
-
-  // Time preset & date range filter state for Chart Hub
-  const [timePreset, setTimePreset] = useState<"7d" | "30d" | "90d" | "180d" | "365d" | "custom">("30d");
-  const [customStartDate, setCustomStartDate] = useState("2026-01-01");
-  const [customEndDate, setCustomEndDate] = useState("2026-02-28");
 
   return (
     <div className="admin-wrapper">
@@ -331,93 +332,106 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* 1.5 INTERACTIVE REVENUE TREND & ANALYTICS CHART HUB */}
+              {/* 1.5 INTERACTIVE REVENUE TREND & ANALYTICS CHART HUB (HIERARCHICAL FILTERS & TALL SVG CANVAS) */}
               {(() => {
                 // Calculate dynamic date points strictly based on selected time preset & real Supabase orders
                 const chartPoints: { dateStr: string; label: string; revenue: number }[] = [];
 
-                if (timePreset === "custom") {
-                  const startDate = new Date(customStartDate);
-                  const endDate = new Date(customEndDate);
-                  if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime()) && startDate <= endDate) {
-                    const curr = new Date(startDate);
-                    while (curr <= endDate) {
-                      const year = curr.getFullYear();
-                      const month = String(curr.getMonth() + 1).padStart(2, "0");
-                      const day = String(curr.getDate()).padStart(2, "0");
-                      const isoDate = `${year}-${month}-${day}`;
-                      const dateLabel = `${day}/${month}/${year}`;
+                const today = new Date();
+                let startDate: Date = new Date(today);
+                let endDate: Date = new Date(today);
 
-                      const dayRevenue = completedOrders
-                        .filter((o) => {
-                          if (!o.date) return false;
-                          if (o.date.includes("/")) {
-                            const parts = o.date.split(" ")[0].split("/");
-                            if (parts.length === 3) {
-                              const orderIso = `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`;
-                              return orderIso === isoDate;
-                            }
-                          }
-                          return o.date.startsWith(isoDate);
-                        })
-                        .reduce((sum, o) => sum + (o.total || 0), 0);
-
-                      chartPoints.push({ dateStr: isoDate, label: dateLabel, revenue: dayRevenue });
-                      curr.setDate(curr.getDate() + 1);
-                    }
+                if (chartGroup === "custom") {
+                  const s = new Date(customStartDate);
+                  const e = new Date(customEndDate);
+                  if (!isNaN(s.getTime()) && !isNaN(e.getTime()) && s <= e) {
+                    startDate = s;
+                    endDate = e;
                   }
-                } else {
-                  const today = new Date();
-                  let startDate: Date;
-                  let endDate: Date;
-
-                  if (timePreset === "7d") {
-                    startDate = new Date(today);
+                } else if (chartGroup === "day") {
+                  if (chartSubPreset === "7d") {
                     startDate.setDate(today.getDate() - 6);
-                    endDate = new Date(today);
-                  } else if (timePreset === "30d") {
-                    // 1 Tháng: Từ ngày 1 đến ngày cuối của tháng hiện tại
+                  } else if (chartSubPreset === "14d") {
+                    startDate.setDate(today.getDate() - 13);
+                  } else if (chartSubPreset === "60d") {
+                    startDate.setDate(today.getDate() - 59);
+                  } else {
+                    // 30d (1 Tháng hiện tại)
                     startDate = new Date(today.getFullYear(), today.getMonth(), 1);
                     endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-                  } else if (timePreset === "90d") {
-                    // 3 Tháng: Từ ngày 1 của 2 tháng trước đến ngày cuối tháng hiện tại
+                  }
+                } else if (chartGroup === "month") {
+                  if (chartSubPreset === "last_month") {
+                    startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                    endDate = new Date(today.getFullYear(), today.getMonth(), 0);
+                  } else if (chartSubPreset === "3m") {
                     startDate = new Date(today.getFullYear(), today.getMonth() - 2, 1);
                     endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-                  } else if (timePreset === "180d") {
-                    // 6 Tháng: Từ ngày 1 của 5 tháng trước đến ngày cuối tháng hiện tại
+                  } else if (chartSubPreset === "6m") {
                     startDate = new Date(today.getFullYear(), today.getMonth() - 5, 1);
                     endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
                   } else {
-                    // 12 Tháng: Từ 01/01 đến 31/12 của năm hiện tại
-                    startDate = new Date(today.getFullYear(), 0, 1);
-                    endDate = new Date(today.getFullYear(), 11, 31);
+                    // this_month
+                    startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                    endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
                   }
+                } else if (chartGroup === "quarter") {
+                  const currY = today.getFullYear();
+                  if (chartSubPreset === "Q1") {
+                    startDate = new Date(currY, 0, 1);
+                    endDate = new Date(currY, 2, 31);
+                  } else if (chartSubPreset === "Q2") {
+                    startDate = new Date(currY, 3, 1);
+                    endDate = new Date(currY, 5, 30);
+                  } else if (chartSubPreset === "Q3") {
+                    startDate = new Date(currY, 6, 1);
+                    endDate = new Date(currY, 8, 30);
+                  } else if (chartSubPreset === "Q4") {
+                    startDate = new Date(currY, 9, 1);
+                    endDate = new Date(currY, 11, 31);
+                  } else {
+                    // Cả năm (4 Quý)
+                    startDate = new Date(currY, 0, 1);
+                    endDate = new Date(currY, 11, 31);
+                  }
+                } else if (chartGroup === "year") {
+                  if (chartSubPreset === "2025") {
+                    startDate = new Date(2025, 0, 1);
+                    endDate = new Date(2025, 11, 31);
+                  } else if (chartSubPreset === "3y") {
+                    startDate = new Date(2024, 0, 1);
+                    endDate = new Date(2026, 11, 31);
+                  } else {
+                    // 2026
+                    startDate = new Date(2026, 0, 1);
+                    endDate = new Date(2026, 11, 31);
+                  }
+                }
 
-                  const curr = new Date(startDate);
-                  while (curr <= endDate) {
-                    const year = curr.getFullYear();
-                    const month = String(curr.getMonth() + 1).padStart(2, "0");
-                    const day = String(curr.getDate()).padStart(2, "0");
-                    const isoDate = `${year}-${month}-${day}`;
-                    const dateLabel = `${day}/${month}/${year}`;
+                const curr = new Date(startDate);
+                while (curr <= endDate) {
+                  const year = curr.getFullYear();
+                  const month = String(curr.getMonth() + 1).padStart(2, "0");
+                  const day = String(curr.getDate()).padStart(2, "0");
+                  const isoDate = `${year}-${month}-${day}`;
+                  const dateLabel = `${day}/${month}/${year}`;
 
-                    const dayRevenue = completedOrders
-                      .filter((o) => {
-                        if (!o.date) return false;
-                        if (o.date.includes("/")) {
-                          const parts = o.date.split(" ")[0].split("/");
-                          if (parts.length === 3) {
-                            const orderIso = `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`;
-                            return orderIso === isoDate;
-                          }
+                  const dayRevenue = completedOrders
+                    .filter((o) => {
+                      if (!o.date) return false;
+                      if (o.date.includes("/")) {
+                        const parts = o.date.split(" ")[0].split("/");
+                        if (parts.length === 3) {
+                          const orderIso = `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`;
+                          return orderIso === isoDate;
                         }
-                        return o.date.startsWith(isoDate);
-                      })
-                      .reduce((sum, o) => sum + (o.total || 0), 0);
+                      }
+                      return o.date.startsWith(isoDate);
+                    })
+                    .reduce((sum, o) => sum + (o.total || 0), 0);
 
-                    chartPoints.push({ dateStr: isoDate, label: dateLabel, revenue: dayRevenue });
-                    curr.setDate(curr.getDate() + 1);
-                  }
+                  chartPoints.push({ dateStr: isoDate, label: dateLabel, revenue: dayRevenue });
+                  curr.setDate(curr.getDate() + 1);
                 }
 
                 if (chartPoints.length === 0) {
@@ -426,12 +440,13 @@ export default function AdminDashboard() {
                 }
 
                 const maxRevenue = Math.max(...chartPoints.map((p) => p.revenue), 0);
+                const totalRangeRevenue = chartPoints.reduce((sum, p) => sum + p.revenue, 0);
 
-                // Build SVG path string dynamically
+                // Build SVG path string dynamically (Height increased to 270px)
                 const width = 800;
-                const height = 160;
-                const baselineY = 130;
-                const topY = 30;
+                const height = 270;
+                const baselineY = 230;
+                const topY = 40;
 
                 const svgPoints = chartPoints.map((pt, idx) => {
                   const x = (idx / Math.max(1, chartPoints.length - 1)) * width;
@@ -452,174 +467,330 @@ export default function AdminDashboard() {
                 return (
                   <div className="admin-card-shell" style={{ marginBottom: "24px" }}>
                     <div className="admin-card-core" style={{ padding: "24px" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px", marginBottom: "20px" }}>
+                      {/* Card Header Title */}
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "16px", marginBottom: "20px" }}>
                         <div>
                           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                            <BarChart3 className="w-5 h-5 text-emerald-700" />
-                            <h3 style={{ fontSize: "18px", fontWeight: 900, color: "#0f172a", margin: 0, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                            <BarChart3 className="w-6 h-6 text-emerald-700" />
+                            <h3 style={{ fontSize: "20px", fontWeight: 900, color: "#0f172a", margin: 0, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                               Biểu Đồ Doanh Thu & Xu Hướng Tăng Trưởng ({chartPoints.length} Ngày Qua)
                             </h3>
                           </div>
-                          <p style={{ fontSize: "12px", color: "#64748b", margin: "2px 0 0", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                            Phân tích dữ liệu thực tế từ Supabase — Hiển thị chính xác {chartPoints.length} ngày trong khoảng chọn
+                          <p style={{ fontSize: "13px", color: "#64748b", margin: "4px 0 0", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                            Phân tích báo cáo dữ liệu Supabase thực tế — Khoảng lọc: <strong>{chartPoints[0]?.label}</strong> đến <strong>{chartPoints[chartPoints.length - 1]?.label}</strong>
                           </p>
                         </div>
 
-                        {/* Time Presets & Custom Picker */}
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-                          {(["7d", "30d", "90d", "180d", "365d"] as const).map((preset) => (
-                            <button
-                              key={preset}
-                              type="button"
-                              onClick={() => setTimePreset(preset)}
-                              style={{
-                                padding: "6px 14px",
-                                borderRadius: "999px",
-                                border: timePreset === preset ? "none" : "1px solid #cbd5e1",
-                                background: timePreset === preset ? "var(--primary-color, #2e7d32)" : "#ffffff",
-                                color: timePreset === preset ? "#ffffff" : "#475569",
-                                fontSize: "12px",
-                                fontWeight: 800,
-                                fontFamily: "'Plus Jakarta Sans', sans-serif",
-                                cursor: "pointer",
-                                boxShadow: timePreset === preset ? "0 4px 10px rgba(46, 125, 50, 0.2)" : "none",
-                              }}
-                            >
-                              {preset === "7d" && "7 ngày"}
-                              {preset === "30d" && "1 tháng (30 ngày)"}
-                              {preset === "90d" && "3 tháng (90 ngày)"}
-                              {preset === "180d" && "6 tháng (180 ngày)"}
-                              {preset === "365d" && "12 tháng (365 ngày)"}
-                            </button>
-                          ))}
-
-                          {/* Custom Range Toggle */}
-                          <button
-                            type="button"
-                            onClick={() => setTimePreset("custom")}
-                            style={{
-                              padding: "6px 14px",
-                              borderRadius: "999px",
-                              border: timePreset === "custom" ? "none" : "1px solid #cbd5e1",
-                              background: timePreset === "custom" ? "#0284c7" : "#ffffff",
-                              color: timePreset === "custom" ? "#ffffff" : "#475569",
-                              fontSize: "12px",
-                              fontWeight: 800,
-                              fontFamily: "'Plus Jakarta Sans', sans-serif",
-                              cursor: "pointer",
-                            }}
-                          >
-                            📅 Tùy chỉnh ngày
-                          </button>
+                        {/* Total Revenue Summary Pill */}
+                        <div
+                          style={{
+                            background: "linear-gradient(135deg, #14532d 0%, #166534 100%)",
+                            color: "#ffffff",
+                            padding: "10px 18px",
+                            borderRadius: "16px",
+                            boxShadow: "0 6px 16px rgba(20, 83, 45, 0.2)",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "12px",
+                          }}
+                        >
+                          <div>
+                            <div style={{ fontSize: "11px", fontWeight: 800, textTransform: "uppercase", opacity: 0.85, letterSpacing: "0.05em" }}>
+                              Tổng Doanh Thu Kỳ Chọn
+                            </div>
+                            <div style={{ fontSize: "18px", fontWeight: 900, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                              {formatVND(totalRangeRevenue)}
+                            </div>
+                          </div>
                         </div>
                       </div>
 
-                      {/* Custom Date Pickers Bar */}
-                      {timePreset === "custom" && (
-                        <div
-                          style={{
-                            padding: "12px 16px",
-                            background: "#f0f9ff",
-                            border: "1px solid #bae6fd",
-                            borderRadius: "14px",
-                            marginBottom: "16px",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "14px",
-                            flexWrap: "wrap",
-                          }}
-                        >
-                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                            <span style={{ fontSize: "12px", fontWeight: 800, color: "#0369a1" }}>Từ ngày:</span>
-                            <input
-                              type="date"
-                              value={customStartDate}
-                              onChange={(e) => setCustomStartDate(e.target.value)}
-                              style={{
-                                padding: "6px 12px",
-                                borderRadius: "10px",
-                                border: "1px solid #cbd5e1",
-                                fontSize: "12.5px",
-                                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      {/* LEVEL 1: HIERARCHICAL CATEGORY TABS (Theo Ngày, Theo Tháng, Theo Quý, Theo Năm, Custom) */}
+                      <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "20px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", background: "#f8fafc", padding: "6px", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
+                          {[
+                            { key: "day", label: "📅 Theo Ngày" },
+                            { key: "month", label: "🗓️ Theo Tháng" },
+                            { key: "quarter", label: "📊 Theo Quý" },
+                            { key: "year", label: "📈 Theo Năm" },
+                            { key: "custom", label: "⚙️ Tùy Chỉnh Ngày" },
+                          ].map((cat) => (
+                            <button
+                              key={cat.key}
+                              type="button"
+                              onClick={() => {
+                                setChartGroup(cat.key as any);
+                                if (cat.key === "day") setChartSubPreset("30d");
+                                else if (cat.key === "month") setChartSubPreset("this_month");
+                                else if (cat.key === "quarter") setChartSubPreset("all_quarters");
+                                else if (cat.key === "year") setChartSubPreset("2026");
                               }}
-                            />
-                          </div>
-                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                            <span style={{ fontSize: "12px", fontWeight: 800, color: "#0369a1" }}>Đến ngày:</span>
-                            <input
-                              type="date"
-                              value={customEndDate}
-                              onChange={(e) => setCustomEndDate(e.target.value)}
                               style={{
-                                padding: "6px 12px",
-                                borderRadius: "10px",
-                                border: "1px solid #cbd5e1",
+                                padding: "8px 16px",
+                                borderRadius: "12px",
+                                border: "none",
+                                background: chartGroup === cat.key ? "#0f172a" : "transparent",
+                                color: chartGroup === cat.key ? "#ffffff" : "#475569",
                                 fontSize: "12.5px",
+                                fontWeight: 800,
                                 fontFamily: "'Plus Jakarta Sans', sans-serif",
+                                cursor: "pointer",
+                                transition: "all 0.2s ease",
                               }}
-                            />
-                          </div>
-                          <span style={{ fontSize: "12px", color: "#0369a1", fontWeight: 700 }}>
-                            Hiển thị báo cáo doanh thu {chartPoints.length} ngày (từ <strong>{customStartDate}</strong> đến <strong>{customEndDate}</strong>)
-                          </span>
+                            >
+                              {cat.label}
+                            </button>
+                          ))}
                         </div>
-                      )}
 
-                      {/* Dynamic SVG Area Chart */}
-                      <div style={{ position: "relative", width: "100%", height: "240px", background: "linear-gradient(180deg, #f0fdf4 0%, #ffffff 100%)", borderRadius: "16px", padding: "20px", border: "1px solid #e2e8f0" }}>
-                        <svg width="100%" height="170" viewBox="0 0 800 160" preserveAspectRatio="none" style={{ overflow: "visible" }}>
+                        {/* LEVEL 2: DETAILED TIME PRESET PILLS FOR SELECTED HIERARCHY */}
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                          {chartGroup === "day" && (
+                            <>
+                              {[
+                                { key: "7d", label: "7 ngày gần nhất" },
+                                { key: "14d", label: "14 ngày gần nhất" },
+                                { key: "30d", label: "30 ngày (1 tháng)" },
+                                { key: "60d", label: "60 ngày (2 tháng)" },
+                              ].map((p) => (
+                                <button
+                                  key={p.key}
+                                  type="button"
+                                  onClick={() => setChartSubPreset(p.key)}
+                                  style={{
+                                    padding: "6px 14px",
+                                    borderRadius: "999px",
+                                    border: chartSubPreset === p.key ? "none" : "1px solid #cbd5e1",
+                                    background: chartSubPreset === p.key ? "var(--primary-color, #2e7d32)" : "#ffffff",
+                                    color: chartSubPreset === p.key ? "#ffffff" : "#475569",
+                                    fontSize: "12px",
+                                    fontWeight: 800,
+                                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                                    cursor: "pointer",
+                                  }}
+                                >
+                                  {p.label}
+                                </button>
+                              ))}
+                            </>
+                          )}
+
+                          {chartGroup === "month" && (
+                            <>
+                              {[
+                                { key: "this_month", label: "Tháng này" },
+                                { key: "last_month", label: "Tháng trước" },
+                                { key: "3m", label: "3 tháng gần nhất" },
+                                { key: "6m", label: "6 tháng gần nhất" },
+                              ].map((p) => (
+                                <button
+                                  key={p.key}
+                                  type="button"
+                                  onClick={() => setChartSubPreset(p.key)}
+                                  style={{
+                                    padding: "6px 14px",
+                                    borderRadius: "999px",
+                                    border: chartSubPreset === p.key ? "none" : "1px solid #cbd5e1",
+                                    background: chartSubPreset === p.key ? "#0284c7" : "#ffffff",
+                                    color: chartSubPreset === p.key ? "#ffffff" : "#475569",
+                                    fontSize: "12px",
+                                    fontWeight: 800,
+                                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                                    cursor: "pointer",
+                                  }}
+                                >
+                                  {p.label}
+                                </button>
+                              ))}
+                            </>
+                          )}
+
+                          {chartGroup === "quarter" && (
+                            <>
+                              {[
+                                { key: "Q1", label: "Quý 1 (Q1)" },
+                                { key: "Q2", label: "Quý 2 (Q2)" },
+                                { key: "Q3", label: "Quý 3 (Q3)" },
+                                { key: "Q4", label: "Quý 4 (Q4)" },
+                                { key: "all_quarters", label: "Cả Năm (4 Quý)" },
+                              ].map((p) => (
+                                <button
+                                  key={p.key}
+                                  type="button"
+                                  onClick={() => setChartSubPreset(p.key)}
+                                  style={{
+                                    padding: "6px 14px",
+                                    borderRadius: "999px",
+                                    border: chartSubPreset === p.key ? "none" : "1px solid #cbd5e1",
+                                    background: chartSubPreset === p.key ? "#d97706" : "#ffffff",
+                                    color: chartSubPreset === p.key ? "#ffffff" : "#475569",
+                                    fontSize: "12px",
+                                    fontWeight: 800,
+                                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                                    cursor: "pointer",
+                                  }}
+                                >
+                                  {p.label}
+                                </button>
+                              ))}
+                            </>
+                          )}
+
+                          {chartGroup === "year" && (
+                            <>
+                              {[
+                                { key: "2026", label: "Năm 2026" },
+                                { key: "2025", label: "Năm 2025" },
+                                { key: "3y", label: "3 Năm Gần Đây (2024-2026)" },
+                              ].map((p) => (
+                                <button
+                                  key={p.key}
+                                  type="button"
+                                  onClick={() => setChartSubPreset(p.key)}
+                                  style={{
+                                    padding: "6px 14px",
+                                    borderRadius: "999px",
+                                    border: chartSubPreset === p.key ? "none" : "1px solid #cbd5e1",
+                                    background: chartSubPreset === p.key ? "#7c3aed" : "#ffffff",
+                                    color: chartSubPreset === p.key ? "#ffffff" : "#475569",
+                                    fontSize: "12px",
+                                    fontWeight: 800,
+                                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                                    cursor: "pointer",
+                                  }}
+                                >
+                                  {p.label}
+                                </button>
+                              ))}
+                            </>
+                          )}
+
+                          {/* Custom Date Inputs Bar */}
+                          {chartGroup === "custom" && (
+                            <div
+                              style={{
+                                padding: "8px 14px",
+                                background: "#f0f9ff",
+                                border: "1px solid #bae6fd",
+                                borderRadius: "12px",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "12px",
+                                flexWrap: "wrap",
+                                width: "100%",
+                              }}
+                            >
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <span style={{ fontSize: "12px", fontWeight: 800, color: "#0369a1" }}>Từ ngày:</span>
+                                <input
+                                  type="date"
+                                  value={customStartDate}
+                                  onChange={(e) => setCustomStartDate(e.target.value)}
+                                  style={{
+                                    padding: "6px 12px",
+                                    borderRadius: "10px",
+                                    border: "1px solid #cbd5e1",
+                                    fontSize: "12.5px",
+                                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                                  }}
+                                />
+                              </div>
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <span style={{ fontSize: "12px", fontWeight: 800, color: "#0369a1" }}>Đến ngày:</span>
+                                <input
+                                  type="date"
+                                  value={customEndDate}
+                                  onChange={(e) => setCustomEndDate(e.target.value)}
+                                  style={{
+                                    padding: "6px 12px",
+                                    borderRadius: "10px",
+                                    border: "1px solid #cbd5e1",
+                                    fontSize: "12.5px",
+                                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                                  }}
+                                />
+                              </div>
+                              <span style={{ fontSize: "12px", color: "#0369a1", fontWeight: 700 }}>
+                                Hiển thị {chartPoints.length} ngày (từ <strong>{customStartDate}</strong> đến <strong>{customEndDate}</strong>)
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* TALLER DYNAMIC SVG AREA CHART (Height: 380px, Canvas viewBox: 800 x 270) */}
+                      <div
+                        style={{
+                          position: "relative",
+                          width: "100%",
+                          height: "380px",
+                          background: "linear-gradient(180deg, #f0fdf4 0%, #ffffff 100%)",
+                          borderRadius: "20px",
+                          padding: "24px 20px 20px",
+                          border: "1.5px solid #e2e8f0",
+                          boxShadow: "inset 0 2px 6px rgba(0,0,0,0.02)",
+                        }}
+                      >
+                        <svg width="100%" height="280" viewBox="0 0 800 270" preserveAspectRatio="none" style={{ overflow: "visible" }}>
                           <defs>
-                            <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="0%" stopColor="#16a34a" stopOpacity="0.35" />
+                            <linearGradient id="revenueGradTall" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#16a34a" stopOpacity="0.45" />
+                              <stop offset="50%" stopColor="#16a34a" stopOpacity="0.15" />
                               <stop offset="100%" stopColor="#16a34a" stopOpacity="0.0" />
                             </linearGradient>
                           </defs>
+
                           {/* Horizontal Gridlines */}
-                          <line x1="0" y1="30" x2="800" y2="30" stroke="#e2e8f0" strokeDasharray="4 4" />
-                          <line x1="0" y1="70" x2="800" y2="70" stroke="#e2e8f0" strokeDasharray="4 4" />
-                          <line x1="0" y1="110" x2="800" y2="110" stroke="#e2e8f0" strokeDasharray="4 4" />
-                          <line x1="0" y1="130" x2="800" y2="130" stroke="#cbd5e1" strokeWidth="1.5" />
+                          <line x1="0" y1="40" x2="800" y2="40" stroke="#e2e8f0" strokeDasharray="4 4" />
+                          <line x1="0" y1="85" x2="800" y2="85" stroke="#e2e8f0" strokeDasharray="4 4" />
+                          <line x1="0" y1="130" x2="800" y2="130" stroke="#e2e8f0" strokeDasharray="4 4" />
+                          <line x1="0" y1="175" x2="800" y2="175" stroke="#e2e8f0" strokeDasharray="4 4" />
+                          <line x1="0" y1="230" x2="800" y2="230" stroke="#cbd5e1" strokeWidth="2" />
 
                           {/* Dynamic Area & Line Paths */}
-                          <path d={areaPathD} fill="url(#revenueGrad)" />
-                          <path d={linePathD} fill="none" stroke="#15803d" strokeWidth="3" strokeLinecap="round" />
+                          <path d={areaPathD} fill="url(#revenueGradTall)" />
+                          <path d={linePathD} fill="none" stroke="#15803d" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
 
-                          {/* Render Data Dots if there is non-zero revenue */}
+                          {/* Render Data Dots if non-zero revenue */}
                           {maxRevenue > 0 &&
                             svgPoints
                               .filter((p) => p.pt.revenue > 0)
                               .map((p, i) => (
-                                <circle key={i} cx={p.x} cy={p.y} r="5" fill="#16a34a" stroke="#ffffff" strokeWidth="2" />
+                                <g key={i}>
+                                  <circle cx={p.x} cy={p.y} r="6" fill="#16a34a" stroke="#ffffff" strokeWidth="2.5" />
+                                </g>
                               ))}
                         </svg>
 
                         {/* X-Axis Date Labels Row */}
-                        <div style={{ display: "flex", justifyContent: "space-between", marginTop: "8px", paddingTop: "8px", borderTop: "1px solid #e2e8f0" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginTop: "12px", paddingTop: "10px", borderTop: "1.5px solid #e2e8f0" }}>
                           {filteredLabels.map((pt, idx) => (
-                            <span key={idx} style={{ fontSize: "11px", fontWeight: 700, color: "#64748b", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                            <span key={idx} style={{ fontSize: "11.5px", fontWeight: 800, color: "#64748b", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                               {pt.label}
                             </span>
                           ))}
                         </div>
 
-                        {/* Chart Tooltip Badge simulation */}
+                        {/* Chart Status Badge */}
                         <div
                           style={{
                             position: "absolute",
-                            top: "14px",
+                            top: "16px",
                             right: "20px",
                             background: maxRevenue > 0 ? "#14532d" : "#0f172a",
                             color: "#ffffff",
-                            padding: "6px 14px",
+                            padding: "6px 16px",
                             borderRadius: "999px",
-                            fontSize: "12px",
+                            fontSize: "12.5px",
                             fontWeight: 800,
-                            boxShadow: "0 6px 14px rgba(15, 23, 42, 0.2)",
+                            boxShadow: "0 6px 16px rgba(15, 23, 42, 0.2)",
                             pointerEvents: "none",
                             fontFamily: "'Plus Jakarta Sans', sans-serif",
                           }}
                         >
-                          {maxRevenue > 0 ? `Mốc đỉnh cao: ${formatVND(maxRevenue)}` : "Mốc đỉnh cao: 0đ (Chưa có doanh số trong kho)"}
+                          {maxRevenue > 0
+                            ? `📈 Đỉnh doanh thu: ${formatVND(maxRevenue)}`
+                            : "📊 Chưa có doanh thu trong khoảng chọn"}
                         </div>
                       </div>
                     </div>
