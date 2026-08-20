@@ -725,12 +725,12 @@ export default function AuthPage() {
 
   return (
     <main className="main-content" style={{ backgroundColor: "var(--bg-main, #fcfbf9)", minHeight: "100dvh", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-      <div className="container" style={{ padding: "10px 16px 40px" }}>
+      <div className="container" style={{ padding: "0 16px 40px", maxWidth: "1300px" }}>
         
-        <div className="auth-page-section" style={{ padding: "10px 0 40px" }}>
+        <div className="auth-page-section" style={{ padding: "0 0 40px", width: "100%" }}>
           {!user ? (
             /* KHI CHƯA ĐĂNG NHẬP (Wide Spotlight Image & Fixed Form Architecture) */
-            <div className="doppelrand-outer" style={{ maxWidth: "1200px", margin: "0 auto" }}>
+            <div className="doppelrand-outer" style={{ maxWidth: "1300px", width: "100%", margin: "0 auto" }}>
               <div className="doppelrand-inner" style={{ padding: "12px" }}>
                 <div
                   style={{
@@ -1171,7 +1171,7 @@ export default function AuthPage() {
             </div>
           ) : (
             /* KHI ĐÃ ĐĂNG NHẬP (AUTHENTICATED CUSTOMER DASHBOARD - 1300px Bright Clean Architecture) */
-            <div style={{ maxWidth: "1300px", margin: "0 auto" }}>
+            <div style={{ width: "100%", maxWidth: "1300px", margin: "0 auto" }}>
               {/* 1. TOP PROFILE HEADER CARD (Bright Elegant White/Emerald Theme) */}
               <div
                 style={{
