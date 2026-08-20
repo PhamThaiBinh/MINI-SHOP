@@ -57,17 +57,17 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   return (
     <aside className={`admin-sidebar ${sidebarCollapsed ? "collapsed" : ""}`}>
       <div className="sidebar-header">
-        <Link href="/admin" className="sidebar-brand-logo">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-700 to-emerald-900 text-white flex items-center justify-center shadow-md shadow-emerald-900/20 font-black text-lg">
-            M
-          </div>
+        <Link href="/admin" className="sidebar-brand-logo" style={{ textDecoration: "none" }}>
+          <svg viewBox="0 0 24 24" style={{ width: 28, height: 28, fill: "var(--primary-color, #2e7d32)", flexShrink: 0 }}>
+            <path d="M19 6h-2c0-2.76-2.24-5-5-5S7 3.24 7 6H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-7-3c1.66 0 3 1.34 3 3H9c0-1.66 1.34-3 3-3zm7 17H5V8h2v2c0 .55.45 1 1 1s1-.45 1-1V8h6v2c0 .55.45 1 1 1s1-.45 1-1V8h2v12z" />
+          </svg>
           {!sidebarCollapsed && (
             <div>
-              <div className="font-extrabold text-base tracking-tight text-slate-900 leading-none">
+              <div style={{ fontWeight: 900, fontSize: "18px", color: "var(--primary-color, #2e7d32)", lineHeight: 1.1, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                 Mini Shop
               </div>
-              <div className="sidebar-subtext text-[11px] text-emerald-700 font-bold mt-1 flex items-center gap-1">
-                <Sparkles className="w-3 h-3" /> Admin Suite
+              <div style={{ fontSize: "11px", color: "#475569", fontWeight: 700, marginTop: "2px", display: "flex", alignItems: "center", gap: "4px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                <Sparkles className="w-3 h-3 text-emerald-700" /> Admin Suite
               </div>
             </div>
           )}

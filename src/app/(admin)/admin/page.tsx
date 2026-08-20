@@ -205,7 +205,7 @@ export default function AdminDashboard() {
                         Doanh Thu Thực
                       </span>
                       <span style={{ padding: "2px 6px", background: "#dcfce7", color: "#15803d", borderRadius: "8px", fontWeight: 800, fontSize: "10px" }}>
-                        ↑ +12.8%
+                        {completedOrders.length > 0 ? "↑ 100%" : "0%"}
                       </span>
                     </div>
                     <div style={{ fontSize: "28px", fontWeight: 900, color: "#14532d", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
@@ -241,7 +241,7 @@ export default function AdminDashboard() {
                         Đơn Trung Bình (AOV)
                       </span>
                       <span style={{ padding: "2px 6px", background: "#e0f2fe", color: "#0369a1", borderRadius: "8px", fontWeight: 800, fontSize: "10px" }}>
-                        ↑ +5.4%
+                        {completedOrders.length > 0 ? "↑ 100%" : "0%"}
                       </span>
                     </div>
                     <div style={{ fontSize: "28px", fontWeight: 900, color: "#0c4a6e", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
@@ -277,7 +277,7 @@ export default function AdminDashboard() {
                         Tỷ Lệ Chốt Đơn
                       </span>
                       <span style={{ padding: "2px 6px", background: "#ccfbf1", color: "#0f766e", borderRadius: "8px", fontWeight: 800, fontSize: "10px" }}>
-                        ↑ +8.2%
+                        {fulfillmentRate}%
                       </span>
                     </div>
                     <div style={{ fontSize: "28px", fontWeight: 900, color: "#134e4a", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
@@ -313,7 +313,7 @@ export default function AdminDashboard() {
                         Hàng Tồn Thấp (&le;10)
                       </span>
                       <span style={{ padding: "2px 6px", background: "#fef3c7", color: "#b45309", borderRadius: "8px", fontWeight: 800, fontSize: "10px" }}>
-                        ↓ -2 món
+                        {lowStockProducts.length} món
                       </span>
                     </div>
                     <div style={{ fontSize: "28px", fontWeight: 900, color: "#78350f", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
@@ -332,180 +332,248 @@ export default function AdminDashboard() {
               </div>
 
               {/* 1.5 INTERACTIVE REVENUE TREND & ANALYTICS CHART HUB */}
-              <div className="admin-card-shell" style={{ marginBottom: "24px" }}>
-                <div className="admin-card-core" style={{ padding: "24px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px", marginBottom: "20px" }}>
-                    <div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <BarChart3 className="w-5 h-5 text-emerald-700" />
-                        <h3 style={{ fontSize: "18px", fontWeight: 900, color: "#0f172a", margin: 0, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                          Biểu Đồ Doanh Thu & Xu Hướng Tăng Trưởng (Chart Hub)
-                        </h3>
-                      </div>
-                      <p style={{ fontSize: "12px", color: "#64748b", margin: "2px 0 0", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                        Phân tích biến động doanh số bán hàng thời gian thực theo mốc thời gian tùy chỉnh
-                      </p>
-                    </div>
+              {(() => {
+                // Calculate dynamic date points strictly based on selected time preset & real Supabase orders
+                let daysCount = 30;
+                if (timePreset === "7d") daysCount = 7;
+                else if (timePreset === "30d") daysCount = 30;
+                else if (timePreset === "90d") daysCount = 90;
+                else if (timePreset === "180d") daysCount = 180;
+                else if (timePreset === "365d") daysCount = 365;
+                else if (timePreset === "custom") {
+                  const start = new Date(customStartDate).getTime();
+                  const end = new Date(customEndDate).getTime();
+                  const diff = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
+                  daysCount = Math.min(365, Math.max(2, diff));
+                }
 
-                    {/* Time Presets & Custom Picker */}
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-                      {(["7d", "30d", "90d", "180d", "365d"] as const).map((preset) => (
-                        <button
-                          key={preset}
-                          type="button"
-                          onClick={() => setTimePreset(preset)}
+                const chartPoints: { dateStr: string; label: string; revenue: number }[] = [];
+                const today = new Date();
+
+                for (let i = daysCount - 1; i >= 0; i--) {
+                  const d = new Date(today);
+                  d.setDate(d.getDate() - i);
+                  const isoDate = d.toISOString().split("T")[0];
+                  const dateLabel = `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}`;
+
+                  const dayRevenue = completedOrders
+                    .filter((o) => {
+                      if (!o.date) return false;
+                      if (o.date.includes("/")) {
+                        const parts = o.date.split(" ")[0].split("/");
+                        if (parts.length === 3) {
+                          const orderIso = `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`;
+                          return orderIso === isoDate;
+                        }
+                      }
+                      return o.date.startsWith(isoDate);
+                    })
+                    .reduce((sum, o) => sum + (o.total || 0), 0);
+
+                  chartPoints.push({ dateStr: isoDate, label: dateLabel, revenue: dayRevenue });
+                }
+
+                const maxRevenue = Math.max(...chartPoints.map((p) => p.revenue), 0);
+
+                // Build SVG path string dynamically
+                const width = 800;
+                const height = 160;
+                const baselineY = 130;
+                const topY = 30;
+
+                const svgPoints = chartPoints.map((pt, idx) => {
+                  const x = (idx / Math.max(1, chartPoints.length - 1)) * width;
+                  const y = maxRevenue > 0
+                    ? baselineY - (pt.revenue / maxRevenue) * (baselineY - topY)
+                    : baselineY;
+                  return { x, y, pt };
+                });
+
+                const polylineStr = svgPoints.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" L ");
+                const linePathD = `M ${polylineStr}`;
+                const areaPathD = `M 0,${baselineY} L ${polylineStr} L ${width},${baselineY} Z`;
+
+                // Calculate display label steps for X-axis
+                const labelStep = Math.max(1, Math.floor(chartPoints.length / 8));
+                const filteredLabels = chartPoints.filter((_, i) => i % labelStep === 0 || i === chartPoints.length - 1);
+
+                return (
+                  <div className="admin-card-shell" style={{ marginBottom: "24px" }}>
+                    <div className="admin-card-core" style={{ padding: "24px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px", marginBottom: "20px" }}>
+                        <div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                            <BarChart3 className="w-5 h-5 text-emerald-700" />
+                            <h3 style={{ fontSize: "18px", fontWeight: 900, color: "#0f172a", margin: 0, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                              Biểu Đồ Doanh Thu & Xu Hướng Tăng Trưởng ({daysCount} Ngày Qua)
+                            </h3>
+                          </div>
+                          <p style={{ fontSize: "12px", color: "#64748b", margin: "2px 0 0", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                            Phân tích dữ liệu thực tế từ Supabase — Hiển thị chính xác {chartPoints.length} ngày trong khoảng chọn
+                          </p>
+                        </div>
+
+                        {/* Time Presets & Custom Picker */}
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                          {(["7d", "30d", "90d", "180d", "365d"] as const).map((preset) => (
+                            <button
+                              key={preset}
+                              type="button"
+                              onClick={() => setTimePreset(preset)}
+                              style={{
+                                padding: "6px 14px",
+                                borderRadius: "999px",
+                                border: timePreset === preset ? "none" : "1px solid #cbd5e1",
+                                background: timePreset === preset ? "var(--primary-color, #2e7d32)" : "#ffffff",
+                                color: timePreset === preset ? "#ffffff" : "#475569",
+                                fontSize: "12px",
+                                fontWeight: 800,
+                                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                                cursor: "pointer",
+                                boxShadow: timePreset === preset ? "0 4px 10px rgba(46, 125, 50, 0.2)" : "none",
+                              }}
+                            >
+                              {preset === "7d" && "7 ngày"}
+                              {preset === "30d" && "1 tháng (30 ngày)"}
+                              {preset === "90d" && "3 tháng (90 ngày)"}
+                              {preset === "180d" && "6 tháng (180 ngày)"}
+                              {preset === "365d" && "12 tháng (365 ngày)"}
+                            </button>
+                          ))}
+
+                          {/* Custom Range Toggle */}
+                          <button
+                            type="button"
+                            onClick={() => setTimePreset("custom")}
+                            style={{
+                              padding: "6px 14px",
+                              borderRadius: "999px",
+                              border: timePreset === "custom" ? "none" : "1px solid #cbd5e1",
+                              background: timePreset === "custom" ? "#0284c7" : "#ffffff",
+                              color: timePreset === "custom" ? "#ffffff" : "#475569",
+                              fontSize: "12px",
+                              fontWeight: 800,
+                              fontFamily: "'Plus Jakarta Sans', sans-serif",
+                              cursor: "pointer",
+                            }}
+                          >
+                            📅 Tùy chỉnh ngày
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Custom Date Pickers Bar */}
+                      {timePreset === "custom" && (
+                        <div
                           style={{
-                            padding: "6px 14px",
-                            borderRadius: "999px",
-                            border: timePreset === preset ? "none" : "1px solid #cbd5e1",
-                            background: timePreset === preset ? "var(--primary-color, #2e7d32)" : "#ffffff",
-                            color: timePreset === preset ? "#ffffff" : "#475569",
-                            fontSize: "12px",
-                            fontWeight: 800,
-                            fontFamily: "'Plus Jakarta Sans', sans-serif",
-                            cursor: "pointer",
-                            boxShadow: timePreset === preset ? "0 4px 10px rgba(46, 125, 50, 0.2)" : "none",
+                            padding: "12px 16px",
+                            background: "#f0f9ff",
+                            border: "1px solid #bae6fd",
+                            borderRadius: "14px",
+                            marginBottom: "16px",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "14px",
+                            flexWrap: "wrap",
                           }}
                         >
-                          {preset === "7d" && "7 ngày"}
-                          {preset === "30d" && "1 tháng"}
-                          {preset === "90d" && "3 tháng"}
-                          {preset === "180d" && "6 tháng"}
-                          {preset === "365d" && "12 tháng"}
-                        </button>
-                      ))}
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <span style={{ fontSize: "12px", fontWeight: 800, color: "#0369a1" }}>Từ ngày:</span>
+                            <input
+                              type="date"
+                              value={customStartDate}
+                              onChange={(e) => setCustomStartDate(e.target.value)}
+                              style={{
+                                padding: "6px 12px",
+                                borderRadius: "10px",
+                                border: "1px solid #cbd5e1",
+                                fontSize: "12.5px",
+                                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                              }}
+                            />
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <span style={{ fontSize: "12px", fontWeight: 800, color: "#0369a1" }}>Đến ngày:</span>
+                            <input
+                              type="date"
+                              value={customEndDate}
+                              onChange={(e) => setCustomEndDate(e.target.value)}
+                              style={{
+                                padding: "6px 12px",
+                                borderRadius: "10px",
+                                border: "1px solid #cbd5e1",
+                                fontSize: "12.5px",
+                                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                              }}
+                            />
+                          </div>
+                          <span style={{ fontSize: "12px", color: "#0369a1", fontWeight: 700 }}>
+                            Hiển thị báo cáo doanh thu {daysCount} ngày (từ <strong>{customStartDate}</strong> đến <strong>{customEndDate}</strong>)
+                          </span>
+                        </div>
+                      )}
 
-                      {/* Custom Range Toggle */}
-                      <button
-                        type="button"
-                        onClick={() => setTimePreset("custom")}
-                        style={{
-                          padding: "6px 14px",
-                          borderRadius: "999px",
-                          border: timePreset === "custom" ? "none" : "1px solid #cbd5e1",
-                          background: timePreset === "custom" ? "#0284c7" : "#ffffff",
-                          color: timePreset === "custom" ? "#ffffff" : "#475569",
-                          fontSize: "12px",
-                          fontWeight: 800,
-                          fontFamily: "'Plus Jakarta Sans', sans-serif",
-                          cursor: "pointer",
-                        }}
-                      >
-                        📅 Tùy chỉnh ngày
-                      </button>
-                    </div>
-                  </div>
+                      {/* Dynamic SVG Area Chart */}
+                      <div style={{ position: "relative", width: "100%", height: "240px", background: "linear-gradient(180deg, #f0fdf4 0%, #ffffff 100%)", borderRadius: "16px", padding: "20px", border: "1px solid #e2e8f0" }}>
+                        <svg width="100%" height="170" viewBox="0 0 800 160" preserveAspectRatio="none" style={{ overflow: "visible" }}>
+                          <defs>
+                            <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#16a34a" stopOpacity="0.35" />
+                              <stop offset="100%" stopColor="#16a34a" stopOpacity="0.0" />
+                            </linearGradient>
+                          </defs>
+                          {/* Horizontal Gridlines */}
+                          <line x1="0" y1="30" x2="800" y2="30" stroke="#e2e8f0" strokeDasharray="4 4" />
+                          <line x1="0" y1="70" x2="800" y2="70" stroke="#e2e8f0" strokeDasharray="4 4" />
+                          <line x1="0" y1="110" x2="800" y2="110" stroke="#e2e8f0" strokeDasharray="4 4" />
+                          <line x1="0" y1="130" x2="800" y2="130" stroke="#cbd5e1" strokeWidth="1.5" />
 
-                  {/* Custom Date Pickers Bar */}
-                  {timePreset === "custom" && (
-                    <div
-                      style={{
-                        padding: "12px 16px",
-                        background: "#f0f9ff",
-                        border: "1px solid #bae6fd",
-                        borderRadius: "14px",
-                        marginBottom: "16px",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "14px",
-                        flexWrap: "wrap",
-                      }}
-                    >
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <span style={{ fontSize: "12px", fontWeight: 800, color: "#0369a1" }}>Từ ngày:</span>
-                        <input
-                          type="date"
-                          value={customStartDate}
-                          onChange={(e) => setCustomStartDate(e.target.value)}
+                          {/* Dynamic Area & Line Paths */}
+                          <path d={areaPathD} fill="url(#revenueGrad)" />
+                          <path d={linePathD} fill="none" stroke="#15803d" strokeWidth="3" strokeLinecap="round" />
+
+                          {/* Render Data Dots if there is non-zero revenue */}
+                          {maxRevenue > 0 &&
+                            svgPoints
+                              .filter((p) => p.pt.revenue > 0)
+                              .map((p, i) => (
+                                <circle key={i} cx={p.x} cy={p.y} r="5" fill="#16a34a" stroke="#ffffff" strokeWidth="2" />
+                              ))}
+                        </svg>
+
+                        {/* X-Axis Date Labels Row */}
+                        <div style={{ display: "flex", justifyContent: "space-between", marginTop: "8px", paddingTop: "8px", borderTop: "1px solid #e2e8f0" }}>
+                          {filteredLabels.map((pt, idx) => (
+                            <span key={idx} style={{ fontSize: "11px", fontWeight: 700, color: "#64748b", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                              {pt.label}
+                            </span>
+                          ))}
+                        </div>
+
+                        {/* Chart Tooltip Badge simulation */}
+                        <div
                           style={{
-                            padding: "6px 12px",
-                            borderRadius: "10px",
-                            border: "1px solid #cbd5e1",
-                            fontSize: "12.5px",
+                            position: "absolute",
+                            top: "14px",
+                            right: "20px",
+                            background: maxRevenue > 0 ? "#14532d" : "#0f172a",
+                            color: "#ffffff",
+                            padding: "6px 14px",
+                            borderRadius: "999px",
+                            fontSize: "12px",
+                            fontWeight: 800,
+                            boxShadow: "0 6px 14px rgba(15, 23, 42, 0.2)",
+                            pointerEvents: "none",
                             fontFamily: "'Plus Jakarta Sans', sans-serif",
                           }}
-                        />
+                        >
+                          {maxRevenue > 0 ? `Mốc đỉnh cao: ${formatVND(maxRevenue)}` : "Mốc đỉnh cao: 0đ (Chưa có doanh số trong kho)"}
+                        </div>
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <span style={{ fontSize: "12px", fontWeight: 800, color: "#0369a1" }}>Đến ngày:</span>
-                        <input
-                          type="date"
-                          value={customEndDate}
-                          onChange={(e) => setCustomEndDate(e.target.value)}
-                          style={{
-                            padding: "6px 12px",
-                            borderRadius: "10px",
-                            border: "1px solid #cbd5e1",
-                            fontSize: "12.5px",
-                            fontFamily: "'Plus Jakarta Sans', sans-serif",
-                          }}
-                        />
-                      </div>
-                      <span style={{ fontSize: "12px", color: "#0369a1", fontWeight: 700 }}>
-                        Hiển thị báo cáo doanh thu từ <strong>{customStartDate}</strong> đến <strong>{customEndDate}</strong>
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Interactive SVG Area Chart */}
-                  <div style={{ position: "relative", width: "100%", height: "220px", background: "linear-gradient(180deg, #f0fdf4 0%, #ffffff 100%)", borderRadius: "16px", padding: "16px 20px", border: "1px solid #e2e8f0" }}>
-                    <svg width="100%" height="100%" viewBox="0 0 800 160" preserveAspectRatio="none" style={{ overflow: "visible" }}>
-                      <defs>
-                        <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#16a34a" stopOpacity="0.35" />
-                          <stop offset="100%" stopColor="#16a34a" stopOpacity="0.0" />
-                        </linearGradient>
-                      </defs>
-                      {/* Horizontal Gridlines */}
-                      <line x1="0" y1="30" x2="800" y2="30" stroke="#e2e8f0" strokeDasharray="4 4" />
-                      <line x1="0" y1="70" x2="800" y2="70" stroke="#e2e8f0" strokeDasharray="4 4" />
-                      <line x1="0" y1="110" x2="800" y2="110" stroke="#e2e8f0" strokeDasharray="4 4" />
-                      <line x1="0" y1="150" x2="800" y2="150" stroke="#e2e8f0" />
-
-                      {/* Smooth Area Path */}
-                      <path
-                        d="M0,130 Q120,90 240,110 T480,50 T720,70 L800,40 L800,150 L0,150 Z"
-                        fill="url(#revenueGrad)"
-                      />
-                      {/* Smooth Curve Line */}
-                      <path
-                        d="M0,130 Q120,90 240,110 T480,50 T720,70 L800,40"
-                        fill="none"
-                        stroke="#15803d"
-                        strokeWidth="3.5"
-                        strokeLinecap="round"
-                      />
-
-                      {/* Data Dots */}
-                      <circle cx="0" cy="130" r="5" fill="#15803d" stroke="#ffffff" strokeWidth="2" />
-                      <circle cx="240" cy="110" r="5" fill="#15803d" stroke="#ffffff" strokeWidth="2" />
-                      <circle cx="480" cy="50" r="6" fill="#16a34a" stroke="#ffffff" strokeWidth="2.5" />
-                      <circle cx="720" cy="70" r="5" fill="#15803d" stroke="#ffffff" strokeWidth="2" />
-                      <circle cx="800" cy="40" r="6" fill="#22c55e" stroke="#ffffff" strokeWidth="2.5" />
-                    </svg>
-
-                    {/* Chart Tooltip Badge simulation */}
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: "30px",
-                        left: "58%",
-                        transform: "translateX(-50%)",
-                        background: "#0f172a",
-                        color: "#ffffff",
-                        padding: "6px 12px",
-                        borderRadius: "10px",
-                        fontSize: "11px",
-                        fontWeight: 800,
-                        boxShadow: "0 8px 18px rgba(15, 23, 42, 0.25)",
-                        pointerEvents: "none",
-                      }}
-                    >
-                      Mốc đỉnh cao: {formatVND(netRevenue || 28500000)}
                     </div>
                   </div>
-                </div>
-              </div>
+                );
+              })()}
 
               {/* 2. MIDDLE SECTION: ORDER FUNNEL & CATEGORY PERFORMANCE */}
               <div

@@ -9,9 +9,12 @@ import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
 import { PRODUCTS_DATA } from "@/data/products";
 import { Zap, Flame, Clock, ShoppingCart, ArrowRight, Check } from "lucide-react";
 
+import { fetchAdminOrders } from "@/lib/supabaseAdmin";
+
 export const HomeFlashSale: React.FC = () => {
   const { addToCart } = useCart();
   const [products, setProducts] = useState<Product[]>([]);
+  const [realSoldMap, setRealSoldMap] = useState<Record<string, number>>({});
   const [addedId, setAddedId] = useState<number | null>(null);
 
   // VN Countdown Timer
@@ -19,8 +22,24 @@ export const HomeFlashSale: React.FC = () => {
 
   useEffect(() => {
     async function loadData() {
-      const data = await fetchProductsFromSupabase();
+      const [data, orders] = await Promise.all([
+        fetchProductsFromSupabase(),
+        fetchAdminOrders(),
+      ]);
       setProducts(data.length > 0 ? data : PRODUCTS_DATA);
+
+      const soldCounts: Record<string, number> = {};
+      (orders || [])
+        .filter((o) => o.status !== "cancelled")
+        .forEach((o) => {
+          (o.items || []).forEach((it) => {
+            const key = (it.name || "").trim().toLowerCase();
+            if (key) {
+              soldCounts[key] = (soldCounts[key] || 0) + (it.qty || 1);
+            }
+          });
+        });
+      setRealSoldMap(soldCounts);
     }
     loadData();
 
@@ -47,8 +66,9 @@ export const HomeFlashSale: React.FC = () => {
   const flashItems = (products.length > 0 ? products : PRODUCTS_DATA).slice(0, 4).map((p, idx) => {
     const discountPercent = 25 + (idx * 5);
     const flashPrice = Math.round((p.price * (1 - discountPercent / 100)) / 1000) * 1000;
-    const totalStock = 20;
-    const soldCount = 14 + (idx * 2);
+    const totalStock = p.stock && p.stock > 0 ? p.stock : 20;
+    const realSold = realSoldMap[p.name.trim().toLowerCase()] || 0;
+    const soldCount = Math.min(totalStock, realSold);
     return {
       product: p,
       flashPrice,

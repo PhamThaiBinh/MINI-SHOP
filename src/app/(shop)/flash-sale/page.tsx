@@ -10,8 +10,10 @@ import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
 import "@/styles/flash-sale.css";
 import { Zap, ShoppingCart, Flame, Clock, Check, Bell, Sparkles, ArrowRight, ShieldCheck, Truck, RefreshCw } from "lucide-react";
 
+import { fetchAdminOrders } from "@/lib/supabaseAdmin";
+
 // Generate 10 Flash Sale items per time slot guaranteed to be lower than original price
-const getSlotProducts = (productsList: Product[], slotIndex: number) => {
+const getSlotProducts = (productsList: Product[], slotIndex: number, soldMap: Record<string, number>) => {
   const list = productsList.length > 0 ? productsList : PRODUCTS_DATA;
   const startIndex = (slotIndex * 4) % list.length;
   const items = [];
@@ -27,11 +29,9 @@ const getSlotProducts = (productsList: Product[], slotIndex: number) => {
     const rawFlashPrice = Math.round((p.price * (1 - discountPercent / 100)) / 1000) * 1000;
     const flashPrice = Math.min(p.price - 10000, rawFlashPrice);
 
-    const totalStock = 20 + ((p.id * 7) % 30);
-    const soldCount = Math.min(
-      totalStock - 2,
-      Math.floor(totalStock * (0.60 + ((p.id * 5) % 35) / 100))
-    );
+    const totalStock = p.stock && p.stock > 0 ? p.stock : 20;
+    const realSold = soldMap[p.name.trim().toLowerCase()] || 0;
+    const soldCount = Math.min(totalStock, realSold);
 
     items.push({
       product: p,
@@ -52,13 +52,30 @@ export default function FlashSalePage() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const [products, setProducts] = useState<Product[]>([]);
+  const [realSoldMap, setRealSoldMap] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     async function loadData() {
       setLoading(true);
-      const data = await fetchProductsFromSupabase();
+      const [data, orders] = await Promise.all([
+        fetchProductsFromSupabase(),
+        fetchAdminOrders(),
+      ]);
       setProducts(data);
+
+      const soldCounts: Record<string, number> = {};
+      (orders || [])
+        .filter((o) => o.status !== "cancelled")
+        .forEach((o) => {
+          (o.items || []).forEach((it) => {
+            const key = (it.name || "").trim().toLowerCase();
+            if (key) {
+              soldCounts[key] = (soldCounts[key] || 0) + (it.qty || 1);
+            }
+          });
+        });
+      setRealSoldMap(soldCounts);
       setLoading(false);
     }
     loadData();
@@ -133,7 +150,7 @@ export default function FlashSalePage() {
   const slotStartHours = { slot1: 0, slot2: 9, slot3: 15, slot4: 21 };
   
   const currentSlotIndex = slotMap[activeSlot];
-  const slotProducts = getSlotProducts(products, currentSlotIndex);
+  const slotProducts = getSlotProducts(products, currentSlotIndex, realSoldMap);
   const heroSuperDeal = slotProducts[0]; // Top 50% deal of the slot
 
   const isSlotAvailableToBuy = vnHour >= slotStartHours[activeSlot];
