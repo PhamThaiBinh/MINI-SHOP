@@ -36,6 +36,8 @@ export default function WishlistPage() {
     wishlistIds.includes(p.id)
   );
 
+  const [isMovedAll, setIsMovedAll] = useState(false);
+
   const handleRemoveWishlist = (id: number) => {
     toggleWishlist(id);
   };
@@ -45,8 +47,8 @@ export default function WishlistPage() {
     wishlistProducts.forEach((p) => {
       addToCart(p, 1);
     });
-    setToastMsg(`Đã chuyển toàn bộ ${wishlistProducts.length} sản phẩm yêu thích vào giỏ hàng thành công!`);
-    setTimeout(() => setToastMsg(""), 3500);
+    setIsMovedAll(true);
+    setTimeout(() => setIsMovedAll(false), 2500);
   };
 
   return (
@@ -106,7 +108,7 @@ export default function WishlistPage() {
               onClick={handleMoveAllToCart}
               style={{
                 padding: "12px 24px",
-                background: "var(--primary-color, #2e7d32)",
+                background: isMovedAll ? "#166534" : "var(--primary-color, #2e7d32)",
                 color: "#ffffff",
                 border: "none",
                 borderRadius: "999px",
@@ -120,8 +122,11 @@ export default function WishlistPage() {
                 transition: "all 0.2s ease",
               }}
             >
-              <ShoppingCart className="w-4 h-4" />
-              <span>Chuyển Tất Cả Vào Giỏ Hàng</span>
+              {isMovedAll ? (
+                <><Check className="w-4 h-4" /> Đã Chuyển Vào Giỏ Hàng</>
+              ) : (
+                <><ShoppingCart className="w-4 h-4" /> Chuyển Tất Cả Vào Giỏ Hàng</>
+              )}
             </button>
           )}
         </div>
