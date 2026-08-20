@@ -323,19 +323,24 @@ export default function ContactPage() {
         <div className="doppelrand-outer">
           <div className="doppelrand-inner" style={{ padding: "28px", textAlign: "center" }}>
             <h3 style={{ fontSize: "18px", fontWeight: 900, color: "#0f172a", margin: "0 0 8px" }}>
-              Ghé Thăm Showroom MINI-SHOP Trực Tiếp
+              Ghé Thăm Trung Tâm Tin Học Văn Phòng Bình Dương
             </h3>
-            <p style={{ fontSize: "14px", color: "#64748b", margin: "0 auto 20px", maxWidth: "600px" }}>
-              Trải nghiệm thực tế các mẫu nội thất gỗ sồi Mỹ, sofa nỉ cao cấp và hệ thống chiếu sáng phong cách Bắc Âu tại không gian trưng bày 500m².
+            <p style={{ fontSize: "14px", color: "#64748b", margin: "0 auto 12px", maxWidth: "650px" }}>
+              {storeInfo.address}
             </p>
-            <div style={{ borderRadius: "1.25rem", overflow: "hidden", border: "1px solid #cbd5e1", height: "320px", background: "#f1f5f9" }}>
+
+            <div style={{ fontSize: "12px", fontWeight: 800, color: "#166534", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "6px 16px", borderRadius: "999px", width: "fit-content", margin: "0 auto 18px", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+              <span>🖱️ Lăn con lăn chuột trực tiếp trên bản đồ để Phóng to / Thu nhỏ</span>
+            </div>
+
+            <div style={{ borderRadius: "1.25rem", overflow: "hidden", border: "1px solid #cbd5e1", height: "400px", background: "#f1f5f9", position: "relative" }}>
               <iframe
-                title="Mini-Shop Showroom Location Map"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3724.63467439561!2d105.84117!3d21.00727!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjHCsDAwJzI2LjIiTiAxMDXCsDUwJzI4LjIiRQ!5e0!3m2!1svi!2s!4v1620000000000!5m2!1svi!2s"
+                title="Bản đồ Trung tâm Tin học Văn phòng Bình Dương"
+                src="https://maps.google.com/maps?q=Trung+t%C3%A2m+Tin+h%E1%BB%8Dc+V%C4%83n+ph%C3%B2ng+B%C3%ACnh+D%C6%B0%C6%A1ng&t=&z=16&ie=UTF8&iwloc=&output=embed"
                 width="100%"
                 height="100%"
-                style={{ border: 0 }}
-                allowFullScreen={false}
+                style={{ border: 0, pointerEvents: "auto" }}
+                allowFullScreen={true}
                 loading="lazy"
               />
             </div>
