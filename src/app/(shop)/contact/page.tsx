@@ -326,7 +326,7 @@ export default function ContactPage() {
               Ghé Thăm Trụ Sở & Showroom MINI-SHOP
             </h3>
             <p style={{ fontSize: "14px", color: "#64748b", margin: "0 auto 12px", maxWidth: "650px" }}>
-              {storeInfo.address}
+              {storeInfo.address || "107, đường D5, KDC Phú Hòa 1, phường Phú Lợi, TP. Hồ Chí Minh"}
             </p>
 
             <div style={{ marginBottom: "18px" }}>
