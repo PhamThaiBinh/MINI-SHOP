@@ -194,35 +194,49 @@ export default function AdminProductsPage() {
         />
 
         <div className="dashboard-content-body">
-          <div className="dashboard-card">
-            <div className="card-header-row" style={{ marginBottom: "16px" }}>
-              <div>
-                <h2 className="card-header-title">Danh Sách Sản Phẩm Kinh Doanh ({filteredProducts.length})</h2>
-                <p style={{ fontSize: "12px", color: "var(--text-muted)", margin: 0 }}>
-                  Quản lý giá bán, hình ảnh và tồn kho sản phẩm trực tuyến
-                </p>
+          <div className="admin-card-shell">
+            <div className="admin-card-core">
+              <div className="card-header-row" style={{ marginBottom: "20px" }}>
+                <div>
+                  <h2 className="card-header-title text-xl font-extrabold text-slate-900 tracking-tight">
+                    Danh Sách Sản Phẩm Kinh Doanh ({filteredProducts.length})
+                  </h2>
+                  <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: "4px 0 0" }}>
+                    Quản lý giá bán, hình ảnh và tồn kho sản phẩm trực tuyến
+                  </p>
+                </div>
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <button
+                    onClick={() => setOnlyLowStock(!onlyLowStock)}
+                    style={{
+                      padding: "8px 14px",
+                      fontSize: "13px",
+                      fontWeight: 700,
+                      border: "1px solid #fecaca",
+                      borderRadius: "12px",
+                      background: onlyLowStock ? "#fef2f2" : "#fff",
+                      color: onlyLowStock ? "#ef4444" : "#64748b",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {onlyLowStock ? "⚠️ Đang lọc: Sắp hết hàng" : "⚠️ Cảnh báo tồn thấp"}
+                  </button>
+                  <button
+                    className="btn-add-product-green"
+                    onClick={handleOpenAddModal}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      padding: "10px 18px",
+                      borderRadius: "12px",
+                      fontWeight: 800,
+                    }}
+                  >
+                    <Plus className="w-4 h-4" /> Thêm Sản Phẩm Mới
+                  </button>
+                </div>
               </div>
-              <div style={{ display: "flex", gap: "8px" }}>
-                <button
-                  onClick={() => setOnlyLowStock(!onlyLowStock)}
-                  style={{
-                    padding: "6px 12px",
-                    fontSize: "12px",
-                    fontWeight: 700,
-                    border: "1px solid var(--border-color)",
-                    borderRadius: "6px",
-                    background: onlyLowStock ? "#fee2e2" : "#f8fafc",
-                    color: onlyLowStock ? "#b91c1c" : "inherit",
-                    cursor: "pointer",
-                  }}
-                >
-                  {onlyLowStock ? "Đang lọc: Sắp hết hàng" : "Sắp hết hàng"}
-                </button>
-                <button className="btn-add-product-green" onClick={handleOpenAddModal}>
-                  + Thêm Sản Phẩm Mới
-                </button>
-              </div>
-            </div>
 
             {loading ? (
               <div style={{ padding: "30px", textAlign: "center", fontSize: "13px", color: "var(--text-muted)" }}>
@@ -420,6 +434,7 @@ export default function AdminProductsPage() {
                 </div>
               </>
             )}
+            </div>
           </div>
         </div>
       </main>

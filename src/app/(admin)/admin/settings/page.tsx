@@ -402,10 +402,11 @@ export default function AdminSettingsPage() {
 
             {/* TAB 1: THÔNG TIN CỬA HÀNG */}
             {activeTab === "store" && (
-              <div className="dashboard-card" style={{ maxWidth: "900px" }}>
-                <h2 className="card-header-title" style={{ marginBottom: "8px" }}>
-                  Cấu Hình Thông Tin Trụ Sở & Hotline
-                </h2>
+              <div className="admin-card-shell" style={{ maxWidth: "900px" }}>
+                <div className="admin-card-core">
+                  <h2 className="card-header-title text-xl font-extrabold text-slate-900 tracking-tight" style={{ marginBottom: "8px" }}>
+                    Cấu Hình Thông Tin Trụ Sở & Hotline
+                  </h2>
                 <p
                   style={{
                     fontSize: "13px",
@@ -594,6 +595,7 @@ export default function AdminSettingsPage() {
                   </div>
                 </form>
               </div>
+            </div>
             )}
 
             {/* TAB 2: CỔNG THANH TOÁN (Danh sách đầy đủ Ngân hàng tại Việt Nam) */}

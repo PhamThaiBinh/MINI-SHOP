@@ -199,18 +199,32 @@ export default function AdminCategoriesPage() {
         />
 
         <div className="dashboard-content-body">
-          <div className="dashboard-card">
-            <div className="card-header-row" style={{ marginBottom: "16px" }}>
-              <div>
-                <h2 className="card-header-title">Danh Sách Danh Mục ({filteredCategories.length})</h2>
-                <p style={{ fontSize: "12px", color: "var(--text-muted)", margin: 0 }}>
-                  Quản lý hiển thị các nhóm sản phẩm kinh doanh trên website
-                </p>
+          <div className="admin-card-shell">
+            <div className="admin-card-core">
+              <div className="card-header-row" style={{ marginBottom: "20px" }}>
+                <div>
+                  <h2 className="card-header-title text-xl font-extrabold text-slate-900 tracking-tight">
+                    Danh Sách Danh Mục ({filteredCategories.length})
+                  </h2>
+                  <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: "4px 0 0" }}>
+                    Quản lý hiển thị các nhóm sản phẩm kinh doanh trên website
+                  </p>
+                </div>
+                <button
+                  className="btn-add-product-green"
+                  onClick={handleOpenAddModal}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    padding: "10px 18px",
+                    borderRadius: "12px",
+                    fontWeight: 800,
+                  }}
+                >
+                  <Plus className="w-4 h-4" /> Thêm Danh Mục Mới
+                </button>
               </div>
-              <button className="btn-add-product-green" onClick={handleOpenAddModal}>
-                + Thêm Danh Mục Mới
-              </button>
-            </div>
 
             {loading ? (
               <div style={{ padding: "30px", textAlign: "center", fontSize: "13px", color: "var(--text-muted)" }}>
@@ -418,6 +432,7 @@ export default function AdminCategoriesPage() {
                 </div>
               </>
             )}
+            </div>
           </div>
         </div>
       </main>

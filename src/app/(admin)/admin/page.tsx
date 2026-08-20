@@ -179,70 +179,78 @@ export default function AdminDashboard() {
             </div>
           ) : (
             <>
-              {/* 1. EXECUTIVE KPI SUMMARY CARDS (4 CARDS) */}
-              <div className="kpi-cards-grid">
+              {/* 1. EXECUTIVE KPI SUMMARY CARDS (4 BENTO CARDS) */}
+              <div className="admin-bento-grid" style={{ marginBottom: "20px" }}>
                 {/* Card 1: Net Revenue */}
-                <div className="kpi-card">
-                  <div>
-                    <div className="kpi-title">Doanh Thu Thật (Completed)</div>
-                    <div
-                      className="kpi-value"
-                      style={{ color: "var(--primary-color)" }}
-                    >
-                      {formatVND(netRevenue)}
+                <div className="admin-card-shell">
+                  <div className="admin-card-core" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Doanh Thu Thật (Completed)</div>
+                      <div className="text-2xl font-black text-emerald-700 tracking-tight">
+                        {formatVND(netRevenue)}
+                      </div>
+                      <div className="text-xs text-slate-500 font-medium mt-1">
+                        Từ <strong className="text-slate-900">{completedOrders.length}</strong> đơn hoàn thành
+                      </div>
                     </div>
-                    <div className="kpi-subtext">
-                      Từ <strong>{completedOrders.length}</strong> đơn hoàn thành
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700 shadow-sm">
+                      <DollarSign className="w-6 h-6" />
                     </div>
                   </div>
-                  <div className="kpi-icon-wrapper icon-green" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}><DollarSign className="w-6 h-6 text-emerald-700" /></div>
                 </div>
 
                 {/* Card 2: AOV */}
-                <div className="kpi-card">
-                  <div>
-                    <div className="kpi-title">Giá Trị Đơn Trung Bình (AOV)</div>
-                    <div className="kpi-value" style={{ color: "#2563eb" }}>
-                      {formatVND(averageOrderValue)}
+                <div className="admin-card-shell">
+                  <div className="admin-card-core" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Giá Trị Đơn TB (AOV)</div>
+                      <div className="text-2xl font-black text-sky-700 tracking-tight">
+                        {formatVND(averageOrderValue)}
+                      </div>
+                      <div className="text-xs text-slate-500 font-medium mt-1">
+                        Pipeline: <strong className="text-slate-900">{formatVND(grossPipeline)}</strong>
+                      </div>
                     </div>
-                    <div className="kpi-subtext">
-                      Pipeline tiềm năng: {formatVND(grossPipeline)}
+                    <div className="w-12 h-12 rounded-2xl bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-700 shadow-sm">
+                      <BarChart3 className="w-6 h-6" />
                     </div>
                   </div>
-                  <div className="kpi-icon-wrapper icon-blue" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}><BarChart3 className="w-6 h-6 text-blue-600" /></div>
                 </div>
 
                 {/* Card 3: Fulfillment Rate */}
-                <div className="kpi-card">
-                  <div>
-                    <div className="kpi-title">Tỷ Lệ Chốt Đơn (Fulfillment)</div>
-                    <div className="kpi-value" style={{ color: "#0d9488" }}>
-                      {fulfillmentRate}%
+                <div className="admin-card-shell">
+                  <div className="admin-card-core" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Tỷ Lệ Chốt Đơn</div>
+                      <div className="text-2xl font-black text-teal-700 tracking-tight">
+                        {fulfillmentRate}%
+                      </div>
+                      <div className="text-xs text-slate-500 font-medium mt-1">
+                        <strong className="text-slate-900">{completedOrders.length}</strong> / {orders.length} đơn phát sinh
+                      </div>
                     </div>
-                    <div className="kpi-subtext">
-                      {completedOrders.length} / {orders.length} tổng đơn phát sinh
+                    <div className="w-12 h-12 rounded-2xl bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700 shadow-sm">
+                      <Target className="w-6 h-6" />
                     </div>
                   </div>
-                  <div className="kpi-icon-wrapper icon-teal" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}><Target className="w-6 h-6 text-teal-600" /></div>
                 </div>
 
-                {/* Card 4: Inventory Risk Alert */}
-                <div className="kpi-card">
-                  <div>
-                    <div className="kpi-title">Cảnh Báo Hàng Sắp Hết</div>
-                    <div
-                      className="kpi-value"
-                      style={{
-                        color: lowStockProducts.length > 0 ? "#dc2626" : "#16a34a",
-                      }}
-                    >
-                      {lowStockProducts.length} <span style={{ fontSize: "14px", fontWeight: 600 }}>sản phẩm</span>
+                {/* Card 4: Low Stock Alert */}
+                <div className="admin-card-shell">
+                  <div className="admin-card-core" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Hàng Tồn Thấp (&le;10)</div>
+                      <div className={`text-2xl font-black tracking-tight ${lowStockProducts.length > 0 ? "text-amber-600" : "text-emerald-700"}`}>
+                        {lowStockProducts.length} <span className="text-sm font-semibold">mặt hàng</span>
+                      </div>
+                      <div className="text-xs text-slate-500 font-medium mt-1">
+                        <strong className="text-amber-700">{pendingOrders.length}</strong> đơn chờ duyệt gấp
+                      </div>
                     </div>
-                    <div className="kpi-subtext">
-                      {pendingOrders.length} đơn đang chờ duyệt gấp
+                    <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shadow-sm">
+                      <AlertTriangle className="w-6 h-6" />
                     </div>
                   </div>
-                  <div className="kpi-icon-wrapper icon-orange" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}><AlertTriangle className="w-6 h-6 text-amber-600" /></div>
                 </div>
               </div>
 

@@ -510,14 +510,15 @@ export default function AdminOrdersPage() {
             </div>
 
             {/* Orders Table Card */}
-            <div className="dashboard-card">
-              <div
-                className="card-header-row"
-                style={{ flexWrap: "wrap", gap: "12px" }}
-              >
-                <h2 className="card-header-title">
-                  Danh Sách Đơn Hàng Gần Đây
-                </h2>
+            <div className="admin-card-shell">
+              <div className="admin-card-core">
+                <div
+                  className="card-header-row"
+                  style={{ flexWrap: "wrap", gap: "12px", marginBottom: "20px" }}
+                >
+                  <h2 className="card-header-title text-xl font-extrabold text-slate-900 tracking-tight">
+                    Danh Sách Đơn Hàng Gần Đây
+                  </h2>
                 <div
                   style={{
                     display: "flex",
@@ -863,6 +864,7 @@ export default function AdminOrdersPage() {
                   >
                     Trang sau &gt;
                   </button>
+                  </div>
                 </div>
               </div>
             </div>

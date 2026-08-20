@@ -43,6 +43,43 @@ body:has(.admin-wrapper) .admin-wrapper {
     margin-top: 0 !important;
 }
 
+/* Double-Bezel Architecture & Bento Card Utilities */
+.admin-card-shell {
+    background-color: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    padding: 8px;
+    transition: var(--transition);
+}
+
+.admin-card-shell:hover {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+}
+
+.admin-card-core {
+    background-color: #ffffff;
+    border-radius: calc(var(--radius-lg) - 6px);
+    padding: 24px;
+}
+
+.admin-bento-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+}
+
+.badge-status-pill {
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
 /* Left Sidebar (Light Theme V2) */
 .admin-sidebar {
     width: 260px;

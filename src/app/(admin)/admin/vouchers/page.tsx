@@ -152,18 +152,32 @@ export default function AdminVouchersPage() {
         />
 
         <div className="dashboard-content-body">
-          <div className="dashboard-card">
-            <div className="card-header-row" style={{ marginBottom: "16px" }}>
-              <div>
-                <h2 className="card-header-title">Danh Sách Mã Voucher ({filteredVouchers.length})</h2>
-                <p style={{ fontSize: "12px", color: "var(--text-muted)", margin: 0 }}>
-                  Tạo và điều chỉnh chính sách ưu đãi chiết khấu khuyến mãi cho cửa hàng
-                </p>
+          <div className="admin-card-shell">
+            <div className="admin-card-core">
+              <div className="card-header-row" style={{ marginBottom: "20px" }}>
+                <div>
+                  <h2 className="card-header-title text-xl font-extrabold text-slate-900 tracking-tight">
+                    Danh Sách Mã Voucher ({filteredVouchers.length})
+                  </h2>
+                  <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: "4px 0 0" }}>
+                    Tạo và điều chỉnh chính sách ưu đãi chiết khấu khuyến mãi cho cửa hàng
+                  </p>
+                </div>
+                <button
+                  className="btn-add-product-green"
+                  onClick={handleOpenAddModal}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    padding: "10px 18px",
+                    borderRadius: "12px",
+                    fontWeight: 800,
+                  }}
+                >
+                  <Ticket className="w-4 h-4" /> Tạo Mã Voucher Mới
+                </button>
               </div>
-              <button className="btn-add-product-green" onClick={handleOpenAddModal}>
-                + Tạo Mã Voucher Mới
-              </button>
-            </div>
 
             {loading ? (
               <div style={{ padding: "30px", textAlign: "center", fontSize: "13px", color: "var(--text-muted)" }}>
@@ -376,6 +390,7 @@ export default function AdminVouchersPage() {
                 </div>
               </>
             )}
+            </div>
           </div>
         </div>
       </main>
