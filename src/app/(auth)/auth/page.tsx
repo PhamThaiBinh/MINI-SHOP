@@ -283,16 +283,16 @@ const MOCK_ORDERS: CustomerOrder[] = [
 
 const SPOTLIGHT_SLIDES = [
   {
-    image: "assets/images/banner/banner-trang-chu-mini-shop.webp",
+    image: "assets/images/banner/auth-banner-1.webp",
   },
   {
-    image: "assets/images/products/San_pham/hero-home-decor-pexels-original.webp",
+    image: "assets/images/banner/auth-banner-2.webp",
   },
   {
-    image: "assets/images/products/San_pham/sofa-phong-khach-original.webp",
+    image: "assets/images/banner/auth-banner-3.webp",
   },
   {
-    image: "assets/images/products/San_pham/bo-ban-an-go-original.webp",
+    image: "assets/images/banner/auth-banner-4.webp",
   },
 ];
 
