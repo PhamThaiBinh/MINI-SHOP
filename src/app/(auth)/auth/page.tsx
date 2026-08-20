@@ -289,10 +289,10 @@ const SPOTLIGHT_SLIDES = [
     image: "assets/images/products/San_pham/hero-home-decor-pexels-original.webp",
   },
   {
-    image: "assets/images/products/noi-that-gia-dung/sofa-phong-khach.webp",
+    image: "assets/images/products/San_pham/sofa-phong-khach-original.webp",
   },
   {
-    image: "assets/images/products/noi-that-gia-dung/bo-ban-an-go.webp",
+    image: "assets/images/products/San_pham/bo-ban-an-go-original.webp",
   },
 ];
 
