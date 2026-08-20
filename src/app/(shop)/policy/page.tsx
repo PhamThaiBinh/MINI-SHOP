@@ -271,7 +271,7 @@ function PolicyContent() {
               3. Cước phí vận chuyển
             </h3>
             <p>
-              Miễn phí giao hàng toàn quốc đối với đơn hàng từ <strong>500.000đ trở lên</strong>. Với đơn hàng dưới 500.000đ, cước phí cố định là 20.000đ (Nội thành) và 30.000đ (Ngoại thành/Tỉnh).
+              Miễn phí giao hàng toàn quốc đối với đơn hàng từ <strong>500.000đ trở lên</strong>. Với đơn hàng dưới 500.000đ, cước phí cố định là <strong>20.000đ</strong> (Nội thành: áp dụng cho Hà Nội và Hồ Chí Minh) và <strong>30.000đ</strong> (Ngoại thành / Tỉnh: áp dụng cho các tỉnh thành còn lại).
             </p>
           </div>
         )}

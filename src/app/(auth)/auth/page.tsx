@@ -703,17 +703,17 @@ export default function AuthPage() {
     <main className="main-content" style={{ backgroundColor: "var(--bg-main, #fcfbf9)", minHeight: "100dvh", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       <div className="container" style={{ padding: "30px 16px 60px" }}>
         
-        {/* 1. Flush-Left Directory Header */}
-        <div style={{ marginBottom: "28px" }}>
-          <h1 style={{ fontSize: "32px", fontWeight: 900, color: "#0f172a", margin: "0 0 6px", letterSpacing: "-0.02em" }}>
-            {!user ? "Tài Khoản Khách Hàng & Đăng Nhập" : "Hồ Sơ Khách Hàng & Trung Tâm Hội Viên"}
-          </h1>
-          <p style={{ fontSize: "14px", color: "#64748b", margin: 0, maxWidth: "600px" }}>
-            {!user
-              ? "Đăng nhập hoặc đăng ký tài khoản để theo dõi đơn hàng, tích điểm đổi quà và quản lý địa chỉ giao hàng."
-              : "Quản lý thông tin tài khoản, tích điểm đổi quà tặng, theo dõi trạng thái đơn hàng và sổ địa chỉ."}
-          </p>
-        </div>
+        {/* 1. Flush-Left Directory Header (Guest view only) */}
+        {!user && (
+          <div style={{ marginBottom: "28px" }}>
+            <h1 style={{ fontSize: "32px", fontWeight: 900, color: "#0f172a", margin: "0 0 6px", letterSpacing: "-0.02em" }}>
+              Tài Khoản Khách Hàng & Đăng Nhập
+            </h1>
+            <p style={{ fontSize: "14px", color: "#64748b", margin: 0, maxWidth: "600px" }}>
+              Đăng nhập hoặc đăng ký tài khoản để theo dõi đơn hàng, tích điểm đổi quà và quản lý địa chỉ giao hàng.
+            </p>
+          </div>
+        )}
 
         <div className="auth-page-section">
           {!user ? (

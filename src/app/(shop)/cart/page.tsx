@@ -24,6 +24,8 @@ import {
   Plus,
 } from "lucide-react";
 
+import { fetchUserAddressesFromSupabase } from "@/lib/supabaseAddress";
+
 interface Coupon {
   code: string;
   percent?: number;
@@ -48,6 +50,20 @@ export default function CartPage() {
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
   const [couponMsg, setCouponMsg] = useState("");
   const [showModal, setShowModal] = useState(false);
+  const [userProvince, setUserProvince] = useState("Thành phố Hồ Chí Minh");
+
+  useEffect(() => {
+    async function loadUserAddr() {
+      if (user?.username || user?.email) {
+        const addrs = await fetchUserAddressesFromSupabase(user.username || user.email || "binh");
+        const defaultAddr = addrs.find((a) => a.isDefault) || addrs[0];
+        if (defaultAddr?.province) {
+          setUserProvince(defaultAddr.province);
+        }
+      }
+    }
+    loadUserAddr();
+  }, [user]);
 
   const subtotal = cart.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
@@ -109,7 +125,13 @@ export default function CartPage() {
     }
   }
 
-  const total = Math.max(0, subtotal - discountAmount);
+  const isInnerCity =
+    userProvince.toLowerCase().includes("hà nội") ||
+    userProvince.toLowerCase().includes("hồ chí minh") ||
+    userProvince.toLowerCase().includes("hcm");
+
+  const shippingFee = subtotal >= 500000 ? 0 : isInnerCity ? 20000 : 30000;
+  const total = Math.max(0, subtotal - discountAmount + shippingFee);
 
   const totalAvailableItemsCount =
     (user?.vouchers.reduce((sum, v) => sum + (v.quantity || 1), 0) || 0) +
@@ -536,8 +558,8 @@ export default function CartPage() {
                   {/* Shipping Row */}
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px", color: "#475569" }}>
                     <span>Phí giao hàng:</span>
-                    <strong style={{ color: subtotal >= 500000 ? "var(--primary-color, #2e7d32)" : "#0f172a" }}>
-                      {subtotal >= 500000 ? "Miễn phí" : "20.000đ - 30.000đ"}
+                    <strong style={{ color: shippingFee === 0 ? "var(--primary-color, #2e7d32)" : "#0f172a" }}>
+                      {shippingFee === 0 ? "Miễn phí" : formatVND(shippingFee)}
                     </strong>
                   </div>
 
