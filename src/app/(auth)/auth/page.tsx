@@ -741,14 +741,14 @@ export default function AuthPage() {
         
         <div className="auth-page-section" style={{ padding: "40px 0 60px" }}>
           {!user ? (
-            /* KHI CHƯA ĐĂNG NHẬP (Balanced Split-Screen Doppelrand Architecture) */
-            <div className="doppelrand-outer" style={{ maxWidth: "920px", margin: "0 auto" }}>
-              <div className="doppelrand-inner" style={{ padding: "12px" }}>
+            /* KHI CHƯA ĐĂNG NHẬP (Cinematic Split-Screen 1200px Doppelrand Architecture) */
+            <div className="doppelrand-outer" style={{ maxWidth: "1200px", margin: "0 auto" }}>
+              <div className="doppelrand-inner" style={{ padding: "16px" }}>
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: "24px",
+                    gridTemplateColumns: "1fr 440px",
+                    gap: "28px",
                     alignItems: "stretch",
                   }}
                 >
