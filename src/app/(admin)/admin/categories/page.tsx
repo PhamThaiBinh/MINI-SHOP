@@ -187,7 +187,7 @@ export default function AdminCategoriesPage() {
 
       <main className="admin-main">
         <AdminHeader
-          title="Quản Lý Danh Mục Sản Phẩm"
+          title="Danh mục"
           sidebarCollapsed={sidebarCollapsed}
           setSidebarCollapsed={setSidebarCollapsed}
           searchQuery={searchQuery}

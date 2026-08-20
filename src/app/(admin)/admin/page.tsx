@@ -156,7 +156,7 @@ export default function AdminDashboard() {
 
       <main className="admin-main">
         <AdminHeader
-          title="Báo Cáo Quản Trị & Phân Tích Dữ Liệu Hoạt Động (Data Analytics)"
+          title="Tổng quan"
           sidebarCollapsed={sidebarCollapsed}
           setSidebarCollapsed={setSidebarCollapsed}
           searchQuery={searchQuery}
@@ -179,77 +179,129 @@ export default function AdminDashboard() {
             </div>
           ) : (
             <>
-              {/* 1. EXECUTIVE KPI SUMMARY CARDS (4 BENTO CARDS) */}
-              <div className="admin-bento-grid" style={{ marginBottom: "20px" }}>
+              {/* 1. HIGH-CONTRAST EXECUTIVE KPI SUMMARY CARDS */}
+              <div className="admin-bento-grid" style={{ marginBottom: "24px" }}>
                 {/* Card 1: Net Revenue */}
-                <div className="admin-card-shell">
-                  <div className="admin-card-core" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div>
-                      <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Doanh Thu Thật (Completed)</div>
-                      <div className="text-2xl font-black text-emerald-700 tracking-tight">
-                        {formatVND(netRevenue)}
-                      </div>
-                      <div className="text-xs text-slate-500 font-medium mt-1">
-                        Từ <strong className="text-slate-900">{completedOrders.length}</strong> đơn hoàn thành
-                      </div>
+                <div
+                  style={{
+                    background: "linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%)",
+                    border: "1.5px solid #bbf7d0",
+                    borderRadius: "20px",
+                    padding: "20px",
+                    boxShadow: "0 4px 20px rgba(22, 101, 52, 0.06)",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: "12px", fontWeight: 800, color: "#166534", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>
+                      Doanh Thu Thực
                     </div>
-                    <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700 shadow-sm">
-                      <DollarSign className="w-6 h-6" />
+                    <div style={{ fontSize: "28px", fontWeight: 900, color: "#14532d", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
+                      {formatVND(netRevenue)}
                     </div>
+                    <div style={{ fontSize: "12px", color: "#475569", fontWeight: 600, marginTop: "8px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                      <span style={{ padding: "2px 8px", background: "#dcfce7", color: "#15803d", borderRadius: "12px", fontWeight: 800, fontSize: "11px" }}>
+                        {completedOrders.length} đơn hoàn thành
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{ width: "52px", height: "52px", borderRadius: "16px", background: "#166534", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 16px rgba(22, 101, 52, 0.25)" }}>
+                    <DollarSign className="w-7 h-7" />
                   </div>
                 </div>
 
                 {/* Card 2: AOV */}
-                <div className="admin-card-shell">
-                  <div className="admin-card-core" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div>
-                      <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Giá Trị Đơn TB (AOV)</div>
-                      <div className="text-2xl font-black text-sky-700 tracking-tight">
-                        {formatVND(averageOrderValue)}
-                      </div>
-                      <div className="text-xs text-slate-500 font-medium mt-1">
-                        Pipeline: <strong className="text-slate-900">{formatVND(grossPipeline)}</strong>
-                      </div>
+                <div
+                  style={{
+                    background: "linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%)",
+                    border: "1.5px solid #bae6fd",
+                    borderRadius: "20px",
+                    padding: "20px",
+                    boxShadow: "0 4px 20px rgba(3, 105, 161, 0.06)",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: "12px", fontWeight: 800, color: "#0369a1", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>
+                      Đơn Trung Bình (AOV)
                     </div>
-                    <div className="w-12 h-12 rounded-2xl bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-700 shadow-sm">
-                      <BarChart3 className="w-6 h-6" />
+                    <div style={{ fontSize: "28px", fontWeight: 900, color: "#0c4a6e", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
+                      {formatVND(averageOrderValue)}
                     </div>
+                    <div style={{ fontSize: "12px", color: "#475569", fontWeight: 600, marginTop: "8px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                      <span style={{ padding: "2px 8px", background: "#e0f2fe", color: "#0369a1", borderRadius: "12px", fontWeight: 800, fontSize: "11px" }}>
+                        Pipeline {formatVND(grossPipeline)}
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{ width: "52px", height: "52px", borderRadius: "16px", background: "#0284c7", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 16px rgba(2, 132, 199, 0.25)" }}>
+                    <BarChart3 className="w-7 h-7" />
                   </div>
                 </div>
 
                 {/* Card 3: Fulfillment Rate */}
-                <div className="admin-card-shell">
-                  <div className="admin-card-core" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div>
-                      <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Tỷ Lệ Chốt Đơn</div>
-                      <div className="text-2xl font-black text-teal-700 tracking-tight">
-                        {fulfillmentRate}%
-                      </div>
-                      <div className="text-xs text-slate-500 font-medium mt-1">
-                        <strong className="text-slate-900">{completedOrders.length}</strong> / {orders.length} đơn phát sinh
-                      </div>
+                <div
+                  style={{
+                    background: "linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%)",
+                    border: "1.5px solid #99f6e4",
+                    borderRadius: "20px",
+                    padding: "20px",
+                    boxShadow: "0 4px 20px rgba(15, 118, 110, 0.06)",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: "12px", fontWeight: 800, color: "#0f766e", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>
+                      Tỷ Lệ Chốt Đơn
                     </div>
-                    <div className="w-12 h-12 rounded-2xl bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700 shadow-sm">
-                      <Target className="w-6 h-6" />
+                    <div style={{ fontSize: "28px", fontWeight: 900, color: "#134e4a", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
+                      {fulfillmentRate}%
                     </div>
+                    <div style={{ fontSize: "12px", color: "#475569", fontWeight: 600, marginTop: "8px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                      <span style={{ padding: "2px 8px", background: "#ccfbf1", color: "#0f766e", borderRadius: "12px", fontWeight: 800, fontSize: "11px" }}>
+                        {completedOrders.length} / {orders.length} đơn hàng
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{ width: "52px", height: "52px", borderRadius: "16px", background: "#0d9488", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 16px rgba(13, 148, 136, 0.25)" }}>
+                    <Target className="w-7 h-7" />
                   </div>
                 </div>
 
                 {/* Card 4: Low Stock Alert */}
-                <div className="admin-card-shell">
-                  <div className="admin-card-core" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div>
-                      <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Hàng Tồn Thấp (&le;10)</div>
-                      <div className={`text-2xl font-black tracking-tight ${lowStockProducts.length > 0 ? "text-amber-600" : "text-emerald-700"}`}>
-                        {lowStockProducts.length} <span className="text-sm font-semibold">mặt hàng</span>
-                      </div>
-                      <div className="text-xs text-slate-500 font-medium mt-1">
-                        <strong className="text-amber-700">{pendingOrders.length}</strong> đơn chờ duyệt gấp
-                      </div>
+                <div
+                  style={{
+                    background: "linear-gradient(135deg, #ffffff 0%, #fffbeb 100%)",
+                    border: "1.5px solid #fde68a",
+                    borderRadius: "20px",
+                    padding: "20px",
+                    boxShadow: "0 4px 20px rgba(180, 83, 9, 0.06)",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: "12px", fontWeight: 800, color: "#b45309", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>
+                      Hàng Tồn Thấp (&le;10)
                     </div>
-                    <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shadow-sm">
-                      <AlertTriangle className="w-6 h-6" />
+                    <div style={{ fontSize: "28px", fontWeight: 900, color: "#78350f", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
+                      {lowStockProducts.length} <span style={{ fontSize: "14px", fontWeight: 700 }}>mặt hàng</span>
                     </div>
+                    <div style={{ fontSize: "12px", color: "#475569", fontWeight: 600, marginTop: "8px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                      <span style={{ padding: "2px 8px", background: "#fef3c7", color: "#b45309", borderRadius: "12px", fontWeight: 800, fontSize: "11px" }}>
+                        {pendingOrders.length} đơn chờ duyệt
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{ width: "52px", height: "52px", borderRadius: "16px", background: "#d97706", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 16px rgba(217, 119, 6, 0.25)" }}>
+                    <AlertTriangle className="w-7 h-7" />
                   </div>
                 </div>
               </div>

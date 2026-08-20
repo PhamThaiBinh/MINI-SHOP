@@ -321,7 +321,7 @@ export default function AdminSettingsPage() {
         <main className="admin-main">
           {/* Header Đồng Bộ Chuẩn 3 Thông Báo & Dropdown Admin Profile */}
           <AdminHeader
-            title="Cấu Hình Cửa Hàng & Hệ Thống"
+            title="Cấu hình Shop"
             sidebarCollapsed={sidebarCollapsed}
             setSidebarCollapsed={setSidebarCollapsed}
           />

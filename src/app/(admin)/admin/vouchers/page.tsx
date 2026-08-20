@@ -140,7 +140,7 @@ export default function AdminVouchersPage() {
 
       <main className="admin-main">
         <AdminHeader
-          title="Quản Lý Mã Voucher Ưu Đãi"
+          title="Mã giảm giá"
           sidebarCollapsed={sidebarCollapsed}
           setSidebarCollapsed={setSidebarCollapsed}
           searchQuery={searchQuery}

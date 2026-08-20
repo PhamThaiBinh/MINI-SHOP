@@ -182,7 +182,7 @@ export default function AdminProductsPage() {
 
       <main className="admin-main">
         <AdminHeader
-          title="Quản Lý Sản Phẩm"
+          title="Sản phẩm"
           sidebarCollapsed={sidebarCollapsed}
           setSidebarCollapsed={setSidebarCollapsed}
           searchQuery={searchQuery}

@@ -433,7 +433,7 @@ export default function AdminOrdersPage() {
         <main className="admin-main">
           {/* Top Header Bar Đồng Bộ Chuẩn 3 Thông Báo & Menu Admin Interactive */}
           <AdminHeader
-            title="Quản Lý Đơn Hàng System"
+            title="Đơn hàng"
             sidebarCollapsed={sidebarCollapsed}
             setSidebarCollapsed={setSidebarCollapsed}
             searchQuery={searchQuery}
