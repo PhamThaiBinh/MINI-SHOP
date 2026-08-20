@@ -280,15 +280,15 @@ function ProductsContent() {
           {/* Left Doppelrand Filter Sidebar */}
           <aside className="doppelrand-outer" style={{ position: "sticky", top: "90px" }}>
             <div className="doppelrand-inner" style={{ padding: "20px" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "18px", borderBottom: "1px solid #e2e8f0", paddingBottom: "14px" }}>
-                <h3 style={{ fontSize: "17px", fontWeight: 900, color: "#0f172a", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
-                  <SlidersHorizontal className="w-4.5 h-4.5 text-emerald-700" /> BỘ LỌC NÂNG CAO
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "18px", borderBottom: "1px solid #e2e8f0", paddingBottom: "14px", flexWrap: "nowrap", gap: "8px" }}>
+                <h3 style={{ fontSize: "15px", fontWeight: 900, color: "#0f172a", margin: 0, display: "flex", alignItems: "center", gap: "6px", whiteSpace: "nowrap" }}>
+                  <SlidersHorizontal className="w-4 h-4 text-emerald-700" /> BỘ LỌC NÂNG CAO
                 </h3>
                 {isFilterActive && (
                   <button
                     type="button"
                     onClick={handleResetFilters}
-                    style={{ background: "none", border: "none", fontSize: "12.5px", fontWeight: 800, color: "#dc2626", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                    style={{ background: "none", border: "none", fontSize: "12.5px", fontWeight: 800, color: "#dc2626", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "4px", whiteSpace: "nowrap", flexShrink: 0 }}
                   >
                     <RotateCcw className="w-3.5 h-3.5" /> Đặt lại
                   </button>
