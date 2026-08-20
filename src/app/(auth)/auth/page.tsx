@@ -488,6 +488,35 @@ export default function AuthPage() {
     addPointsAndHistory("Đánh giá sản phẩm đã mua", 80, "REVIEW");
   };
 
+  const handleResetTestingData = async () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("minishop_task_checkin");
+      localStorage.removeItem("minishop_task_share_performed");
+      localStorage.removeItem("minishop_task_share_claimed");
+      localStorage.removeItem("minishop_task_review_performed");
+      localStorage.removeItem("minishop_task_review_claimed");
+      localStorage.removeItem("minishop_wheel_spin");
+      localStorage.removeItem("minishop_all_orders");
+    }
+
+    setHasCheckedIn(false);
+    setShareTaskStatus("not_started");
+    setReviewTaskStatus("not_started");
+    setHasSpunWheelToday(false);
+
+    if (user) {
+      user.points = 0;
+      user.history = [];
+      await syncUserRewardsToSupabase(user.username || user.email || "binh", {
+        points: 0,
+        history: [],
+      });
+    }
+
+    setRedeemFeedback("🔄 Đã RESET toàn bộ dữ liệu Tích Điểm & Nhiệm Vụ thành công! Bạn có thể thực hiện kiểm thử lại từ đầu.");
+    setTimeout(() => setRedeemFeedback(""), 5000);
+  };
+
   const handleSpinWheel = () => {
     const todayStr = getVnTodayStr();
     if (isSpinning || hasSpunWheelToday) return;
@@ -2028,6 +2057,28 @@ export default function AuthPage() {
                             gap: "12px",
                           }}
                         >
+                          {/* Quick Reset Button for Testing */}
+                          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "4px" }}>
+                            <button
+                              type="button"
+                              onClick={handleResetTestingData}
+                              style={{
+                                padding: "6px 12px",
+                                background: "#fef2f2",
+                                border: "1px solid #fecaca",
+                                color: "#ef4444",
+                                borderRadius: "8px",
+                                fontSize: "12px",
+                                fontWeight: 800,
+                                cursor: "pointer",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "6px",
+                              }}
+                            >
+                              <History className="w-3.5 h-3.5" /> 🔄 Reset Nhiệm Vụ & Điểm (Để Kiểm Thử)
+                            </button>
+                          </div>
                           <div
                             style={{
                               border: "1px solid var(--border-color)",

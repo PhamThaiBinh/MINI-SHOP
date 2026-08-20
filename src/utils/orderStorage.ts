@@ -105,11 +105,16 @@ export const getAllOrders = (): UnifiedOrder[] => {
     let list: UnifiedOrder[] = DEFAULT_UNIFIED_ORDERS;
     if (raw) {
       list = JSON.parse(raw);
-    } else {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_UNIFIED_ORDERS));
+    }
+    // Explicitly purge old mock orders for Bình Nguyễn (#MS-9824 & #MS-7102)
+    const cleanList = list.filter(
+      (o) => o.id !== "#MS-9824" && o.id !== "#MS-7102" && o.username !== "binh"
+    );
+    if (list.length !== cleanList.length) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cleanList));
     }
     // Always return sorted descending by timestamp
-    return list.sort((a, b) => parseOrderDate(b.date) - parseOrderDate(a.date));
+    return cleanList.sort((a, b) => parseOrderDate(b.date) - parseOrderDate(a.date));
   } catch (e) {
     console.error("Error reading orders:", e);
     return DEFAULT_UNIFIED_ORDERS;
