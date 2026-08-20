@@ -283,16 +283,16 @@ const MOCK_ORDERS: CustomerOrder[] = [
 
 const SPOTLIGHT_SLIDES = [
   {
-    image: "/assets/images/banner/banner-trang-chu-mini-shop.webp",
+    image: "assets/images/banner/banner-trang-chu-mini-shop.webp",
   },
   {
-    image: "/assets/images/products/San_pham/hero-home-decor-pexels-original.webp",
+    image: "assets/images/products/San_pham/hero-home-decor-pexels-original.webp",
   },
   {
-    image: "/assets/images/products/San_pham/sofa-phong-khach-original.webp",
+    image: "assets/images/products/noi-that-gia-dung/sofa-phong-khach.webp",
   },
   {
-    image: "/assets/images/products/San_pham/bo-ban-an-go-original.webp",
+    image: "assets/images/products/noi-that-gia-dung/bo-ban-an-go.webp",
   },
 ];
 
@@ -753,24 +753,18 @@ export default function AuthPage() {
                       background: "#f8fafc",
                     }}
                   >
-                    {/* Background Slide Images with smooth fade transition */}
-                    {SPOTLIGHT_SLIDES.map((slide, idx) => (
-                      <img
-                        key={idx}
-                        src={fixImagePath(slide.image)}
-                        alt={`Spotlight Banner ${idx + 1}`}
-                        style={{
-                          position: "absolute",
-                          inset: 0,
-                          width: "100%",
-                          height: "420px",
-                          objectFit: "cover",
-                          display: "block",
-                          opacity: idx === spotlightIndex ? 1 : 0,
-                          transition: "opacity 0.8s ease-in-out",
-                        }}
-                      />
-                    ))}
+                    {/* Active Hero Image (Direct & Guaranteed Display) */}
+                    <img
+                      key={spotlightIndex}
+                      src={fixImagePath(SPOTLIGHT_SLIDES[spotlightIndex].image)}
+                      alt={`Spotlight Banner ${spotlightIndex + 1}`}
+                      style={{
+                        width: "100%",
+                        height: "420px",
+                        objectFit: "cover",
+                        display: "block",
+                      }}
+                    />
 
                     {/* Floating Circle Prev Button (Identical to Home Page Hero) */}
                     <button
