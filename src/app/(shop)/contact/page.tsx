@@ -352,10 +352,66 @@ export default function ContactPage() {
               </a>
             </div>
 
-            <div style={{ borderRadius: "1.25rem", overflow: "hidden", border: "1px solid #cbd5e1", height: "400px", background: "#f1f5f9", position: "relative" }}>
+            <div style={{ borderRadius: "1.25rem", overflow: "hidden", border: "2px solid #cbd5e1", height: "440px", background: "#f1f5f9", position: "relative" }}>
+              {/* Dead-Center Big Prominent Red Pin Badge */}
+              <div
+                style={{
+                  position: "absolute",
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -100%)",
+                  zIndex: 10,
+                  pointerEvents: "none",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  filter: "drop-shadow(0 10px 20px rgba(0,0,0,0.3))",
+                }}
+              >
+                <div
+                  style={{
+                    background: "#dc2626",
+                    color: "#ffffff",
+                    padding: "8px 18px",
+                    borderRadius: "999px",
+                    fontSize: "13.5px",
+                    fontWeight: 900,
+                    whiteSpace: "nowrap",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    border: "2px solid #ffffff",
+                    boxShadow: "0 6px 18px rgba(220, 38, 38, 0.45)",
+                  }}
+                >
+                  <MapPin className="w-4.5 h-4.5 fill-white text-red-600 flex-shrink-0" />
+                  <span>Trung Tâm Tin Học Văn Phòng Bình Dương</span>
+                </div>
+                <div
+                  style={{
+                    width: 0,
+                    height: 0,
+                    borderLeft: "10px solid transparent",
+                    borderRight: "10px solid transparent",
+                    borderTop: "14px solid #dc2626",
+                    marginTop: "-2px",
+                  }}
+                />
+                <div
+                  style={{
+                    width: "18px",
+                    height: "8px",
+                    borderRadius: "50%",
+                    background: "rgba(220, 38, 38, 0.5)",
+                    marginTop: "2px",
+                    boxShadow: "0 0 14px #dc2626",
+                  }}
+                />
+              </div>
+
               <iframe
                 title="Bản đồ Trung Tâm Tin Học Văn Phòng Bình Dương - 107 D5 Phú Hòa"
-                src="https://maps.google.com/maps?q=Trung+T%C3%A2m+Tin+H%E1%BB%8Dc+V%C4%83n+Ph%C3%B2ng+B%C3%ACnh+D%C6%B0%C6%A1ng%2C+107+D5+Ph%C3%BA+H%C3%B2a+1&t=&z=16&ie=UTF8&iwloc=near&output=embed"
+                src="https://maps.google.com/maps?q=10.9757659,106.6716075&t=&z=17&ie=UTF8&output=embed"
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}
