@@ -22,6 +22,8 @@ import {
   X,
   Minus,
   Plus,
+  LogIn,
+  Lock,
 } from "lucide-react";
 
 import { fetchUserAddressesFromSupabase } from "@/lib/supabaseAddress";
@@ -221,8 +223,93 @@ export default function CartPage() {
       }}
     >
       <div className="container" style={{ padding: "30px 16px 60px" }}>
-        
-        {/* Header Title Section */}
+        {!user ? (
+          /* GUEST AUTH REQUIRED GATE (Doppelrand Hardware Architecture) */
+          <div
+            style={{
+              background: "rgba(15, 23, 42, 0.03)",
+              border: "1px solid rgba(15, 23, 42, 0.08)",
+              borderRadius: "2rem",
+              padding: "8px",
+              maxWidth: "600px",
+              margin: "40px auto",
+            }}
+          >
+            <div
+              style={{
+                background: "#ffffff",
+                borderRadius: "calc(2rem - 0.5rem)",
+                padding: "48px 32px",
+                textAlign: "center",
+                boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
+              }}
+            >
+              <div
+                style={{
+                  width: "72px",
+                  height: "72px",
+                  borderRadius: "50%",
+                  background: "#e8f5e9",
+                  color: "var(--primary-color, #2e7d32)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  margin: "0 auto 20px",
+                  border: "1px solid #c8e6c9",
+                  boxShadow: "0 6px 20px rgba(46, 125, 50, 0.15)",
+                }}
+              >
+                <ShoppingCart className="w-9 h-9" />
+              </div>
+
+              <h1
+                style={{
+                  fontSize: "24px",
+                  fontWeight: 900,
+                  color: "#0f172a",
+                  marginBottom: "12px",
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                Yêu Cầu Đăng Nhập Tài Khoản
+              </h1>
+
+              <p
+                style={{
+                  fontSize: "14px",
+                  color: "#64748b",
+                  lineHeight: "1.6",
+                  marginBottom: "32px",
+                  maxWidth: "460px",
+                  margin: "0 auto 32px",
+                }}
+              >
+                Bạn cần đăng nhập tài khoản khách hàng để xem giỏ hàng, áp dụng mã ưu đãi và tiến hành thanh toán đơn hàng.
+              </p>
+
+              <Link
+                href="/auth"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  background: "var(--primary-color, #2e7d32)",
+                  color: "#ffffff",
+                  padding: "14px 32px",
+                  borderRadius: "999px",
+                  fontSize: "15px",
+                  fontWeight: 800,
+                  textDecoration: "none",
+                  boxShadow: "0 8px 25px rgba(46, 125, 50, 0.25)",
+                }}
+              >
+                <LogIn className="w-5 h-5" />
+                <span>🔒 Đăng Nhập Ngay</span>
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <>
         <div style={{ marginBottom: "28px", textAlign: "left" }}>
           <h1
             style={{
@@ -830,6 +917,8 @@ export default function CartPage() {
               </div>
             </div>
           </div>
+        )}
+          </>
         )}
       </div>
     </main>
