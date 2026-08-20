@@ -90,7 +90,7 @@ export const VoucherMarketplace: React.FC = () => {
                   Kho Quà & Mã Giảm Giá Đặc Quyền
                 </h2>
                 <p style={{ fontSize: "12px", color: "#64748b", margin: "2px 0 0" }}>
-                  Bấm nút "Lưu mã 1-Click" để tự động áp dụng ưu đãi vào đơn hàng của bạn.
+                  Bấm nút "Lưu mã" để tự động áp dụng ưu đãi vào đơn hàng của bạn.
                 </p>
               </div>
             </div>
