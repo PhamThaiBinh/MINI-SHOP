@@ -21,10 +21,10 @@ export const DEFAULT_STORE_SETTINGS: StoreSettings = {
   facebookUrl: "https://facebook.com",
   zaloUrl: "https://zalo.me",
   tiktokUrl: "https://tiktok.com",
-  googleMapsUrl: "https://maps.app.goo.gl/ymXNFFXsf6qXoHWS7",
+  googleMapsUrl: "https://maps.app.goo.gl/GMg8baQSYBb1ZY8U8",
 };
 
-export const STORE_SETTINGS_KEY = "minishop_store_settings_v2";
+export const STORE_SETTINGS_KEY = "minishop_store_settings_v3";
 
 export function getStoreSettings(): StoreSettings {
   if (typeof window === "undefined") return DEFAULT_STORE_SETTINGS;
