@@ -742,7 +742,7 @@ export default function AuthPage() {
         <div className="auth-page-section">
           {!user ? (
             /* KHI CHƯA ĐĂNG NHẬP (Split-Screen Doppelrand Hardware Architecture) */
-            <div className="doppelrand-outer" style={{ maxWidth: "1000px", margin: "0 auto" }}>
+            <div className="doppelrand-outer" style={{ maxWidth: "1200px", margin: "0 auto" }}>
               <div className="doppelrand-inner" style={{ padding: "16px" }}>
                 <div
                   style={{
