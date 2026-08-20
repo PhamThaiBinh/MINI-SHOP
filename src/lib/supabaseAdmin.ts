@@ -322,13 +322,16 @@ export const updateAdminOrderStatus = async (
 export const saveAdminProduct = async (product: Partial<Product>): Promise<boolean> => {
   try {
     const supabase = createClient();
-    const { error } = await supabase.from("products").upsert({
-      original_id: product.id || Math.floor(1000 + Math.random() * 9000),
+    const productCode = `P${String(product.id || Math.floor(Math.random() * 9000) + 1000).padStart(4, "0")}`;
+
+    const payload = {
+      product_code: productCode,
       name: product.name,
       category: product.category,
       category_name: product.categoryName || product.category,
       price: product.price,
       old_price: product.oldPrice || null,
+      stock: product.stock !== undefined ? product.stock : 15,
       status: product.status || "Active",
       badge: product.badge || null,
       badge_type: product.badgeType || null,
@@ -336,9 +339,23 @@ export const saveAdminProduct = async (product: Partial<Product>): Promise<boole
       description: product.description || "",
       full_desc: product.fullDesc || product.description || "",
       specs: product.specs || {},
-    }, { onConflict: "original_id" });
+    };
 
-    return !error;
+    if (product.id) {
+      const { error } = await supabase.from("products").update(payload).eq("id", product.id);
+      if (error) {
+        // Fallback update by name or original_id if primary key differs
+        const { error: err2 } = await supabase
+          .from("products")
+          .update(payload)
+          .or(`original_id.eq.${product.id},name.eq.${product.name}`);
+        return !err2;
+      }
+      return true;
+    } else {
+      const { error } = await supabase.from("products").insert(payload);
+      return !error;
+    }
   } catch (err) {
     console.error("Error saving admin product:", err);
     return false;

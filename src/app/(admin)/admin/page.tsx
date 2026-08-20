@@ -367,20 +367,37 @@ export default function AdminDashboard() {
                     }
                   }
                 } else {
-                  let daysCount = 30;
-                  if (timePreset === "7d") daysCount = 7;
-                  else if (timePreset === "30d") daysCount = 30;
-                  else if (timePreset === "90d") daysCount = 90;
-                  else if (timePreset === "180d") daysCount = 180;
-                  else if (timePreset === "365d") daysCount = 365;
-
                   const today = new Date();
-                  for (let i = daysCount - 1; i >= 0; i--) {
-                    const d = new Date(today);
-                    d.setDate(d.getDate() - i);
-                    const year = d.getFullYear();
-                    const month = String(d.getMonth() + 1).padStart(2, "0");
-                    const day = String(d.getDate()).padStart(2, "0");
+                  let startDate: Date;
+                  let endDate: Date;
+
+                  if (timePreset === "7d") {
+                    startDate = new Date(today);
+                    startDate.setDate(today.getDate() - 6);
+                    endDate = new Date(today);
+                  } else if (timePreset === "30d") {
+                    // 1 Tháng: Từ ngày 1 đến ngày cuối của tháng hiện tại
+                    startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                    endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                  } else if (timePreset === "90d") {
+                    // 3 Tháng: Từ ngày 1 của 2 tháng trước đến ngày cuối tháng hiện tại
+                    startDate = new Date(today.getFullYear(), today.getMonth() - 2, 1);
+                    endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                  } else if (timePreset === "180d") {
+                    // 6 Tháng: Từ ngày 1 của 5 tháng trước đến ngày cuối tháng hiện tại
+                    startDate = new Date(today.getFullYear(), today.getMonth() - 5, 1);
+                    endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                  } else {
+                    // 12 Tháng: Từ 01/01 đến 31/12 của năm hiện tại
+                    startDate = new Date(today.getFullYear(), 0, 1);
+                    endDate = new Date(today.getFullYear(), 11, 31);
+                  }
+
+                  const curr = new Date(startDate);
+                  while (curr <= endDate) {
+                    const year = curr.getFullYear();
+                    const month = String(curr.getMonth() + 1).padStart(2, "0");
+                    const day = String(curr.getDate()).padStart(2, "0");
                     const isoDate = `${year}-${month}-${day}`;
                     const dateLabel = `${day}/${month}/${year}`;
 
@@ -399,6 +416,7 @@ export default function AdminDashboard() {
                       .reduce((sum, o) => sum + (o.total || 0), 0);
 
                     chartPoints.push({ dateStr: isoDate, label: dateLabel, revenue: dayRevenue });
+                    curr.setDate(curr.getDate() + 1);
                   }
                 }
 

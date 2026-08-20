@@ -318,7 +318,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     } catch (e) {}
 
-    // 1. Check Supabase database users table status
+    // 1. Check Supabase database users table status & password
     try {
       const { data: userRows } = await supabase
         .from("users")
@@ -329,6 +329,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         const matched = userRows[0];
         if (matched.status === "Blocked" || matched.status === "Khóa" || matched.status === "Tạm khóa") {
           return { success: false, error: "Tài khoản của bạn đã bị khóa bởi Quản trị viên!" };
+        }
+
+        // Validate password against matched user password field or demo standard password "123456"
+        const dbPass = matched.password || matched.pass;
+        if (dbPass) {
+          if (dbPass !== cleanPass) {
+            return { success: false, error: "Sai tên đăng nhập hoặc mật khẩu!" };
+          }
+        } else {
+          // If no password set in DB, require password "123456" or "admin123" or minimum length 6
+          if (cleanPass !== "123456" && cleanPass !== "admin123" && cleanPass !== "binh123") {
+            return { success: false, error: "Sai tên đăng nhập hoặc mật khẩu!" };
+          }
         }
 
         const isEmailAdmin = matched.email === "admin@minishop.vn" || matched.role_type === "admin" || cleanEmail.includes("admin");
@@ -383,10 +396,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     } catch (e) {}
 
-    // 3. Admin credentials fallback check (Validate password minimum length/match)
+    // 3. Admin credentials fallback check (Require password "123456" or "admin123")
     if (cleanEmail === "admin@minishop.vn" || cleanEmail === "admin") {
-      if (cleanPass.length < 4) {
-        return { success: false, error: "Sai mật khẩu! Vui lòng kiểm tra lại." };
+      if (cleanPass !== "123456" && cleanPass !== "admin123") {
+        return { success: false, error: "Sai tên đăng nhập hoặc mật khẩu!" };
       }
       const adminProfile: UserProfile = {
         username: "admin",
@@ -403,10 +416,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       return { success: true };
     }
 
-    // 4. Customer credentials fallback check (Validate password minimum length/match)
+    // 4. Customer credentials fallback check (Require password "123456" or "binh123")
     if (cleanEmail === "binh.nguyen@minishop.vn" || cleanEmail === "binh") {
-      if (cleanPass.length < 4) {
-        return { success: false, error: "Sai mật khẩu! Vui lòng kiểm tra lại." };
+      if (cleanPass !== "123456" && cleanPass !== "binh123") {
+        return { success: false, error: "Sai tên đăng nhập hoặc mật khẩu!" };
       }
       const customerProfile: UserProfile = {
         username: "binh",
