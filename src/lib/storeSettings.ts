@@ -24,7 +24,7 @@ export const DEFAULT_STORE_SETTINGS: StoreSettings = {
   googleMapsUrl: "https://maps.app.goo.gl/ymXNFFXsf6qXoHWS7",
 };
 
-export const STORE_SETTINGS_KEY = "minishop_store_settings_v1";
+export const STORE_SETTINGS_KEY = "minishop_store_settings_v2";
 
 export function getStoreSettings(): StoreSettings {
   if (typeof window === "undefined") return DEFAULT_STORE_SETTINGS;
