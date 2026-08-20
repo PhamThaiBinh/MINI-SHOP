@@ -700,34 +700,44 @@ export default function AuthPage() {
     user?.vouchers.reduce((sum, v) => sum + (v.quantity || 1), 0) || 0;
 
   return (
-    <main className="main-content">
-      <div className="container">
+    <main className="main-content" style={{ backgroundColor: "var(--bg-main, #fcfbf9)", minHeight: "100dvh", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      <div className="container" style={{ padding: "30px 16px 60px" }}>
+        
+        {/* 1. Flush-Left Directory Header */}
+        <div style={{ marginBottom: "28px" }}>
+          <h1 style={{ fontSize: "32px", fontWeight: 900, color: "#0f172a", margin: "0 0 6px", letterSpacing: "-0.02em" }}>
+            {!user ? "Tài Khoản Khách Hàng & Đăng Nhập" : "Hồ Sơ Khách Hàng & Trung Tâm Hội Viên"}
+          </h1>
+          <p style={{ fontSize: "14px", color: "#64748b", margin: 0, maxWidth: "600px" }}>
+            {!user
+              ? "Đăng nhập hoặc đăng ký tài khoản để theo dõi đơn hàng, tích điểm đổi quà và quản lý địa chỉ giao hàng."
+              : "Quản lý thông tin tài khoản, tích điểm đổi quà tặng, theo dõi trạng thái đơn hàng và sổ địa chỉ."}
+          </p>
+        </div>
+
         <div className="auth-page-section">
           {!user ? (
-            /* KHI CHƯA ĐĂNG NHẬP */
-            <div
-              className="auth-card"
-              id="auth-guest-card"
-              style={{ maxWidth: "560px" }}
-            >
-              <div className="auth-tabs">
-                <button
-                  className={`auth-tab-btn ${
-                    activeTab === "login" ? "active" : ""
-                  }`}
-                  onClick={() => setActiveTab("login")}
-                >
-                  Đăng Nhập
-                </button>
-                <button
-                  className={`auth-tab-btn ${
-                    activeTab === "register" ? "active" : ""
-                  }`}
-                  onClick={() => setActiveTab("register")}
-                >
-                  Đăng Ký
-                </button>
-              </div>
+            /* KHI CHƯA ĐĂNG NHẬP (Doppelrand Hardware Container) */
+            <div className="doppelrand-outer" style={{ maxWidth: "560px", margin: "0 auto" }}>
+              <div className="doppelrand-inner" style={{ padding: "32px 24px" }}>
+                <div className="auth-tabs">
+                  <button
+                    className={`auth-tab-btn ${
+                      activeTab === "login" ? "active" : ""
+                    }`}
+                    onClick={() => setActiveTab("login")}
+                  >
+                    Đăng Nhập
+                  </button>
+                  <button
+                    className={`auth-tab-btn ${
+                      activeTab === "register" ? "active" : ""
+                    }`}
+                    onClick={() => setActiveTab("register")}
+                  >
+                    Đăng Ký
+                  </button>
+                </div>
 
               <div className="auth-card-body">
                 {authError && (
@@ -954,22 +964,20 @@ export default function AuthPage() {
                 )}
               </div>
             </div>
+          </div>
           ) : (
-            /* KHI ĐÃ ĐĂNG NHẬP (USER DASHBOARD) */
-            <div className="user-dashboard-container" style={{ width: "100%" }}>
-              <div
-                className="user-dashboard-card"
-                style={{
-                  background: "#ffffff",
-                  borderRadius: "var(--radius-lg)",
-                  border: "1px solid var(--border-color)",
-                  overflow: "hidden",
-                  display: "grid",
-                  gridTemplateColumns: "260px 1fr",
-                  minHeight: "560px",
-                }}
-              >
-                {/* Left Navigation Sidebar */}
+            /* KHI ĐÃ ĐĂNG NHẬP (USER DASHBOARD - Doppelrand Hardware Container) */
+            <div className="doppelrand-outer" style={{ width: "100%" }}>
+              <div className="doppelrand-inner" style={{ padding: "20px" }}>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "260px 1fr",
+                    gap: "20px",
+                    minHeight: "560px",
+                  }}
+                >
+                  {/* Left Navigation Sidebar */}
                 <aside
                   style={{
                     background: "#f8fafc",
@@ -2629,6 +2637,7 @@ export default function AuthPage() {
                 </div>
               </div>
             </div>
+          </div>
           )}
         </div>
       </div>
