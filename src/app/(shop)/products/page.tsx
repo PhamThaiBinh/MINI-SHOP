@@ -476,7 +476,16 @@ function ProductsContent() {
                               zIndex: 10,
                             }}
                           >
-                            <Heart className={`w-4 h-4 transition-all duration-200 ${wishlisted ? "text-red-500 fill-red-500 scale-110" : "text-slate-400 fill-none"}`} />
+                            <Heart
+                              style={{
+                                width: "16px",
+                                height: "16px",
+                                color: wishlisted ? "#ef4444" : "#94a3b8",
+                                fill: wishlisted ? "#ef4444" : "none",
+                                transition: "all 0.2s ease",
+                                transform: wishlisted ? "scale(1.1)" : "scale(1)",
+                              }}
+                            />
                           </button>
 
                           {product.oldPrice && (

@@ -507,16 +507,7 @@ function ProductDetailPageContent({
 
                   <button
                     type="button"
-                    onClick={() => {
-                      const wasWishlisted = isWishlisted(currentProduct.id);
-                      toggleWishlist(currentProduct.id);
-                      setToastMsg(
-                        wasWishlisted
-                          ? `🤍 Đã xóa "${currentProduct.name}" khỏi danh sách yêu thích!`
-                          : `❤️ Đã thêm "${currentProduct.name}" vào danh sách yêu thích!`
-                      );
-                      setTimeout(() => setToastMsg(""), 3000);
-                    }}
+                    onClick={() => toggleWishlist(currentProduct.id)}
                     style={{
                       width: "48px",
                       height: "48px",
@@ -528,13 +519,22 @@ function ProductDetailPageContent({
                       alignItems: "center",
                       justifyContent: "center",
                       flexShrink: 0,
-                      boxShadow: isWishlisted(currentProduct.id) ? "0 4px 12px rgba(239, 68, 68, 0.2)" : "0 2px 8px rgba(0,0,0,0.06)",
-                      transition: "all 0.2s ease",
+                      boxShadow: isWishlisted(currentProduct.id) ? "0 4px 14px rgba(239, 68, 68, 0.25)" : "0 2px 8px rgba(0,0,0,0.06)",
+                      transition: "all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)",
                       transform: isWishlisted(currentProduct.id) ? "scale(1.08)" : "scale(1)",
                     }}
                     title={isWishlisted(currentProduct.id) ? "Đã yêu thích - Bấm để bỏ" : "Thêm vào danh sách yêu thích"}
                   >
-                    <Heart className={`w-5 h-5 transition-all duration-200 ${isWishlisted(currentProduct.id) ? "text-red-500 fill-red-500 scale-110" : "text-slate-400 fill-none"}`} />
+                    <Heart
+                      style={{
+                        width: "20px",
+                        height: "20px",
+                        color: isWishlisted(currentProduct.id) ? "#ef4444" : "#94a3b8",
+                        fill: isWishlisted(currentProduct.id) ? "#ef4444" : "none",
+                        transition: "all 0.2s ease",
+                        transform: isWishlisted(currentProduct.id) ? "scale(1.1)" : "scale(1)",
+                      }}
+                    />
                   </button>
                 </div>
 

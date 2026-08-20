@@ -245,19 +245,27 @@ export default function WishlistPage() {
                           position: "absolute",
                           top: "10px",
                           right: "10px",
-                          background: "#ffffff",
-                          border: "none",
+                          background: "#fef2f2",
+                          border: "1.5px solid #fecaca",
                           borderRadius: "50%",
                           width: "34px",
                           height: "34px",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
+                          boxShadow: "0 4px 12px rgba(239, 68, 68, 0.2)",
                           cursor: "pointer",
+                          transition: "all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)",
                         }}
                       >
-                        <Heart className="w-4.5 h-4.5 text-red-500 fill-red-500" />
+                        <Heart
+                          style={{
+                            width: "18px",
+                            height: "18px",
+                            color: "#ef4444",
+                            fill: "#ef4444",
+                          }}
+                        />
                       </button>
                     </div>
 
