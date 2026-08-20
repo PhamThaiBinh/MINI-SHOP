@@ -123,14 +123,20 @@ export default function TrackOrderPage() {
       }}
     >
       <div className="container" style={{ padding: "30px 16px 60px" }}>
-        
+        {/* Header Directory Banner (Flush Left Aligned) */}
+        <div style={{ marginBottom: "28px" }}>
+          <h1 style={{ fontSize: "32px", fontWeight: 900, color: "#0f172a", margin: "0 0 6px", letterSpacing: "-0.02em" }}>
+            Tra Cứu & Quản Lý Đơn Hàng
+          </h1>
+          <p style={{ fontSize: "14px", color: "#64748b", margin: 0, maxWidth: "600px" }}>
+            Kiểm tra hành trình vận chuyển real-time và thông tin chi tiết các đơn hàng tại Mini Shop.
+          </p>
+        </div>
+
         {/* =========================================================================
            MAIN CONTENT AREA (LOGGED-IN CUSTOMER VS GUEST LOOKUP)
            ========================================================================= */}
         {user ? (
-          /* -----------------------------------------------------------------------
-             A. LOGGED-IN CUSTOMER VIEW (SLEEK COMPACT LIST WITH PAGINATION)
-             ----------------------------------------------------------------------- */
           <div>
             {/* Customer Status Summary Bar */}
             <div
@@ -606,91 +612,86 @@ export default function TrackOrderPage() {
               </Link>
             </div>
 
-            {/* Search Form Card */}
-            <div
-              style={{
-                background: "#ffffff",
-                border: "1px solid var(--border-color, #e2e8f0)",
-                borderRadius: "1.5rem",
-                padding: "32px",
-                boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
-                marginBottom: "28px",
-              }}
-            >
-              <h2 style={{ fontSize: "20px", fontWeight: 900, color: "#0f172a", marginBottom: "16px" }}>
-                Tra Cứu Nhanh Đơn Hàng
-              </h2>
-              <form onSubmit={handleSearchOrder}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "20px" }}>
-                  <div>
-                    <label style={{ fontSize: "13px", fontWeight: 800, color: "#0f172a", marginBottom: "8px", display: "block" }}>
-                      Mã Đơn Hàng (Ví dụ: #MS-9824) *
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Nhập mã đơn hàng..."
-                      required
-                      value={searchCode}
-                      onChange={(e) => setSearchCode(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "12px 16px",
-                        fontSize: "14px",
-                        borderRadius: "0.75rem",
-                        border: "1px solid var(--border-color, #cbd5e1)",
-                        outline: "none",
-                        boxSizing: "border-box",
-                      }}
-                    />
+            {/* Search Form Doppelrand Container */}
+            <div className="doppelrand-outer" style={{ marginBottom: "28px" }}>
+              <div className="doppelrand-inner" style={{ padding: "28px 32px" }}>
+                <h2 style={{ fontSize: "20px", fontWeight: 900, color: "#0f172a", marginBottom: "16px" }}>
+                  Tra Cứu Nhanh Đơn Hàng
+                </h2>
+                <form onSubmit={handleSearchOrder}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "20px" }}>
+                    <div>
+                      <label style={{ fontSize: "13px", fontWeight: 800, color: "#0f172a", marginBottom: "8px", display: "block" }}>
+                        Mã Đơn Hàng (Ví dụ: #MS-9824) *
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Nhập mã đơn hàng..."
+                        required
+                        value={searchCode}
+                        onChange={(e) => setSearchCode(e.target.value)}
+                        style={{
+                          width: "100%",
+                          padding: "12px 16px",
+                          fontSize: "14px",
+                          borderRadius: "0.75rem",
+                          border: "1px solid var(--border-color, #cbd5e1)",
+                          outline: "none",
+                          boxSizing: "border-box",
+                          background: "#ffffff",
+                        }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: "13px", fontWeight: 800, color: "#0f172a", marginBottom: "8px", display: "block" }}>
+                        Số Điện Thoại Mua Hàng *
+                      </label>
+                      <input
+                        type="tel"
+                        placeholder="Ví dụ: 0988123456"
+                        required
+                        value={searchPhone}
+                        onChange={(e) => setSearchPhone(e.target.value)}
+                        style={{
+                          width: "100%",
+                          padding: "12px 16px",
+                          fontSize: "14px",
+                          borderRadius: "0.75rem",
+                          border: "1px solid var(--border-color, #cbd5e1)",
+                          outline: "none",
+                          boxSizing: "border-box",
+                          background: "#ffffff",
+                        }}
+                      />
+                    </div>
                   </div>
 
-                  <div>
-                    <label style={{ fontSize: "13px", fontWeight: 800, color: "#0f172a", marginBottom: "8px", display: "block" }}>
-                      Số Điện Thoại Mua Hàng *
-                    </label>
-                    <input
-                      type="tel"
-                      placeholder="Ví dụ: 0988123456"
-                      required
-                      value={searchPhone}
-                      onChange={(e) => setSearchPhone(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "12px 16px",
-                        fontSize: "14px",
-                        borderRadius: "0.75rem",
-                        border: "1px solid var(--border-color, #cbd5e1)",
-                        outline: "none",
-                        boxSizing: "border-box",
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  style={{
-                    width: "100%",
-                    padding: "12px 24px",
-                    background: "var(--primary-color, #2e7d32)",
-                    color: "#ffffff",
-                    border: "none",
-                    borderRadius: "999px",
-                    fontSize: "15px",
-                    fontWeight: 800,
-                    cursor: "pointer",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "8px",
-                    boxShadow: "0 6px 20px rgba(46, 125, 50, 0.2)",
-                  }}
-                >
-                  <Search className="w-4 h-4 text-white" />
-                  <span>{loading ? "Đang Tra Cứu..." : "Tra Cứu Đơn Hàng Ngay"}</span>
-                </button>
-              </form>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    style={{
+                      width: "100%",
+                      padding: "12px 24px",
+                      background: "var(--primary-color, #2e7d32)",
+                      color: "#ffffff",
+                      border: "none",
+                      borderRadius: "999px",
+                      fontSize: "15px",
+                      fontWeight: 800,
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "8px",
+                      boxShadow: "0 6px 20px rgba(46, 125, 50, 0.2)",
+                    }}
+                  >
+                    <Search className="w-4 h-4 text-white" />
+                    <span>{loading ? "Đang Tra Cứu..." : "Tra Cứu Đơn Hàng Ngay"}</span>
+                  </button>
+                </form>
+              </div>
             </div>
 
             {/* Guest Search Results Container */}
