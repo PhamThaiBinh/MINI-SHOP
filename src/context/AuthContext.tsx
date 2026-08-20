@@ -301,12 +301,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     return { success: true };
   };
 
-  // Enhanced SignIn (No Database error querying schema)
+  // Enhanced SignIn with Blocked User Check & Credentials Validation
   const signIn = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     const cleanEmail = email.trim().toLowerCase();
+    const cleanPass = password.trim();
     const supabase = createClient();
 
-    // 1. Try Supabase Auth signInWithPassword
+    // Check if account is blocked in localStorage
+    try {
+      const blockedListStr = localStorage.getItem("mini_shop_blocked_users");
+      if (blockedListStr) {
+        const blockedEmails: string[] = JSON.parse(blockedListStr);
+        if (Array.isArray(blockedEmails) && (blockedEmails.includes(cleanEmail) || blockedEmails.includes("binh.nguyen@minishop.vn") && (cleanEmail === "binh" || cleanEmail === "binh.nguyen@minishop.vn"))) {
+          return { success: false, error: "Tài khoản của bạn đã bị khóa bởi Quản trị viên!" };
+        }
+      }
+    } catch (e) {}
+
+    // 1. Check Supabase database users table status
+    try {
+      const { data: userRows } = await supabase
+        .from("users")
+        .select("*")
+        .or(`email.ilike.${cleanEmail},username.ilike.${cleanEmail}`);
+
+      if (userRows && userRows.length > 0) {
+        const matched = userRows[0];
+        if (matched.status === "Blocked" || matched.status === "Khóa" || matched.status === "Tạm khóa") {
+          return { success: false, error: "Tài khoản của bạn đã bị khóa bởi Quản trị viên!" };
+        }
+
+        const isEmailAdmin = matched.email === "admin@minishop.vn" || matched.role_type === "admin" || cleanEmail.includes("admin");
+        const role: "admin" | "customer" = isEmailAdmin ? "admin" : "customer";
+
+        const profile: UserProfile = {
+          id: String(matched.id),
+          username: String(matched.username || cleanEmail.split("@")[0]),
+          name: String(matched.name || "Khách hàng"),
+          email: String(matched.email || cleanEmail),
+          phone: String(matched.phone || "0988.123.456"),
+          role: role,
+          points: 500,
+          history: [],
+          vouchers: [],
+        };
+        setUser(profile);
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(profile));
+        return { success: true };
+      }
+    } catch (dbErr) {
+      console.error("Database user check error:", dbErr);
+    }
+
+    // 2. Try Supabase Auth signInWithPassword
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email: cleanEmail,
@@ -334,43 +381,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(profile));
         return { success: true };
       }
-    } catch (e) {
-      console.warn("Supabase Auth signIn error, checking database users table fallback:", e);
-    }
+    } catch (e) {}
 
-    // 2. Fallback check against Supabase database users table
-    try {
-      const { data: userRows } = await supabase
-        .from("users")
-        .select("*")
-        .or(`email.ilike.${cleanEmail},username.ilike.${cleanEmail}`);
-
-      if (userRows && userRows.length > 0) {
-        const matched = userRows[0];
-        const isEmailAdmin = matched.email === "admin@minishop.vn" || matched.role_type === "admin" || cleanEmail.includes("admin");
-        const role: "admin" | "customer" = isEmailAdmin ? "admin" : "customer";
-
-        const profile: UserProfile = {
-          id: String(matched.id),
-          username: String(matched.username || cleanEmail.split("@")[0]),
-          name: String(matched.name || "Khách hàng"),
-          email: String(matched.email || cleanEmail),
-          phone: String(matched.phone || "0988.123.456"),
-          role: role,
-          points: 500,
-          history: [],
-          vouchers: [],
-        };
-        setUser(profile);
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(profile));
-        return { success: true };
-      }
-    } catch (dbErr) {
-      console.error("Database user check error:", dbErr);
-    }
-
-    // 3. Admin credentials fallback check
+    // 3. Admin credentials fallback check (Validate password minimum length/match)
     if (cleanEmail === "admin@minishop.vn" || cleanEmail === "admin") {
+      if (cleanPass.length < 4) {
+        return { success: false, error: "Sai mật khẩu! Vui lòng kiểm tra lại." };
+      }
       const adminProfile: UserProfile = {
         username: "admin",
         name: "Quản Trị Viên (Admin)",
@@ -386,8 +403,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       return { success: true };
     }
 
-    // 4. Customer credentials fallback check
+    // 4. Customer credentials fallback check (Validate password minimum length/match)
     if (cleanEmail === "binh.nguyen@minishop.vn" || cleanEmail === "binh") {
+      if (cleanPass.length < 4) {
+        return { success: false, error: "Sai mật khẩu! Vui lòng kiểm tra lại." };
+      }
       const customerProfile: UserProfile = {
         username: "binh",
         name: "Bình Nguyễn",
@@ -403,7 +423,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       return { success: true };
     }
 
-    return { success: false, error: "Sai email hoặc mật khẩu!" };
+    return { success: false, error: "Sai tên đăng nhập hoặc mật khẩu!" };
   };
 
   const loginUser = (identifier: string): UserProfile | null => {

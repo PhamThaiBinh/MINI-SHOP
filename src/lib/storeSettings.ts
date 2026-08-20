@@ -26,6 +26,8 @@ export const DEFAULT_STORE_SETTINGS: StoreSettings = {
 
 export const STORE_SETTINGS_KEY = "minishop_store_settings_v3";
 
+import { createClient } from "@/utils/supabase/client";
+
 export function getStoreSettings(): StoreSettings {
   if (typeof window === "undefined") return DEFAULT_STORE_SETTINGS;
   try {
@@ -47,6 +49,29 @@ export function saveStoreSettings(settings: Partial<StoreSettings>): StoreSettin
     try {
       localStorage.setItem(STORE_SETTINGS_KEY, JSON.stringify(updated));
       window.dispatchEvent(new CustomEvent("minishop_store_settings_updated", { detail: updated }));
+
+      // Async sync to Supabase
+      const supabase = createClient();
+      supabase
+        .from("settings")
+        .select("id")
+        .limit(1)
+        .then(({ data }: { data: any }) => {
+          const payload = {
+            site_name: updated.storeName,
+            hotline: updated.phone,
+            email: updated.email,
+            address: updated.address,
+            opening_hours: updated.workingHours,
+            updated_at: new Date().toISOString(),
+          };
+          if (data && data.length > 0) {
+            supabase.from("settings").update(payload).eq("id", data[0].id).then();
+          } else {
+            supabase.from("settings").insert(payload).then();
+          }
+        })
+        .catch(console.error);
     } catch (err) {
       console.error("Error saving store settings:", err);
     }

@@ -44,6 +44,8 @@ export default function AdminProductsPage() {
   const [formImageUrl, setFormImageUrl] = useState("");
   const [formStatus, setFormStatus] = useState<"Active" | "Hidden">("Active");
   const [formDesc, setFormDesc] = useState("");
+  const [formStock, setFormStock] = useState<string>("15");
+  const [formImportQty, setFormImportQty] = useState<string>("0");
 
   // Pagination states
   const [pageSize, setPageSize] = useState<number>(10);
@@ -110,6 +112,8 @@ export default function AdminProductsPage() {
     setFormImageUrl("");
     setFormStatus("Active");
     setFormDesc("");
+    setFormStock("15");
+    setFormImportQty("0");
     setShowModal(true);
   };
 
@@ -121,6 +125,8 @@ export default function AdminProductsPage() {
     setFormImageUrl(prod.image);
     setFormStatus(prod.status);
     setFormDesc(prod.desc);
+    setFormStock((prod.stock !== undefined ? prod.stock : 15).toString());
+    setFormImportQty("0");
     setShowModal(true);
   };
 
@@ -139,26 +145,27 @@ export default function AdminProductsPage() {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formName.trim() || !formPrice) return;
+    setLoading(true);
 
-    const numPrice = Number(formPrice);
-    if (isNaN(numPrice) || numPrice <= 0) {
-      alert("Giá bán sản phẩm phải là một số dương lớn hơn 0!");
+    const numericPrice = parseFloat(formPrice);
+    if (isNaN(numericPrice) || numericPrice < 0) {
+      alert("Giá bán không hợp lệ!");
+      setLoading(false);
       return;
     }
-
-    const selectedCategoryName = formCategory || (dbCategories[0]?.name || "Nội Thất Phòng Khách");
 
     let finalImage = formImageUrl.trim();
     if (!finalImage || (!finalImage.startsWith("http://") && !finalImage.startsWith("https://") && !finalImage.startsWith("/assets/"))) {
       finalImage = "/assets/images/products/noi-that-gia-dung/sofa-phong-khach.webp";
     }
 
+    const selectedCategory = formCategory || (dbCategories[0]?.name || "Nội Thất Phòng Khách");
+
     const prodData = {
       id: editingProduct ? editingProduct.id : undefined,
       name: formName.trim(),
-      category: selectedCategoryName,
-      categoryName: selectedCategoryName,
+      category: selectedCategory,
+      categoryName: selectedCategory,
       price: Number(formPrice),
       image: finalImage,
       status: formStatus,
@@ -705,6 +712,31 @@ export default function AdminProductsPage() {
                           onChange={(e) => setFormPrice(e.target.value)}
                           required
                           style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13.5px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "14px" }}>
+                      <div>
+                        <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "4px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Số Lượng Tồn Kho</label>
+                        <input
+                          type="number"
+                          className="form-control admin-setting-input"
+                          placeholder="15"
+                          value={formStock}
+                          onChange={(e) => setFormStock(e.target.value)}
+                          style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13.5px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "4px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>📦 Nhập Thêm Hàng (+Số lượng)</label>
+                        <input
+                          type="number"
+                          className="form-control admin-setting-input"
+                          placeholder="0"
+                          value={formImportQty}
+                          onChange={(e) => setFormImportQty(e.target.value)}
+                          style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13.5px", fontFamily: "'Plus Jakarta Sans', sans-serif", borderColor: "#86efac", background: "#f0fdf4" }}
                         />
                       </div>
                     </div>

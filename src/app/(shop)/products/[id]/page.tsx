@@ -10,6 +10,7 @@ import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { Product } from "@/types/product";
 import { fetchProductByIdFromSupabase, fetchProductsFromSupabase } from "@/lib/supabaseProducts";
+import { createClient } from "@/utils/supabase/client";
 import {
   ShoppingCart,
   Zap,
@@ -169,7 +170,7 @@ function ProductDetailPageContent({
   const [hoverRating, setHoverRating] = useState(0);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
 
-  const handleAddReview = (e: React.FormEvent) => {
+  const handleAddReview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!reviewerName.trim() || !reviewerComment.trim()) return;
 
@@ -182,7 +183,28 @@ function ProductDetailPageContent({
       isVerified: true,
     };
 
-    setReviewsList([newRev, ...reviewsList]);
+    const updatedList = [newRev, ...reviewsList];
+    setReviewsList(updatedList);
+
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(`minishop_reviews_product_${productId}`, JSON.stringify(updatedList));
+      } catch (err) {}
+    }
+
+    try {
+      const supabase = createClient();
+      await supabase.from("product_reviews").insert({
+        product_id: productId,
+        reviewer_name: reviewerName.trim(),
+        rating: reviewRating,
+        comment: reviewerComment.trim(),
+        created_at: new Date().toISOString(),
+      });
+    } catch (err) {
+      console.warn("Supabase product review insert error:", err);
+    }
+
     setReviewerName("");
     setReviewerComment("");
     setReviewRating(5);

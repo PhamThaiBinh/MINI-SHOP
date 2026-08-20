@@ -153,7 +153,7 @@ export default function AdminDashboard() {
   // Time preset & date range filter state for Chart Hub
   const [timePreset, setTimePreset] = useState<"7d" | "30d" | "90d" | "180d" | "365d" | "custom">("30d");
   const [customStartDate, setCustomStartDate] = useState("2026-01-01");
-  const [customEndDate, setCustomEndDate] = useState("2026-12-31");
+  const [customEndDate, setCustomEndDate] = useState("2026-02-28");
 
   return (
     <div className="admin-wrapper">
@@ -334,43 +334,77 @@ export default function AdminDashboard() {
               {/* 1.5 INTERACTIVE REVENUE TREND & ANALYTICS CHART HUB */}
               {(() => {
                 // Calculate dynamic date points strictly based on selected time preset & real Supabase orders
-                let daysCount = 30;
-                if (timePreset === "7d") daysCount = 7;
-                else if (timePreset === "30d") daysCount = 30;
-                else if (timePreset === "90d") daysCount = 90;
-                else if (timePreset === "180d") daysCount = 180;
-                else if (timePreset === "365d") daysCount = 365;
-                else if (timePreset === "custom") {
-                  const start = new Date(customStartDate).getTime();
-                  const end = new Date(customEndDate).getTime();
-                  const diff = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
-                  daysCount = Math.min(365, Math.max(2, diff));
+                const chartPoints: { dateStr: string; label: string; revenue: number }[] = [];
+
+                if (timePreset === "custom") {
+                  const startDate = new Date(customStartDate);
+                  const endDate = new Date(customEndDate);
+                  if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime()) && startDate <= endDate) {
+                    const curr = new Date(startDate);
+                    while (curr <= endDate) {
+                      const year = curr.getFullYear();
+                      const month = String(curr.getMonth() + 1).padStart(2, "0");
+                      const day = String(curr.getDate()).padStart(2, "0");
+                      const isoDate = `${year}-${month}-${day}`;
+                      const dateLabel = `${day}/${month}/${year}`;
+
+                      const dayRevenue = completedOrders
+                        .filter((o) => {
+                          if (!o.date) return false;
+                          if (o.date.includes("/")) {
+                            const parts = o.date.split(" ")[0].split("/");
+                            if (parts.length === 3) {
+                              const orderIso = `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`;
+                              return orderIso === isoDate;
+                            }
+                          }
+                          return o.date.startsWith(isoDate);
+                        })
+                        .reduce((sum, o) => sum + (o.total || 0), 0);
+
+                      chartPoints.push({ dateStr: isoDate, label: dateLabel, revenue: dayRevenue });
+                      curr.setDate(curr.getDate() + 1);
+                    }
+                  }
+                } else {
+                  let daysCount = 30;
+                  if (timePreset === "7d") daysCount = 7;
+                  else if (timePreset === "30d") daysCount = 30;
+                  else if (timePreset === "90d") daysCount = 90;
+                  else if (timePreset === "180d") daysCount = 180;
+                  else if (timePreset === "365d") daysCount = 365;
+
+                  const today = new Date();
+                  for (let i = daysCount - 1; i >= 0; i--) {
+                    const d = new Date(today);
+                    d.setDate(d.getDate() - i);
+                    const year = d.getFullYear();
+                    const month = String(d.getMonth() + 1).padStart(2, "0");
+                    const day = String(d.getDate()).padStart(2, "0");
+                    const isoDate = `${year}-${month}-${day}`;
+                    const dateLabel = `${day}/${month}/${year}`;
+
+                    const dayRevenue = completedOrders
+                      .filter((o) => {
+                        if (!o.date) return false;
+                        if (o.date.includes("/")) {
+                          const parts = o.date.split(" ")[0].split("/");
+                          if (parts.length === 3) {
+                            const orderIso = `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`;
+                            return orderIso === isoDate;
+                          }
+                        }
+                        return o.date.startsWith(isoDate);
+                      })
+                      .reduce((sum, o) => sum + (o.total || 0), 0);
+
+                    chartPoints.push({ dateStr: isoDate, label: dateLabel, revenue: dayRevenue });
+                  }
                 }
 
-                const chartPoints: { dateStr: string; label: string; revenue: number }[] = [];
-                const today = new Date();
-
-                for (let i = daysCount - 1; i >= 0; i--) {
-                  const d = new Date(today);
-                  d.setDate(d.getDate() - i);
-                  const isoDate = d.toISOString().split("T")[0];
-                  const dateLabel = `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}`;
-
-                  const dayRevenue = completedOrders
-                    .filter((o) => {
-                      if (!o.date) return false;
-                      if (o.date.includes("/")) {
-                        const parts = o.date.split(" ")[0].split("/");
-                        if (parts.length === 3) {
-                          const orderIso = `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`;
-                          return orderIso === isoDate;
-                        }
-                      }
-                      return o.date.startsWith(isoDate);
-                    })
-                    .reduce((sum, o) => sum + (o.total || 0), 0);
-
-                  chartPoints.push({ dateStr: isoDate, label: dateLabel, revenue: dayRevenue });
+                if (chartPoints.length === 0) {
+                  const todayStr = new Date().toISOString().split("T")[0];
+                  chartPoints.push({ dateStr: todayStr, label: "Hôm nay", revenue: 0 });
                 }
 
                 const maxRevenue = Math.max(...chartPoints.map((p) => p.revenue), 0);
@@ -405,7 +439,7 @@ export default function AdminDashboard() {
                           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                             <BarChart3 className="w-5 h-5 text-emerald-700" />
                             <h3 style={{ fontSize: "18px", fontWeight: 900, color: "#0f172a", margin: 0, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                              Biểu Đồ Doanh Thu & Xu Hướng Tăng Trưởng ({daysCount} Ngày Qua)
+                              Biểu Đồ Doanh Thu & Xu Hướng Tăng Trưởng ({chartPoints.length} Ngày Qua)
                             </h3>
                           </div>
                           <p style={{ fontSize: "12px", color: "#64748b", margin: "2px 0 0", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
@@ -508,7 +542,7 @@ export default function AdminDashboard() {
                             />
                           </div>
                           <span style={{ fontSize: "12px", color: "#0369a1", fontWeight: 700 }}>
-                            Hiển thị báo cáo doanh thu {daysCount} ngày (từ <strong>{customStartDate}</strong> đến <strong>{customEndDate}</strong>)
+                            Hiển thị báo cáo doanh thu {chartPoints.length} ngày (từ <strong>{customStartDate}</strong> đến <strong>{customEndDate}</strong>)
                           </span>
                         </div>
                       )}

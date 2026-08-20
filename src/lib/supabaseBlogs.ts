@@ -62,11 +62,52 @@ export const fetchBlogByIdFromSupabase = async (id: number): Promise<BlogArticle
       excerpt: String(row.excerpt),
       img: String(row.img),
       author: String(row.author),
-      readTime: String(row.read_time || row.readTime),
-      content: String(row.content),
+      readTime: String(row.read_time || row.readTime || "5 phút đọc"),
+      content: String(row.content || row.excerpt),
     };
   } catch (err) {
     console.error(`Error fetching blog ${id} from Supabase:`, err);
     return BLOG_ARTICLES.find((b) => b.id === id) || null;
+  }
+};
+
+export const saveBlogToSupabase = async (blog: Partial<BlogArticle>): Promise<boolean> => {
+  try {
+    const supabase = createClient();
+    const blogCode = `B${String(blog.id || Math.floor(Math.random() * 9000) + 1000).padStart(4, "0")}`;
+
+    const payload = {
+      blog_code: blogCode,
+      title: blog.title,
+      category: blog.category,
+      date: blog.date || new Date().toLocaleDateString("vi-VN"),
+      excerpt: blog.excerpt,
+      img: blog.img,
+      author: blog.author || "Admin",
+      read_time: blog.readTime || "5 phút đọc",
+      content: blog.content || blog.excerpt,
+    };
+
+    if (blog.id) {
+      const { error } = await supabase.from("blogs").update(payload).eq("id", blog.id);
+      return !error;
+    } else {
+      const { error } = await supabase.from("blogs").insert(payload);
+      return !error;
+    }
+  } catch (err) {
+    console.error("Error saving blog to Supabase:", err);
+    return false;
+  }
+};
+
+export const deleteBlogFromSupabase = async (id: number): Promise<boolean> => {
+  try {
+    const supabase = createClient();
+    const { error } = await supabase.from("blogs").delete().eq("id", id);
+    return !error;
+  } catch (err) {
+    console.error(`Error deleting blog ${id} from Supabase:`, err);
+    return false;
   }
 };

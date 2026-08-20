@@ -6,7 +6,9 @@ import "@/styles/admin.css";
 
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
-import { fetchAdminCategories, saveAdminCategory, deleteAdminCategory } from "@/lib/supabaseAdmin";
+import { fetchAdminCategories, saveAdminCategory, deleteAdminCategory, fetchAdminOrders } from "@/lib/supabaseAdmin";
+import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
+import { formatVND } from "@/lib/utils";
 import { createClient } from "@/utils/supabase/client";
 import { Edit3, Trash2, Folder, Plus, X } from "lucide-react";
 
@@ -39,6 +41,9 @@ export default function AdminCategoriesPage() {
   const [formStatus, setFormStatus] = useState<"Active" | "Hidden">("Active");
   const [formDesc, setFormDesc] = useState("");
 
+  // Dynamic Top Category Info from Supabase Orders
+  const [topCatInfo, setTopCatInfo] = useState<{ name: string; revenue: number }>({ name: "Chưa có doanh thu", revenue: 0 });
+
   const loadCategories = async () => {
     setLoading(true);
     const data = await fetchAdminCategories();
@@ -62,6 +67,56 @@ export default function AdminCategoriesPage() {
   useEffect(() => {
     loadCategories();
   }, []);
+
+  useEffect(() => {
+    async function calcTopCategory() {
+      if (categories.length === 0) return;
+      const [prods, orders] = await Promise.all([
+        fetchProductsFromSupabase(),
+        fetchAdminOrders(),
+      ]);
+
+      const completedOrders = (orders || []).filter((o) => o.status === "completed" || o.status !== "cancelled");
+      if (completedOrders.length === 0) {
+        setTopCatInfo({ name: "Chưa có doanh thu", revenue: 0 });
+        return;
+      }
+
+      const catRevenueMap: Record<string, number> = {};
+      categories.forEach((c) => {
+        catRevenueMap[c.name] = 0;
+      });
+
+      completedOrders.forEach((ord) => {
+        (ord.items || []).forEach((it) => {
+          const matchedProd = prods.find((p) => p.name.trim().toLowerCase() === it.name.trim().toLowerCase());
+          if (matchedProd) {
+            const catName = matchedProd.categoryName || matchedProd.category;
+            const matchedCat = categories.find(
+              (c) => c.name.toLowerCase() === (catName || "").toLowerCase() || c.slug === catName
+            );
+            const key = matchedCat ? matchedCat.name : catName;
+            if (key) {
+              catRevenueMap[key] = (catRevenueMap[key] || 0) + ((it.price || 0) * (it.qty || 1));
+            }
+          }
+        });
+      });
+
+      let maxCat = "Chưa có doanh thu";
+      let maxRev = 0;
+      Object.entries(catRevenueMap).forEach(([cName, rev]) => {
+        if (rev > maxRev) {
+          maxRev = rev;
+          maxCat = cName;
+        }
+      });
+
+      setTopCatInfo({ name: maxCat, revenue: maxRev });
+    }
+
+    calcTopCategory();
+  }, [categories]);
 
   const filteredCategories = categories.filter(
     (c) =>
@@ -257,11 +312,11 @@ export default function AdminCategoriesPage() {
                   Nhóm Bán Chạy Nhất
                 </div>
                 <div style={{ fontSize: "20px", fontWeight: 900, color: "#0c4a6e", letterSpacing: "-0.02em", lineHeight: 1.2 }}>
-                  {categories[0]?.name || "Nội Thất Phòng Khách"}
+                  {topCatInfo.name}
                 </div>
                 <div style={{ fontSize: "12px", color: "#475569", fontWeight: 600, marginTop: "8px" }}>
                   <span style={{ padding: "2px 8px", background: "#e0f2fe", color: "#0369a1", borderRadius: "12px", fontWeight: 800, fontSize: "11px" }}>
-                    Top 1 Doanh thu
+                    {topCatInfo.revenue > 0 ? `Doanh thu: ${formatVND(topCatInfo.revenue)}` : "Chưa có doanh thu từ đơn hàng"}
                   </span>
                 </div>
               </div>
