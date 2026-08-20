@@ -6,11 +6,9 @@ import { usePathname, useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { useAuth } from "@/context/AuthContext";
-
 import { PRODUCTS_DATA } from "@/data/products";
 import { formatVND, fixImagePath } from "@/lib/utils";
-
-import { Zap, Search, ShoppingCart, Heart, LogOut } from "lucide-react";
+import { Zap, Search, ShoppingCart, Heart, LogOut, Menu, X, ArrowRight, User } from "lucide-react";
 
 export const Header: React.FC = () => {
   const pathname = usePathname();
@@ -22,6 +20,7 @@ export const Header: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const matchingProducts = PRODUCTS_DATA.filter((p) =>
     p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -33,12 +32,11 @@ export const Header: React.FC = () => {
     router.push("/auth");
   };
 
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setMobileMenuOpen(false);
+        setShowSuggestions(false);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -49,366 +47,478 @@ export const Header: React.FC = () => {
     return null;
   }
 
+  const navItems = [
+    { label: "Trang chủ", href: "/" },
+    { label: "Sản phẩm", href: "/products" },
+    { label: "Bài viết", href: "/blog" },
+    { label: "⚡ Flash Sale", href: "/flash-sale", isSpecial: true },
+    { label: "Tra cứu đơn", href: "/track-order" },
+    { label: "Liên hệ", href: "/contact" },
+  ];
+
   return (
     <>
+      {/* Mobile Backdrop */}
       {mobileMenuOpen && (
         <div
           onClick={() => setMobileMenuOpen(false)}
-          className="mobile-backdrop-overlay"
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(0,0,0,0.5)",
+            background: "rgba(15, 23, 42, 0.6)",
+            backdropFilter: "blur(12px)",
             zIndex: 998,
             cursor: "pointer",
           }}
         />
       )}
-      <header className="site-header">
-      <div className="container">
-        <div className="header-inner">
-          {/* Brand Logo */}
-          <Link href="/" className="brand-logo" id="header-logo">
-            <svg viewBox="0 0 24 24">
-              <path d="M19 6h-2c0-2.76-2.24-5-5-5S7 3.24 7 6H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-7-3c1.66 0 3 1.34 3 3H9c0-1.66 1.34-3 3-3zm7 17H5V8h2v2c0 .55.45 1 1 1s1-.45 1-1V8h6v2c0 .55.45 1 1 1s1-.45 1-1V8h2v12z" />
-            </svg>
-            <span>Mini Shop</span>
+
+      {/* Floating Doppelrand Header Bar */}
+      <header
+        style={{
+          position: "sticky",
+          top: "16px",
+          zIndex: 999,
+          padding: "0 16px",
+          marginBottom: "24px",
+          fontFamily: "'Plus Jakarta Sans', sans-serif",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: "1280px",
+            margin: "0 auto",
+            background: "rgba(255, 255, 255, 0.88)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+            borderRadius: "999px",
+            border: "1px solid rgba(226, 232, 240, 0.8)",
+            boxShadow: "0 10px 30px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(0, 0, 0, 0.05)",
+            padding: "8px 16px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "16px",
+            transition: "all 0.3s cubic-bezier(0.32, 0.72, 0, 1)",
+          }}
+        >
+          {/* 1. Brand Logo */}
+          <Link
+            href="/"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "10px",
+              textDecoration: "none",
+              padding: "6px 14px",
+              borderRadius: "999px",
+              background: "#ffffff",
+              border: "1px solid #e2e8f0",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+              flexShrink: 0,
+            }}
+          >
+            <div
+              style={{
+                width: "28px",
+                height: "28px",
+                borderRadius: "50%",
+                background: "var(--primary-color, #2e7d32)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#ffffff",
+              }}
+            >
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                <path d="M19 6h-2c0-2.76-2.24-5-5-5S7 3.24 7 6H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-7-3c1.66 0 3 1.34 3 3H9c0-1.66 1.34-3 3-3zm7 17H5V8h2v2c0 .55.45 1 1 1s1-.45 1-1V8h6v2c0 .55.45 1 1 1s1-.45 1-1V8h2v12z" />
+              </svg>
+            </div>
+            <span style={{ fontSize: "16px", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.02em" }}>
+              MINI SHOP
+            </span>
           </Link>
 
-          {/* Nav Menu */}
-          <nav>
-            <ul className="nav-menu">
-              <li>
+          {/* 2. Desktop Navigation Menu */}
+          <nav className="hidden lg:flex" style={{ alignItems: "center", gap: "4px" }}>
+            {navItems.map((item) => {
+              const isActive =
+                item.href === "/"
+                  ? pathname === "/"
+                  : pathname.startsWith(item.href);
+
+              return (
                 <Link
-                  href="/"
-                  className={`nav-link ${pathname === "/" ? "active" : ""}`}
+                  key={item.href}
+                  href={item.href}
+                  style={{
+                    padding: "8px 16px",
+                    borderRadius: "999px",
+                    fontSize: "13.5px",
+                    fontWeight: isActive ? 900 : 700,
+                    color: item.isSpecial
+                      ? "#dc2626"
+                      : isActive
+                      ? "#0f172a"
+                      : "#64748b",
+                    background: isActive ? "#f1f5f9" : "transparent",
+                    textDecoration: "none",
+                    whiteSpace: "nowrap",
+                    transition: "all 0.2s ease",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                  }}
                 >
-                  <span className="nav-two-lines">
-                    <span>Trang</span>
-                    <span>chủ</span>
-                  </span>
+                  {item.label}
                 </Link>
-              </li>
-              <li>
-                <Link
-                  href="/products"
-                  className={`nav-link ${
-                    pathname.startsWith("/products") ? "active" : ""
-                  }`}
-                >
-                  <span className="nav-two-lines">
-                    <span>Sản</span>
-                    <span>phẩm</span>
-                  </span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/blog"
-                  className={`nav-link ${
-                    pathname.startsWith("/blog") ? "active" : ""
-                  }`}
-                >
-                  <span className="nav-two-lines">
-                    <span>Bài</span>
-                    <span>viết</span>
-                  </span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/flash-sale"
-                  className={`nav-link ${
-                    pathname === "/flash-sale" ? "active" : ""
-                  }`}
-                  style={{ color: "#ef4444", fontWeight: 800 }}
-                >
-                  <span className="nav-two-lines" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                    <Zap style={{ width: 14, height: 14, color: "#f59e0b", fill: "#f59e0b" }} />
-                    <span>Flash Sale</span>
-                  </span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/track-order"
-                  className={`nav-link ${
-                    pathname === "/track-order" ? "active" : ""
-                  }`}
-                >
-                  <span className="nav-two-lines" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                    <Search style={{ width: 14, height: 14 }} />
-                    <span>Tra cứu đơn</span>
-                  </span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/contact"
-                  className={`nav-link ${
-                    pathname === "/contact" ? "active" : ""
-                  }`}
-                >
-                  <span className="nav-two-lines">
-                    <span>Liên</span>
-                    <span>hệ</span>
-                  </span>
-                </Link>
-              </li>
-            </ul>
+              );
+            })}
           </nav>
 
-          {/* Search Input with Autocomplete Dropdown */}
-          <div className="header-search" style={{ position: "relative" }}>
-            <input
-              type="text"
-              placeholder="Tìm sản phẩm..."
-              id="header-search-input"
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setSelectedIndex(-1);
-              }}
-              onFocus={() => setShowSuggestions(true)}
-              onKeyDown={(e) => {
-                if (e.key === "ArrowDown") {
-                  e.preventDefault();
-                  if (matchingProducts.length > 0) {
-                    setSelectedIndex((prev) => (prev < matchingProducts.length - 1 ? prev + 1 : 0));
-                  }
-                } else if (e.key === "ArrowUp") {
-                  e.preventDefault();
-                  if (matchingProducts.length > 0) {
-                    setSelectedIndex((prev) => (prev > 0 ? prev - 1 : matchingProducts.length - 1));
-                  }
-                } else if (e.key === "Enter") {
-                  if (selectedIndex >= 0 && selectedIndex < matchingProducts.length) {
-                    const selectedProd = matchingProducts[selectedIndex];
-                    setShowSuggestions(false);
-                    setSearchTerm("");
-                    setSelectedIndex(-1);
-                    router.push(`/products/${selectedProd.id}`);
-                  } else {
-                    const query = searchTerm.trim();
-                    setShowSuggestions(false);
-                    if (query) {
-                      router.push(`/products?search=${encodeURIComponent(query)}`);
-                    } else {
-                      router.push("/products");
-                    }
-                  }
-                } else if (e.key === "Escape") {
-                  setShowSuggestions(false);
-                  setSelectedIndex(-1);
-                }
-              }}
-            />
-            <svg viewBox="0 0 24 24">
-              <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
-            </svg>
-
-            {/* Suggestions Dropdown Popup */}
-            {showSuggestions && searchTerm.trim().length > 0 && (
+          {/* 3. Header Right Actions & Search */}
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
+            
+            {/* Search Input with Autocomplete */}
+            <div style={{ position: "relative" }} className="hidden sm:block">
               <div
                 style={{
-                  position: "absolute",
-                  top: "calc(100% + 6px)",
-                  left: 0,
-                  right: 0,
+                  display: "flex",
+                  alignItems: "center",
                   background: "#ffffff",
-                  border: "1px solid var(--border-color)",
-                  borderRadius: "12px",
-                  boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
-                  zIndex: 2000,
-                  maxHeight: "320px",
-                  overflowY: "auto",
-                  padding: "8px 0",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "999px",
+                  padding: "4px 14px",
+                  width: "220px",
+                  boxShadow: "inset 0 1px 2px rgba(0,0,0,0.03)",
                 }}
               >
-                {matchingProducts.length === 0 ? (
-                  <div style={{ padding: "12px 16px", fontSize: "13px", color: "var(--text-muted)", textAlign: "center" }}>
-                    Không tìm thấy sản phẩm phù hợp.
-                  </div>
-                ) : (
-                  matchingProducts.map((p, idx) => (
-                    <div
-                      key={p.id}
-                      onClick={() => {
+                <Search className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                <input
+                  type="text"
+                  placeholder="Tìm sản phẩm..."
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setSelectedIndex(-1);
+                  }}
+                  onFocus={() => setShowSuggestions(true)}
+                  onKeyDown={(e) => {
+                    if (e.key === "ArrowDown") {
+                      e.preventDefault();
+                      if (matchingProducts.length > 0) {
+                        setSelectedIndex((prev) => (prev < matchingProducts.length - 1 ? prev + 1 : 0));
+                      }
+                    } else if (e.key === "ArrowUp") {
+                      e.preventDefault();
+                      if (matchingProducts.length > 0) {
+                        setSelectedIndex((prev) => (prev > 0 ? prev - 1 : matchingProducts.length - 1));
+                      }
+                    } else if (e.key === "Enter") {
+                      if (selectedIndex >= 0 && selectedIndex < matchingProducts.length) {
+                        const selectedProd = matchingProducts[selectedIndex];
                         setShowSuggestions(false);
                         setSearchTerm("");
                         setSelectedIndex(-1);
-                        router.push(`/products/${p.id}`);
-                      }}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "10px",
-                        padding: "8px 14px",
-                        cursor: "pointer",
-                        borderBottom: "1px solid #f1f5f9",
-                        transition: "background 0.2s ease",
-                        background: idx === selectedIndex ? "#f1f5f9" : "#ffffff",
-                      }}
-                      onMouseEnter={() => setSelectedIndex(idx)}
-                    >
-                      <img
-                        src={fixImagePath(p.image)}
-                        alt={p.name}
-                        style={{ width: "36px", height: "36px", objectFit: "cover", borderRadius: "6px" }}
-                      />
-                      <div style={{ flex: 1, overflow: "hidden" }}>
-                        <div style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                          {p.name}
-                        </div>
-                        <div style={{ fontSize: "12px", fontWeight: 800, color: "var(--primary-color)" }}>
-                          {formatVND(p.price)}
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Header Actions */}
-          <div className="header-actions">
-            <Link
-              href="/wishlist"
-              className="btn-stacked btn-stacked-red"
-              title="Danh sách Yêu thích"
-            >
-              <div className="btn-stacked-icon">
-                <Heart style={{ width: 20, height: 20, color: "#ef4444" }} />
-                <sup className="badge-superscript count-red">
-                  {totalWishlistItems}
-                </sup>
-              </div>
-            </Link>
-
-            <Link
-              href="/cart"
-              className="btn-stacked btn-stacked-green"
-              title="Giỏ hàng"
-            >
-              <div className="btn-stacked-icon">
-                <ShoppingCart style={{ width: 20, height: 20, color: "var(--primary-color)" }} />
-                <sup className="badge-superscript count-green">
-                  {totalItems}
-                </sup>
-              </div>
-            </Link>
-
-            {/* User Auth Section */}
-            {user ? (
-              user.role === "admin" ? (
-                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  <Link
-                    href="/admin"
-                    className="btn-stacked nav-link"
-                    style={{
-                      backgroundColor: "var(--primary-color)",
-                      color: "#ffffff",
-                      borderColor: "var(--primary-color)",
-                      fontWeight: 700,
-                    }}
-                  >
-                    <span className="nav-two-lines">
-                      <span>Chào</span>
-                      <span>Admin</span>
-                    </span>
-                  </Link>
-                  <button
-                    onClick={handleLogout}
-                    title="Đăng xuất Admin"
-                    style={{
-                      background: "none",
-                      border: "1px solid var(--border-color)",
-                      borderRadius: "var(--radius-md)",
-                      padding: "6px 8px",
-                      cursor: "pointer",
-                      fontSize: "12px",
-                      color: "var(--text-muted)",
-                      height: "40px",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <LogOut className="w-4 h-4 text-slate-600" />
-                  </button>
-                </div>
-              ) : (
-                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  <Link
-                    href="/auth"
-                    className="btn-stacked nav-link"
-                    style={{
-                      backgroundColor: "var(--primary-light)",
-                      color: "var(--primary-color)",
-                      borderColor: "var(--primary-color)",
-                      fontWeight: 700,
-                    }}
-                  >
-                    <span className="nav-two-lines">
-                      <span>Chào,</span>
-                      <span>{user.name}</span>
-                    </span>
-                  </Link>
-                  <button
-                    onClick={handleLogout}
-                    title="Đăng xuất"
-                    style={{
-                      background: "none",
-                      border: "1px solid var(--border-color)",
-                      borderRadius: "var(--radius-md)",
-                      padding: "6px 8px",
-                      cursor: "pointer",
-                      fontSize: "12px",
-                      color: "var(--text-muted)",
-                      height: "40px",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <LogOut className="w-4 h-4 text-slate-600" />
-                  </button>
-                </div>
-              )
-            ) : (
-              <>
-                <Link
-                  href="/auth"
-                  className="btn-stacked nav-link"
-                  style={{ color: "var(--text-main)" }}
-                >
-                  <span className="nav-two-lines">
-                    <span>Đăng</span>
-                    <span>nhập</span>
-                  </span>
-                </Link>
-
-                <Link
-                  href="/auth?mode=register"
-                  className="btn-stacked nav-link"
+                        router.push(`/products/${selectedProd.id}`);
+                      } else {
+                        const query = searchTerm.trim();
+                        setShowSuggestions(false);
+                        if (query) {
+                          router.push(`/products?search=${encodeURIComponent(query)}`);
+                        } else {
+                          router.push("/products");
+                        }
+                      }
+                    } else if (e.key === "Escape") {
+                      setShowSuggestions(false);
+                      setSelectedIndex(-1);
+                    }
+                  }}
                   style={{
-                    backgroundColor: "var(--primary-color)",
-                    color: "#ffffff",
-                    borderColor: "var(--primary-color)",
+                    border: "none",
+                    outline: "none",
+                    background: "transparent",
+                    padding: "6px 8px",
+                    fontSize: "13px",
+                    width: "100%",
+                    color: "#0f172a",
+                    fontWeight: 600,
+                  }}
+                />
+              </div>
+
+              {/* Suggestions Popup */}
+              {showSuggestions && searchTerm.trim().length > 0 && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "calc(100% + 10px)",
+                    right: 0,
+                    width: "300px",
+                    background: "#ffffff",
+                    border: "1px solid #cbd5e1",
+                    borderRadius: "1.25rem",
+                    boxShadow: "0 12px 36px rgba(15, 23, 42, 0.15)",
+                    zIndex: 2000,
+                    maxHeight: "320px",
+                    overflowY: "auto",
+                    padding: "8px",
                   }}
                 >
-                  <span className="nav-two-lines">
-                    <span>Đăng</span>
-                    <span>ký</span>
-                  </span>
+                  {matchingProducts.length === 0 ? (
+                    <div style={{ padding: "12px 16px", fontSize: "13px", color: "#64748b", textAlign: "center" }}>
+                      Không tìm thấy sản phẩm phù hợp.
+                    </div>
+                  ) : (
+                    matchingProducts.map((p, idx) => (
+                      <div
+                        key={p.id}
+                        onClick={() => {
+                          setShowSuggestions(false);
+                          setSearchTerm("");
+                          setSelectedIndex(-1);
+                          router.push(`/products/${p.id}`);
+                        }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "10px",
+                          padding: "8px 12px",
+                          borderRadius: "0.75rem",
+                          cursor: "pointer",
+                          transition: "background 0.2s ease",
+                          background: idx === selectedIndex ? "#f1f5f9" : "#ffffff",
+                        }}
+                        onMouseEnter={() => setSelectedIndex(idx)}
+                      >
+                        <img
+                          src={fixImagePath(p.image)}
+                          alt={p.name}
+                          style={{ width: "40px", height: "40px", objectFit: "cover", borderRadius: "8px" }}
+                        />
+                        <div style={{ flex: 1, overflow: "hidden" }}>
+                          <div style={{ fontSize: "13px", fontWeight: 800, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            {p.name}
+                          </div>
+                          <div style={{ fontSize: "12px", fontWeight: 900, color: "var(--primary-color, #2e7d32)" }}>
+                            {formatVND(p.price)}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Wishlist Pill */}
+            <Link
+              href="/wishlist"
+              style={{
+                width: "40px",
+                height: "40px",
+                borderRadius: "50%",
+                background: "#ffffff",
+                border: "1px solid #cbd5e1",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                position: "relative",
+                textDecoration: "none",
+                transition: "transform 0.2s ease",
+              }}
+              title="Danh sách Yêu thích"
+            >
+              <Heart className="w-4.5 h-4.5 text-rose-500" />
+              {totalWishlistItems > 0 && (
+                <span
+                  style={{
+                    position: "absolute",
+                    top: "-2px",
+                    right: "-2px",
+                    background: "#ef4444",
+                    color: "#ffffff",
+                    fontSize: "10px",
+                    fontWeight: 900,
+                    width: "18px",
+                    height: "18px",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  {totalWishlistItems}
+                </span>
+              )}
+            </Link>
+
+            {/* Cart Pill */}
+            <Link
+              href="/cart"
+              style={{
+                width: "40px",
+                height: "40px",
+                borderRadius: "50%",
+                background: "var(--primary-color, #2e7d32)",
+                color: "#ffffff",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                position: "relative",
+                textDecoration: "none",
+                boxShadow: "0 4px 12px rgba(46, 125, 50, 0.25)",
+                transition: "transform 0.2s ease",
+              }}
+              title="Giỏ hàng"
+            >
+              <ShoppingCart className="w-4.5 h-4.5" />
+              {totalItems > 0 && (
+                <span
+                  style={{
+                    position: "absolute",
+                    top: "-4px",
+                    right: "-4px",
+                    background: "#0f172a",
+                    color: "#ffffff",
+                    fontSize: "10px",
+                    fontWeight: 900,
+                    width: "18px",
+                    height: "18px",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    border: "2px solid #ffffff",
+                  }}
+                >
+                  {totalItems}
+                </span>
+              )}
+            </Link>
+
+            {/* Auth Pill Button */}
+            {user ? (
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <Link
+                  href={user.role === "admin" ? "/admin" : "/auth"}
+                  style={{
+                    padding: "8px 14px",
+                    borderRadius: "999px",
+                    background: "#f1f5f9",
+                    border: "1px solid #cbd5e1",
+                    fontSize: "13px",
+                    fontWeight: 800,
+                    color: "#0f172a",
+                    textDecoration: "none",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                  }}
+                >
+                  <User className="w-4 h-4 text-emerald-700" />
+                  <span>{user.role === "admin" ? "Admin" : user.name}</span>
                 </Link>
-              </>
+                <button
+                  onClick={handleLogout}
+                  title="Đăng xuất"
+                  style={{
+                    width: "36px",
+                    height: "36px",
+                    borderRadius: "50%",
+                    background: "#ffffff",
+                    border: "1px solid #cbd5e1",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                  }}
+                >
+                  <LogOut className="w-4 h-4 text-slate-600" />
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/auth"
+                style={{
+                  padding: "8px 18px",
+                  borderRadius: "999px",
+                  background: "#0f172a",
+                  color: "#ffffff",
+                  fontSize: "13px",
+                  fontWeight: 900,
+                  textDecoration: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+              >
+                <span>Đăng Nhập</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             )}
+
+            {/* Mobile Hamburger Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden"
+              style={{
+                width: "40px",
+                height: "40px",
+                borderRadius: "50%",
+                background: "#ffffff",
+                border: "1px solid #cbd5e1",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+              }}
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5 text-slate-800" /> : <Menu className="w-5 h-5 text-slate-800" />}
+            </button>
           </div>
         </div>
-      </div>
-    </header>
+
+        {/* Mobile Navigation Drawer Overlay */}
+        {mobileMenuOpen && (
+          <div
+            style={{
+              position: "absolute",
+              top: "calc(100% + 8px)",
+              left: "16px",
+              right: "16px",
+              background: "#ffffff",
+              borderRadius: "1.5rem",
+              border: "1px solid #cbd5e1",
+              boxShadow: "0 20px 40px rgba(15, 23, 42, 0.15)",
+              padding: "20px",
+              zIndex: 1000,
+            }}
+          >
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              {navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  style={{
+                    padding: "12px 16px",
+                    borderRadius: "0.75rem",
+                    fontSize: "14px",
+                    fontWeight: 800,
+                    color: item.isSpecial ? "#ef4444" : "#0f172a",
+                    background: "#f8fafc",
+                    textDecoration: "none",
+                  }}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+      </header>
     </>
   );
 };
