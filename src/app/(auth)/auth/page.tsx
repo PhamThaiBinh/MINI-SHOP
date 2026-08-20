@@ -283,16 +283,16 @@ const MOCK_ORDERS: CustomerOrder[] = [
 
 const SPOTLIGHT_SLIDES = [
   {
-    image: "assets/images/banner/banner-trang-chu-mini-shop.webp",
+    image: "/assets/images/banner/banner-trang-chu-mini-shop.webp",
   },
   {
-    image: "assets/images/products/San_pham/hero-home-decor-pexels-original.webp",
+    image: "/assets/images/products/San_pham/hero-home-decor-pexels-original.webp",
   },
   {
-    image: "assets/images/products/noi-that-gia-dung/sofa-phong-khach.webp",
+    image: "/assets/images/products/San_pham/sofa-phong-khach-original.webp",
   },
   {
-    image: "assets/images/products/noi-that-gia-dung/bo-ban-an-go.webp",
+    image: "/assets/images/products/San_pham/bo-ban-an-go-original.webp",
   },
 ];
 
@@ -935,15 +935,6 @@ export default function AuthPage() {
 
                       {activeTab === "login" ? (
                         <form className="auth-form" onSubmit={handleLoginSubmit} style={{ gap: "14px" }}>
-                          <div>
-                            <h2 style={{ fontSize: "22px", fontWeight: 900, color: "#0f172a", margin: "0 0 4px", letterSpacing: "-0.02em" }}>
-                              Đăng Nhập Tài Khoản
-                            </h2>
-                            <p style={{ fontSize: "13px", color: "#64748b", margin: 0 }}>
-                              Chào mừng bạn quay trở lại với Mini Shop!
-                            </p>
-                          </div>
-
                           <div className="form-group" style={{ marginBottom: "0" }}>
                             <label htmlFor="login-email" className="auth-label" style={{ fontSize: "13px", fontWeight: 800, color: "#334155", marginBottom: "6px" }}>
                               Tên đăng nhập hoặc Email *
@@ -1053,15 +1044,6 @@ export default function AuthPage() {
                         </form>
                       ) : (
                         <form className="auth-form" onSubmit={handleRegisterSubmit} style={{ gap: "12px" }}>
-                          <div>
-                            <h2 style={{ fontSize: "22px", fontWeight: 900, color: "#0f172a", margin: "0 0 4px", letterSpacing: "-0.02em" }}>
-                              Tạo Tài Khoản Mới
-                            </h2>
-                            <p style={{ fontSize: "13px", color: "#64748b", margin: 0 }}>
-                              Tham gia thành viên Mini Shop để nhận hàng ngàn ưu đãi!
-                            </p>
-                          </div>
-
                           <div className="form-group" style={{ marginBottom: "0" }}>
                             <label htmlFor="reg-name" className="auth-label" style={{ fontSize: "13px", fontWeight: 800, color: "#334155", marginBottom: "4px" }}>
                               Họ và tên *
