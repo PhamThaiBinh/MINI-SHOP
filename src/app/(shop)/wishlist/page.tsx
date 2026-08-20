@@ -10,7 +10,7 @@ import { useWishlist } from "@/context/WishlistContext";
 import { useCart } from "@/context/CartContext";
 import { Product } from "@/types/product";
 import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
-import { ShoppingCart, Heart, Flame, ArrowRight, ChevronRight } from "lucide-react";
+import { ShoppingCart, Heart, Flame, ArrowRight, ChevronRight, CheckCircle2, Trash2 } from "lucide-react";
 
 export default function WishlistPage() {
   const { wishlistIds, toggleWishlist } = useWishlist();
@@ -57,6 +57,8 @@ export default function WishlistPage() {
       }}
     >
       <div className="container" style={{ padding: "30px 16px 60px" }}>
+        
+        {/* Toast Notification */}
         {toastMsg && (
           <div
             style={{
@@ -65,192 +67,273 @@ export default function WishlistPage() {
               color: "#166534",
               border: "1px solid #bbf7d0",
               borderRadius: "1rem",
-              fontSize: "13px",
+              fontSize: "13.5px",
               fontWeight: 800,
-              marginBottom: "20px",
+              marginBottom: "24px",
               display: "flex",
               alignItems: "center",
-              gap: "8px",
-              boxShadow: "0 4px 12px rgba(22, 101, 52, 0.08)",
+              gap: "10px",
+              boxShadow: "0 4px 14px rgba(22, 101, 52, 0.1)",
             }}
           >
-            {toastMsg}
+            <CheckCircle2 className="w-5 h-5 text-emerald-700 flex-shrink-0" />
+            <span>{toastMsg}</span>
           </div>
         )}
 
-        {/* Header Title Section */}
+        {/* 1. Header Directory Banner (Flush Left Aligned) */}
         <div style={{ marginBottom: "28px", display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: "16px" }}>
           <div>
             <h1
               style={{
-                fontSize: "28px",
+                fontSize: "32px",
                 fontWeight: 900,
                 color: "#0f172a",
-                margin: 0,
+                margin: "0 0 6px",
                 letterSpacing: "-0.02em",
               }}
             >
-              Sản phẩm yêu thích ({wishlistProducts.length})
+              Sản Phẩm Yêu Thích ({wishlistProducts.length})
             </h1>
+            <p style={{ fontSize: "14px", color: "#64748b", margin: 0, maxWidth: "600px" }}>
+              Danh sách những mẫu nội thất gỗ sồi Bắc Âu & đồ gia dụng thông minh bạn đã lưu trữ để tham khảo.
+            </p>
           </div>
 
           {wishlistProducts.length > 0 && (
             <button
               onClick={handleMoveAllToCart}
               style={{
-                padding: "10px 22px",
+                padding: "12px 24px",
                 background: "var(--primary-color, #2e7d32)",
                 color: "#ffffff",
                 border: "none",
                 borderRadius: "999px",
-                fontWeight: 800,
-                fontSize: "13px",
+                fontWeight: 900,
+                fontSize: "13.5px",
                 cursor: "pointer",
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "8px",
-                boxShadow: "0 4px 14px rgba(46, 125, 50, 0.2)",
+                boxShadow: "0 6px 20px rgba(46, 125, 50, 0.25)",
+                transition: "all 0.2s ease",
               }}
             >
-              <ShoppingCart className="w-4 h-4" /> Chuyển tất cả vào giỏ hàng
+              <ShoppingCart className="w-4 h-4" />
+              <span>Chuyển Tất Cả Vào Giỏ Hàng</span>
             </button>
           )}
         </div>
 
-        {/* Empty State */}
+        {/* 2. Empty State Doppelrand Container */}
         {wishlistProducts.length === 0 ? (
-          <div
-            style={{
-              background: "#ffffff",
-              border: "1px solid var(--border-color, #e2e8f0)",
-              borderRadius: "1.75rem",
-              padding: "64px 20px",
-              textAlign: "center",
-              boxShadow: "0 10px 30px rgba(0,0,0,0.03)",
-            }}
-          >
-            <div
-              style={{
-                width: "80px",
-                height: "80px",
-                borderRadius: "50%",
-                background: "#fef2f2",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                margin: "0 auto 20px",
-              }}
-            >
-              <Heart className="w-10 h-10 text-red-500 fill-red-500" />
+          <div className="doppelrand-outer" style={{ maxWidth: "640px", margin: "40px auto 0" }}>
+            <div className="doppelrand-inner" style={{ padding: "56px 28px", textAlign: "center" }}>
+              <div
+                style={{
+                  width: "80px",
+                  height: "80px",
+                  borderRadius: "50%",
+                  background: "#fef2f2",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  margin: "0 auto 20px",
+                  border: "1px solid #fecaca",
+                }}
+              >
+                <Heart className="w-10 h-10 text-red-500 fill-red-500" />
+              </div>
+              <h2 style={{ fontSize: "20px", fontWeight: 900, color: "#0f172a", marginBottom: "8px" }}>
+                Danh Sách Yêu Thích Đang Trống!
+              </h2>
+              <p style={{ fontSize: "14px", color: "#64748b", maxWidth: "420px", margin: "0 auto 24px", lineHeight: 1.5 }}>
+                Hãy thả tim trên các mẫu nội thất bạn ưng ý khi tham khảo cửa hàng để lưu lại danh sách mua sắm sau nhé.
+              </p>
+              <Link
+                href="/products"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  background: "var(--primary-color, #2e7d32)",
+                  color: "#ffffff",
+                  padding: "14px 32px",
+                  borderRadius: "999px",
+                  fontSize: "14px",
+                  fontWeight: 900,
+                  textDecoration: "none",
+                  boxShadow: "0 6px 20px rgba(46, 125, 50, 0.25)",
+                }}
+              >
+                <Flame className="w-4.5 h-4.5 text-amber-300" />
+                <span>Khám Phá Sản Phẩm HOT Ngay</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
             </div>
-            <h2 style={{ fontSize: "20px", fontWeight: 800, color: "#0f172a", marginBottom: "8px" }}>
-              Chưa có sản phẩm yêu thích nào!
-            </h2>
-            <p style={{ fontSize: "14px", color: "#64748b", maxWidth: "480px", margin: "0 auto 24px" }}>
-              Hãy bấm nút thả tim trên các sản phẩm bạn thích để lưu trữ tại đây nhé.
-            </p>
-            <Link
-              href="/products"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-                background: "var(--primary-color, #2e7d32)",
-                color: "#ffffff",
-                padding: "12px 28px",
-                borderRadius: "999px",
-                fontSize: "14px",
-                fontWeight: 800,
-                textDecoration: "none",
-                boxShadow: "0 6px 20px rgba(46, 125, 50, 0.25)",
-              }}
-            >
-              <Flame className="w-4 h-4 text-amber-300" />
-              <span>Khám phá sản phẩm HOT ngay</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
           </div>
         ) : (
-          /* Wishlist Grid Layout */
+          /* 3. Wishlist Product Doppelrand Grid Layout */
           <div
-            className="catalog-grid"
-            style={{ gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "20px" }}
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+              gap: "24px",
+            }}
           >
             {wishlistProducts.map((product) => (
-              <div key={product.id} className="catalog-card" style={{ background: "#ffffff", borderRadius: "1.25rem", border: "1px solid #e2e8f0", overflow: "hidden" }}>
-                <div style={{ position: "relative", paddingTop: "100%", background: "#f8fafc" }}>
-                  <img
-                    src={fixImagePath(product.image)}
-                    alt={product.name}
-                    style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
-                  />
-                  <button
-                    className="btn-wishlist active"
-                    onClick={() => handleRemoveWishlist(product.id)}
-                    title="Bỏ yêu thích"
-                    style={{
-                      position: "absolute",
-                      top: "10px",
-                      right: "10px",
-                      background: "#ffffff",
-                      border: "none",
-                      borderRadius: "50%",
-                      width: "32px",
-                      height: "32px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <Heart className="w-4 h-4 text-red-500 fill-red-500" />
-                  </button>
-                </div>
-                <div style={{ padding: "16px" }}>
-                  <h3 style={{ fontSize: "14px", fontWeight: 800, color: "#0f172a", marginBottom: "6px", lineHeight: 1.4 }}>
-                    {product.name}
-                  </h3>
-                  <div style={{ fontSize: "16px", fontWeight: 900, color: "var(--primary-color, #2e7d32)", marginBottom: "12px" }}>
-                    {formatVND(product.price)}
+              <div key={product.id} className="doppelrand-outer" style={{ height: "100%" }}>
+                <div
+                  className="doppelrand-inner"
+                  style={{
+                    padding: "16px",
+                    display: "flex",
+                    flexDirection: "column",
+                    height: "100%",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <div>
+                    {/* Image Area */}
+                    <div
+                      style={{
+                        position: "relative",
+                        paddingTop: "90%",
+                        borderRadius: "1.25rem",
+                        overflow: "hidden",
+                        background: "#f8fafc",
+                        marginBottom: "14px",
+                      }}
+                    >
+                      <img
+                        src={fixImagePath(product.image)}
+                        alt={product.name}
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
+                      
+                      {/* Category Pill Tag */}
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: "10px",
+                          left: "10px",
+                          background: "rgba(255, 255, 255, 0.9)",
+                          backdropFilter: "blur(6px)",
+                          padding: "4px 10px",
+                          borderRadius: "999px",
+                          fontSize: "11px",
+                          fontWeight: 800,
+                          color: "#334155",
+                          border: "1px solid rgba(226, 232, 240, 0.8)",
+                        }}
+                      >
+                        Nội thất Bắc Âu
+                      </div>
+
+                      {/* Remove Wishlist Button */}
+                      <button
+                        onClick={() => handleRemoveWishlist(product.id)}
+                        title="Bỏ khỏi yêu thích"
+                        style={{
+                          position: "absolute",
+                          top: "10px",
+                          right: "10px",
+                          background: "#ffffff",
+                          border: "none",
+                          borderRadius: "50%",
+                          width: "34px",
+                          height: "34px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <Heart className="w-4.5 h-4.5 text-red-500 fill-red-500" />
+                      </button>
+                    </div>
+
+                    {/* Content Info */}
+                    <h3
+                      style={{
+                        fontSize: "15px",
+                        fontWeight: 800,
+                        color: "#0f172a",
+                        marginBottom: "8px",
+                        lineHeight: 1.4,
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                        minHeight: "42px",
+                      }}
+                    >
+                      {product.name}
+                    </h3>
+
+                    {/* Price Display */}
+                    <div style={{ display: "flex", alignItems: "baseline", gap: "8px", marginBottom: "16px" }}>
+                      <span style={{ fontSize: "17px", fontWeight: 900, color: "var(--primary-color, #2e7d32)" }}>
+                        {formatVND(product.price)}
+                      </span>
+                      {product.oldPrice && product.oldPrice > product.price && (
+                        <span style={{ fontSize: "12px", color: "#94a3b8", textDecoration: "line-through", fontWeight: 700 }}>
+                          {formatVND(product.oldPrice)}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div style={{ display: "flex", gap: "6px" }}>
+
+                  {/* Actions Bar */}
+                  <div style={{ display: "flex", gap: "8px", paddingTop: "12px", borderTop: "1px solid #f1f5f9" }}>
                     <button
                       onClick={() => addToCart(product)}
                       style={{
                         flex: 1,
-                        padding: "8px 12px",
+                        padding: "10px 14px",
                         background: "var(--primary-color, #2e7d32)",
                         color: "#ffffff",
                         border: "none",
                         borderRadius: "999px",
-                        fontSize: "12px",
-                        fontWeight: 800,
+                        fontSize: "12.5px",
+                        fontWeight: 900,
                         cursor: "pointer",
                         display: "inline-flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        gap: "4px",
+                        gap: "6px",
+                        boxShadow: "0 4px 12px rgba(46, 125, 50, 0.2)",
                       }}
                     >
-                      <ShoppingCart className="w-3.5 h-3.5" /> Thêm giỏ
+                      <ShoppingCart className="w-3.5 h-3.5" />
+                      <span>+ Thêm Giỏ Hàng</span>
                     </button>
+
                     <Link
                       href={`/products/${product.id}`}
                       style={{
-                        padding: "8px 12px",
+                        padding: "10px 14px",
                         background: "#f1f5f9",
                         color: "#0f172a",
                         borderRadius: "999px",
-                        fontSize: "12px",
+                        fontSize: "12.5px",
                         fontWeight: 800,
                         textDecoration: "none",
                         display: "inline-flex",
                         alignItems: "center",
+                        justifyContent: "center",
                         gap: "2px",
                       }}
                     >
-                      Chi tiết <ChevronRight className="w-3.5 h-3.5" />
+                      <span>Chi tiết</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
                     </Link>
                   </div>
                 </div>
