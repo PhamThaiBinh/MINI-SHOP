@@ -56,56 +56,6 @@ export const parseOrderDate = (dateStr: string): number => {
 
 export const DEFAULT_UNIFIED_ORDERS: UnifiedOrder[] = [
   {
-    id: "#MS-9824",
-    date: "15/08/2026 14:20:15",
-    status: "shipping",
-    statusText: "Đang vận chuyển (Dự kiến hôm nay)",
-    recipientName: "Bình Nguyễn",
-    recipientPhone: "0988.123.456",
-    address: "123 Đường Nguyễn Trãi, Phường Bến Thành, Thành phố Hồ Chí Minh",
-    paymentMethod: "COD (Thanh toán khi nhận hàng)",
-    items: [
-      {
-        name: "Sofa Vải Hiện Đại Nordic",
-        image: "/assets/images/products/noi-that-gia-dung/sofa-phong-khach.webp",
-        qty: 1,
-        price: 2990000,
-      },
-      {
-        name: "Đèn Tre Thủ Công Minimal",
-        image: "/assets/images/products/do-my-nghe/den-tre-thu-cong.webp",
-        qty: 1,
-        price: 549000,
-      },
-    ],
-    subtotal: 3539000,
-    discount: 50000,
-    total: 3489000,
-    username: "binh",
-  },
-  {
-    id: "#MS-7102",
-    date: "10/08/2026 09:30:45",
-    status: "completed",
-    statusText: "Đã hoàn thành",
-    recipientName: "Bình Nguyễn",
-    recipientPhone: "0988.123.456",
-    address: "123 Đường Nguyễn Trãi, Phường Bến Thành, Thành phố Hồ Chí Minh",
-    paymentMethod: "Chuyển khoản VietQR",
-    items: [
-      {
-        name: "Bàn Ăn Gỗ Sồi Tự Nhiên",
-        image: "/assets/images/products/noi-that-gia-dung/bo-ban-an-go.webp",
-        qty: 1,
-        price: 3490000,
-      },
-    ],
-    subtotal: 3490000,
-    discount: 0,
-    total: 3490000,
-    username: "binh",
-  },
-  {
     id: "#MS-1024",
     date: "08/08/2026 11:15:20",
     status: "completed",

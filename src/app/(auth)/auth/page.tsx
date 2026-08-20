@@ -395,8 +395,8 @@ export default function AuthPage() {
   useEffect(() => {
     const supabase = createClient();
     const updateOrders = () => {
-      const userOrds = getOrdersForUser(user?.username || user?.phone || "binh");
-      setLiveOrders(userOrds.length > 0 ? userOrds : getAllOrders());
+      const userOrds = getOrdersForUser(user?.username || user?.email || user?.phone || "binh");
+      setLiveOrders(userOrds);
     };
     updateOrders();
     window.addEventListener("ordersUpdated", updateOrders);
@@ -444,10 +444,16 @@ export default function AuthPage() {
   };
 
   const handlePerformShare = () => {
-    const todayStr = getVnTodayStr();
     setShowShareModal(true);
+  };
+
+  const handleConfirmShareAction = () => {
+    const todayStr = getVnTodayStr();
+    setShowShareModal(false);
     setShareTaskStatus("performed");
     localStorage.setItem("minishop_task_share_performed", todayStr);
+    setRedeemFeedback("🎉 Đã xác nhận bài đăng chia sẻ lên Facebook/Zalo! Bạn có thể bấm nút 'Nhận quà (+100 điểm)' ngay bây giờ.");
+    setTimeout(() => setRedeemFeedback(""), 5000);
   };
 
   const handleClaimShare = () => {
@@ -458,10 +464,21 @@ export default function AuthPage() {
   };
 
   const handlePerformReview = () => {
-    const todayStr = getVnTodayStr();
     setShowReviewModal(true);
+  };
+
+  const handleConfirmReviewAction = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reviewComment.trim()) {
+      alert("Vui lòng nhập cảm nhận đánh giá của bạn trước khi gửi!");
+      return;
+    }
+    const todayStr = getVnTodayStr();
+    setShowReviewModal(false);
     setReviewTaskStatus("performed");
     localStorage.setItem("minishop_task_review_performed", todayStr);
+    setRedeemFeedback("⭐ Gửi đánh giá sản phẩm thành công! Bạn có thể bấm nút 'Nhận quà (+80 điểm)' ngay bây giờ.");
+    setTimeout(() => setRedeemFeedback(""), 5000);
   };
 
   const handleClaimReview = () => {
@@ -535,7 +552,9 @@ export default function AuthPage() {
   const loadAddresses = async () => {
     if (user) {
       const data = await fetchUserAddressesFromSupabase(user.username || user.email || "binh");
-      setAddresses(data);
+      // Auto-sort default address to top line (index 0)
+      const sorted = [...data].sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0));
+      setAddresses(sorted);
     }
   };
 
@@ -1431,6 +1450,8 @@ export default function AuthPage() {
                     padding: "28px",
                     boxShadow: "0 4px 20px rgba(0, 0, 0, 0.04)",
                     minHeight: "560px",
+                    minWidth: 0,
+                    overflow: "hidden",
                   }}
                 >
                   {/* Feedback Notification */}
@@ -2374,7 +2395,12 @@ export default function AuthPage() {
                                 background: "#fff",
                               }}
                             >
-                              <div style={{ fontSize: "32px" }}>{gift.icon}</div>
+                              <div style={{ width: "46px", height: "46px", borderRadius: "12px", background: "#e8f5e9", border: "1px solid #c8e6c9", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                {gift.icon === "Ticket" && <Ticket className="w-6 h-6 text-emerald-700" />}
+                                {gift.icon === "Gift" && <Gift className="w-6 h-6 text-emerald-700" />}
+                                {gift.icon === "Truck" && <Truck className="w-6 h-6 text-emerald-700" />}
+                                {gift.icon === "Sofa" && <Sofa className="w-6 h-6 text-emerald-700" />}
+                              </div>
                               <div style={{ flex: 1 }}>
                                 <strong
                                   style={{ fontSize: "14px", color: "#0f172a" }}
@@ -3316,7 +3342,7 @@ export default function AuthPage() {
               </button>
             </div>
             <button
-              onClick={() => setShowShareModal(false)}
+              onClick={handleConfirmShareAction}
               style={{
                 width: "100%",
                 padding: "10px",
@@ -3333,7 +3359,7 @@ export default function AuthPage() {
                 gap: "6px",
               }}
             >
-              <Check className="w-4 h-4" /> Đã Chia Sẻ Xong (Sẵn Sàng Nhận +100 Điểm)
+              <Check className="w-4 h-4" /> Xác Nhận Đã Chia Sẻ Facebook/Zalo
             </button>
           </div>
         </div>
@@ -3370,63 +3396,62 @@ export default function AuthPage() {
               <button onClick={() => setShowReviewModal(false)} style={{ background: "none", border: "none", cursor: "pointer" }}><X className="w-5 h-5 text-slate-400 hover:text-slate-600" /></button>
             </div>
 
-            <div style={{ marginBottom: "16px" }}>
-              <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "6px" }}>Chọn mức độ hài lòng (Số sao):</label>
-              <div style={{ display: "flex", gap: "8px" }}>
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    key={star}
-                    type="button"
-                    onClick={() => setReviewRating(star)}
-                    style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
-                  >
-                    <Star
-                      className={`w-7 h-7 ${
-                        star <= reviewRating
-                          ? "text-amber-500 fill-amber-500"
-                          : "text-slate-300 fill-slate-100"
-                      }`}
-                    />
-                  </button>
-                ))}
+            <form onSubmit={handleConfirmReviewAction}>
+              <div style={{ marginBottom: "16px" }}>
+                <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "6px" }}>Chọn mức độ hài lòng (Số sao):</label>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setReviewRating(star)}
+                      style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                    >
+                      <Star
+                        className={`w-7 h-7 ${
+                          star <= reviewRating
+                            ? "text-amber-500 fill-amber-500"
+                            : "text-slate-300 fill-slate-100"
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            <div style={{ marginBottom: "20px" }}>
-              <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "6px" }}>Viết cảm nhận của bạn về sản phẩm:</label>
-              <textarea
-                rows={3}
-                className="form-control auth-input"
-                placeholder="Ví dụ: Sản phẩm gỗ sồi tự nhiên rất đẹp, đóng gói cẩn thận..."
-                value={reviewComment}
-                onChange={(e) => setReviewComment(e.target.value)}
-                style={{ width: "100%", padding: "10px", fontSize: "13px" }}
-              />
-            </div>
+              <div style={{ marginBottom: "20px" }}>
+                <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "6px" }}>Viết cảm nhận của bạn về sản phẩm:</label>
+                <textarea
+                  rows={3}
+                  className="form-control auth-input"
+                  placeholder="Ví dụ: Sản phẩm gỗ sồi tự nhiên rất đẹp, đóng gói cẩn thận..."
+                  value={reviewComment}
+                  onChange={(e) => setReviewComment(e.target.value)}
+                  style={{ width: "100%", padding: "10px", fontSize: "13px" }}
+                />
+              </div>
 
-            <button
-              onClick={() => {
-                setShowReviewModal(false);
-                setReviewComment("");
-              }}
-              style={{
-                width: "100%",
-                padding: "10px",
-                background: "var(--primary-color)",
-                color: "#fff",
-                border: "none",
-                borderRadius: "8px",
-                fontWeight: 800,
-                fontSize: "14px",
-                cursor: "pointer",
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "6px",
-              }}
-            >
-              <Send className="w-4 h-4" /> Gửi Đánh Giá (Sẵn Sàng Nhận +80 Điểm)
-            </button>
+              <button
+                type="submit"
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  background: "var(--primary-color)",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontWeight: 800,
+                  fontSize: "14px",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "6px",
+                }}
+              >
+                <Send className="w-4 h-4" /> Gửi Đánh Giá Hoàn Thành
+              </button>
+            </form>
           </div>
         </div>
       )}
