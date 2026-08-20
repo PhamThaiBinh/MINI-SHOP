@@ -361,7 +361,11 @@ export default function AdminDashboard() {
                     endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
                   }
                 } else if (chartGroup === "month") {
-                  if (chartSubPreset === "last_month") {
+                  if (chartSubPreset.startsWith("m") && !isNaN(parseInt(chartSubPreset.slice(1), 10))) {
+                    const monthIdx = parseInt(chartSubPreset.slice(1), 10) - 1;
+                    startDate = new Date(today.getFullYear(), monthIdx, 1);
+                    endDate = new Date(today.getFullYear(), monthIdx + 1, 0);
+                  } else if (chartSubPreset === "last_month") {
                     startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
                     endDate = new Date(today.getFullYear(), today.getMonth(), 0);
                   } else if (chartSubPreset === "3m") {
@@ -582,6 +586,18 @@ export default function AdminDashboard() {
                                 { key: "last_month", label: "Tháng trước" },
                                 { key: "3m", label: "3 tháng gần nhất" },
                                 { key: "6m", label: "6 tháng gần nhất" },
+                                { key: "m1", label: "Tháng 1" },
+                                { key: "m2", label: "Tháng 2" },
+                                { key: "m3", label: "Tháng 3" },
+                                { key: "m4", label: "Tháng 4" },
+                                { key: "m5", label: "Tháng 5" },
+                                { key: "m6", label: "Tháng 6" },
+                                { key: "m7", label: "Tháng 7" },
+                                { key: "m8", label: "Tháng 8" },
+                                { key: "m9", label: "Tháng 9" },
+                                { key: "m10", label: "Tháng 10" },
+                                { key: "m11", label: "Tháng 11" },
+                                { key: "m12", label: "Tháng 12" },
                               ].map((p) => (
                                 <button
                                   key={p.key}

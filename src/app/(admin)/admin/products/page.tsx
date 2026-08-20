@@ -59,7 +59,16 @@ export default function AdminProductsPage() {
   const [inventoryQty, setInventoryQty] = useState<string>("10");
   const [inventorySupplier, setInventorySupplier] = useState<string>("");
   const [inventoryReason, setInventoryReason] = useState<string>("");
+  const [discrepancyPresetReason, setDiscrepancyPresetReason] = useState<string>("Mất hàng / Thất thoát kiểm kho");
   const [stockLogs, setStockLogs] = useState<StockLogItem[]>([]);
+
+  // History Log Filter States (Lọc theo Ngày, Tháng, Năm, Loại, Từ khóa)
+  const [historyTypeFilter, setHistoryTypeFilter] = useState<string>("ALL");
+  const [historyTimeFilterMode, setHistoryTimeFilterMode] = useState<"ALL" | "DAY" | "MONTH" | "YEAR">("ALL");
+  const [historyFilterDate, setHistoryFilterDate] = useState<string>("");
+  const [historyFilterMonth, setHistoryFilterMonth] = useState<string>("");
+  const [historyFilterYear, setHistoryFilterYear] = useState<string>("2026");
+  const [historySearchQuery, setHistorySearchQuery] = useState<string>("");
 
   // Form state
   const [formName, setFormName] = useState("");
@@ -207,21 +216,35 @@ export default function AdminProductsPage() {
     setLoading(false);
   };
 
+  const generateUniqueTicketCode = (prefix: "NK" | "XK" | "KK") => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const randNum = Math.floor(1000 + Math.random() * 9000);
+    const timeTag = Date.now().toString(36).toUpperCase().slice(-4);
+    return `${prefix}-${year}${month}${day}-${timeTag}${randNum}`;
+  };
+
   const handleOpenInventoryModal = (prodId?: number, mode: "IMPORT" | "EXPORT" | "AUDIT" = "IMPORT") => {
     setInventoryMode(mode);
     const targetId = prodId || (products[0]?.id || 1);
     setSelectedInventoryProdId(targetId);
-    setInventoryQty("10");
-    setInventorySupplier(mode === "IMPORT" ? "Tổng Kho Gỗ An Cường" : mode === "EXPORT" ? "Xuất Cửa Hàng Showroom" : "Đột xuất");
-    setInventoryReason(mode === "IMPORT" ? "Nhập bổ sung khi tồn kho hết" : mode === "EXPORT" ? "Xuất điều chuyển bán hàng" : "Kiểm kê cân bằng tồn");
+    const targetProd = products.find((p) => p.id === targetId);
+    const currentStock = targetProd?.stock !== undefined ? targetProd.stock : 15;
+
+    setInventoryQty(mode === "AUDIT" ? String(currentStock) : "10");
+    setInventorySupplier(mode === "IMPORT" ? "Tổng Kho Gỗ An Cường" : mode === "EXPORT" ? "Showroom Chi Nhánh 1" : "Bộ Phận Kiểm Kê Kho");
+    setInventoryReason(mode === "IMPORT" ? "Nhập bổ sung hàng khi kho cạn" : mode === "EXPORT" ? "Xuất kho phục vụ bán hàng" : "");
+    setDiscrepancyPresetReason("Mất hàng / Thất thoát kiểm kho");
     setShowInventoryModal(true);
   };
 
   const handleSaveInventoryTransaction = async (e: React.FormEvent) => {
     e.preventDefault();
     const qtyVal = parseInt(inventoryQty, 10);
-    if (isNaN(qtyVal) || qtyVal <= 0) {
-      alert("Số lượng giao dịch phải là một số dương lớn hơn 0!");
+    if (isNaN(qtyVal) || qtyVal < 0) {
+      alert("Số lượng giao dịch phải là một số không âm (≥ 0)!");
       return;
     }
 
@@ -233,17 +256,35 @@ export default function AdminProductsPage() {
 
     const currentStock = targetProd.stock !== undefined ? targetProd.stock : 15;
     let newStock = currentStock;
+    let finalReason = inventoryReason.trim();
 
     if (inventoryMode === "IMPORT") {
+      if (qtyVal <= 0) {
+        alert("Số lượng nhập kho phải lớn hơn 0!");
+        return;
+      }
       newStock = currentStock + qtyVal;
+      if (!finalReason) finalReason = "Nhập bổ sung hàng kho";
     } else if (inventoryMode === "EXPORT") {
+      if (qtyVal <= 0) {
+        alert("Số lượng xuất kho phải lớn hơn 0!");
+        return;
+      }
       if (qtyVal > currentStock) {
-        alert(`Số lượng xuất (${qtyVal}) vượt quá tồn kho hiện tại (${currentStock})!`);
+        alert(`Số lượng xuất (${qtyVal}) vượt quá số tồn kho hiện tại (${currentStock})!`);
         return;
       }
       newStock = currentStock - qtyVal;
+      if (!finalReason) finalReason = "Xuất kho bán hàng / điều chuyển";
     } else if (inventoryMode === "AUDIT") {
       newStock = qtyVal;
+      const discrepancy = newStock - currentStock;
+
+      if (discrepancy !== 0) {
+        finalReason = `[Chênh lệch kho: ${discrepancy > 0 ? `Thừa ${discrepancy}` : `Thiếu ${Math.abs(discrepancy)}`} món] ${discrepancyPresetReason} ${inventoryReason ? `- ${inventoryReason}` : ""}`;
+      } else {
+        finalReason = "Kiểm kê khớp 100% tồn kho hệ thống";
+      }
     }
 
     setLoading(true);
@@ -258,24 +299,26 @@ export default function AdminProductsPage() {
 
     if (success) {
       const codePrefix = inventoryMode === "IMPORT" ? "NK" : inventoryMode === "EXPORT" ? "XK" : "KK";
+      const uniqueCode = generateUniqueTicketCode(codePrefix);
+
       const newLog: StockLogItem = {
         id: String(Date.now()),
-        code: `${codePrefix}-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-${String(Math.floor(Math.random() * 900 + 100))}`,
+        code: uniqueCode,
         productId: targetProd.id,
         productName: targetProd.name,
         type: inventoryMode,
         qty: qtyVal,
         stockBefore: currentStock,
         stockAfter: newStock,
-        supplier: inventorySupplier.trim() || "Kho Tổng",
-        reason: inventoryReason.trim() || "Nhập xuất tồn kho",
+        supplier: inventorySupplier.trim() || (inventoryMode === "IMPORT" ? "Nhà Cung Cấp" : inventoryMode === "EXPORT" ? "Nơi Nhận Xuất" : "Bộ Phận Kiểm Kho"),
+        reason: finalReason,
         createdAt: new Date().toLocaleString("vi-VN"),
       };
 
       setStockLogs((prev) => [newLog, ...prev]);
       await loadData();
       setShowInventoryModal(false);
-      alert(`✅ Cập nhật kho thành công! Sản phẩm "${targetProd.name}" tồn mới: ${newStock} món.`);
+      alert(`✅ Cập nhật kho thành công! Mã phiếu duy nhất: ${uniqueCode}. Tồn mới: ${newStock} món.`);
     } else {
       alert("Cập nhật tồn kho thất bại! Vui lòng thử lại.");
     }
@@ -1049,8 +1092,8 @@ export default function AdminProductsPage() {
                     color: inventoryMode === "IMPORT" ? "#166534" : inventoryMode === "EXPORT" ? "#991b1b" : "#b45309",
                   }}
                 >
-                  Mã Phiếu Tự Động: <span style={{ background: "#ffffff", padding: "2px 8px", borderRadius: "6px", fontWeight: 900, border: "1px solid rgba(0,0,0,0.1)" }}>
-                    {inventoryMode === "IMPORT" ? "NK" : inventoryMode === "EXPORT" ? "XK" : "KK"}-{new Date().toISOString().slice(0, 10).replace(/-/g, "")}-001
+                  Mã Phiếu Duy Nhất: <span style={{ background: "#ffffff", padding: "2px 8px", borderRadius: "6px", fontWeight: 900, border: "1px solid rgba(0,0,0,0.1)", letterSpacing: "0.03em" }}>
+                    {inventoryMode === "IMPORT" ? "NK" : inventoryMode === "EXPORT" ? "XK" : "KK"}-{new Date().getFullYear()}{String(new Date().getMonth() + 1).padStart(2, "0")}{String(new Date().getDate()).padStart(2, "0")}-AUTO
                   </span>
                 </p>
               </div>
@@ -1079,7 +1122,7 @@ export default function AdminProductsPage() {
               {/* Mode Selector */}
               <div style={{ marginBottom: "20px" }}>
                 <label style={{ fontSize: "12px", fontWeight: 800, color: "#475569", textTransform: "uppercase", letterSpacing: "0.05em", display: "block", marginBottom: "8px" }}>
-                  Loại Thao Tác Nhập / Xuất Kho *
+                  Loại Thao Tác Nhập / Xuất / Kiểm Kê Kho *
                 </label>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
                   <button
@@ -1101,8 +1144,8 @@ export default function AdminProductsPage() {
                       gap: "4px",
                     }}
                   >
-                    <span>🟢 Nhập Kho (+Hàng)</span>
-                    <span style={{ fontSize: "11px", opacity: 0.8, fontWeight: 600 }}>Tăng số lượng tồn</span>
+                    <span>🟢 Nhập Kho Hàng</span>
+                    <span style={{ fontSize: "11px", opacity: 0.8, fontWeight: 600 }}>Tăng tồn thực tế</span>
                   </button>
 
                   <button
@@ -1124,13 +1167,17 @@ export default function AdminProductsPage() {
                       gap: "4px",
                     }}
                   >
-                    <span>🔴 Xuất Kho (-Hàng)</span>
-                    <span style={{ fontSize: "11px", opacity: 0.8, fontWeight: 600 }}>Giảm số lượng tồn</span>
+                    <span>🔴 Xuất Kho Hàng</span>
+                    <span style={{ fontSize: "11px", opacity: 0.8, fontWeight: 600 }}>Giảm tồn thực tế</span>
                   </button>
 
                   <button
                     type="button"
-                    onClick={() => setInventoryMode("AUDIT")}
+                    onClick={() => {
+                      setInventoryMode("AUDIT");
+                      const targetProd = products.find((p) => p.id === selectedInventoryProdId);
+                      if (targetProd) setInventoryQty(String(targetProd.stock !== undefined ? targetProd.stock : 15));
+                    }}
                     style={{
                       padding: "12px",
                       borderRadius: "14px",
@@ -1147,8 +1194,8 @@ export default function AdminProductsPage() {
                       gap: "4px",
                     }}
                   >
-                    <span>🟡 Kiểm Kê Kho</span>
-                    <span style={{ fontSize: "11px", opacity: 0.8, fontWeight: 600 }}>Đặt tồn thực tế</span>
+                    <span>🟡 Kiểm Kê Thực Tế</span>
+                    <span style={{ fontSize: "11px", opacity: 0.8, fontWeight: 600 }}>Đếm số tồn thực</span>
                   </button>
                 </div>
               </div>
@@ -1161,34 +1208,41 @@ export default function AdminProductsPage() {
                 <select
                   className="form-control admin-setting-input"
                   value={selectedInventoryProdId}
-                  onChange={(e) => setSelectedInventoryProdId(Number(e.target.value))}
+                  onChange={(e) => {
+                    const newProdId = Number(e.target.value);
+                    setSelectedInventoryProdId(newProdId);
+                    if (inventoryMode === "AUDIT") {
+                      const p = products.find((prod) => prod.id === newProdId);
+                      if (p) setInventoryQty(String(p.stock !== undefined ? p.stock : 15));
+                    }
+                  }}
                   required
                   style={{ borderRadius: "12px", padding: "12px 14px", fontSize: "14px", fontWeight: 700, fontFamily: "'Plus Jakarta Sans', sans-serif" }}
                 >
                   {products.map((p) => (
                     <option key={p.id} value={p.id}>
-                      {p.name} (P{String(p.id).padStart(4, "0")}) — 📦 Tồn kho hiện tại: {p.stock !== undefined ? p.stock : 15} món
+                      {p.name} (P{String(p.id).padStart(4, "0")}) — 📦 Tồn kho hệ thống: {p.stock !== undefined ? p.stock : 15} món
                     </option>
                   ))}
                 </select>
               </div>
 
-              {/* Quantity Inputs & Quick Pills */}
+              {/* Quantity Inputs & Quick Pills (Clean Numbers without + or -) */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1.2fr", gap: "16px", marginBottom: "16px" }}>
                 <div>
                   <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "6px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                    {inventoryMode === "IMPORT" ? "Số Lượng Nhập (+Món)" : inventoryMode === "EXPORT" ? "Số Lượng Xuất (-Món)" : "Số Lượng Tồn Kho Thực Mới"} *
+                    {inventoryMode === "IMPORT" ? "Số Lượng Nhập (Món)" : inventoryMode === "EXPORT" ? "Số Lượng Xuất (Món)" : "Số Lượng Thực Tế Đếm Được (Món)"} *
                   </label>
                   <input
                     type="number"
-                    min="1"
+                    min="0"
                     className="form-control admin-setting-input"
                     value={inventoryQty}
                     onChange={(e) => setInventoryQty(e.target.value)}
                     required
                     style={{ borderRadius: "12px", padding: "12px 14px", fontSize: "16px", fontWeight: 900, color: "#0f172a", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
                   />
-                  {/* Quick Pills */}
+                  {/* Quick Pills (Clean Numbers) */}
                   <div style={{ display: "flex", gap: "6px", marginTop: "8px" }}>
                     {["5", "10", "20", "50", "100"].map((num) => (
                       <button
@@ -1206,27 +1260,32 @@ export default function AdminProductsPage() {
                           cursor: "pointer",
                         }}
                       >
-                        +{num}
+                        {num}
                       </button>
                     ))}
                   </div>
                 </div>
 
-                {/* Stock Math Calculation Preview */}
+                {/* Stock Math & Audit Discrepancy Preview */}
                 {(() => {
                   const targetP = products.find((p) => p.id === selectedInventoryProdId);
                   const currentS = targetP?.stock !== undefined ? targetP.stock : 15;
                   const qtyVal = parseInt(inventoryQty, 10) || 0;
                   let calcNewS = currentS;
+                  let discrepancy = 0;
+
                   if (inventoryMode === "IMPORT") calcNewS = currentS + qtyVal;
                   else if (inventoryMode === "EXPORT") calcNewS = Math.max(0, currentS - qtyVal);
-                  else if (inventoryMode === "AUDIT") calcNewS = qtyVal;
+                  else if (inventoryMode === "AUDIT") {
+                    calcNewS = qtyVal;
+                    discrepancy = qtyVal - currentS;
+                  }
 
                   return (
                     <div
                       style={{
-                        background: "#f8fafc",
-                        border: "1.5px solid #e2e8f0",
+                        background: inventoryMode === "AUDIT" && discrepancy !== 0 ? "#fffbeb" : "#f8fafc",
+                        border: inventoryMode === "AUDIT" && discrepancy !== 0 ? "1.5px solid #fde68a" : "1.5px solid #e2e8f0",
                         borderRadius: "14px",
                         padding: "12px 16px",
                         display: "flex",
@@ -1235,32 +1294,65 @@ export default function AdminProductsPage() {
                       }}
                     >
                       <div style={{ fontSize: "11px", fontWeight: 800, color: "#64748b", textTransform: "uppercase", marginBottom: "4px" }}>
-                        Dự Kiến Tồn Kho Sau Giao Dịch
+                        {inventoryMode === "AUDIT" ? "Đối Soát Kiểm Kê Hệ Thống" : "Tồn Kho Sau Giao Dịch"}
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <span style={{ fontSize: "16px", fontWeight: 700, color: "#64748b" }}>{currentS}</span>
+                        <span style={{ fontSize: "15px", fontWeight: 700, color: "#64748b" }}>HT: {currentS}</span>
                         <span style={{ fontSize: "14px", color: "#94a3b8" }}>➔</span>
-                        <span style={{ fontSize: "22px", fontWeight: 900, color: calcNewS <= 5 ? "#b45309" : "#047857" }}>
-                          {calcNewS} <span style={{ fontSize: "13px", fontWeight: 700 }}>món</span>
+                        <span style={{ fontSize: "20px", fontWeight: 900, color: calcNewS <= 5 ? "#b45309" : "#047857" }}>
+                          {calcNewS} <span style={{ fontSize: "12px", fontWeight: 700 }}>món</span>
                         </span>
                       </div>
-                      <div style={{ fontSize: "11.5px", fontWeight: 800, color: inventoryMode === "IMPORT" ? "#047857" : inventoryMode === "EXPORT" ? "#b91c1c" : "#b45309", marginTop: "2px" }}>
-                        {inventoryMode === "IMPORT" ? `(+${qtyVal} món bổ sung kho)` : inventoryMode === "EXPORT" ? `(-${qtyVal} món điều chuyển/bán)` : `(Điều chỉnh tồn = ${qtyVal})`}
-                      </div>
+
+                      {inventoryMode === "AUDIT" ? (
+                        <div style={{ fontSize: "11.5px", fontWeight: 800, color: discrepancy === 0 ? "#047857" : discrepancy < 0 ? "#b91c1c" : "#b45309", marginTop: "4px" }}>
+                          {discrepancy === 0
+                            ? "✅ Đếm thực tế khớp 100% hệ thống"
+                            : discrepancy < 0
+                            ? `⚠️ Thất thoát / Thiếu ${Math.abs(discrepancy)} món so với sổ sách`
+                            : `ℹ️ Thừa ${discrepancy} món so với sổ sách`}
+                        </div>
+                      ) : (
+                        <div style={{ fontSize: "11.5px", fontWeight: 800, color: inventoryMode === "IMPORT" ? "#047857" : "#b91c1c", marginTop: "4px" }}>
+                          {inventoryMode === "IMPORT" ? `Bổ sung kho: ${qtyVal} món` : `Xuất bán / chuyển: ${qtyVal} món`}
+                        </div>
+                      )}
                     </div>
                   );
                 })()}
               </div>
 
+              {/* AUDIT DISCREPANCY REASON SELECTOR (Nghiệp vụ kiểm kê khớp hệ thống) */}
+              {inventoryMode === "AUDIT" && (
+                <div style={{ marginBottom: "16px", background: "#fefce8", padding: "14px", borderRadius: "14px", border: "1px solid #fef08a" }}>
+                  <label style={{ fontSize: "12.5px", fontWeight: 800, color: "#854d0e", display: "block", marginBottom: "8px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                    Lý Do Lệch Kho / Thất Thoát Hàng Thực Tế *
+                  </label>
+                  <select
+                    className="form-control admin-setting-input"
+                    value={discrepancyPresetReason}
+                    onChange={(e) => setDiscrepancyPresetReason(e.target.value)}
+                    style={{ borderRadius: "10px", padding: "10px 12px", fontSize: "13px", fontWeight: 700, fontFamily: "'Plus Jakarta Sans', sans-serif", marginBottom: "8px" }}
+                  >
+                    <option value="Mất hàng / Thất thoát kiểm kho">❓ Mất hàng / Thất thoát chưa rõ nguyên nhân</option>
+                    <option value="Hư hỏng / Lỗi vận chuyển / Trầy xước">📦 Hư hỏng / Lỗi vận chuyển / Trầy xước gỗ</option>
+                    <option value="Sai lệch do đếm sót đợt kiểm trước">📋 Sai lệch đếm sót đợt kiểm kê trước</option>
+                    <option value="Xuất hàng dùng thử / Quà tặng mẫu">🎁 Xuất hàng dùng thử / Quà tặng trưng bày</option>
+                    <option value="Hàng trả về chưa kịp ghi nhận">🔄 Hàng khách trả về chưa kịp nhập sổ</option>
+                    <option value="Khác (Ghi rõ ở bên dưới)">✍️ Lý do khác (Nhập ghi chú chi tiết bên dưới)</option>
+                  </select>
+                </div>
+              )}
+
               {/* Supplier / Destination */}
               <div style={{ marginBottom: "16px" }}>
                 <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "6px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                  {inventoryMode === "IMPORT" ? "Nhà Cung Cấp / Xưởng Sản Xuất" : "Nơi Nhận / Showroom Xuất Đến"}
+                  {inventoryMode === "IMPORT" ? "Nhà Cung Cấp / Xưởng Sản Xuất" : inventoryMode === "EXPORT" ? "Nơi Nhận / Showroom Xuất Đến" : "Đơn Vị / Cá Nhân Thực Hiện Kiểm Kho"}
                 </label>
                 <input
                   type="text"
                   className="form-control admin-setting-input"
-                  placeholder={inventoryMode === "IMPORT" ? "Ví dụ: Tổng Kho Gỗ An Cường / Xưởng Đồng Nai" : "Ví dụ: Showroom Quận 1 / Kho Hàng Trưng Bày"}
+                  placeholder={inventoryMode === "IMPORT" ? "Tổng Kho Gỗ An Cường / Xưởng Đồng Nai" : inventoryMode === "EXPORT" ? "Showroom Quận 1 / Kho Hàng Trưng Bày" : "Ban Kiểm Kê Nội Bộ Kho"}
                   value={inventorySupplier}
                   onChange={(e) => setInventorySupplier(e.target.value)}
                   style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13.5px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
@@ -1270,12 +1362,12 @@ export default function AdminProductsPage() {
               {/* Reason & Notes */}
               <div style={{ marginBottom: "20px" }}>
                 <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "6px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                  Lý Do Giao Dịch & Ghi Chú Chi Tiết
+                  Ghi Chú Bổ Sung & Diễn Giải Chi Tiết
                 </label>
                 <textarea
                   rows={2}
                   className="form-control admin-setting-input"
-                  placeholder="Ví dụ: Nhập bổ sung đợt mới khi sản phẩm cháy hàng / Điều chuyển giao đại lý..."
+                  placeholder="Ghi chú chi tiết lý do lập phiếu nhập/xuất/kiểm kê..."
                   value={inventoryReason}
                   onChange={(e) => setInventoryReason(e.target.value)}
                   style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
@@ -1328,7 +1420,7 @@ export default function AdminProductsPage() {
         </div>
       )}
 
-      {/* 5. HISTORICAL STOCK LEDGER LOGS MODAL (NHẬT KÝ NHẬP XUẤT TỒN KHO - BRIGHT HEADER) */}
+      {/* 5. HISTORICAL STOCK LEDGER LOGS MODAL (BỘ LỌC NGÀY, THÁNG, NĂM & TÌM KIẾM DỮ LIỆU) */}
       {showHistoryModal && (
         <div
           style={{
@@ -1351,8 +1443,8 @@ export default function AdminProductsPage() {
               background: "#ffffff",
               borderRadius: "24px",
               width: "100%",
-              maxWidth: "850px",
-              maxHeight: "85vh",
+              maxWidth: "920px",
+              maxHeight: "88vh",
               display: "flex",
               flexDirection: "column",
               boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
@@ -1400,65 +1492,214 @@ export default function AdminProductsPage() {
               </button>
             </div>
 
-            {/* Content Table */}
-            <div style={{ padding: "20px", overflowY: "auto", flex: 1 }}>
-              {stockLogs.length === 0 ? (
-                <div style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>
-                  <Package className="w-12 h-12 stroke-1 text-slate-300 mx-auto mb-2" />
-                  <p style={{ fontSize: "14px", fontWeight: 700, margin: "8px 0 4px" }}>Chưa có phiếu nhập xuất tồn nào được khởi tạo</p>
-                  <p style={{ fontSize: "12px", color: "#94a3b8" }}>Hãy bấm nút "📦 Nhập Xuất Tồn Kho" để thử nghiệm tạo phiếu mới.</p>
-                </div>
-              ) : (
-                <table className="admin-table">
-                  <thead>
-                    <tr>
-                      <th>Mã Phiếu</th>
-                      <th>Sản Phẩm</th>
-                      <th>Loại</th>
-                      <th>Số Lượng</th>
-                      <th>Tồn Sau GD</th>
-                      <th>Nhà Cung Cấp / Lý Do</th>
-                      <th>Thời Gian</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {stockLogs.map((log) => (
-                      <tr key={log.id}>
-                        <td>
-                          <code style={{ background: "#f1f5f9", padding: "3px 8px", borderRadius: "6px", fontWeight: 800, fontSize: "11px", color: "#0f172a" }}>
-                            {log.code}
-                          </code>
-                        </td>
-                        <td><strong style={{ fontSize: "13px", color: "#0f172a" }}>{log.productName}</strong></td>
-                        <td>
-                          <span
-                            style={{
-                              padding: "3px 10px",
-                              borderRadius: "999px",
-                              fontSize: "11px",
-                              fontWeight: 800,
-                              background: log.type === "IMPORT" ? "#dcfce7" : log.type === "EXPORT" ? "#fee2e2" : "#fef3c7",
-                              color: log.type === "IMPORT" ? "#15803d" : log.type === "EXPORT" ? "#b91c1c" : "#b45309",
-                            }}
-                          >
-                            {log.type === "IMPORT" ? "🟢 Nhập Kho" : log.type === "EXPORT" ? "🔴 Xuất Kho" : "🟡 Kiểm Kê"}
-                          </span>
-                        </td>
-                        <td style={{ fontWeight: 900, color: log.type === "IMPORT" ? "#15803d" : log.type === "EXPORT" ? "#b91c1c" : "#b45309" }}>
-                          {log.type === "IMPORT" ? `+${log.qty}` : log.type === "EXPORT" ? `-${log.qty}` : log.qty}
-                        </td>
-                        <td style={{ fontWeight: 800, color: "#1e293b" }}>{log.stockAfter} món</td>
-                        <td style={{ fontSize: "12px", color: "#475569" }}>
-                          <div style={{ fontWeight: 700, color: "#0f172a" }}>{log.supplier}</div>
-                          <div style={{ fontSize: "11px", color: "#64748b" }}>{log.reason}</div>
-                        </td>
-                        <td style={{ fontSize: "11.5px", color: "#64748b", fontWeight: 600 }}>{log.createdAt}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
+            {/* FILTER BAR FOR HISTORY LOGS (Lọc theo Ngày, Tháng, Năm) */}
+            <div style={{ padding: "14px 24px", background: "#f8fafc", borderBottom: "1px solid #e2e8f0", display: "flex", flexDirection: "column", gap: "12px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+                {/* Search Bar */}
+                <input
+                  type="text"
+                  placeholder="Tìm mã phiếu, tên SP, nhà cung cấp, lý do..."
+                  value={historySearchQuery}
+                  onChange={(e) => setHistorySearchQuery(e.target.value)}
+                  style={{
+                    padding: "8px 14px",
+                    borderRadius: "10px",
+                    border: "1px solid #cbd5e1",
+                    fontSize: "12.5px",
+                    minWidth: "240px",
+                    flex: 1,
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  }}
+                />
+
+                {/* Filter Type Selector */}
+                <select
+                  value={historyTypeFilter}
+                  onChange={(e) => setHistoryTypeFilter(e.target.value)}
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: "10px",
+                    border: "1px solid #cbd5e1",
+                    fontSize: "12.5px",
+                    fontWeight: 700,
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  }}
+                >
+                  <option value="ALL">Tất cả loại giao dịch</option>
+                  <option value="IMPORT">🟢 Nhập Kho</option>
+                  <option value="EXPORT">🔴 Xuất Kho</option>
+                  <option value="AUDIT">🟡 Kiểm Kê Kho</option>
+                </select>
+
+                {/* Filter Time Mode Selector */}
+                <select
+                  value={historyTimeFilterMode}
+                  onChange={(e) => setHistoryTimeFilterMode(e.target.value as any)}
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: "10px",
+                    border: "1px solid #cbd5e1",
+                    fontSize: "12.5px",
+                    fontWeight: 700,
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  }}
+                >
+                  <option value="ALL">Tất cả thời gian</option>
+                  <option value="DAY">📅 Lọc theo Ngày</option>
+                  <option value="MONTH">🗓️ Lọc theo Tháng</option>
+                  <option value="YEAR">📈 Lọc theo Năm</option>
+                </select>
+
+                {/* Dynamic Date/Month/Year Picker Input */}
+                {historyTimeFilterMode === "DAY" && (
+                  <input
+                    type="date"
+                    value={historyFilterDate}
+                    onChange={(e) => setHistoryFilterDate(e.target.value)}
+                    style={{
+                      padding: "7px 12px",
+                      borderRadius: "10px",
+                      border: "1.5px solid #0284c7",
+                      fontSize: "12.5px",
+                      fontFamily: "'Plus Jakarta Sans', sans-serif",
+                    }}
+                  />
+                )}
+
+                {historyTimeFilterMode === "MONTH" && (
+                  <input
+                    type="month"
+                    value={historyFilterMonth}
+                    onChange={(e) => setHistoryFilterMonth(e.target.value)}
+                    style={{
+                      padding: "7px 12px",
+                      borderRadius: "10px",
+                      border: "1.5px solid #0284c7",
+                      fontSize: "12.5px",
+                      fontFamily: "'Plus Jakarta Sans', sans-serif",
+                    }}
+                  />
+                )}
+
+                {historyTimeFilterMode === "YEAR" && (
+                  <select
+                    value={historyFilterYear}
+                    onChange={(e) => setHistoryFilterYear(e.target.value)}
+                    style={{
+                      padding: "8px 12px",
+                      borderRadius: "10px",
+                      border: "1.5px solid #0284c7",
+                      fontSize: "12.5px",
+                      fontWeight: 700,
+                      fontFamily: "'Plus Jakarta Sans', sans-serif",
+                    }}
+                  >
+                    <option value="2026">Năm 2026</option>
+                    <option value="2025">Năm 2025</option>
+                    <option value="2024">Năm 2024</option>
+                  </select>
+                )}
+              </div>
             </div>
+
+            {/* Content Table */}
+            {(() => {
+              const filteredLogs = stockLogs.filter((log) => {
+                // Type Filter
+                if (historyTypeFilter !== "ALL" && log.type !== historyTypeFilter) return false;
+
+                // Search Query Filter
+                if (historySearchQuery.trim()) {
+                  const q = historySearchQuery.toLowerCase();
+                  const matchCode = log.code.toLowerCase().includes(q);
+                  const matchName = log.productName.toLowerCase().includes(q);
+                  const matchSupplier = log.supplier.toLowerCase().includes(q);
+                  const matchReason = log.reason.toLowerCase().includes(q);
+                  if (!matchCode && !matchName && !matchSupplier && !matchReason) return false;
+                }
+
+                // Time Filter Mode
+                if (historyTimeFilterMode === "DAY" && historyFilterDate) {
+                  const parts = historyFilterDate.split("-");
+                  if (parts.length === 3) {
+                    const formattedMatch = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                    if (!log.createdAt.includes(formattedMatch)) return false;
+                  }
+                } else if (historyTimeFilterMode === "MONTH" && historyFilterMonth) {
+                  const parts = historyFilterMonth.split("-");
+                  if (parts.length === 2) {
+                    const formattedMatch = `/${parts[1]}/${parts[0]}`;
+                    if (!log.createdAt.includes(formattedMatch)) return false;
+                  }
+                } else if (historyTimeFilterMode === "YEAR" && historyFilterYear) {
+                  if (!log.createdAt.includes(historyFilterYear)) return false;
+                }
+
+                return true;
+              });
+
+              return (
+                <div style={{ padding: "20px", overflowY: "auto", flex: 1 }}>
+                  {filteredLogs.length === 0 ? (
+                    <div style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>
+                      <Package className="w-12 h-12 stroke-1 text-slate-300 mx-auto mb-2" />
+                      <p style={{ fontSize: "14px", fontWeight: 700, margin: "8px 0 4px" }}>Không tìm thấy phiếu kho nào khớp bộ lọc</p>
+                      <p style={{ fontSize: "12px", color: "#94a3b8" }}>Thử thay đổi từ khóa hoặc bộ lọc thời gian.</p>
+                    </div>
+                  ) : (
+                    <table className="admin-table">
+                      <thead>
+                        <tr>
+                          <th>Mã Phiếu Duy Nhất</th>
+                          <th>Sản Phẩm</th>
+                          <th>Loại</th>
+                          <th>Số Lượng (Món)</th>
+                          <th>Tồn Sau GD</th>
+                          <th>Nhà Cung Cấp / Lý Do</th>
+                          <th>Thời Gian</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredLogs.map((log) => (
+                          <tr key={log.id}>
+                            <td>
+                              <code style={{ background: "#f1f5f9", padding: "4px 8px", borderRadius: "6px", fontWeight: 900, fontSize: "11.5px", color: "#0f172a" }}>
+                                {log.code}
+                              </code>
+                            </td>
+                            <td><strong style={{ fontSize: "13px", color: "#0f172a" }}>{log.productName}</strong></td>
+                            <td>
+                              <span
+                                style={{
+                                  padding: "3px 10px",
+                                  borderRadius: "999px",
+                                  fontSize: "11px",
+                                  fontWeight: 800,
+                                  background: log.type === "IMPORT" ? "#dcfce7" : log.type === "EXPORT" ? "#fee2e2" : "#fef3c7",
+                                  color: log.type === "IMPORT" ? "#15803d" : log.type === "EXPORT" ? "#b91c1c" : "#b45309",
+                                }}
+                              >
+                                {log.type === "IMPORT" ? "🟢 Nhập Kho" : log.type === "EXPORT" ? "🔴 Xuất Kho" : "🟡 Kiểm Kê"}
+                              </span>
+                            </td>
+                            {/* Raw Clean Number Display without + or - */}
+                            <td style={{ fontWeight: 900, color: log.type === "IMPORT" ? "#15803d" : log.type === "EXPORT" ? "#b91c1c" : "#b45309" }}>
+                              {log.qty} món
+                            </td>
+                            <td style={{ fontWeight: 800, color: "#1e293b" }}>{log.stockAfter} món</td>
+                            <td style={{ fontSize: "12px", color: "#475569" }}>
+                              <div style={{ fontWeight: 700, color: "#0f172a" }}>{log.supplier}</div>
+                              <div style={{ fontSize: "11px", color: "#64748b" }}>{log.reason}</div>
+                            </td>
+                            <td style={{ fontSize: "11.5px", color: "#64748b", fontWeight: 600 }}>{log.createdAt}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Footer */}
             <div style={{ padding: "16px 24px", background: "#f8fafc", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "flex-end" }}>
