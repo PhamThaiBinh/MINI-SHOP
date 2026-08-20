@@ -982,12 +982,12 @@ export default function AdminProductsPage() {
             right: 0,
             bottom: 0,
             background: "rgba(15, 23, 42, 0.65)",
-            backdropFilter: "blur(6px)",
+            backdropFilter: "blur(8px)",
             zIndex: 9999,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            padding: "20px",
+            padding: "24px 16px",
           }}
         >
           <div
@@ -996,22 +996,27 @@ export default function AdminProductsPage() {
               borderRadius: "24px",
               width: "100%",
               maxWidth: "680px",
+              maxHeight: "85vh",
+              overflowY: "auto",
               boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-              overflow: "hidden",
               border: "1.5px solid #e2e8f0",
               animation: "fadeIn 0.25s ease-out",
             }}
           >
-            {/* Modal Header */}
+            {/* Modal Header (Bright Theme) */}
             <div
               style={{
                 padding: "20px 24px",
                 background: inventoryMode === "IMPORT"
-                  ? "linear-gradient(135deg, #064e3b 0%, #047857 100%)"
+                  ? "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)"
                   : inventoryMode === "EXPORT"
-                  ? "linear-gradient(135deg, #991b1b 0%, #dc2626 100%)"
-                  : "linear-gradient(135deg, #78350f 0%, #d97706 100%)",
-                color: "#ffffff",
+                  ? "linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%)"
+                  : "linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)",
+                borderBottom: inventoryMode === "IMPORT"
+                  ? "1.5px solid #bbf7d0"
+                  : inventoryMode === "EXPORT"
+                  ? "1.5px solid #fecdd3"
+                  : "1.5px solid #fde68a",
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
@@ -1019,13 +1024,32 @@ export default function AdminProductsPage() {
             >
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-                  <PackageCheck className="w-6 h-6 text-emerald-200" />
-                  <h3 style={{ fontSize: "18px", fontWeight: 900, margin: 0, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                  <PackageCheck
+                    className={`w-6 h-6 ${
+                      inventoryMode === "IMPORT" ? "text-emerald-700" : inventoryMode === "EXPORT" ? "text-red-700" : "text-amber-700"
+                    }`}
+                  />
+                  <h3
+                    style={{
+                      fontSize: "18px",
+                      fontWeight: 900,
+                      margin: 0,
+                      fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      color: inventoryMode === "IMPORT" ? "#14532d" : inventoryMode === "EXPORT" ? "#7f1d1d" : "#78350f",
+                    }}
+                  >
                     {inventoryMode === "IMPORT" ? "📦 Lập Phiếu Nhập Kho Hàng" : inventoryMode === "EXPORT" ? "📤 Lập Phiếu Xuất Kho Hàng" : "📋 Phiếu Kiểm Kê & Cân Bằng Kho"}
                   </h3>
                 </div>
-                <p style={{ fontSize: "12px", opacity: 0.9, margin: 0, fontWeight: 600 }}>
-                  Mã Phiếu Tự Động: <span style={{ background: "rgba(255,255,255,0.2)", padding: "2px 8px", borderRadius: "6px", fontWeight: 800 }}>
+                <p
+                  style={{
+                    fontSize: "12.5px",
+                    margin: 0,
+                    fontWeight: 700,
+                    color: inventoryMode === "IMPORT" ? "#166534" : inventoryMode === "EXPORT" ? "#991b1b" : "#b45309",
+                  }}
+                >
+                  Mã Phiếu Tự Động: <span style={{ background: "#ffffff", padding: "2px 8px", borderRadius: "6px", fontWeight: 900, border: "1px solid rgba(0,0,0,0.1)" }}>
                     {inventoryMode === "IMPORT" ? "NK" : inventoryMode === "EXPORT" ? "XK" : "KK"}-{new Date().toISOString().slice(0, 10).replace(/-/g, "")}-001
                   </span>
                 </p>
@@ -1033,16 +1057,17 @@ export default function AdminProductsPage() {
               <button
                 onClick={() => setShowInventoryModal(false)}
                 style={{
-                  background: "rgba(255, 255, 255, 0.2)",
-                  border: "none",
+                  background: "#ffffff",
+                  border: "1px solid #cbd5e1",
                   borderRadius: "50%",
                   width: "36px",
                   height: "36px",
-                  color: "#ffffff",
+                  color: "#334155",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   cursor: "pointer",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.06)",
                 }}
               >
                 <X className="w-5 h-5" />
@@ -1303,7 +1328,7 @@ export default function AdminProductsPage() {
         </div>
       )}
 
-      {/* 5. HISTORICAL STOCK LEDGER LOGS MODAL (NHẬT KÝ NHẬP XUẤT TỒN KHO) */}
+      {/* 5. HISTORICAL STOCK LEDGER LOGS MODAL (NHẬT KÝ NHẬP XUẤT TỒN KHO - BRIGHT HEADER) */}
       {showHistoryModal && (
         <div
           style={{
@@ -1313,12 +1338,12 @@ export default function AdminProductsPage() {
             right: 0,
             bottom: 0,
             background: "rgba(15, 23, 42, 0.65)",
-            backdropFilter: "blur(6px)",
+            backdropFilter: "blur(8px)",
             zIndex: 9999,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            padding: "20px",
+            padding: "24px 16px",
           }}
         >
           <div
@@ -1335,39 +1360,40 @@ export default function AdminProductsPage() {
               border: "1.5px solid #e2e8f0",
             }}
           >
-            {/* Header */}
+            {/* Bright Header */}
             <div
               style={{
                 padding: "20px 24px",
-                background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
-                color: "#ffffff",
+                background: "linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%)",
+                borderBottom: "1.5px solid #bae6fd",
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <History className="w-6 h-6 text-sky-400" />
+                <History className="w-6 h-6 text-sky-600" />
                 <div>
-                  <h3 style={{ fontSize: "18px", fontWeight: 900, margin: 0, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                  <h3 style={{ fontSize: "18px", fontWeight: 900, margin: 0, color: "#0369a1", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                     📜 Nhật Ký Lịch Sử Giao Dịch Nhập Xuất Tồn Kho
                   </h3>
-                  <p style={{ fontSize: "12px", opacity: 0.8, margin: 0 }}>Theo dõi biến động kho hàng tự động theo thời gian thực</p>
+                  <p style={{ fontSize: "12px", color: "#0284c7", margin: 0, fontWeight: 700 }}>Theo dõi biến động kho hàng tự động theo thời gian thực</p>
                 </div>
               </div>
               <button
                 onClick={() => setShowHistoryModal(false)}
                 style={{
-                  background: "rgba(255, 255, 255, 0.15)",
-                  border: "none",
+                  background: "#ffffff",
+                  border: "1px solid #cbd5e1",
                   borderRadius: "50%",
                   width: "36px",
                   height: "36px",
-                  color: "#ffffff",
+                  color: "#334155",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   cursor: "pointer",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.06)",
                 }}
               >
                 <X className="w-5 h-5" />

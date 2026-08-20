@@ -322,38 +322,37 @@ export const updateAdminOrderStatus = async (
 export const saveAdminProduct = async (product: Partial<Product>): Promise<boolean> => {
   try {
     const supabase = createClient();
-    const productCode = `P${String(product.id || Math.floor(Math.random() * 9000) + 1000).padStart(4, "0")}`;
 
-    const payload = {
-      product_code: productCode,
+    const payload: any = {
       name: product.name,
       category: product.category,
-      category_name: product.categoryName || product.category,
       price: product.price,
-      old_price: product.oldPrice || null,
-      stock: product.stock !== undefined ? product.stock : 15,
+      stock: product.stock !== undefined ? Number(product.stock) : 15,
       status: product.status || "Active",
-      badge: product.badge || null,
-      badge_type: product.badgeType || null,
       image: product.image,
       description: product.description || "",
-      full_desc: product.fullDesc || product.description || "",
-      specs: product.specs || {},
     };
 
     if (product.id) {
-      const { error } = await supabase.from("products").update(payload).eq("id", product.id);
-      if (error) {
-        // Fallback update by name or original_id if primary key differs
-        const { error: err2 } = await supabase
-          .from("products")
-          .update(payload)
-          .or(`original_id.eq.${product.id},name.eq.${product.name}`);
-        return !err2;
+      // 1. Try update by id
+      const { error: err1 } = await supabase.from("products").update(payload).eq("id", product.id);
+      if (!err1) return true;
+
+      // 2. Try update by original_id
+      const { error: err2 } = await supabase.from("products").update(payload).eq("original_id", product.id);
+      if (!err2) return true;
+
+      // 3. Try update by name
+      if (product.name) {
+        const { error: err3 } = await supabase.from("products").update(payload).eq("name", product.name);
+        if (!err3) return true;
       }
-      return true;
+      return false;
     } else {
-      const { error } = await supabase.from("products").insert(payload);
+      const { error } = await supabase.from("products").insert({
+        ...payload,
+        original_id: Math.floor(1000 + Math.random() * 9000),
+      });
       return !error;
     }
   } catch (err) {
