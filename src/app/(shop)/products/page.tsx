@@ -456,24 +456,27 @@ function ProductsContent() {
                           <button
                             type="button"
                             onClick={() => toggleWishlist(product.id)}
+                            title={wishlisted ? "Đã yêu thích - Bấm để bỏ" : "Thêm vào yêu thích"}
                             style={{
                               position: "absolute",
                               top: "10px",
                               right: "10px",
-                              width: "32px",
-                              height: "32px",
+                              width: "34px",
+                              height: "34px",
                               borderRadius: "999px",
-                              background: "#ffffff",
-                              border: "none",
+                              background: wishlisted ? "#fef2f2" : "#ffffff",
+                              border: wishlisted ? "1.5px solid #fecaca" : "1px solid #cbd5e1",
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
                               cursor: "pointer",
-                              boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
+                              boxShadow: wishlisted ? "0 4px 12px rgba(239, 68, 68, 0.2)" : "0 2px 8px rgba(0,0,0,0.12)",
+                              transition: "all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                              transform: wishlisted ? "scale(1.08)" : "scale(1)",
                               zIndex: 10,
                             }}
                           >
-                            <Heart className={`w-4 h-4 ${wishlisted ? "text-red-500 fill-red-500" : "text-slate-400"}`} />
+                            <Heart className={`w-4 h-4 transition-all duration-200 ${wishlisted ? "text-red-500 fill-red-500 scale-110" : "text-slate-400 fill-none"}`} />
                           </button>
 
                           {product.oldPrice && (

@@ -142,6 +142,8 @@ function ProductDetailPageContent({
   const [quantity, setQuantity] = useState(1);
   const [copied, setCopied] = useState(false);
   const [isSizeChartOpen, setIsSizeChartOpen] = useState(false);
+  const [addedToCart, setAddedToCart] = useState(false);
+  const [toastMsg, setToastMsg] = useState("");
 
   // Variant Controls State
   const [selectedColor, setSelectedColor] = useState<"soi" | "occho" | "trangkem">("soi");
@@ -210,6 +212,28 @@ function ProductDetailPageContent({
     <>
       <main className="main-content" style={{ paddingTop: "24px", paddingBottom: "60px" }}>
         <div className="container">
+          {toastMsg && (
+            <div
+              style={{
+                padding: "12px 18px",
+                background: "#f0fdf4",
+                color: "#166534",
+                border: "1px solid #bbf7d0",
+                borderRadius: "1rem",
+                fontSize: "13.5px",
+                fontWeight: 800,
+                marginBottom: "20px",
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                boxShadow: "0 4px 14px rgba(22, 101, 52, 0.1)",
+              }}
+            >
+              <CheckCircle2 className="w-5 h-5 text-emerald-700 flex-shrink-0" />
+              <span>{toastMsg}</span>
+            </div>
+          )}
+
           {/* 1. High-End Editorial Split Grid (Double-Bezel Architecture) */}
           <div className="editorial-detail-grid">
             {/* Left Col: Doppelrand Image Gallery Shell */}
@@ -447,9 +471,21 @@ function ProductDetailPageContent({
                   <button
                     type="button"
                     className="btn-nested-primary"
-                    onClick={() => addToCart({ ...currentProduct, price: finalDisplayPrice }, quantity)}
+                    onClick={() => {
+                      addToCart({ ...currentProduct, price: finalDisplayPrice }, quantity);
+                      setAddedToCart(true);
+                      setToastMsg(`Đã thêm ${quantity} sản phẩm "${currentProduct.name}" vào giỏ hàng thành công!`);
+                      setTimeout(() => {
+                        setAddedToCart(false);
+                        setToastMsg("");
+                      }, 2500);
+                    }}
+                    style={{
+                      background: addedToCart ? "#166534" : "var(--primary-color, #2e7d32)",
+                      transition: "all 0.2s ease",
+                    }}
                   >
-                    <span>+ Thêm Giỏ Hàng</span>
+                    <span>{addedToCart ? `✓ Đã Thêm Giỏ Hàng (${quantity})!` : "+ Thêm Giỏ Hàng"}</span>
                     <div className="btn-nested-icon-capsule">
                       <ShoppingCart className="w-4 h-4 text-white" />
                     </div>
@@ -471,22 +507,34 @@ function ProductDetailPageContent({
 
                   <button
                     type="button"
-                    onClick={() => toggleWishlist(currentProduct.id)}
+                    onClick={() => {
+                      const wasWishlisted = isWishlisted(currentProduct.id);
+                      toggleWishlist(currentProduct.id);
+                      setToastMsg(
+                        wasWishlisted
+                          ? `🤍 Đã xóa "${currentProduct.name}" khỏi danh sách yêu thích!`
+                          : `❤️ Đã thêm "${currentProduct.name}" vào danh sách yêu thích!`
+                      );
+                      setTimeout(() => setToastMsg(""), 3000);
+                    }}
                     style={{
                       width: "48px",
                       height: "48px",
                       borderRadius: "50%",
-                      border: "1px solid #cbd5e1",
-                      background: "#ffffff",
+                      border: isWishlisted(currentProduct.id) ? "1.5px solid #fecaca" : "1px solid #cbd5e1",
+                      background: isWishlisted(currentProduct.id) ? "#fef2f2" : "#ffffff",
                       cursor: "pointer",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       flexShrink: 0,
+                      boxShadow: isWishlisted(currentProduct.id) ? "0 4px 12px rgba(239, 68, 68, 0.2)" : "0 2px 8px rgba(0,0,0,0.06)",
+                      transition: "all 0.2s ease",
+                      transform: isWishlisted(currentProduct.id) ? "scale(1.08)" : "scale(1)",
                     }}
-                    title="Yêu thích"
+                    title={isWishlisted(currentProduct.id) ? "Đã yêu thích - Bấm để bỏ" : "Thêm vào danh sách yêu thích"}
                   >
-                    <Heart className={`w-5 h-5 ${isWishlisted(currentProduct.id) ? "text-red-500 fill-red-500" : "text-slate-400"}`} />
+                    <Heart className={`w-5 h-5 transition-all duration-200 ${isWishlisted(currentProduct.id) ? "text-red-500 fill-red-500 scale-110" : "text-slate-400 fill-none"}`} />
                   </button>
                 </div>
 

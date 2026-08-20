@@ -10,7 +10,7 @@ import { useWishlist } from "@/context/WishlistContext";
 import { useCart } from "@/context/CartContext";
 import { Product } from "@/types/product";
 import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
-import { ShoppingCart, Heart, Flame, ArrowRight, ChevronRight, CheckCircle2, Trash2 } from "lucide-react";
+import { ShoppingCart, Heart, Flame, ArrowRight, ChevronRight, CheckCircle2, Check } from "lucide-react";
 
 export default function WishlistPage() {
   const { wishlistIds, toggleWishlist } = useWishlist();
@@ -19,6 +19,7 @@ export default function WishlistPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [toastMsg, setToastMsg] = useState("");
+  const [addedId, setAddedId] = useState<number | null>(null);
 
   useEffect(() => {
     async function loadData() {
@@ -294,11 +295,19 @@ export default function WishlistPage() {
                   {/* Actions Bar */}
                   <div style={{ display: "flex", gap: "8px", paddingTop: "12px", borderTop: "1px solid #f1f5f9" }}>
                     <button
-                      onClick={() => addToCart(product)}
+                      onClick={() => {
+                        addToCart(product, 1);
+                        setAddedId(product.id);
+                        setToastMsg(`Đã thêm sản phẩm "${product.name}" vào giỏ hàng thành công!`);
+                        setTimeout(() => {
+                          setAddedId(null);
+                          setToastMsg("");
+                        }, 2500);
+                      }}
                       style={{
                         flex: 1,
                         padding: "10px 14px",
-                        background: "var(--primary-color, #2e7d32)",
+                        background: addedId === product.id ? "#166534" : "var(--primary-color, #2e7d32)",
                         color: "#ffffff",
                         border: "none",
                         borderRadius: "999px",
@@ -310,10 +319,14 @@ export default function WishlistPage() {
                         justifyContent: "center",
                         gap: "6px",
                         boxShadow: "0 4px 12px rgba(46, 125, 50, 0.2)",
+                        transition: "all 0.2s ease",
                       }}
                     >
-                      <ShoppingCart className="w-3.5 h-3.5" />
-                      <span>+ Thêm Giỏ Hàng</span>
+                      {addedId === product.id ? (
+                        <><Check className="w-3.5 h-3.5" /> Đã Thêm Giỏ Hàng!</>
+                      ) : (
+                        <><ShoppingCart className="w-3.5 h-3.5" /> + Thêm Giỏ Hàng</>
+                      )}
                     </button>
 
                     <Link
