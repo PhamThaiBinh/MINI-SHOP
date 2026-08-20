@@ -8,18 +8,20 @@ export interface StoreSettings {
   facebookUrl?: string;
   zaloUrl?: string;
   tiktokUrl?: string;
+  googleMapsUrl?: string;
 }
 
 export const DEFAULT_STORE_SETTINGS: StoreSettings = {
-  storeName: "Mini Shop - Trung Tâm Tin Học Văn Phòng Bình Dương",
+  storeName: "Mini Shop - Trung Tâm Tin Học Văn Phòng",
   phone: "0987.654.321",
-  email: "tinhocbinhduong@gmail.com",
-  address: "Trung tâm Tin học Văn phòng Bình Dương - Số 59, Đường ĐT743, KDC Bình Đáng, P. Bình Hòa, TP. Thuận An, Bình Dương",
+  email: "support@minishop.vn",
+  address: "107, đường D5, KDC Phú Hòa 1, phường Phú Lợi, TP. Hồ Chí Minh",
   workingHours: "7:30 AM - 21:00 PM (Tất cả các ngày trong tuần)",
   description: "Mini Shop cung cấp giải pháp nội thất hiện đại, gỗ tự nhiên cao cấp và đồ dùng trang trí góc làm việc thông minh cho ngôi nhà của bạn.",
   facebookUrl: "https://facebook.com",
   zaloUrl: "https://zalo.me",
   tiktokUrl: "https://tiktok.com",
+  googleMapsUrl: "https://maps.app.goo.gl/ymXNFFXsf6qXoHWS7",
 };
 
 export const STORE_SETTINGS_KEY = "minishop_store_settings_v1";

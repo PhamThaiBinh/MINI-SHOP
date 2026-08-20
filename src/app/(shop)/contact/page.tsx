@@ -323,23 +323,42 @@ export default function ContactPage() {
         <div className="doppelrand-outer">
           <div className="doppelrand-inner" style={{ padding: "28px", textAlign: "center" }}>
             <h3 style={{ fontSize: "18px", fontWeight: 900, color: "#0f172a", margin: "0 0 8px" }}>
-              Ghé Thăm Trung Tâm Tin Học Văn Phòng Bình Dương
+              Ghé Thăm Trụ Sở & Showroom MINI-SHOP
             </h3>
             <p style={{ fontSize: "14px", color: "#64748b", margin: "0 auto 12px", maxWidth: "650px" }}>
               {storeInfo.address}
             </p>
 
-            <div style={{ fontSize: "12px", fontWeight: 800, color: "#166534", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "6px 16px", borderRadius: "999px", width: "fit-content", margin: "0 auto 18px", display: "inline-flex", alignItems: "center", gap: "6px" }}>
-              <span>🖱️ Lăn con lăn chuột trực tiếp trên bản đồ để Phóng to / Thu nhỏ</span>
+            <div style={{ marginBottom: "18px" }}>
+              <a
+                href={storeInfo.googleMapsUrl || "https://maps.app.goo.gl/ymXNFFXsf6qXoHWS7"}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  fontSize: "13px",
+                  fontWeight: 800,
+                  color: "#ffffff",
+                  background: "var(--primary-color, #2e7d32)",
+                  padding: "8px 20px",
+                  borderRadius: "999px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  textDecoration: "none",
+                  boxShadow: "0 4px 12px rgba(46, 125, 50, 0.2)",
+                }}
+              >
+                <MapPin className="w-4 h-4" /> Mở Bản Đồ Google Maps (107 D5 Phú Hòa) ↗
+              </a>
             </div>
 
             <div style={{ borderRadius: "1.25rem", overflow: "hidden", border: "1px solid #cbd5e1", height: "400px", background: "#f1f5f9", position: "relative" }}>
               <iframe
-                title="Bản đồ Trung tâm Tin học Văn phòng Bình Dương"
-                src="https://maps.google.com/maps?q=Trung+t%C3%A2m+Tin+h%E1%BB%8Dc+V%C4%83n+ph%C3%B2ng+B%C3%ACnh+D%C6%B0%C6%A1ng&t=&z=16&ie=UTF8&iwloc=&output=embed"
+                title="Bản đồ Mini Shop 107 D5 Phú Hòa"
+                src="https://maps.google.com/maps?q=107+d%C6%B0%E1%BB%9Dng+D5+KDC+Ph%C3%BA+H%C3%B2a+1+Ph%C3%BA+L%E1%BB%A3i+Th%E1%BB%A7+D%E1%BA%A7u+M%E1%BB%99t&t=&z=16&ie=UTF8&iwloc=&output=embed"
                 width="100%"
                 height="100%"
-                style={{ border: 0, pointerEvents: "auto" }}
+                style={{ border: 0 }}
                 allowFullScreen={true}
                 loading="lazy"
               />
