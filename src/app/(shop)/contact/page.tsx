@@ -355,7 +355,7 @@ export default function ContactPage() {
             <div style={{ borderRadius: "1.25rem", overflow: "hidden", border: "1px solid #cbd5e1", height: "400px", background: "#f1f5f9", position: "relative" }}>
               <iframe
                 title="Bản đồ Trung Tâm Tin Học Văn Phòng - 107 D5 Phú Hòa"
-                src="https://maps.google.com/maps?q=10.97054,106.67841+(Trung+T%C3%A2m+Tin+H%E1%BB%8Dc+V%C4%83n+Ph%C3%B2ng)&t=&z=17&ie=UTF8&iwloc=B&output=embed"
+                src="https://maps.google.com/maps?q=Trung+T%C3%A2m+Tin+H%E1%BB%8Dc+V%C4%83n+Ph%C3%B2ng%2C+107+D5+Ph%C3%BA+H%C3%B2a+1%2C+Ph%C3%BA+L%E1%BB%A3i%2C+B%C3%ACnh+D%C6%B0%C6%A1ng&t=&z=16&ie=UTF8&output=embed"
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}
