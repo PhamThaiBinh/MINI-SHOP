@@ -725,9 +725,9 @@ export default function AuthPage() {
 
   return (
     <main className="main-content" style={{ backgroundColor: "var(--bg-main, #fcfbf9)", minHeight: "100dvh", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-      <div className="container" style={{ padding: "30px 16px 60px" }}>
+      <div className="container" style={{ padding: "10px 16px 40px" }}>
         
-        <div className="auth-page-section" style={{ padding: "40px 0 60px" }}>
+        <div className="auth-page-section" style={{ padding: "10px 0 40px" }}>
           {!user ? (
             /* KHI CHƯA ĐĂNG NHẬP (Wide Spotlight Image & Fixed Form Architecture) */
             <div className="doppelrand-outer" style={{ maxWidth: "1200px", margin: "0 auto" }}>
@@ -1170,17 +1170,18 @@ export default function AuthPage() {
               </div>
             </div>
           ) : (
-            /* KHI ĐÃ ĐĂNG NHẬP (AUTHENTICATED CUSTOMER DASHBOARD) */
-            <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-              {/* 1. TOP VIP PROFILE HEADER CARD */}
+            /* KHI ĐÃ ĐĂNG NHẬP (AUTHENTICATED CUSTOMER DASHBOARD - 1300px Bright Clean Architecture) */
+            <div style={{ maxWidth: "1300px", margin: "0 auto" }}>
+              {/* 1. TOP PROFILE HEADER CARD (Bright Elegant White/Emerald Theme) */}
               <div
                 style={{
-                  background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #2e7d32 100%)",
+                  background: "#ffffff",
                   borderRadius: "20px",
+                  border: "1px solid #e2e8f0",
                   padding: "24px 28px",
-                  marginBottom: "24px",
-                  color: "#ffffff",
-                  boxShadow: "0 10px 30px rgba(0, 0, 0, 0.12)",
+                  marginBottom: "20px",
+                  color: "#0f172a",
+                  boxShadow: "0 4px 20px rgba(0, 0, 0, 0.04)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
@@ -1190,9 +1191,6 @@ export default function AuthPage() {
                   overflow: "hidden",
                 }}
               >
-                {/* Subtle Radial Ambient Glow */}
-                <div style={{ position: "absolute", top: "-60px", right: "-60px", width: "240px", height: "240px", background: "radial-gradient(circle, rgba(74, 222, 128, 0.25) 0%, rgba(0,0,0,0) 70%)", borderRadius: "50%", pointerEvents: "none" }} />
-
                 {/* Left: User Avatar & Info */}
                 <div style={{ display: "flex", alignItems: "center", gap: "18px", zIndex: 2 }}>
                   <div
@@ -1200,15 +1198,15 @@ export default function AuthPage() {
                       width: "68px",
                       height: "68px",
                       borderRadius: "50%",
-                      background: "linear-gradient(135deg, #2e7d32, #4ade80)",
+                      background: "linear-gradient(135deg, #2e7d32, #15803d)",
                       color: "#ffffff",
                       fontSize: "26px",
                       fontWeight: 900,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      boxShadow: "0 6px 16px rgba(46, 125, 50, 0.4)",
-                      border: "3px solid rgba(255, 255, 255, 0.3)",
+                      boxShadow: "0 6px 16px rgba(46, 125, 50, 0.25)",
+                      border: "3px solid #e8f5e9",
                       flexShrink: 0,
                     }}
                   >
@@ -1217,28 +1215,27 @@ export default function AuthPage() {
 
                   <div>
                     <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-                      <h2 style={{ fontSize: "22px", fontWeight: 900, margin: 0, color: "#ffffff", letterSpacing: "-0.01em" }}>
+                      <h2 style={{ fontSize: "22px", fontWeight: 900, margin: 0, color: "#0f172a", letterSpacing: "-0.01em" }}>
                         {user.name}
                       </h2>
                       <span
                         style={{
                           padding: "4px 12px",
                           borderRadius: "999px",
-                          background: "rgba(255, 255, 255, 0.15)",
-                          backdropFilter: "blur(8px)",
-                          border: "1px solid rgba(255, 255, 255, 0.25)",
+                          background: "#e8f5e9",
+                          border: "1px solid #bbf7d0",
                           fontSize: "12px",
                           fontWeight: 800,
-                          color: "#86efac",
+                          color: "var(--primary-color, #2e7d32)",
                           display: "inline-flex",
                           alignItems: "center",
                           gap: "4px",
                         }}
                       >
-                        <Crown className="w-3.5 h-3.5 text-emerald-400" /> {(user as any).tier || (user.points >= 500 ? "Thành viên Vàng" : "Thành viên Bạc")}
+                        <Crown className="w-3.5 h-3.5 text-emerald-700" /> {(user as any).tier || (user.points >= 500 ? "Thành viên Vàng" : "Thành viên Bạc")}
                       </span>
                     </div>
-                    <p style={{ fontSize: "13px", color: "#94a3b8", margin: "4px 0 0" }}>
+                    <p style={{ fontSize: "13px", color: "#64748b", margin: "4px 0 0" }}>
                       @{user.username || "user"} • {user.email}
                     </p>
                   </div>
@@ -1246,24 +1243,24 @@ export default function AuthPage() {
 
                 {/* Right: 3 Quick Metric Stat Cards */}
                 <div style={{ display: "flex", alignItems: "center", gap: "14px", zIndex: 2, flexWrap: "wrap" }}>
-                  <div style={{ background: "rgba(255,255,255,0.08)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: "14px", padding: "10px 18px", textAlign: "center", minWidth: "110px" }}>
-                    <div style={{ fontSize: "11px", fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>Điểm Thưởng</div>
-                    <div style={{ fontSize: "19px", fontWeight: 900, color: "#86efac", marginTop: "2px", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}>
-                      <Sparkles className="w-4 h-4 text-emerald-400" />
+                  <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "10px 18px", textAlign: "center", minWidth: "110px" }}>
+                    <div style={{ fontSize: "11px", fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" }}>Điểm Thưởng</div>
+                    <div style={{ fontSize: "19px", fontWeight: 900, color: "var(--primary-color, #2e7d32)", marginTop: "2px", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}>
+                      <Sparkles className="w-4 h-4 text-emerald-700" />
                       {user.points.toLocaleString("vi-VN")}
                     </div>
                   </div>
 
-                  <div style={{ background: "rgba(255,255,255,0.08)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: "14px", padding: "10px 18px", textAlign: "center", minWidth: "100px" }}>
-                    <div style={{ fontSize: "11px", fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>Đơn Hàng</div>
-                    <div style={{ fontSize: "19px", fontWeight: 900, color: "#ffffff", marginTop: "2px" }}>
+                  <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "10px 18px", textAlign: "center", minWidth: "100px" }}>
+                    <div style={{ fontSize: "11px", fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" }}>Đơn Hàng</div>
+                    <div style={{ fontSize: "19px", fontWeight: 900, color: "#0f172a", marginTop: "2px" }}>
                       {liveOrders.length}
                     </div>
                   </div>
 
-                  <div style={{ background: "rgba(255,255,255,0.08)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: "14px", padding: "10px 18px", textAlign: "center", minWidth: "100px" }}>
-                    <div style={{ fontSize: "11px", fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>Voucher</div>
-                    <div style={{ fontSize: "19px", fontWeight: 900, color: "#ffffff", marginTop: "2px" }}>
+                  <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "10px 18px", textAlign: "center", minWidth: "100px" }}>
+                    <div style={{ fontSize: "11px", fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" }}>Voucher</div>
+                    <div style={{ fontSize: "19px", fontWeight: 900, color: "#0f172a", marginTop: "2px" }}>
                       {totalVouchersCount}
                     </div>
                   </div>
