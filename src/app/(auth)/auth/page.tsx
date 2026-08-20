@@ -739,31 +739,32 @@ export default function AuthPage() {
     <main className="main-content" style={{ backgroundColor: "var(--bg-main, #fcfbf9)", minHeight: "100dvh", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       <div className="container" style={{ padding: "30px 16px 60px" }}>
         
-        <div className="auth-page-section">
+        <div className="auth-page-section" style={{ padding: "40px 0 60px" }}>
           {!user ? (
-            /* KHI CHƯA ĐĂNG NHẬP (Split-Screen Doppelrand Hardware Architecture) */
-            <div className="doppelrand-outer" style={{ maxWidth: "1200px", margin: "0 auto" }}>
-              <div className="doppelrand-inner" style={{ padding: "16px" }}>
+            /* KHI CHƯA ĐĂNG NHẬP (Balanced Split-Screen Doppelrand Architecture) */
+            <div className="doppelrand-outer" style={{ maxWidth: "920px", margin: "0 auto" }}>
+              <div className="doppelrand-inner" style={{ padding: "12px" }}>
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "1fr 1.15fr",
+                    gridTemplateColumns: "1fr 1fr",
                     gap: "24px",
                     alignItems: "stretch",
                   }}
                 >
-                  {/* LEFT COLUMN: SPOTLIGHT ANIMATED IMAGE CAROUSEL */}
+                  {/* LEFT COLUMN: MATCHED HEIGHT SPOTLIGHT IMAGE CAROUSEL */}
                   <div
                     style={{
-                      borderRadius: "1.5rem",
+                      borderRadius: "1.25rem",
                       position: "relative",
                       overflow: "hidden",
-                      boxShadow: "0 12px 36px rgba(0, 0, 0, 0.15)",
-                      minHeight: "520px",
+                      boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)",
+                      minHeight: "460px",
+                      height: "100%",
                       display: "flex",
                       flexDirection: "column",
-                      justifyContent: "space-between",
-                      padding: "32px 28px",
+                      justifyContent: "flex-end",
+                      padding: "24px",
                       background: "#0f172a",
                     }}
                   >
@@ -789,17 +790,12 @@ export default function AuthPage() {
                       style={{
                         position: "absolute",
                         inset: 0,
-                        background: "linear-gradient(180deg, rgba(0,0,0,0) 65%, rgba(0,0,0,0.45) 100%)",
+                        background: "linear-gradient(180deg, rgba(0,0,0,0) 60%, rgba(0,0,0,0.5) 100%)",
                       }}
                     />
 
-                    {/* Spacer */}
-                    <div style={{ position: "relative", zIndex: 10 }} />
-
-                    {/* Bottom Nav Controls */}
-                    <div style={{ position: "relative", zIndex: 10, color: "#ffffff" }}>
-
-                      {/* Navigation Controls: Dots & Chevrons */}
+                    {/* Floating Bottom Nav Controls */}
+                    <div style={{ position: "relative", zIndex: 10, color: "#ffffff", width: "100%" }}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         {/* Dot Indicators */}
                         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -812,7 +808,7 @@ export default function AuthPage() {
                                 width: i === spotlightIndex ? "24px" : "8px",
                                 height: "8px",
                                 borderRadius: "999px",
-                                background: i === spotlightIndex ? "var(--primary-color, #2e7d32)" : "rgba(255,255,255,0.4)",
+                                background: i === spotlightIndex ? "var(--primary-color, #2e7d32)" : "rgba(255,255,255,0.45)",
                                 border: "none",
                                 cursor: "pointer",
                                 transition: "all 0.3s ease",
@@ -830,12 +826,12 @@ export default function AuthPage() {
                               setSpotlightIndex((prev) => (prev - 1 + SPOTLIGHT_SLIDES.length) % SPOTLIGHT_SLIDES.length)
                             }
                             style={{
-                              width: "34px",
-                              height: "34px",
+                              width: "32px",
+                              height: "32px",
                               borderRadius: "50%",
-                              background: "rgba(255,255,255,0.2)",
+                              background: "rgba(255,255,255,0.25)",
                               backdropFilter: "blur(8px)",
-                              border: "1px solid rgba(255,255,255,0.3)",
+                              border: "1px solid rgba(255,255,255,0.35)",
                               color: "#ffffff",
                               display: "flex",
                               alignItems: "center",
@@ -851,12 +847,12 @@ export default function AuthPage() {
                               setSpotlightIndex((prev) => (prev + 1) % SPOTLIGHT_SLIDES.length)
                             }
                             style={{
-                              width: "34px",
-                              height: "34px",
+                              width: "32px",
+                              height: "32px",
                               borderRadius: "50%",
-                              background: "rgba(255,255,255,0.2)",
+                              background: "rgba(255,255,255,0.25)",
                               backdropFilter: "blur(8px)",
-                              border: "1px solid rgba(255,255,255,0.3)",
+                              border: "1px solid rgba(255,255,255,0.35)",
                               color: "#ffffff",
                               display: "flex",
                               alignItems: "center",
@@ -871,27 +867,59 @@ export default function AuthPage() {
                     </div>
                   </div>
 
-                  {/* RIGHT COLUMN: INTERACTIVE FORM CARD */}
-                  <div style={{ padding: "16px 8px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                    {/* Tab Navigation Pill */}
-                    <div className="auth-tabs" style={{ marginBottom: "20px" }}>
+                  {/* RIGHT COLUMN: BALANCED INTERACTIVE FORM CARD */}
+                  <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                    {/* Segmented Pill Tab Switcher */}
+                    <div
+                      style={{
+                        display: "flex",
+                        background: "#f1f5f9",
+                        padding: "4px",
+                        borderRadius: "999px",
+                        marginBottom: "20px",
+                      }}
+                    >
                       <button
                         type="button"
-                        className={`auth-tab-btn ${activeTab === "login" ? "active" : ""}`}
+                        style={{
+                          flex: 1,
+                          padding: "9px 16px",
+                          fontSize: "14px",
+                          fontWeight: 800,
+                          borderRadius: "999px",
+                          border: "none",
+                          cursor: "pointer",
+                          transition: "all 0.2s ease",
+                          background: activeTab === "login" ? "#ffffff" : "transparent",
+                          color: activeTab === "login" ? "var(--primary-color, #2e7d32)" : "#64748b",
+                          boxShadow: activeTab === "login" ? "0 2px 8px rgba(0,0,0,0.06)" : "none",
+                        }}
                         onClick={() => setActiveTab("login")}
                       >
                         Đăng Nhập
                       </button>
                       <button
                         type="button"
-                        className={`auth-tab-btn ${activeTab === "register" ? "active" : ""}`}
+                        style={{
+                          flex: 1,
+                          padding: "9px 16px",
+                          fontSize: "14px",
+                          fontWeight: 800,
+                          borderRadius: "999px",
+                          border: "none",
+                          cursor: "pointer",
+                          transition: "all 0.2s ease",
+                          background: activeTab === "register" ? "#ffffff" : "transparent",
+                          color: activeTab === "register" ? "var(--primary-color, #2e7d32)" : "#64748b",
+                          boxShadow: activeTab === "register" ? "0 2px 8px rgba(0,0,0,0.06)" : "none",
+                        }}
                         onClick={() => setActiveTab("register")}
                       >
                         Đăng Ký
                       </button>
                     </div>
 
-                    <div className="auth-card-body">
+                    <div>
                       {authError && (
                         <div style={{ padding: "10px 14px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "10px", color: "#dc2626", fontSize: "13px", fontWeight: 800, marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
                           <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0" />
@@ -906,19 +934,25 @@ export default function AuthPage() {
                       )}
 
                       {activeTab === "login" ? (
-                        <form className="auth-form" onSubmit={handleLoginSubmit}>
-                          <h2 className="auth-form-title" style={{ fontSize: "20px", fontWeight: 900, marginBottom: "16px" }}>
-                            Đăng Nhập Tài Khoản
-                          </h2>
+                        <form className="auth-form" onSubmit={handleLoginSubmit} style={{ gap: "14px" }}>
+                          <div>
+                            <h2 style={{ fontSize: "22px", fontWeight: 900, color: "#0f172a", margin: "0 0 4px", letterSpacing: "-0.02em" }}>
+                              Đăng Nhập Tài Khoản
+                            </h2>
+                            <p style={{ fontSize: "13px", color: "#64748b", margin: 0 }}>
+                              Chào mừng bạn quay trở lại với Mini Shop!
+                            </p>
+                          </div>
 
-                          <div className="form-group" style={{ marginBottom: "14px" }}>
-                            <label htmlFor="login-email" className="auth-label" style={{ fontSize: "13px", fontWeight: 800, color: "#334155" }}>
+                          <div className="form-group" style={{ marginBottom: "0" }}>
+                            <label htmlFor="login-email" className="auth-label" style={{ fontSize: "13px", fontWeight: 800, color: "#334155", marginBottom: "6px" }}>
                               Tên đăng nhập hoặc Email *
                             </label>
                             <input
                               type="text"
                               id="login-email"
                               className="form-control auth-input"
+                              style={{ borderRadius: "12px", height: "46px" }}
                               placeholder="Nhập tên đăng nhập hoặc email..."
                               required
                               value={loginEmail}
@@ -926,8 +960,8 @@ export default function AuthPage() {
                             />
                           </div>
 
-                          <div className="form-group" style={{ marginBottom: "14px" }}>
-                            <label htmlFor="login-password" className="auth-label" style={{ fontSize: "13px", fontWeight: 800, color: "#334155" }}>
+                          <div className="form-group" style={{ marginBottom: "0" }}>
+                            <label htmlFor="login-password" className="auth-label" style={{ fontSize: "13px", fontWeight: 800, color: "#334155", marginBottom: "6px" }}>
                               Mật khẩu *
                             </label>
                             <div style={{ position: "relative" }}>
@@ -935,7 +969,7 @@ export default function AuthPage() {
                                 type={showLoginPassword ? "text" : "password"}
                                 id="login-password"
                                 className="form-control auth-input"
-                                style={{ paddingRight: "40px" }}
+                                style={{ paddingRight: "40px", borderRadius: "12px", height: "46px" }}
                                 placeholder="••••••••"
                                 required
                                 value={loginPassword}
@@ -952,7 +986,6 @@ export default function AuthPage() {
                                   background: "none",
                                   border: "none",
                                   cursor: "pointer",
-                                  fontSize: "16px",
                                   display: "inline-flex",
                                   alignItems: "center",
                                   justifyContent: "center",
@@ -984,11 +1017,11 @@ export default function AuthPage() {
                                 style={{
                                   background: "none",
                                   border: "none",
-                                  color: "var(--primary-color)",
+                                  color: "var(--primary-color, #2e7d32)",
                                   fontSize: "12.5px",
                                   fontWeight: 800,
                                   cursor: "pointer",
-                                  textDecoration: "underline",
+                                  textDecoration: "none",
                                   display: "inline-flex",
                                   alignItems: "center",
                                   gap: "4px",
@@ -999,24 +1032,45 @@ export default function AuthPage() {
                             </div>
                           </div>
 
-                          <button type="submit" className="btn-auth-submit" style={{ width: "100%", padding: "14px", borderRadius: "999px", fontSize: "15px", fontWeight: 800 }}>
+                          <button
+                            type="submit"
+                            style={{
+                              width: "100%",
+                              height: "48px",
+                              borderRadius: "12px",
+                              background: "var(--primary-color, #2e7d32)",
+                              color: "#ffffff",
+                              fontSize: "15px",
+                              fontWeight: 800,
+                              border: "none",
+                              cursor: "pointer",
+                              boxShadow: "0 4px 14px rgba(46, 125, 50, 0.25)",
+                              marginTop: "4px",
+                            }}
+                          >
                             Đăng Nhập Ngay
                           </button>
                         </form>
                       ) : (
-                        <form className="auth-form" onSubmit={handleRegisterSubmit}>
-                          <h2 className="auth-form-title" style={{ fontSize: "20px", fontWeight: 900, marginBottom: "16px" }}>
-                            Tạo Tài Khoản Mới
-                          </h2>
+                        <form className="auth-form" onSubmit={handleRegisterSubmit} style={{ gap: "12px" }}>
+                          <div>
+                            <h2 style={{ fontSize: "22px", fontWeight: 900, color: "#0f172a", margin: "0 0 4px", letterSpacing: "-0.02em" }}>
+                              Tạo Tài Khoản Mới
+                            </h2>
+                            <p style={{ fontSize: "13px", color: "#64748b", margin: 0 }}>
+                              Tham gia thành viên Mini Shop để nhận hàng ngàn ưu đãi!
+                            </p>
+                          </div>
 
-                          <div className="form-group" style={{ marginBottom: "12px" }}>
-                            <label htmlFor="reg-name" className="auth-label" style={{ fontSize: "13px", fontWeight: 800, color: "#334155" }}>
+                          <div className="form-group" style={{ marginBottom: "0" }}>
+                            <label htmlFor="reg-name" className="auth-label" style={{ fontSize: "13px", fontWeight: 800, color: "#334155", marginBottom: "4px" }}>
                               Họ và tên *
                             </label>
                             <input
                               type="text"
                               id="reg-name"
                               className="form-control auth-input"
+                              style={{ borderRadius: "12px", height: "42px" }}
                               placeholder="Nhập họ và tên..."
                               required
                               value={regName}
@@ -1024,14 +1078,15 @@ export default function AuthPage() {
                             />
                           </div>
 
-                          <div className="form-group" style={{ marginBottom: "12px" }}>
-                            <label htmlFor="reg-email" className="auth-label" style={{ fontSize: "13px", fontWeight: 800, color: "#334155" }}>
+                          <div className="form-group" style={{ marginBottom: "0" }}>
+                            <label htmlFor="reg-email" className="auth-label" style={{ fontSize: "13px", fontWeight: 800, color: "#334155", marginBottom: "4px" }}>
                               Email *
                             </label>
                             <input
                               type="email"
                               id="reg-email"
                               className="form-control auth-input"
+                              style={{ borderRadius: "12px", height: "42px" }}
                               placeholder="email@example.com"
                               required
                               value={regEmail}
@@ -1039,8 +1094,8 @@ export default function AuthPage() {
                             />
                           </div>
 
-                          <div className="form-group" style={{ marginBottom: "12px" }}>
-                            <label htmlFor="reg-password" className="auth-label" style={{ fontSize: "13px", fontWeight: 800, color: "#334155" }}>
+                          <div className="form-group" style={{ marginBottom: "0" }}>
+                            <label htmlFor="reg-password" className="auth-label" style={{ fontSize: "13px", fontWeight: 800, color: "#334155", marginBottom: "4px" }}>
                               Mật khẩu *
                             </label>
                             <div style={{ position: "relative" }}>
@@ -1048,7 +1103,7 @@ export default function AuthPage() {
                                 type={showRegPassword ? "text" : "password"}
                                 id="reg-password"
                                 className="form-control auth-input"
-                                style={{ paddingRight: "40px" }}
+                                style={{ paddingRight: "40px", borderRadius: "12px", height: "42px" }}
                                 placeholder="••••••••"
                                 required
                                 value={regPassword}
@@ -1065,7 +1120,6 @@ export default function AuthPage() {
                                   background: "none",
                                   border: "none",
                                   cursor: "pointer",
-                                  fontSize: "16px",
                                   display: "inline-flex",
                                   alignItems: "center",
                                   justifyContent: "center",
@@ -1077,8 +1131,8 @@ export default function AuthPage() {
                             </div>
                           </div>
 
-                          <div className="form-group" style={{ marginBottom: "14px" }}>
-                            <label htmlFor="reg-confirm-password" className="auth-label" style={{ fontSize: "13px", fontWeight: 800, color: "#334155" }}>
+                          <div className="form-group" style={{ marginBottom: "0" }}>
+                            <label htmlFor="reg-confirm-password" className="auth-label" style={{ fontSize: "13px", fontWeight: 800, color: "#334155", marginBottom: "4px" }}>
                               Xác nhận mật khẩu *
                             </label>
                             <div style={{ position: "relative" }}>
@@ -1086,7 +1140,7 @@ export default function AuthPage() {
                                 type={showRegConfirmPassword ? "text" : "password"}
                                 id="reg-confirm-password"
                                 className="form-control auth-input"
-                                style={{ paddingRight: "40px" }}
+                                style={{ paddingRight: "40px", borderRadius: "12px", height: "42px" }}
                                 placeholder="••••••••"
                                 required
                                 value={regConfirmPassword}
@@ -1103,7 +1157,6 @@ export default function AuthPage() {
                                   background: "none",
                                   border: "none",
                                   cursor: "pointer",
-                                  fontSize: "16px",
                                   display: "inline-flex",
                                   alignItems: "center",
                                   justifyContent: "center",
@@ -1115,7 +1168,22 @@ export default function AuthPage() {
                             </div>
                           </div>
 
-                          <button type="submit" className="btn-auth-submit" style={{ width: "100%", padding: "14px", borderRadius: "999px", fontSize: "15px", fontWeight: 800 }}>
+                          <button
+                            type="submit"
+                            style={{
+                              width: "100%",
+                              height: "46px",
+                              borderRadius: "12px",
+                              background: "var(--primary-color, #2e7d32)",
+                              color: "#ffffff",
+                              fontSize: "15px",
+                              fontWeight: 800,
+                              border: "none",
+                              cursor: "pointer",
+                              boxShadow: "0 4px 14px rgba(46, 125, 50, 0.25)",
+                              marginTop: "6px",
+                            }}
+                          >
                             Đăng Ký Tài Khoản
                           </button>
                         </form>
