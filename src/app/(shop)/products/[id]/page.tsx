@@ -2,7 +2,7 @@
 
 import React, { useState, use, useEffect, useMemo, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import "@/styles/product-detail.css";
 import { PRODUCTS_DATA } from "@/data/products";
 import { formatVND, fixImagePath } from "@/lib/utils";
@@ -86,6 +86,10 @@ function ProductDetailPageContent({
   params: Promise<{ id: string }>;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const flashSalePriceParam = searchParams ? searchParams.get("flashSalePrice") : null;
+  const flashSalePrice = flashSalePriceParam ? parseInt(flashSalePriceParam, 10) : null;
+
   const resolvedParams = use(params);
   const productId = parseInt(resolvedParams.id, 10) || 1;
 
@@ -119,7 +123,18 @@ function ProductDetailPageContent({
   }, [productId]);
 
   const currentProduct = product || PRODUCTS_DATA[0];
-  const effectivePrice = currentProduct.price;
+  const isFlashSaleActive = flashSalePrice !== null && !isNaN(flashSalePrice);
+  const effectivePrice = isFlashSaleActive ? flashSalePrice : currentProduct.price;
+
+  const displayOldPrice = isFlashSaleActive
+    ? currentProduct.price
+    : currentProduct.oldPrice;
+
+  const discountPercent = isFlashSaleActive
+    ? Math.round(((currentProduct.price - flashSalePrice) / currentProduct.price) * 100)
+    : currentProduct.oldPrice
+    ? Math.round(((currentProduct.oldPrice - currentProduct.price) / currentProduct.oldPrice) * 100)
+    : 0;
 
   const { addToCart } = useCart();
   const { isWishlisted, toggleWishlist } = useWishlist();
@@ -182,10 +197,6 @@ function ProductDetailPageContent({
   ];
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-
-  const discountPercent = currentProduct.oldPrice
-    ? Math.round((1 - currentProduct.price / currentProduct.oldPrice) * 100)
-    : 0;
 
   const sameCatProducts = allProducts.filter(
     (p) => p.id !== currentProduct.id && (p.category === currentProduct.category || p.categoryName === currentProduct.categoryName)
@@ -322,11 +333,16 @@ function ProductDetailPageContent({
                 </div>
 
                 {/* Price Display Box */}
+                {isFlashSaleActive && (
+                  <div style={{ fontSize: "12px", fontWeight: 900, color: "#dc2626", background: "#fee2e2", padding: "4px 12px", borderRadius: "999px", width: "fit-content", marginBottom: "8px", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                    <Zap className="w-3.5 h-3.5 fill-red-600" /> GIÁ ƯU ĐÃI FLASH SALE
+                  </div>
+                )}
                 <div className="price-display-hero">
                   <span className="price-display-main">{formatVND(finalDisplayPrice)}</span>
-                  {currentProduct.oldPrice && (
+                  {displayOldPrice && (
                     <>
-                      <span className="price-display-old">{formatVND(Math.round(currentProduct.oldPrice * sizeMultiplier))}</span>
+                      <span className="price-display-old">{formatVND(Math.round(displayOldPrice * sizeMultiplier))}</span>
                       <span className="price-badge-discount">-{discountPercent}%</span>
                     </>
                   )}
