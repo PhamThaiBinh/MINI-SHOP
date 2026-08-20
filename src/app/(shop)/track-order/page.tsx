@@ -136,7 +136,92 @@ export default function TrackOrderPage() {
         {/* =========================================================================
            MAIN CONTENT AREA (LOGGED-IN CUSTOMER VS GUEST LOOKUP)
            ========================================================================= */}
-        {user ? (
+        {!user ? (
+          /* GUEST AUTH REQUIRED GATE (Doppelrand Hardware Architecture) */
+          <div
+            style={{
+              background: "rgba(15, 23, 42, 0.03)",
+              border: "1px solid rgba(15, 23, 42, 0.08)",
+              borderRadius: "2rem",
+              padding: "8px",
+              maxWidth: "600px",
+              margin: "40px auto",
+            }}
+          >
+            <div
+              style={{
+                background: "#ffffff",
+                borderRadius: "calc(2rem - 0.5rem)",
+                padding: "48px 32px",
+                textAlign: "center",
+                boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
+              }}
+            >
+              <div
+                style={{
+                  width: "72px",
+                  height: "72px",
+                  borderRadius: "50%",
+                  background: "#e8f5e9",
+                  color: "var(--primary-color, #2e7d32)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  margin: "0 auto 20px",
+                  border: "1px solid #c8e6c9",
+                  boxShadow: "0 6px 20px rgba(46, 125, 50, 0.15)",
+                }}
+              >
+                <Truck className="w-9 h-9" />
+              </div>
+
+              <h1
+                style={{
+                  fontSize: "24px",
+                  fontWeight: 900,
+                  color: "#0f172a",
+                  marginBottom: "12px",
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                Yêu Cầu Đăng Nhập Tài Khoản
+              </h1>
+
+              <p
+                style={{
+                  fontSize: "14px",
+                  color: "#64748b",
+                  lineHeight: "1.6",
+                  marginBottom: "32px",
+                  maxWidth: "460px",
+                  margin: "0 auto 32px",
+                }}
+              >
+                Bạn cần đăng nhập tài khoản khách hàng để tra cứu hành trình đơn hàng, lịch sử mua hàng và cập nhật trạng thái vận chuyển real-time.
+              </p>
+
+              <Link
+                href="/auth"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  background: "var(--primary-color, #2e7d32)",
+                  color: "#ffffff",
+                  padding: "14px 32px",
+                  borderRadius: "999px",
+                  fontSize: "15px",
+                  fontWeight: 800,
+                  textDecoration: "none",
+                  boxShadow: "0 8px 25px rgba(46, 125, 50, 0.25)",
+                }}
+              >
+                <LogIn className="w-5 h-5" />
+                <span>🔒 Đăng Nhập Ngay</span>
+              </Link>
+            </div>
+          </div>
+        ) : (
           <div>
             {/* Customer Status Summary Bar */}
             <div
@@ -557,205 +642,6 @@ export default function TrackOrderPage() {
                         }}
                       >
                         Sau <ChevronRight className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        ) : (
-          /* -----------------------------------------------------------------------
-             B. GUEST LOOKUP VIEW
-             ----------------------------------------------------------------------- */
-          <div>
-            {/* Login Suggestion Banner */}
-            <div
-              style={{
-                background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
-                border: "1px solid #bbf7d0",
-                borderRadius: "1.25rem",
-                padding: "16px 20px",
-                marginBottom: "24px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                flexWrap: "wrap",
-                gap: "12px",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <CheckCircle2 className="w-5 h-5 text-emerald-700 flex-shrink-0" />
-                <span style={{ fontSize: "14px", color: "#166534", lineHeight: 1.5 }}>
-                  <strong>Mẹo tiện lợi:</strong> Bạn có thể <strong>Đăng Nhập Ngay</strong> để tự động xem toàn bộ lịch sử đơn hàng mà không cần gõ mã thủ công.
-                </span>
-              </div>
-
-              <Link
-                href="/auth"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  fontSize: "13px",
-                  fontWeight: 800,
-                  color: "#ffffff",
-                  background: "var(--primary-color, #2e7d32)",
-                  padding: "8px 18px",
-                  borderRadius: "999px",
-                  textDecoration: "none",
-                  boxShadow: "0 4px 10px rgba(46, 125, 50, 0.2)",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                <LogIn className="w-4 h-4" /> Đăng Nhập
-              </Link>
-            </div>
-
-            {/* Search Form Doppelrand Container */}
-            <div className="doppelrand-outer" style={{ marginBottom: "28px" }}>
-              <div className="doppelrand-inner" style={{ padding: "28px 32px" }}>
-                <h2 style={{ fontSize: "20px", fontWeight: 900, color: "#0f172a", marginBottom: "16px" }}>
-                  Tra Cứu Nhanh Đơn Hàng
-                </h2>
-                <form onSubmit={handleSearchOrder}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "20px" }}>
-                    <div>
-                      <label style={{ fontSize: "13px", fontWeight: 800, color: "#0f172a", marginBottom: "8px", display: "block" }}>
-                        Mã Đơn Hàng (Ví dụ: #MS-9824) *
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="Nhập mã đơn hàng..."
-                        required
-                        value={searchCode}
-                        onChange={(e) => setSearchCode(e.target.value)}
-                        style={{
-                          width: "100%",
-                          padding: "12px 16px",
-                          fontSize: "14px",
-                          borderRadius: "0.75rem",
-                          border: "1px solid var(--border-color, #cbd5e1)",
-                          outline: "none",
-                          boxSizing: "border-box",
-                          background: "#ffffff",
-                        }}
-                      />
-                    </div>
-
-                    <div>
-                      <label style={{ fontSize: "13px", fontWeight: 800, color: "#0f172a", marginBottom: "8px", display: "block" }}>
-                        Số Điện Thoại Mua Hàng *
-                      </label>
-                      <input
-                        type="tel"
-                        placeholder="Ví dụ: 0988123456"
-                        required
-                        value={searchPhone}
-                        onChange={(e) => setSearchPhone(e.target.value)}
-                        style={{
-                          width: "100%",
-                          padding: "12px 16px",
-                          fontSize: "14px",
-                          borderRadius: "0.75rem",
-                          border: "1px solid var(--border-color, #cbd5e1)",
-                          outline: "none",
-                          boxSizing: "border-box",
-                          background: "#ffffff",
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    style={{
-                      width: "100%",
-                      padding: "12px 24px",
-                      background: "var(--primary-color, #2e7d32)",
-                      color: "#ffffff",
-                      border: "none",
-                      borderRadius: "999px",
-                      fontSize: "15px",
-                      fontWeight: 800,
-                      cursor: "pointer",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "8px",
-                      boxShadow: "0 6px 20px rgba(46, 125, 50, 0.2)",
-                    }}
-                  >
-                    <Search className="w-4 h-4 text-white" />
-                    <span>{loading ? "Đang Tra Cứu..." : "Tra Cứu Đơn Hàng Ngay"}</span>
-                  </button>
-                </form>
-              </div>
-            </div>
-
-            {/* Guest Search Results Container */}
-            {searched && (
-              <div>
-                {!orderResult ? (
-                  <div
-                    style={{
-                      padding: "20px",
-                      background: "#fef2f2",
-                      border: "1px solid #fca5a5",
-                      borderRadius: "1.25rem",
-                      color: "#991b1b",
-                      textAlign: "center",
-                      fontSize: "14px",
-                      fontWeight: 700,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "8px",
-                    }}
-                  >
-                    <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0" />
-                    <span>
-                      Không tìm thấy thông tin đơn hàng với mã <strong>{searchCode}</strong> và SĐT <strong>{searchPhone}</strong>. Vui lòng kiểm tra lại!
-                    </span>
-                  </div>
-                ) : (
-                  <div
-                    style={{
-                      background: "#ffffff",
-                      border: "1px solid var(--border-color, #e2e8f0)",
-                      borderRadius: "1.5rem",
-                      padding: "24px",
-                      boxShadow: "0 10px 30px rgba(0,0,0,0.04)",
-                    }}
-                  >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-                      <div>
-                        <h3 style={{ fontSize: "18px", fontWeight: 900, color: "#0f172a", margin: 0 }}>
-                          Đơn hàng: {orderResult.id}
-                        </h3>
-                        <div style={{ fontSize: "13px", color: "#64748b", marginTop: "2px" }}>
-                          Ngày đặt: {orderResult.date}
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setSelectedOrderModal(orderResult)}
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          padding: "8px 16px",
-                          borderRadius: "999px",
-                          fontSize: "13px",
-                          fontWeight: 800,
-                          background: "var(--primary-color, #2e7d32)",
-                          color: "#ffffff",
-                          border: "none",
-                          cursor: "pointer",
-                        }}
-                      >
-                        <Eye className="w-4 h-4" /> Xem chi tiết đầy đủ
                       </button>
                     </div>
                   </div>

@@ -19,7 +19,7 @@ import {
   fetchUserRewardsFromSupabase,
   syncUserRewardsToSupabase,
 } from "@/lib/supabaseUserFeatures";
-import { User, Gift, Package, MapPin, LogOut, Eye, EyeOff, Key, Save, Check, Crown, ListCheck, Disc, Ticket, History, Gem, Award, Star, Calendar, Link2, AlertTriangle, Truck, Sofa, Edit3, CheckCircle2, Trash2, Copy, Send, X, Search, Share2, ChevronUp, ChevronDown } from "lucide-react";
+import { User, Gift, Package, MapPin, LogOut, Eye, EyeOff, Key, Save, Check, Crown, ListCheck, Disc, Ticket, History, Gem, Award, Star, Calendar, Link2, AlertTriangle, Truck, Sofa, Edit3, CheckCircle2, Trash2, Copy, Send, X, Search, Share2, ChevronUp, ChevronDown, Sparkles, ShieldCheck } from "lucide-react";
 
 interface AddressItem {
   id: number;
@@ -717,254 +717,421 @@ export default function AuthPage() {
 
         <div className="auth-page-section">
           {!user ? (
-            /* KHI CHƯA ĐĂNG NHẬP (Doppelrand Hardware Container) */
-            <div className="doppelrand-outer" style={{ maxWidth: "560px", margin: "0 auto" }}>
-              <div className="doppelrand-inner" style={{ padding: "32px 24px" }}>
-                <div className="auth-tabs">
-                  <button
-                    className={`auth-tab-btn ${
-                      activeTab === "login" ? "active" : ""
-                    }`}
-                    onClick={() => setActiveTab("login")}
+            /* KHI CHƯA ĐĂNG NHẬP (Split-Screen Doppelrand Hardware Architecture) */
+            <div className="doppelrand-outer" style={{ maxWidth: "1000px", margin: "0 auto" }}>
+              <div className="doppelrand-inner" style={{ padding: "16px" }}>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1.15fr",
+                    gap: "24px",
+                    alignItems: "stretch",
+                  }}
+                >
+                  {/* LEFT COLUMN: BRAND BENEFITS & MEMBER PERKS BENTO CARD */}
+                  <div
+                    style={{
+                      background: "linear-gradient(145deg, #15803d 0%, #166534 60%, #052e16 100%)",
+                      borderRadius: "1.5rem",
+                      padding: "36px 28px",
+                      color: "#ffffff",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "space-between",
+                      position: "relative",
+                      overflow: "hidden",
+                      boxShadow: "0 10px 30px rgba(21, 128, 61, 0.25)",
+                    }}
                   >
-                    Đăng Nhập
-                  </button>
-                  <button
-                    className={`auth-tab-btn ${
-                      activeTab === "register" ? "active" : ""
-                    }`}
-                    onClick={() => setActiveTab("register")}
-                  >
-                    Đăng Ký
-                  </button>
+                    {/* Background Decorative Glow */}
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: "-50px",
+                        right: "-50px",
+                        width: "180px",
+                        height: "180px",
+                        borderRadius: "50%",
+                        background: "rgba(255, 255, 255, 0.08)",
+                        filter: "blur(30px)",
+                      }}
+                    />
+
+                    <div>
+                      {/* Badge Header */}
+                      <div
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          background: "rgba(255, 255, 255, 0.15)",
+                          backdropFilter: "blur(8px)",
+                          padding: "6px 14px",
+                          borderRadius: "999px",
+                          fontSize: "12px",
+                          fontWeight: 800,
+                          letterSpacing: "0.04em",
+                          marginBottom: "20px",
+                          border: "1px solid rgba(255,255,255,0.2)",
+                        }}
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
+                        <span>QUYỀN LỢI THÀNH VIÊN MINI-SHOP</span>
+                      </div>
+
+                      <h2
+                        style={{
+                          fontSize: "26px",
+                          fontWeight: 900,
+                          lineHeight: "1.3",
+                          marginBottom: "14px",
+                          letterSpacing: "-0.02em",
+                        }}
+                      >
+                        Trải Nghiệm Mua Sắm Thông Minh & Đẳng Cấp
+                      </h2>
+
+                      <p
+                        style={{
+                          fontSize: "13.5px",
+                          color: "#dcfce7",
+                          lineHeight: "1.6",
+                          marginBottom: "28px",
+                        }}
+                      >
+                        Đăng nhập ngay để mở khóa trọn bộ đặc quyền tích điểm, nhận quà tặng và miễn phí giao hàng hỏa tốc.
+                      </p>
+
+                      {/* Perk Bullet Cards */}
+                      <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                        <div
+                          style={{
+                            background: "rgba(255, 255, 255, 0.08)",
+                            borderRadius: "1rem",
+                            padding: "12px 16px",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "12px",
+                            border: "1px solid rgba(255,255,255,0.12)",
+                          }}
+                        >
+                          <Gift className="w-5 h-5 text-amber-300 flex-shrink-0" />
+                          <div>
+                            <div style={{ fontSize: "13px", fontWeight: 800 }}>Tích Điểm Vòng Quay</div>
+                            <div style={{ fontSize: "12px", color: "#bbf7d0" }}>Nhận mã giảm giá & voucher độc quyền mỗi đơn</div>
+                          </div>
+                        </div>
+
+                        <div
+                          style={{
+                            background: "rgba(255, 255, 255, 0.08)",
+                            borderRadius: "1rem",
+                            padding: "12px 16px",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "12px",
+                            border: "1px solid rgba(255,255,255,0.12)",
+                          }}
+                        >
+                          <Truck className="w-5 h-5 text-emerald-300 flex-shrink-0" />
+                          <div>
+                            <div style={{ fontSize: "13px", fontWeight: 800 }}>Miễn Phí Vận Chuyển</div>
+                            <div style={{ fontSize: "12px", color: "#bbf7d0" }}>Freeship toàn quốc đơn từ 500.000đ</div>
+                          </div>
+                        </div>
+
+                        <div
+                          style={{
+                            background: "rgba(255, 255, 255, 0.08)",
+                            borderRadius: "1rem",
+                            padding: "12px 16px",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "12px",
+                            border: "1px solid rgba(255,255,255,0.12)",
+                          }}
+                        >
+                          <ShieldCheck className="w-5 h-5 text-cyan-300 flex-shrink-0" />
+                          <div>
+                            <div style={{ fontSize: "13px", fontWeight: 800 }}>Đồng Bộ Dữ Liệu An Toàn</div>
+                            <div style={{ fontSize: "12px", color: "#bbf7d0" }}>Lưu trữ giỏ hàng & sản phẩm yêu thích 24/7</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Trust Footer */}
+                    <div
+                      style={{
+                        marginTop: "32px",
+                        paddingTop: "20px",
+                        borderTop: "1px solid rgba(255,255,255,0.15)",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        fontSize: "12.5px",
+                        color: "#dcfce7",
+                      }}
+                    >
+                      <CheckCircle2 className="w-4 h-4 text-emerald-300" />
+                      <span>Hơn 50.000+ Khách hàng tin tưởng đồng hành</span>
+                    </div>
+                  </div>
+
+                  {/* RIGHT COLUMN: INTERACTIVE FORM CARD */}
+                  <div style={{ padding: "16px 8px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                    {/* Tab Navigation Pill */}
+                    <div className="auth-tabs" style={{ marginBottom: "20px" }}>
+                      <button
+                        type="button"
+                        className={`auth-tab-btn ${activeTab === "login" ? "active" : ""}`}
+                        onClick={() => setActiveTab("login")}
+                      >
+                        Đăng Nhập
+                      </button>
+                      <button
+                        type="button"
+                        className={`auth-tab-btn ${activeTab === "register" ? "active" : ""}`}
+                        onClick={() => setActiveTab("register")}
+                      >
+                        Đăng Ký
+                      </button>
+                    </div>
+
+                    <div className="auth-card-body">
+                      {authError && (
+                        <div style={{ padding: "10px 14px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "10px", color: "#dc2626", fontSize: "13px", fontWeight: 800, marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
+                          <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0" />
+                          <span>{authError}</span>
+                        </div>
+                      )}
+                      {authSuccess && (
+                        <div style={{ padding: "10px 14px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "10px", color: "#166534", fontSize: "13px", fontWeight: 800, marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
+                          <CheckCircle2 className="w-4 h-4 text-emerald-700 flex-shrink-0" />
+                          <span>{authSuccess}</span>
+                        </div>
+                      )}
+
+                      {activeTab === "login" ? (
+                        <form className="auth-form" onSubmit={handleLoginSubmit}>
+                          <h2 className="auth-form-title" style={{ fontSize: "20px", fontWeight: 900, marginBottom: "16px" }}>
+                            Đăng Nhập Tài Khoản
+                          </h2>
+
+                          <div className="form-group" style={{ marginBottom: "14px" }}>
+                            <label htmlFor="login-email" className="auth-label" style={{ fontSize: "13px", fontWeight: 800, color: "#334155" }}>
+                              Tên đăng nhập hoặc Email *
+                            </label>
+                            <input
+                              type="text"
+                              id="login-email"
+                              className="form-control auth-input"
+                              placeholder="Nhập tên đăng nhập hoặc email..."
+                              required
+                              value={loginEmail}
+                              onChange={(e) => setLoginEmail(e.target.value)}
+                            />
+                          </div>
+
+                          <div className="form-group" style={{ marginBottom: "14px" }}>
+                            <label htmlFor="login-password" className="auth-label" style={{ fontSize: "13px", fontWeight: 800, color: "#334155" }}>
+                              Mật khẩu *
+                            </label>
+                            <div style={{ position: "relative" }}>
+                              <input
+                                type={showLoginPassword ? "text" : "password"}
+                                id="login-password"
+                                className="form-control auth-input"
+                                style={{ paddingRight: "40px" }}
+                                placeholder="••••••••"
+                                required
+                                value={loginPassword}
+                                onChange={(e) => setLoginPassword(e.target.value)}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowLoginPassword(!showLoginPassword)}
+                                style={{
+                                  position: "absolute",
+                                  right: "12px",
+                                  top: "50%",
+                                  transform: "translateY(-50%)",
+                                  background: "none",
+                                  border: "none",
+                                  cursor: "pointer",
+                                  fontSize: "16px",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                                title={showLoginPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                              >
+                                {showLoginPassword ? <EyeOff className="w-4 h-4 text-slate-500" /> : <Eye className="w-4 h-4 text-slate-500" />}
+                              </button>
+                            </div>
+                            <div style={{ textAlign: "right", marginTop: "6px" }}>
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  const emailPrompt = prompt("Nhập Email đăng ký của bạn để nhận liên kết khôi phục mật khẩu:", loginEmail || "");
+                                  if (!emailPrompt) return;
+                                  const email = emailPrompt.trim();
+                                  if (!email.includes("@")) {
+                                    alert("Vui lòng nhập địa chỉ Email hợp lệ!");
+                                    return;
+                                  }
+                                  const supabase = createClient();
+                                  const { error } = await supabase.auth.resetPasswordForEmail(email);
+                                  if (error) {
+                                    alert(`Lỗi: ${error.message}`);
+                                  } else {
+                                    alert(`Hệ thống đã gửi hướng dẫn khôi phục mật khẩu tới Email "${email}". Vui lòng kiểm tra hộp thư!`);
+                                  }
+                                }}
+                                style={{
+                                  background: "none",
+                                  border: "none",
+                                  color: "var(--primary-color)",
+                                  fontSize: "12.5px",
+                                  fontWeight: 800,
+                                  cursor: "pointer",
+                                  textDecoration: "underline",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "4px",
+                                }}
+                              >
+                                <Key className="w-3.5 h-3.5" /> Quên mật khẩu?
+                              </button>
+                            </div>
+                          </div>
+
+                          <button type="submit" className="btn-auth-submit" style={{ width: "100%", padding: "14px", borderRadius: "999px", fontSize: "15px", fontWeight: 800 }}>
+                            Đăng Nhập Ngay
+                          </button>
+                        </form>
+                      ) : (
+                        <form className="auth-form" onSubmit={handleRegisterSubmit}>
+                          <h2 className="auth-form-title" style={{ fontSize: "20px", fontWeight: 900, marginBottom: "16px" }}>
+                            Tạo Tài Khoản Mới
+                          </h2>
+
+                          <div className="form-group" style={{ marginBottom: "12px" }}>
+                            <label htmlFor="reg-name" className="auth-label" style={{ fontSize: "13px", fontWeight: 800, color: "#334155" }}>
+                              Họ và tên *
+                            </label>
+                            <input
+                              type="text"
+                              id="reg-name"
+                              className="form-control auth-input"
+                              placeholder="Nhập họ và tên..."
+                              required
+                              value={regName}
+                              onChange={(e) => setRegName(e.target.value)}
+                            />
+                          </div>
+
+                          <div className="form-group" style={{ marginBottom: "12px" }}>
+                            <label htmlFor="reg-email" className="auth-label" style={{ fontSize: "13px", fontWeight: 800, color: "#334155" }}>
+                              Email *
+                            </label>
+                            <input
+                              type="email"
+                              id="reg-email"
+                              className="form-control auth-input"
+                              placeholder="email@example.com"
+                              required
+                              value={regEmail}
+                              onChange={(e) => setRegEmail(e.target.value)}
+                            />
+                          </div>
+
+                          <div className="form-group" style={{ marginBottom: "12px" }}>
+                            <label htmlFor="reg-password" className="auth-label" style={{ fontSize: "13px", fontWeight: 800, color: "#334155" }}>
+                              Mật khẩu *
+                            </label>
+                            <div style={{ position: "relative" }}>
+                              <input
+                                type={showRegPassword ? "text" : "password"}
+                                id="reg-password"
+                                className="form-control auth-input"
+                                style={{ paddingRight: "40px" }}
+                                placeholder="••••••••"
+                                required
+                                value={regPassword}
+                                onChange={(e) => setRegPassword(e.target.value)}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowRegPassword(!showRegPassword)}
+                                style={{
+                                  position: "absolute",
+                                  right: "12px",
+                                  top: "50%",
+                                  transform: "translateY(-50%)",
+                                  background: "none",
+                                  border: "none",
+                                  cursor: "pointer",
+                                  fontSize: "16px",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                                title={showRegPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                              >
+                                {showRegPassword ? <EyeOff className="w-4 h-4 text-slate-500" /> : <Eye className="w-4 h-4 text-slate-500" />}
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="form-group" style={{ marginBottom: "14px" }}>
+                            <label htmlFor="reg-confirm-password" className="auth-label" style={{ fontSize: "13px", fontWeight: 800, color: "#334155" }}>
+                              Xác nhận mật khẩu *
+                            </label>
+                            <div style={{ position: "relative" }}>
+                              <input
+                                type={showRegConfirmPassword ? "text" : "password"}
+                                id="reg-confirm-password"
+                                className="form-control auth-input"
+                                style={{ paddingRight: "40px" }}
+                                placeholder="••••••••"
+                                required
+                                value={regConfirmPassword}
+                                onChange={(e) => setRegConfirmPassword(e.target.value)}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowRegConfirmPassword(!showRegConfirmPassword)}
+                                style={{
+                                  position: "absolute",
+                                  right: "12px",
+                                  top: "50%",
+                                  transform: "translateY(-50%)",
+                                  background: "none",
+                                  border: "none",
+                                  cursor: "pointer",
+                                  fontSize: "16px",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                                title={showRegConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                              >
+                                {showRegConfirmPassword ? <EyeOff className="w-4 h-4 text-slate-500" /> : <Eye className="w-4 h-4 text-slate-500" />}
+                              </button>
+                            </div>
+                          </div>
+
+                          <button type="submit" className="btn-auth-submit" style={{ width: "100%", padding: "14px", borderRadius: "999px", fontSize: "15px", fontWeight: 800 }}>
+                            Đăng Ký Tài Khoản
+                          </button>
+                        </form>
+                      )}
+                    </div>
+                  </div>
                 </div>
-
-              <div className="auth-card-body">
-                {authError && (
-                  <div style={{ padding: "10px 14px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "6px", color: "#991b1b", fontSize: "13px", fontWeight: 700, marginBottom: "16px" }}>
-                    {authError}
-                  </div>
-                )}
-                {authSuccess && (
-                  <div style={{ padding: "10px 14px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "6px", color: "#166534", fontSize: "13px", fontWeight: 700, marginBottom: "16px" }}>
-                    {authSuccess}
-                  </div>
-                )}
-
-                {activeTab === "login" ? (
-                  <form className="auth-form" onSubmit={handleLoginSubmit}>
-                    <h1 className="auth-form-title">Đăng Nhập Hệ Thống</h1>
-
-                    <div className="form-group" style={{ marginBottom: 0 }}>
-                      <label htmlFor="login-email" className="auth-label">
-                        Tên đăng nhập hoặc Email
-                      </label>
-                      <input
-                        type="text"
-                        id="login-email"
-                        className="form-control auth-input"
-                        placeholder="Nhập tên đăng nhập hoặc email..."
-                        required
-                        value={loginEmail}
-                        onChange={(e) => setLoginEmail(e.target.value)}
-                      />
-                    </div>
-
-                    <div className="form-group" style={{ marginBottom: 0 }}>
-                      <label htmlFor="login-password" className="auth-label">
-                        Mật khẩu
-                      </label>
-                      <div style={{ position: "relative" }}>
-                        <input
-                          type={showLoginPassword ? "text" : "password"}
-                          id="login-password"
-                          className="form-control auth-input"
-                          style={{ paddingRight: "40px" }}
-                          placeholder="••••••••"
-                          required
-                          value={loginPassword}
-                          onChange={(e) => setLoginPassword(e.target.value)}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowLoginPassword(!showLoginPassword)}
-                          style={{
-                            position: "absolute",
-                            right: "12px",
-                            top: "50%",
-                            transform: "translateY(-50%)",
-                            background: "none",
-                            border: "none",
-                            cursor: "pointer",
-                            fontSize: "16px",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                          title={showLoginPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-                        >
-                          {showLoginPassword ? <EyeOff className="w-4 h-4 text-slate-500" /> : <Eye className="w-4 h-4 text-slate-500" />}
-                        </button>
-                      </div>
-                      <div style={{ textAlign: "right", marginTop: "6px" }}>
-                        <button
-                          type="button"
-                          onClick={async () => {
-                            const emailPrompt = prompt("Nhập Email đăng ký của bạn để nhận liên kết khôi phục mật khẩu:", loginEmail || "");
-                            if (!emailPrompt) return;
-                            const email = emailPrompt.trim();
-                            if (!email.includes("@")) {
-                              alert("Vui lòng nhập địa chỉ Email hợp lệ!");
-                              return;
-                            }
-                            const supabase = createClient();
-                            const { error } = await supabase.auth.resetPasswordForEmail(email);
-                            if (error) {
-                              alert(`Lỗi: ${error.message}`);
-                            } else {
-                              alert(`Hệ thống đã gửi hướng dẫn khôi phục mật khẩu tới Email "${email}". Vui lòng kiểm tra hộp thư!`);
-                            }
-                          }}
-                          style={{
-                            background: "none",
-                            border: "none",
-                            color: "var(--primary-color)",
-                            fontSize: "13px",
-                            fontWeight: 700,
-                            cursor: "pointer",
-                            textDecoration: "underline",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "4px",
-                          }}
-                        >
-                          <Key className="w-3.5 h-3.5" /> Quên mật khẩu?
-                        </button>
-                      </div>
-                    </div>
-
-                    <button type="submit" className="btn-auth-submit">
-                      Đăng Nhập Ngay
-                    </button>
-                  </form>
-                ) : (
-                  <form className="auth-form" onSubmit={handleRegisterSubmit}>
-                    <h1 className="auth-form-title">Tạo Tài Khoản Mới</h1>
-
-                    <div className="form-group" style={{ marginBottom: 0 }}>
-                      <label htmlFor="reg-name" className="auth-label">
-                        Họ và tên
-                      </label>
-                      <input
-                        type="text"
-                        id="reg-name"
-                        className="form-control auth-input"
-                        placeholder="Nhập họ và tên..."
-                        required
-                        value={regName}
-                        onChange={(e) => setRegName(e.target.value)}
-                      />
-                    </div>
-
-                    <div className="form-group" style={{ marginBottom: 0 }}>
-                      <label htmlFor="reg-email" className="auth-label">
-                        Email
-                      </label>
-                      <input
-                        type="email"
-                        id="reg-email"
-                        className="form-control auth-input"
-                        placeholder="email@example.com"
-                        required
-                        value={regEmail}
-                        onChange={(e) => setRegEmail(e.target.value)}
-                      />
-                    </div>
-
-                    <div className="form-group" style={{ marginBottom: 0 }}>
-                      <label htmlFor="reg-password" className="auth-label">
-                        Mật khẩu
-                      </label>
-                      <div style={{ position: "relative" }}>
-                        <input
-                          type={showRegPassword ? "text" : "password"}
-                          id="reg-password"
-                          className="form-control auth-input"
-                          style={{ paddingRight: "40px" }}
-                          placeholder="••••••••"
-                          required
-                          value={regPassword}
-                          onChange={(e) => setRegPassword(e.target.value)}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowRegPassword(!showRegPassword)}
-                          style={{
-                            position: "absolute",
-                            right: "12px",
-                            top: "50%",
-                            transform: "translateY(-50%)",
-                            background: "none",
-                            border: "none",
-                            cursor: "pointer",
-                            fontSize: "16px",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                          title={showRegPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-                        >
-                          {showRegPassword ? <EyeOff className="w-4 h-4 text-slate-500" /> : <Eye className="w-4 h-4 text-slate-500" />}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="form-group" style={{ marginBottom: 0 }}>
-                      <label htmlFor="reg-confirm-password" className="auth-label">
-                        Xác nhận mật khẩu *
-                      </label>
-                      <div style={{ position: "relative" }}>
-                        <input
-                          type={showRegConfirmPassword ? "text" : "password"}
-                          id="reg-confirm-password"
-                          className="form-control auth-input"
-                          style={{ paddingRight: "40px" }}
-                          placeholder="••••••••"
-                          required
-                          value={regConfirmPassword}
-                          onChange={(e) => setRegConfirmPassword(e.target.value)}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowRegConfirmPassword(!showRegConfirmPassword)}
-                          style={{
-                            position: "absolute",
-                            right: "12px",
-                            top: "50%",
-                            transform: "translateY(-50%)",
-                            background: "none",
-                            border: "none",
-                            cursor: "pointer",
-                            fontSize: "16px",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                          title={showRegConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-                        >
-                          {showRegConfirmPassword ? <EyeOff className="w-4 h-4 text-slate-500" /> : <Eye className="w-4 h-4 text-slate-500" />}
-                        </button>
-                      </div>
-                    </div>
-
-                    <button type="submit" className="btn-auth-submit">
-                      Đăng Ký Tài Khoản
-                    </button>
-                  </form>
-                )}
               </div>
             </div>
-          </div>
           ) : (
             /* KHI ĐÃ ĐĂNG NHẬP (USER DASHBOARD - Doppelrand Hardware Container) */
             <div className="doppelrand-outer" style={{ width: "100%" }}>
