@@ -72,22 +72,19 @@ export default function ContactPage() {
     >
       <div className="container" style={{ padding: "30px 16px 60px" }}>
         
-        {/* 1. Header Directory Banner (Flush Left Aligned) */}
+        {/* 1. Header Directory Banner (Clean & Concise) */}
         <div style={{ marginBottom: "28px" }}>
           <h1
             style={{
               fontSize: "32px",
               fontWeight: 900,
               color: "#0f172a",
-              margin: "0 0 6px",
+              margin: 0,
               letterSpacing: "-0.02em",
             }}
           >
-            Liên Hệ Với MINI-SHOP
+            Liên Hệ
           </h1>
-          <p style={{ fontSize: "14px", color: "#64748b", margin: 0, maxWidth: "600px" }}>
-            Chúng tôi luôn sẵn sàng hỗ trợ bạn 24/7. Hãy gửi tin nhắn hoặc gọi hotline để được kiến trúc sư tư vấn chu đáo nhất.
-          </p>
         </div>
 
         {/* 2. Main Doppelrand Split Grid */}

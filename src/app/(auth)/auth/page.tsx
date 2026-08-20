@@ -1523,21 +1523,11 @@ export default function AuthPage() {
                           fontSize: "20px",
                           fontWeight: 800,
                           color: "#0f172a",
-                          marginBottom: "4px",
+                          marginBottom: "16px",
                         }}
                       >
                         Tích Điểm & Đổi Quà Thưởng
                       </h2>
-                      <p
-                        style={{
-                          fontSize: "13px",
-                          color: "var(--text-muted)",
-                          marginBottom: "20px",
-                        }}
-                      >
-                        Tích lũy điểm khi mua sắm để đổi các voucher giảm giá và
-                        quà tặng độc quyền.
-                      </p>
 
                       {/* Card Điểm Số */}
                       <div
