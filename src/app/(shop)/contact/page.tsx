@@ -5,7 +5,7 @@ import Link from "next/link";
 import "@/styles/contact.css";
 import { sendContactMessageToSupabase } from "@/lib/supabaseContact";
 import { getStoreSettings, StoreSettings } from "@/lib/storeSettings";
-import { MapPin, Phone, Mail, Clock, Send, CheckCircle2 } from "lucide-react";
+import { MapPin, Phone, Mail, Clock, Send, CheckCircle2, MessageSquare, Headphones, ShieldCheck } from "lucide-react";
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -71,138 +71,278 @@ export default function ContactPage() {
       }}
     >
       <div className="container" style={{ padding: "30px 16px 60px" }}>
-        {/* Header Title Section */}
+        
+        {/* 1. Header Directory Banner (Flush Left Aligned) */}
         <div style={{ marginBottom: "28px" }}>
           <h1
             style={{
-              fontSize: "28px",
+              fontSize: "32px",
               fontWeight: 900,
               color: "#0f172a",
-              margin: 0,
+              margin: "0 0 6px",
               letterSpacing: "-0.02em",
             }}
           >
             Liên Hệ Với MINI-SHOP
           </h1>
-          <p style={{ fontSize: "15px", color: "#64748b", margin: "8px 0 0" }}>
-            Chúng tôi luôn lắng nghe và sẵn sàng hỗ trợ bạn 24/7. Hãy gửi tin nhắn cho chúng tôi để được tư vấn chu đáo nhất.
+          <p style={{ fontSize: "14px", color: "#64748b", margin: 0, maxWidth: "600px" }}>
+            Chúng tôi luôn sẵn sàng hỗ trợ bạn 24/7. Hãy gửi tin nhắn hoặc gọi hotline để được kiến trúc sư tư vấn chu đáo nhất.
           </p>
         </div>
 
-        {/* Contact Form & Info Grid */}
-        <div className="contact-grid">
-            {/* Left: Contact Details */}
-            <div className="contact-info-card">
-              <h2 className="contact-info-title">Thông Tin Trụ Sở</h2>
+        {/* 2. Main Doppelrand Split Grid */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1.3fr", gap: "32px", alignItems: "start", marginBottom: "36px" }}>
+          
+          {/* Left: Showroom Headquarters Info Doppelrand Container */}
+          <div className="doppelrand-outer">
+            <div className="doppelrand-inner" style={{ padding: "28px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px", borderBottom: "1px solid #f1f5f9", paddingBottom: "14px" }}>
+                <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "#e8f5e9", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--primary-color, #2e7d32)" }}>
+                  <Headphones className="w-5 h-5" />
+                </div>
+                <h2 style={{ fontSize: "18px", fontWeight: 900, color: "#0f172a", margin: 0 }}>
+                  Thông Tin Trụ Sở & Showroom
+                </h2>
+              </div>
 
-              <div className="contact-item">
-                <div className="contact-icon"><MapPin style={{ width: 18, height: 18, color: "var(--primary-color)" }} /></div>
-                <div className="contact-text">
-                  <strong>Địa chỉ showroom:</strong>
-                  <span>{storeInfo.address}</span>
+              <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                {/* Showroom Address */}
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "14px" }}>
+                  <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "#f8fafc", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <MapPin className="w-4.5 h-4.5 text-emerald-700" />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "12px", fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                      Địa chỉ Showroom
+                    </div>
+                    <div style={{ fontSize: "14px", fontWeight: 800, color: "#0f172a", marginTop: "2px", lineHeight: 1.5 }}>
+                      {storeInfo.address}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Hotline */}
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "14px" }}>
+                  <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "#f8fafc", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <Phone className="w-4.5 h-4.5 text-emerald-700" />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "12px", fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                      Hotline tư vấn 24/7
+                    </div>
+                    <div style={{ fontSize: "16px", fontWeight: 900, color: "var(--primary-color, #2e7d32)", marginTop: "2px" }}>
+                      {storeInfo.phone}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Email Support */}
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "14px" }}>
+                  <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "#f8fafc", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <Mail className="w-4.5 h-4.5 text-emerald-700" />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "12px", fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                      Email hỗ trợ khách hàng
+                    </div>
+                    <div style={{ fontSize: "14px", fontWeight: 800, color: "#0f172a", marginTop: "2px" }}>
+                      {storeInfo.email}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Working Hours */}
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "14px" }}>
+                  <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "#f8fafc", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <Clock className="w-4.5 h-4.5 text-emerald-700" />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "12px", fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                      Giờ phục vụ tại Showroom
+                    </div>
+                    <div style={{ fontSize: "14px", fontWeight: 800, color: "#0f172a", marginTop: "2px" }}>
+                      {storeInfo.workingHours}
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="contact-item">
-                <div className="contact-icon"><Phone style={{ width: 18, height: 18, color: "var(--primary-color)" }} /></div>
-                <div className="contact-text">
-                  <strong>Hotline tư vấn:</strong>
-                  <span>{storeInfo.phone}</span>
-                </div>
-              </div>
-
-              <div className="contact-item">
-                <div className="contact-icon"><Mail style={{ width: 18, height: 18, color: "var(--primary-color)" }} /></div>
-                <div className="contact-text">
-                  <strong>Email hỗ trợ:</strong>
-                  <span>{storeInfo.email}</span>
-                </div>
-              </div>
-
-              <div className="contact-item">
-                <div className="contact-icon"><Clock style={{ width: 18, height: 18, color: "var(--primary-color)" }} /></div>
-                <div className="contact-text">
-                  <strong>Giờ mở cửa:</strong>
-                  <span>{storeInfo.workingHours}</span>
-                </div>
+              {/* Trust Callout */}
+              <div style={{ marginTop: "24px", paddingTop: "18px", borderTop: "1px solid #f1f5f9", display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", fontWeight: 800, color: "#166534", background: "#f0fdf4", padding: "10px 14px", borderRadius: "12px" }}>
+                <ShieldCheck className="w-4 h-4 flex-shrink-0" />
+                <span>Cam kết phản hồi yêu cầu tư vấn trong vòng 2 giờ làm việc.</span>
               </div>
             </div>
+          </div>
 
-            {/* Right: Contact Form */}
-            <div className="contact-form-card">
-              <h2 className="contact-info-title">Gửi Tin Nhắn Cho Chúng Tôi</h2>
+          {/* Right: Contact Form Doppelrand Container */}
+          <div className="doppelrand-outer">
+            <div className="doppelrand-inner" style={{ padding: "28px 32px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px", borderBottom: "1px solid #f1f5f9", paddingBottom: "14px" }}>
+                <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "#e8f5e9", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--primary-color, #2e7d32)" }}>
+                  <MessageSquare className="w-5 h-5" />
+                </div>
+                <h2 style={{ fontSize: "18px", fontWeight: 900, color: "#0f172a", margin: 0 }}>
+                  Gửi Tin Nhắn Cho Chúng Tôi
+                </h2>
+              </div>
+
               {submitted && (
-                <div style={{ padding: "12px 16px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "6px", color: "#166534", fontSize: "14px", fontWeight: 700, marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
-                  <CheckCircle2 style={{ width: 18, height: 18 }} /> Cảm ơn bạn! Tin nhắn đã được gửi và lưu trực tiếp vào hệ thống. Bộ phận CSKH sẽ phản hồi trong 2 giờ.
+                <div style={{ padding: "12px 16px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "12px", color: "#166534", fontSize: "13.5px", fontWeight: 800, marginBottom: "20px", display: "flex", alignItems: "center", gap: "10px" }}>
+                  <CheckCircle2 className="w-5 h-5 text-emerald-700 flex-shrink-0" />
+                  <span>Cảm ơn bạn! Tin nhắn đã được gửi trực tiếp tới bộ phận tư vấn CSKH.</span>
                 </div>
               )}
-              <form className="contact-form" onSubmit={handleSubmit}>
-                <div className="form-group">
-                  <label htmlFor="contact-name">Họ và tên *</label>
+
+              <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                <div>
+                  <label style={{ fontSize: "13px", fontWeight: 800, color: "#0f172a", marginBottom: "6px", display: "block" }}>
+                    Họ và tên *
+                  </label>
                   <input
                     type="text"
-                    id="contact-name"
-                    className="form-control"
-                    placeholder="Nhập họ và tên..."
+                    placeholder="Nhập họ và tên của bạn..."
                     required
                     value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    style={{
+                      width: "100%",
+                      padding: "12px 16px",
+                      fontSize: "14px",
+                      borderRadius: "0.75rem",
+                      border: "1px solid #cbd5e1",
+                      outline: "none",
+                      boxSizing: "border-box",
+                      background: "#ffffff",
+                    }}
                   />
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="contact-email">Địa chỉ Email *</label>
-                  <input
-                    type="email"
-                    id="contact-email"
-                    className="form-control"
-                    placeholder="example@gmail.com"
-                    required
-                    value={formData.email}
-                    onChange={(e) =>
-                      setFormData({ ...formData, email: e.target.value })
-                    }
-                  />
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                  <div>
+                    <label style={{ fontSize: "13px", fontWeight: 800, color: "#0f172a", marginBottom: "6px", display: "block" }}>
+                      Địa chỉ Email *
+                    </label>
+                    <input
+                      type="email"
+                      placeholder="example@gmail.com"
+                      required
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      style={{
+                        width: "100%",
+                        padding: "12px 16px",
+                        fontSize: "14px",
+                        borderRadius: "0.75rem",
+                        border: "1px solid #cbd5e1",
+                        outline: "none",
+                        boxSizing: "border-box",
+                        background: "#ffffff",
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: "13px", fontWeight: 800, color: "#0f172a", marginBottom: "6px", display: "block" }}>
+                      Số điện thoại
+                    </label>
+                    <input
+                      type="tel"
+                      placeholder="0901234567"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      style={{
+                        width: "100%",
+                        padding: "12px 16px",
+                        fontSize: "14px",
+                        borderRadius: "0.75rem",
+                        border: "1px solid #cbd5e1",
+                        outline: "none",
+                        boxSizing: "border-box",
+                        background: "#ffffff",
+                      }}
+                    />
+                  </div>
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="contact-phone">Số điện thoại</label>
-                  <input
-                    type="tel"
-                    id="contact-phone"
-                    className="form-control"
-                    placeholder="0901234567"
-                    value={formData.phone}
-                    onChange={(e) =>
-                      setFormData({ ...formData, phone: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="contact-message">Nội dung tin nhắn *</label>
+                <div>
+                  <label style={{ fontSize: "13px", fontWeight: 800, color: "#0f172a", marginBottom: "6px", display: "block" }}>
+                    Nội dung tin nhắn *
+                  </label>
                   <textarea
-                    id="contact-message"
-                    className="form-control"
-                    placeholder="Nhập yêu cầu tư vấn hoặc góp ý..."
-                    style={{ minHeight: "100px" }}
+                    placeholder="Nhập yêu cầu tư vấn mẫu decor, kích thước nội thất hoặc góp ý..."
                     required
+                    rows={4}
                     value={formData.message}
-                    onChange={(e) =>
-                      setFormData({ ...formData, message: e.target.value })
-                    }
-                  ></textarea>
+                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                    style={{
+                      width: "100%",
+                      padding: "12px 16px",
+                      fontSize: "14px",
+                      borderRadius: "0.75rem",
+                      border: "1px solid #cbd5e1",
+                      outline: "none",
+                      boxSizing: "border-box",
+                      background: "#ffffff",
+                      resize: "vertical",
+                      fontFamily: "inherit",
+                    }}
+                  />
                 </div>
 
-                <button type="submit" className="btn-submit-green" disabled={submitting} style={{ opacity: submitting ? 0.6 : 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
-                  {submitting ? "Đang gửi tin nhắn..." : <><Send className="w-4 h-4" /> Gửi Tin Nhắn</>}
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  style={{
+                    width: "100%",
+                    padding: "14px 28px",
+                    borderRadius: "999px",
+                    background: "var(--primary-color, #2e7d32)",
+                    color: "#ffffff",
+                    fontSize: "14px",
+                    fontWeight: 900,
+                    border: "none",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    boxShadow: "0 6px 20px rgba(46, 125, 50, 0.25)",
+                    transition: "all 0.2s ease",
+                  }}
+                >
+                  <Send className="w-4 h-4" />
+                  <span>{submitting ? "Đang gửi tin nhắn..." : "Gửi Tin Nhắn Tư Vấn"}</span>
                 </button>
               </form>
             </div>
           </div>
         </div>
+
+        {/* 3. Bottom Showroom Location Card (Doppelrand) */}
+        <div className="doppelrand-outer">
+          <div className="doppelrand-inner" style={{ padding: "28px", textAlign: "center" }}>
+            <h3 style={{ fontSize: "18px", fontWeight: 900, color: "#0f172a", margin: "0 0 8px" }}>
+              Ghé Thăm Showroom MINI-SHOP Trực Tiếp
+            </h3>
+            <p style={{ fontSize: "14px", color: "#64748b", margin: "0 auto 20px", maxWidth: "600px" }}>
+              Trải nghiệm thực tế các mẫu nội thất gỗ sồi Mỹ, sofa nỉ cao cấp và hệ thống chiếu sáng phong cách Bắc Âu tại không gian trưng bày 500m².
+            </p>
+            <div style={{ borderRadius: "1.25rem", overflow: "hidden", border: "1px solid #cbd5e1", height: "320px", background: "#f1f5f9" }}>
+              <iframe
+                title="Mini-Shop Showroom Location Map"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3724.63467439561!2d105.84117!3d21.00727!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjHCsDAwJzI2LjIiTiAxMDXCsDUwJzI4LjIiRQ!5e0!3m2!1svi!2s!4v1620000000000!5m2!1svi!2s"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen={false}
+                loading="lazy"
+              />
+            </div>
+          </div>
+        </div>
+
+      </div>
     </main>
   );
 }
