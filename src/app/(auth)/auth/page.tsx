@@ -784,66 +784,20 @@ export default function AuthPage() {
                       />
                     ))}
 
-                    {/* Dark Gradient Overlay */}
+                    {/* Subtle Bottom Vignette for Nav Controls visibility */}
                     <div
                       style={{
                         position: "absolute",
                         inset: 0,
-                        background: "linear-gradient(180deg, rgba(15,23,42,0.3) 0%, rgba(15,23,42,0.85) 100%)",
+                        background: "linear-gradient(180deg, rgba(0,0,0,0) 65%, rgba(0,0,0,0.45) 100%)",
                       }}
                     />
 
-                    {/* Top Tag Badge */}
-                    <div style={{ position: "relative", zIndex: 10 }}>
-                      <div
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          background: "rgba(255, 255, 255, 0.2)",
-                          backdropFilter: "blur(12px)",
-                          padding: "6px 16px",
-                          borderRadius: "999px",
-                          fontSize: "12px",
-                          fontWeight: 800,
-                          color: "#ffffff",
-                          letterSpacing: "0.04em",
-                          border: "1px solid rgba(255,255,255,0.3)",
-                          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                        }}
-                      >
-                        <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
-                        <span>{SPOTLIGHT_SLIDES[spotlightIndex].tag}</span>
-                      </div>
-                    </div>
+                    {/* Spacer */}
+                    <div style={{ position: "relative", zIndex: 10 }} />
 
-                    {/* Bottom Caption Overlay & Nav Controls */}
+                    {/* Bottom Nav Controls */}
                     <div style={{ position: "relative", zIndex: 10, color: "#ffffff" }}>
-                      <h2
-                        style={{
-                          fontSize: "26px",
-                          fontWeight: 900,
-                          lineHeight: "1.3",
-                          marginBottom: "10px",
-                          letterSpacing: "-0.02em",
-                          textShadow: "0 2px 10px rgba(0,0,0,0.6)",
-                        }}
-                      >
-                        {SPOTLIGHT_SLIDES[spotlightIndex].title}
-                      </h2>
-
-                      <p
-                        style={{
-                          fontSize: "13.5px",
-                          color: "#e2e8f0",
-                          lineHeight: "1.6",
-                          marginBottom: "24px",
-                          maxWidth: "380px",
-                          textShadow: "0 1px 4px rgba(0,0,0,0.6)",
-                        }}
-                      >
-                        {SPOTLIGHT_SLIDES[spotlightIndex].desc}
-                      </p>
 
                       {/* Navigation Controls: Dots & Chevrons */}
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
