@@ -283,28 +283,16 @@ const MOCK_ORDERS: CustomerOrder[] = [
 
 const SPOTLIGHT_SLIDES = [
   {
-    image: "/assets/images/banner/banner-trang-chu-mini-shop.webp",
-    tag: "✨ MINI-SHOP DECOR 2026",
-    title: "Không Gian Sống Đẳng Cấp",
-    desc: "Khám phá bộ sưu tập nội thất gia dụng tinh tế & hiện đại dành riêng cho ngôi nhà của bạn.",
+    image: "assets/images/banner/banner-trang-chu-mini-shop.webp",
   },
   {
-    image: "/assets/images/products/noi-that-gia-dung/bo-ban-an-go.webp",
-    tag: "🎁 TÍCH ĐIỂM ĐỔI QUÀ",
-    title: "Gốm Sứ Thủ Công Tinh Tế",
-    desc: "Tích điểm thưởng sau mỗi đơn hàng để nhận voucher ưu đãi độc quyền từ Mini Shop.",
+    image: "assets/images/products/San_pham/hero-home-decor-pexels-original.webp",
   },
   {
-    image: "/assets/images/products/noi-that-gia-dung/sofa-phong-khach.webp",
-    tag: "🚚 MIỄN PHÍ VẬN CHUYỂN",
-    title: "Sofa Phòng Khách Sang Trọng",
-    desc: "Miễn phí giao hàng hỏa tốc toàn quốc cho tất cả đơn hàng từ 500.000đ trở lên.",
+    image: "assets/images/products/noi-that-gia-dung/sofa-phong-khach.webp",
   },
   {
-    image: "/assets/images/products/San_pham/bo-binh-gom-minimal-original.webp",
-    tag: "🔒 BẢO MẬT & ĐỒNG BỘ",
-    title: "Nội Thất Gỗ Tự Nhiên",
-    desc: "Đồng bộ giỏ hàng, danh sách yêu thích và sổ địa chỉ an toàn trên mọi thiết bị.",
+    image: "assets/images/products/noi-that-gia-dung/bo-ban-an-go.webp",
   },
 ];
 
@@ -752,40 +740,39 @@ export default function AuthPage() {
                     alignItems: "stretch",
                   }}
                 >
-                  {/* LEFT COLUMN: HOMEPAGE HERO MATCHED IMAGE CAROUSEL */}
+                  {/* LEFT COLUMN: HOME-PAGE STYLE HERO IMAGE CAROUSEL (Identical Proportions & Floating Circle Controls) */}
                   <div
                     style={{
-                      borderRadius: "16px",
                       position: "relative",
+                      height: "420px",
+                      minHeight: "420px",
+                      maxHeight: "420px",
+                      borderRadius: "16px",
                       overflow: "hidden",
-                      boxShadow: "0 4px 16px rgba(0, 0, 0, 0.04)",
-                      minHeight: "380px",
-                      height: "100%",
-                      background: "#ffffff",
-                      border: "1px solid var(--border-color, #e2e8f0)",
+                      boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)",
+                      background: "#f8fafc",
                     }}
                   >
-                    {/* Background Slide Images */}
+                    {/* Background Slide Images with smooth fade transition */}
                     {SPOTLIGHT_SLIDES.map((slide, idx) => (
                       <img
                         key={idx}
                         src={fixImagePath(slide.image)}
-                        alt={slide.title}
+                        alt={`Spotlight Banner ${idx + 1}`}
                         style={{
                           position: "absolute",
                           inset: 0,
                           width: "100%",
-                          height: "100%",
+                          height: "420px",
                           objectFit: "cover",
                           display: "block",
                           opacity: idx === spotlightIndex ? 1 : 0,
-                          transition: "opacity 0.8s ease-in-out, transform 1.2s ease-in-out",
-                          transform: idx === spotlightIndex ? "scale(1)" : "scale(1.04)",
+                          transition: "opacity 0.8s ease-in-out",
                         }}
                       />
                     ))}
 
-                    {/* Floating Left Arrow (Homepage style white round button) */}
+                    {/* Floating Circle Prev Button (Identical to Home Page Hero) */}
                     <button
                       type="button"
                       onClick={() =>
@@ -796,10 +783,10 @@ export default function AuthPage() {
                         top: "50%",
                         left: "14px",
                         transform: "translateY(-50%)",
-                        width: "36px",
-                        height: "36px",
+                        width: "38px",
+                        height: "38px",
                         borderRadius: "50%",
-                        background: "rgba(255, 255, 255, 0.92)",
+                        background: "rgba(255, 255, 255, 0.9)",
                         border: "1px solid #cbd5e1",
                         color: "#0f172a",
                         display: "flex",
@@ -814,7 +801,7 @@ export default function AuthPage() {
                       <ChevronLeft className="w-5 h-5" />
                     </button>
 
-                    {/* Floating Right Arrow (Homepage style white round button) */}
+                    {/* Floating Circle Next Button (Identical to Home Page Hero) */}
                     <button
                       type="button"
                       onClick={() =>
@@ -825,10 +812,10 @@ export default function AuthPage() {
                         top: "50%",
                         right: "14px",
                         transform: "translateY(-50%)",
-                        width: "36px",
-                        height: "36px",
+                        width: "38px",
+                        height: "38px",
                         borderRadius: "50%",
-                        background: "rgba(255, 255, 255, 0.92)",
+                        background: "rgba(255, 255, 255, 0.9)",
                         border: "1px solid #cbd5e1",
                         color: "#0f172a",
                         display: "flex",
@@ -843,7 +830,7 @@ export default function AuthPage() {
                       <ChevronRight className="w-5 h-5" />
                     </button>
 
-                    {/* Floating Dot Indicators at Bottom */}
+                    {/* Centered Bottom Dot Indicators */}
                     <div
                       style={{
                         position: "absolute",
@@ -852,14 +839,12 @@ export default function AuthPage() {
                         transform: "translateX(-50%)",
                         display: "flex",
                         alignItems: "center",
-                        gap: "6px",
+                        gap: "8px",
                         zIndex: 10,
-                        background: "rgba(255, 255, 255, 0.88)",
+                        background: "rgba(15, 23, 42, 0.35)",
                         backdropFilter: "blur(8px)",
-                        padding: "5px 12px",
+                        padding: "6px 14px",
                         borderRadius: "999px",
-                        boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
-                        border: "1px solid rgba(255,255,255,0.6)",
                       }}
                     >
                       {SPOTLIGHT_SLIDES.map((_, i) => (
@@ -868,13 +853,13 @@ export default function AuthPage() {
                           type="button"
                           onClick={() => setSpotlightIndex(i)}
                           style={{
-                            width: i === spotlightIndex ? "24px" : "7px",
-                            height: "7px",
+                            width: i === spotlightIndex ? "26px" : "8px",
+                            height: "8px",
                             borderRadius: "999px",
-                            background: i === spotlightIndex ? "var(--primary-color, #2e7d32)" : "#cbd5e1",
+                            background: i === spotlightIndex ? "var(--primary-color, #2e7d32)" : "rgba(255,255,255,0.6)",
                             border: "none",
                             cursor: "pointer",
-                            transition: "all 0.3s cubic-bezier(0.32, 0.72, 0, 1)",
+                            transition: "all 0.3s ease",
                           }}
                           aria-label={`Slide ${i + 1}`}
                         />
