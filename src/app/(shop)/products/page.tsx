@@ -222,44 +222,37 @@ function ProductsContent() {
     >
       <div className="container" style={{ padding: "30px 16px 0" }}>
 
-        {/* 1. Doppelrand Header Directory Banner */}
-        <div className="doppelrand-outer" style={{ marginBottom: "32px" }}>
-          <div className="doppelrand-inner" style={{ padding: "28px 32px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "20px" }}>
-              <div>
-                <span style={{ fontSize: "11px", fontWeight: 900, color: "var(--primary-color, #2e7d32)", background: "#e8f5e9", padding: "4px 12px", borderRadius: "999px", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                  MINI-SHOP NORDIC DIRECTORY
-                </span>
-                <h1 style={{ fontSize: "32px", fontWeight: 900, color: "#0f172a", margin: "8px 0 4px", letterSpacing: "-0.02em" }}>
-                  Danh Mục Nội Thất & Đồ Trang Trí Bắc Âu
-                </h1>
-                <p style={{ fontSize: "14px", color: "#64748b", margin: 0, maxWidth: "600px" }}>
-                  Tuyển chọn các thiết kế gỗ sồi Mỹ, mây tre thủ công và gốm sứ mộc mạc cao cấp.
-                </p>
-              </div>
+        {/* 1. Header Directory Banner (Flush Left Aligned) */}
+        <div style={{ marginBottom: "28px", display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: "20px" }}>
+          <div>
+            <h1 style={{ fontSize: "32px", fontWeight: 900, color: "#0f172a", margin: "0 0 6px", letterSpacing: "-0.02em" }}>
+              Danh Mục Nội Thất & Đồ Trang Trí Bắc Âu
+            </h1>
+            <p style={{ fontSize: "14px", color: "#64748b", margin: 0, maxWidth: "600px" }}>
+              Tuyển chọn các thiết kế gỗ sồi Mỹ, mây tre thủ công và gốm sứ mộc mạc cao cấp.
+            </p>
+          </div>
 
-              {/* Search Box inside Header */}
-              <div style={{ position: "relative", minWidth: "280px" }}>
-                <Search className="w-4 h-4 text-slate-400" style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)" }} />
-                <input
-                  type="text"
-                  placeholder="Tìm kiếm sản phẩm..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "10px 16px 10px 38px",
-                    borderRadius: "999px",
-                    border: "1px solid #cbd5e1",
-                    fontSize: "13px",
-                    outline: "none",
-                    boxSizing: "border-box",
-                    background: "#ffffff",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
-                  }}
-                />
-              </div>
-            </div>
+          {/* Search Box inside Header */}
+          <div style={{ position: "relative", minWidth: "280px" }}>
+            <Search className="w-4 h-4 text-slate-400" style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)" }} />
+            <input
+              type="text"
+              placeholder="Tìm kiếm sản phẩm..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "10px 16px 10px 38px",
+                borderRadius: "999px",
+                border: "1px solid #cbd5e1",
+                fontSize: "13px",
+                outline: "none",
+                boxSizing: "border-box",
+                background: "#ffffff",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
+              }}
+            />
           </div>
         </div>
 
@@ -304,7 +297,7 @@ function ProductsContent() {
 
               {/* Price Range Filter Group */}
               <div style={{ marginBottom: "20px" }}>
-                <div style={{ fontSize: "13px", fontWeight: 800, color: "#334155", marginBottom: "10px" }}>
+                <div style={{ fontSize: "14px", fontWeight: 900, color: "#0f172a", marginBottom: "10px", letterSpacing: "0.01em" }}>
                   Mức Giá Ưu Đãi:
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
@@ -327,7 +320,7 @@ function ProductsContent() {
 
               {/* Material Filter Group */}
               <div>
-                <div style={{ fontSize: "13px", fontWeight: 800, color: "#334155", marginBottom: "10px" }}>
+                <div style={{ fontSize: "14px", fontWeight: 900, color: "#0f172a", marginBottom: "10px", letterSpacing: "0.01em" }}>
                   Chất Liệu Đặc Trưng:
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
