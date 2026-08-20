@@ -283,25 +283,25 @@ const MOCK_ORDERS: CustomerOrder[] = [
 
 const SPOTLIGHT_SLIDES = [
   {
-    image: "/assets/images/products/San_pham/hero-home-decor-pexels-original.webp",
+    image: "/assets/images/banner/banner-trang-chu-mini-shop.webp",
     tag: "✨ MINI-SHOP DECOR 2026",
     title: "Không Gian Sống Đẳng Cấp",
     desc: "Khám phá bộ sưu tập nội thất gia dụng tinh tế & hiện đại dành riêng cho ngôi nhà của bạn.",
   },
   {
-    image: "/assets/images/products/San_pham/bo-binh-gom-minimal-original.webp",
+    image: "/assets/images/products/noi-that-gia-dung/bo-ban-an-go.webp",
     tag: "🎁 TÍCH ĐIỂM ĐỔI QUÀ",
     title: "Gốm Sứ Thủ Công Tinh Tế",
     desc: "Tích điểm thưởng sau mỗi đơn hàng để nhận voucher ưu đãi độc quyền từ Mini Shop.",
   },
   {
-    image: "/assets/images/products/San_pham/sofa-phong-khach-original.webp",
+    image: "/assets/images/products/noi-that-gia-dung/sofa-phong-khach.webp",
     tag: "🚚 MIỄN PHÍ VẬN CHUYỂN",
     title: "Sofa Phòng Khách Sang Trọng",
     desc: "Miễn phí giao hàng hỏa tốc toàn quốc cho tất cả đơn hàng từ 500.000đ trở lên.",
   },
   {
-    image: "/assets/images/products/San_pham/bo-ban-an-go-original.webp",
+    image: "/assets/images/products/San_pham/bo-binh-gom-minimal-original.webp",
     tag: "🔒 BẢO MẬT & ĐỒNG BỘ",
     title: "Nội Thất Gỗ Tự Nhiên",
     desc: "Đồng bộ giỏ hàng, danh sách yêu thích và sổ địa chỉ an toàn trên mọi thiết bị.",
@@ -752,118 +752,133 @@ export default function AuthPage() {
                     alignItems: "stretch",
                   }}
                 >
-                  {/* LEFT COLUMN: MATCHED HEIGHT SPOTLIGHT IMAGE CAROUSEL */}
+                  {/* LEFT COLUMN: HOMEPAGE HERO MATCHED IMAGE CAROUSEL */}
                   <div
                     style={{
-                      borderRadius: "1.25rem",
+                      borderRadius: "16px",
                       position: "relative",
                       overflow: "hidden",
-                      boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)",
-                      minHeight: "460px",
+                      boxShadow: "0 4px 16px rgba(0, 0, 0, 0.04)",
+                      minHeight: "380px",
                       height: "100%",
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "flex-end",
-                      padding: "24px",
-                      background: "#0f172a",
+                      background: "#ffffff",
+                      border: "1px solid var(--border-color, #e2e8f0)",
                     }}
                   >
-                    {/* Background Slide Images with smooth transition */}
+                    {/* Background Slide Images */}
                     {SPOTLIGHT_SLIDES.map((slide, idx) => (
-                      <div
+                      <img
                         key={idx}
+                        src={fixImagePath(slide.image)}
+                        alt={slide.title}
                         style={{
                           position: "absolute",
                           inset: 0,
-                          backgroundImage: `url(${slide.image})`,
-                          backgroundSize: "cover",
-                          backgroundPosition: "center",
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          display: "block",
                           opacity: idx === spotlightIndex ? 1 : 0,
                           transition: "opacity 0.8s ease-in-out, transform 1.2s ease-in-out",
-                          transform: idx === spotlightIndex ? "scale(1)" : "scale(1.06)",
+                          transform: idx === spotlightIndex ? "scale(1)" : "scale(1.04)",
                         }}
                       />
                     ))}
 
-                    {/* Subtle Bottom Vignette for Nav Controls visibility */}
+                    {/* Floating Left Arrow (Homepage style white round button) */}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSpotlightIndex((prev) => (prev - 1 + SPOTLIGHT_SLIDES.length) % SPOTLIGHT_SLIDES.length)
+                      }
+                      style={{
+                        position: "absolute",
+                        top: "50%",
+                        left: "14px",
+                        transform: "translateY(-50%)",
+                        width: "36px",
+                        height: "36px",
+                        borderRadius: "50%",
+                        background: "rgba(255, 255, 255, 0.92)",
+                        border: "1px solid #cbd5e1",
+                        color: "#0f172a",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "pointer",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
+                        zIndex: 10,
+                      }}
+                      aria-label="Previous Slide"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+
+                    {/* Floating Right Arrow (Homepage style white round button) */}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSpotlightIndex((prev) => (prev + 1) % SPOTLIGHT_SLIDES.length)
+                      }
+                      style={{
+                        position: "absolute",
+                        top: "50%",
+                        right: "14px",
+                        transform: "translateY(-50%)",
+                        width: "36px",
+                        height: "36px",
+                        borderRadius: "50%",
+                        background: "rgba(255, 255, 255, 0.92)",
+                        border: "1px solid #cbd5e1",
+                        color: "#0f172a",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "pointer",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
+                        zIndex: 10,
+                      }}
+                      aria-label="Next Slide"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+
+                    {/* Floating Dot Indicators at Bottom */}
                     <div
                       style={{
                         position: "absolute",
-                        inset: 0,
-                        background: "linear-gradient(180deg, rgba(0,0,0,0) 60%, rgba(0,0,0,0.5) 100%)",
+                        bottom: "16px",
+                        left: "50%",
+                        transform: "translateX(-50%)",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        zIndex: 10,
+                        background: "rgba(255, 255, 255, 0.88)",
+                        backdropFilter: "blur(8px)",
+                        padding: "5px 12px",
+                        borderRadius: "999px",
+                        boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
+                        border: "1px solid rgba(255,255,255,0.6)",
                       }}
-                    />
-
-                    {/* Floating Bottom Nav Controls */}
-                    <div style={{ position: "relative", zIndex: 10, color: "#ffffff", width: "100%" }}>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        {/* Dot Indicators */}
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                          {SPOTLIGHT_SLIDES.map((_, i) => (
-                            <button
-                              key={i}
-                              type="button"
-                              onClick={() => setSpotlightIndex(i)}
-                              style={{
-                                width: i === spotlightIndex ? "24px" : "8px",
-                                height: "8px",
-                                borderRadius: "999px",
-                                background: i === spotlightIndex ? "var(--primary-color, #2e7d32)" : "rgba(255,255,255,0.45)",
-                                border: "none",
-                                cursor: "pointer",
-                                transition: "all 0.3s ease",
-                              }}
-                              title={`Slide ${i + 1}`}
-                            />
-                          ))}
-                        </div>
-
-                        {/* Arrows */}
-                        <div style={{ display: "flex", gap: "8px" }}>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setSpotlightIndex((prev) => (prev - 1 + SPOTLIGHT_SLIDES.length) % SPOTLIGHT_SLIDES.length)
-                            }
-                            style={{
-                              width: "32px",
-                              height: "32px",
-                              borderRadius: "50%",
-                              background: "rgba(255,255,255,0.25)",
-                              backdropFilter: "blur(8px)",
-                              border: "1px solid rgba(255,255,255,0.35)",
-                              color: "#ffffff",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              cursor: "pointer",
-                            }}
-                          >
-                            <ChevronLeft className="w-4 h-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setSpotlightIndex((prev) => (prev + 1) % SPOTLIGHT_SLIDES.length)
-                            }
-                            style={{
-                              width: "32px",
-                              height: "32px",
-                              borderRadius: "50%",
-                              background: "rgba(255,255,255,0.25)",
-                              backdropFilter: "blur(8px)",
-                              border: "1px solid rgba(255,255,255,0.35)",
-                              color: "#ffffff",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              cursor: "pointer",
-                            }}
-                          >
-                            <ChevronRight className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
+                    >
+                      {SPOTLIGHT_SLIDES.map((_, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => setSpotlightIndex(i)}
+                          style={{
+                            width: i === spotlightIndex ? "24px" : "7px",
+                            height: "7px",
+                            borderRadius: "999px",
+                            background: i === spotlightIndex ? "var(--primary-color, #2e7d32)" : "#cbd5e1",
+                            border: "none",
+                            cursor: "pointer",
+                            transition: "all 0.3s cubic-bezier(0.32, 0.72, 0, 1)",
+                          }}
+                          aria-label={`Slide ${i + 1}`}
+                        />
+                      ))}
                     </div>
                   </div>
 
