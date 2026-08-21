@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { Send } from "lucide-react";
 import { LiveChatSession } from "@/lib/liveChatService";
 
 interface ChatInputAreaProps {
@@ -50,6 +49,8 @@ export const ChatInputArea: React.FC<ChatInputAreaProps> = ({
               whiteSpace: "nowrap",
               cursor: "pointer",
               transition: "all 0.2s ease",
+              display: "inline-flex",
+              alignItems: "center",
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.borderColor = "#2e7d32";
@@ -62,7 +63,8 @@ export const ChatInputArea: React.FC<ChatInputAreaProps> = ({
               e.currentTarget.style.background = "#f1f5f9";
             }}
           >
-            ⚡ {res.slice(0, 32)}...
+            <i className="fa-solid fa-bolt" style={{ color: "#d97706", marginRight: "6px" }}></i>
+            {res.slice(0, 32)}...
           </button>
         ))}
       </div>
@@ -122,7 +124,7 @@ export const ChatInputArea: React.FC<ChatInputAreaProps> = ({
           }}
         >
           <span>Gửi</span>
-          <Send style={{ width: "14px", height: "14px" }} />
+          <i className="fa-solid fa-paper-plane" style={{ fontSize: "13px" }}></i>
         </button>
       </div>
     </>

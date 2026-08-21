@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { User, Bot } from "lucide-react";
 import { LiveChatSession } from "@/lib/liveChatService";
 
 interface ChatActiveHeaderProps {
@@ -47,8 +46,11 @@ export const ChatActiveHeader: React.FC<ChatActiveHeaderProps> = ({
           <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 800, color: "#0f172a" }}>
             {selectedSession.customer_name}
           </h3>
-          <p style={{ margin: "2px 0 0 0", fontSize: "12px", color: "#64748b" }}>
-            📧 {selectedSession.customer_email} • 📞 {selectedSession.customer_phone}
+          <p style={{ margin: "2px 0 0 0", fontSize: "12px", color: "#64748b", display: "flex", alignItems: "center", gap: "12px" }}>
+            <span><i className="fa-solid fa-envelope" style={{ marginRight: "4px" }}></i> {selectedSession.customer_email}</span>
+            {selectedSession.customer_phone && (
+              <span><i className="fa-solid fa-phone" style={{ marginRight: "4px" }}></i> {selectedSession.customer_phone}</span>
+            )}
           </p>
         </div>
       </div>
@@ -72,10 +74,16 @@ export const ChatActiveHeader: React.FC<ChatActiveHeaderProps> = ({
           transition: "all 0.2s ease",
         }}
       >
-        <span>
-          {selectedSession.mode === "human"
-            ? "🧑‍💼 Đang Admin Tiếp Quản (Bấm để trả về AI)"
-            : "🤖 AI Chatbot Tự Động (Bấm để Tiếp Quản Chat)"}
+        <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+          {selectedSession.mode === "human" ? (
+            <>
+              <i className="fa-solid fa-user-tie"></i> Đang Admin Tiếp Quản (Bấm để trả về AI)
+            </>
+          ) : (
+            <>
+              <i className="fa-solid fa-robot"></i> AI Chatbot Tự Động (Bấm để Tiếp Quản Chat)
+            </>
+          )}
         </span>
         <div
           style={{
@@ -89,9 +97,9 @@ export const ChatActiveHeader: React.FC<ChatActiveHeaderProps> = ({
           }}
         >
           {selectedSession.mode === "human" ? (
-            <User style={{ width: "13px", height: "13px" }} />
+            <i className="fa-solid fa-user-gear" style={{ fontSize: "12px" }}></i>
           ) : (
-            <Bot style={{ width: "13px", height: "13px" }} />
+            <i className="fa-solid fa-robot" style={{ fontSize: "12px" }}></i>
           )}
         </div>
       </button>

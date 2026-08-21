@@ -19,9 +19,9 @@ export const DriverOnboardingTour: React.FC = () => {
         const driverObj = driver({
           showProgress: true,
           animate: true,
-          doneBtnText: "Hoàn Thành & Nhận Quà 🎁",
-          nextBtnText: "Tiếp theo →",
-          prevBtnText: "← Quay lại",
+          doneBtnText: 'Hoàn Thành & Nhận Quà <i class="fa-solid fa-gift" style="margin-left: 4px;"></i>',
+          nextBtnText: 'Tiếp theo <i class="fa-solid fa-arrow-right" style="margin-left: 4px;"></i>',
+          prevBtnText: '<i class="fa-solid fa-arrow-left" style="margin-right: 4px;"></i> Quay lại',
           progressText: "Bước {{current}} / {{total}}",
           onDestroyed: () => {
             completeOnboarding();
@@ -30,7 +30,7 @@ export const DriverOnboardingTour: React.FC = () => {
             {
               element: "#header-logo",
               popover: {
-                title: "✨ Trang Chủ MINI SHOP",
+                title: '<i class="fa-solid fa-compass" style="color: #2e7d32; margin-right: 6px;"></i> Trang Chủ MINI SHOP',
                 description: "Chào mừng bạn! Bấm vào Logo bất kỳ lúc nào để nhanh chóng quay lại Trang Chủ.",
                 side: "bottom",
                 align: "start",
@@ -39,7 +39,7 @@ export const DriverOnboardingTour: React.FC = () => {
             {
               element: "#header-search-input",
               popover: {
-                title: "🔍 Tìm Kiếm Sản Phẩm Tức Thì",
+                title: '<i class="fa-solid fa-magnifying-glass" style="color: #2e7d32; margin-right: 6px;"></i> Tìm Kiếm Sản Phẩm Tức Thì',
                 description: "Gõ từ khóa bất kỳ (Sofa, Bàn ăn, Giường ngủ, Rèm cửa) để gợi ý sản phẩm tức thì.",
                 side: "bottom",
                 align: "center",
@@ -48,7 +48,7 @@ export const DriverOnboardingTour: React.FC = () => {
             {
               element: "#nav-flash-sale",
               popover: {
-                title: "⚡ Flash Sale Giá Sập Sàn",
+                title: '<i class="fa-solid fa-bolt" style="color: #d97706; margin-right: 6px;"></i> Flash Sale Giá Sập Sàn',
                 description: "Săn hàng trăm deal nội thất giảm giá sốc đến 50% được cập nhật liên tục.",
                 side: "bottom",
                 align: "center",
@@ -57,7 +57,7 @@ export const DriverOnboardingTour: React.FC = () => {
             {
               element: "#nav-track-order",
               popover: {
-                title: "🚚 Tra Cứu Vận Chuyển",
+                title: '<i class="fa-solid fa-truck-fast" style="color: #2563eb; margin-right: 6px;"></i> Tra Cứu Vận Chuyển',
                 description: "Theo dõi sát sao hành trình giao hàng bằng Số điện thoại hoặc Mã đơn.",
                 side: "bottom",
                 align: "center",
@@ -66,7 +66,7 @@ export const DriverOnboardingTour: React.FC = () => {
             {
               element: "#header-cart-icon",
               popover: {
-                title: "🛒 Giỏ Hàng & Quà Tân Thủ WELCOME50",
+                title: '<i class="fa-solid fa-cart-shopping" style="color: #2e7d32; margin-right: 6px;"></i> Giỏ Hàng & Quà Tân Thủ WELCOME50',
                 description: "Bạn đã hoàn thành Tour! Mã <strong>WELCOME50 (Giảm 50K)</strong> + <strong>500 Điểm thưởng</strong> đã được tự động trao vào tài khoản của bạn!",
                 side: "bottom",
                 align: "end",
@@ -83,15 +83,15 @@ export const DriverOnboardingTour: React.FC = () => {
       const driverObj = driver({
         showProgress: true,
         animate: true,
-        doneBtnText: "Đóng Hướng Dẫn 🚀",
-        nextBtnText: "Tiếp theo →",
-        prevBtnText: "← Quay lại",
+        doneBtnText: 'Đóng Hướng Dẫn <i class="fa-solid fa-circle-check" style="margin-left: 4px;"></i>',
+        nextBtnText: 'Tiếp theo <i class="fa-solid fa-arrow-right" style="margin-left: 4px;"></i>',
+        prevBtnText: '<i class="fa-solid fa-arrow-left" style="margin-right: 4px;"></i> Quay lại',
         progressText: "Bước {{current}} / {{total}}",
         steps: [
           {
             element: "#header-logo",
             popover: {
-              title: "✨ Trang Chủ MINI SHOP",
+              title: '<i class="fa-solid fa-compass" style="color: #2e7d32; margin-right: 6px;"></i> Trang Chủ MINI SHOP',
               description: "Chào mừng bạn! Bấm vào Logo bất kỳ lúc nào để quay lại Trang Chủ.",
               side: "bottom",
               align: "start",
@@ -100,7 +100,7 @@ export const DriverOnboardingTour: React.FC = () => {
           {
             element: "#header-search-input",
             popover: {
-              title: "🔍 Tìm Kiếm Sản Phẩm Tức Thì",
+              title: '<i class="fa-solid fa-magnifying-glass" style="color: #2e7d32; margin-right: 6px;"></i> Tìm Kiếm Sản Phẩm Tức Thì',
               description: "Gõ từ khóa bất kỳ (Sofa, Bàn ăn, Giường ngủ, Rèm cửa) để gợi ý sản phẩm tức thì.",
               side: "bottom",
               align: "center",
@@ -109,7 +109,7 @@ export const DriverOnboardingTour: React.FC = () => {
           {
             element: "#nav-flash-sale",
             popover: {
-              title: "⚡ Flash Sale Giá Sập Sàn",
+              title: '<i class="fa-solid fa-bolt" style="color: #d97706; margin-right: 6px;"></i> Flash Sale Giá Sập Sàn',
               description: "Săn hàng trăm deal nội thất giảm giá sốc đến 50% được cập nhật liên tục.",
               side: "bottom",
               align: "center",
@@ -118,7 +118,7 @@ export const DriverOnboardingTour: React.FC = () => {
           {
             element: "#nav-track-order",
             popover: {
-              title: "🚚 Tra Cứu Vận Chuyển",
+              title: '<i class="fa-solid fa-truck-fast" style="color: #2563eb; margin-right: 6px;"></i> Tra Cứu Vận Chuyển',
               description: "Theo dõi sát sao hành trình giao hàng bằng Số điện thoại hoặc Mã đơn.",
               side: "bottom",
               align: "center",
@@ -127,7 +127,7 @@ export const DriverOnboardingTour: React.FC = () => {
           {
             element: "#header-cart-icon",
             popover: {
-              title: "🛒 Giỏ Hàng & Mua Sắm",
+              title: '<i class="fa-solid fa-cart-shopping" style="color: #2e7d32; margin-right: 6px;"></i> Giỏ Hàng & Mua Sắm',
               description: "Xem giỏ hàng và tiến hành thanh toán cực kỳ tiện lợi.",
               side: "bottom",
               align: "end",

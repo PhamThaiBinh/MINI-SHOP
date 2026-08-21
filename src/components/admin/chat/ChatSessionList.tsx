@@ -38,8 +38,8 @@ export const ChatSessionList: React.FC<ChatSessionListProps> = ({
       }}
     >
       <div className="card-header-row" style={{ marginBottom: "14px" }}>
-        <h3 className="card-header-title" style={{ fontSize: "16px" }}>
-          📋 Danh Sách Hội Thoại
+        <h3 className="card-header-title" style={{ fontSize: "16px", display: "flex", alignItems: "center", gap: "6px" }}>
+          <i className="fa-solid fa-list-check" style={{ color: "#2e7d32" }}></i> Danh Sách Hội Thoại
         </h3>
         <span
           style={{
@@ -105,9 +105,25 @@ export const ChatSessionList: React.FC<ChatSessionListProps> = ({
               fontWeight: 800,
               cursor: "pointer",
               transition: "all 0.2s ease",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "4px",
             }}
           >
-            {mode === "all" ? "Tất cả" : mode === "human" ? "🧑‍💼 Admin" : "🤖 Bot"}
+            {mode === "all" ? (
+              <>
+                <i className="fa-solid fa-comments"></i> Tất cả
+              </>
+            ) : mode === "human" ? (
+              <>
+                <i className="fa-solid fa-user-tie"></i> Admin
+              </>
+            ) : (
+              <>
+                <i className="fa-solid fa-robot"></i> Bot
+              </>
+            )}
           </button>
         ))}
       </div>
@@ -229,7 +245,15 @@ export const ChatSessionList: React.FC<ChatSessionListProps> = ({
                           color: s.mode === "human" ? "#b45309" : "#0369a1",
                         }}
                       >
-                        {s.mode === "human" ? "🧑‍💼 Admin trực" : "🤖 Bot trả lời"}
+                        {s.mode === "human" ? (
+                          <>
+                            <i className="fa-solid fa-user-tie"></i> Admin trực
+                          </>
+                        ) : (
+                          <>
+                            <i className="fa-solid fa-robot"></i> Bot trả lời
+                          </>
+                        )}
                       </span>
                     </div>
                   </div>

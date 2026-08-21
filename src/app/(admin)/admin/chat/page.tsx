@@ -168,7 +168,7 @@ export default function AdminLiveChatPage() {
       <main className="admin-main">
         {/* Top Fixed Header Bar */}
         <AdminHeader
-          title="💬 Trợ Lý Live Chat & Tư Vấn Khách Hàng Realtime"
+          title="Trợ Lý Live Chat & Tư Vấn Khách Hàng Realtime"
           sidebarCollapsed={sidebarCollapsed}
           setSidebarCollapsed={setSidebarCollapsed}
           searchQuery={searchQuery}
