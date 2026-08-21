@@ -23,32 +23,32 @@ export interface ChatMessage {
   quickReplies?: string[];
 }
 
-// System FAQs Knowledge Base
+// System FAQs Knowledge Base (No emojis, no markdown asterisks)
 const FAQ_KNOWLEDGE = [
   {
     keywords: ["bao hanh", "bảo hành", "hu hong", "hư hỏng", "loi", "lỗi"],
     response:
-      "🛡️ **Chính Sách Bảo Hành Tại MINI SHOP:**\n- Tất cả sản phẩm nội thất gỗ, bàn ghế, giường tủ đều được **bảo hành chính hãng 12 - 24 tháng**.\n- Hỗ trợ 1 đổi 1 trong **7 ngày đầu** nếu có lỗi từ nhà sản xuất.\n- Kỹ thuật viên hỗ trợ bảo hành tận nhà hoàn toàn miễn phí!",
+      "Chính Sách Bảo Hành Tại MINI SHOP:\n- Tất cả sản phẩm nội thất gỗ, bàn ghế, giường tủ đều được bảo hành chính hãng 12 - 24 tháng.\n- Hỗ trợ 1 đổi 1 trong 7 ngày đầu nếu có lỗi từ nhà sản xuất.\n- Kỹ thuật viên hỗ trợ bảo hành tận nhà hoàn toàn miễn phí!",
   },
   {
     keywords: ["giao hang", "vận chuyển", "ship", "phi ship", "phí ship", "thoi gian giao", "bao lau"],
     response:
-      "🚚 **Chính Sách Vận Chuyển & Giao Hàng:**\n- **MIỄN PHÍ VẬN CHUYỂN** toàn quốc cho đơn hàng từ **500.000đ** trở lên.\n- Giao hàng hỏa tốc trong **2 - 4 giờ** tại khu vực nội thành.\n- Giao hàng tiêu chuẩn toàn quốc trong 2 - 3 ngày làm việc.",
+      "Chính Sách Vận Chuyển & Giao Hàng:\n- MIỄN PHÍ VẬN CHUYỂN toàn quốc cho đơn hàng từ 500.000đ trở lên.\n- Giao hàng hỏa tốc trong 2 - 4 giờ tại khu vực nội thành.\n- Giao hàng tiêu chuẩn toàn quốc trong 2 - 3 ngày làm việc.",
   },
   {
     keywords: ["thanh toan", "thanh toán", "chuyen khoản", "chuyển khoản", "cod", "banking", "qr"],
     response:
-      "💳 **Phương Thức Thanh Toán Linh Hoạt:**\n- Thanh toán khi nhận hàng (**COD**).\n- Chuyển khoản ngân hàng qua mã **VietQR** tự động gạch nợ tức thì.\n- Hỗ trợ trả góp 0% lãi suất qua thẻ tín dụng.",
+      "Phương Thức Thanh Toán Linh Hoạt:\n- Thanh toán khi nhận hàng (COD).\n- Chuyển khoản ngân hàng qua mã VietQR tự động gạch nợ tức thì.\n- Hỗ trợ trả góp 0% lãi suất qua thẻ tín dụng.",
   },
   {
     keywords: ["doi tra", "đổi trả", "tra hang", "trả hàng", "hoan tien", "hoàn tiền"],
     response:
-      "🔄 **Chính Sách Đổi Trả Dễ Dàng:**\n- Đổi mới miễn phí trong **7 ngày** nếu sản phẩm không đúng mô tả hoặc bị xước móp do vận chuyển.\n- Hoàn tiền 100% nếu không đúng cam kết chất lượng.",
+      "Chính Sách Đổi Trả Dễ Dàng:\n- Đổi mới miễn phí trong 7 ngày nếu sản phẩm không đúng mô tả hoặc bị xước móp do vận chuyển.\n- Hoàn tiền 100% nếu không đúng cam kết chất lượng.",
   },
   {
     keywords: ["dia chi", "địa chỉ", "showroom", "cua hang", "cửa hàng", "o dau", "ở đâu"],
     response:
-      "📍 **Hệ Thống Showroom MINI SHOP:**\n- **Địa chỉ:** 123 Nguyễn Văn Cừ, Quận 5, TP. Hồ Chí Minh.\n- **Thời gian mở cửa:** 8:00 - 21:00 (Tất cả các ngày trong tuần).\n- **Hotline tư vấn:** `0988.123.456`",
+      "Hệ Thống Showroom MINI SHOP:\n- Địa chỉ: 123 Nguyễn Văn Cừ, Quận 5, TP. Hồ Chí Minh.\n- Thời gian mở cửa: 8:00 - 21:00 (Tất cả các ngày trong tuần).\n- Hotline tư vấn: 0988.123.456",
   },
 ];
 
@@ -74,7 +74,6 @@ const VOUCHERS_DATA = [
   },
 ];
 
-// Normalize text for Vietnamese regex matching
 function normalizeText(text: string): string {
   return text
     .toLowerCase()
@@ -84,23 +83,32 @@ function normalizeText(text: string): string {
     .trim();
 }
 
+function formatProductListToText(title: string, products: Product[]): string {
+  if (products.length === 0) return title;
+  const productTextLines = products.map((p, idx) => {
+    const formattedPrice = p.price.toLocaleString("vi-VN") + "đ";
+    return `${idx + 1}. ${p.name}\n   - Giá bán: ${formattedPrice}\n   - Danh mục: ${p.category}`;
+  });
+  return `${title}\n\n${productTextLines.join("\n\n")}`;
+}
+
 export function processUserQuery(userQuery: string): ChatMessage {
   const normalized = normalizeText(userQuery);
   const timestamp = new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
   const id = `msg-${Date.now()}`;
 
-  // 1. Check Order Tracking Intent (e.g. O0001 or 6 digits/order code pattern)
+  // 1. Order Tracking Intent
   const orderMatch = userQuery.match(/O\d{4}/i) || normalized.match(/don hang|tra cuu|ma don|don gop/i);
   if (orderMatch) {
     const matchedCode = userQuery.match(/O\d{4}/i)?.[0]?.toUpperCase() || "O0001";
     return {
       id,
       sender: "bot",
-      text: `🔍 **Kết quả tra cứu đơn hàng #${matchedCode}:**`,
+      text: `Kết quả tra cứu đơn hàng #${matchedCode}:\n- Trạng thái: Đang vận chuyển\n- Người nhận: Khách hàng MINI SHOP\n- Tổng tiền: 1.450.000đ\n- Ngày đặt: 21/08/2026`,
       timestamp,
       orderInfo: {
         code: matchedCode,
-        status: "Đang vận chuyển 🚚",
+        status: "Đang vận chuyển",
         customer_name: "Khách hàng MINI SHOP",
         total_amount: 1450000,
         created_at: "21/08/2026",
@@ -109,23 +117,24 @@ export function processUserQuery(userQuery: string): ChatMessage {
     };
   }
 
-  // 2. Check Voucher Intent
+  // 2. Voucher / Promotion Intent
   if (normalized.includes("voucher") || normalized.includes("khuyen mai") || normalized.includes("giam gia") || normalized.includes("uu dai") || normalized.includes("ma giam")) {
+    const voucherText = VOUCHERS_DATA.map((v, i) => `${i + 1}. Mã: ${v.code} - ${v.discount} (${v.minOrder})\n   ${v.desc}`).join("\n\n");
     return {
       id,
       sender: "bot",
-      text: "🎟️ **Danh Sách Mã Giảm Giá Đang Khả Dụng Hôm Nay:**\nBạn có thể sao chép và áp dụng ngay tại bước Thanh toán!",
+      text: `Danh Sách Mã Giảm Giá Đang Khả Dụng Hôm Nay:\n\n${voucherText}\n\nBạn có thể sao chép và áp dụng ngay tại bước Thanh toán!`,
       timestamp,
       vouchers: VOUCHERS_DATA,
       quickReplies: ["Tư vấn bàn ghế", "Tư vấn sofa", "Xem Flash Sale"],
     };
   }
 
-  // 3. Check Product Category Intent (Sofa, Bàn, Ghế, Giường, Rèm, Tủ)
+  // 3. Specific Category Intent (Bàn, Ghế, Sofa, Giường, Rèm, Tủ)
   let matchedCategory = "";
-  if (normalized.includes("ban") || normalized.includes("ban an") || normalized.includes("ban lam viec")) {
+  if (normalized.includes("ban an") || normalized.includes("ban lam viec") || normalized.includes("ban tra") || (/\bban\b/.test(normalized) && !normalized.includes("di ban") && !normalized.includes("ban hay") && !normalized.includes("giuong ban"))) {
     matchedCategory = "Bàn";
-  } else if (normalized.includes("ghe") || normalized.includes("sofa") || normalized.includes("ghe xoay")) {
+  } else if (normalized.includes("sofa") || normalized.includes("ghe xoay") || normalized.includes("ghe an") || /\bghe\b/.test(normalized)) {
     matchedCategory = "Ghế";
   } else if (normalized.includes("giuong") || normalized.includes("giuong ngu")) {
     matchedCategory = "Giường";
@@ -137,18 +146,34 @@ export function processUserQuery(userQuery: string): ChatMessage {
 
   if (matchedCategory) {
     const recommendedProducts = PRODUCTS_DATA.filter((p) => p.category === matchedCategory).slice(0, 3);
+    const finalProducts = recommendedProducts.length > 0 ? recommendedProducts : PRODUCTS_DATA.slice(0, 3);
+    const titleText = `Dưới đây là các mẫu ${matchedCategory} nổi bật được chọn mua nhiều nhất:`;
 
     return {
       id,
       sender: "bot",
-      text: `🛋️ **Dưới đây là các mẫu ${matchedCategory} nổi bật được chọn mua nhiều nhất:**`,
+      text: formatProductListToText(titleText, finalProducts),
       timestamp,
-      products: recommendedProducts.length > 0 ? recommendedProducts : PRODUCTS_DATA.slice(0, 3),
+      products: finalProducts,
       quickReplies: ["Xem thêm mẫu khác", "Kiểm tra mã giảm giá", "Tư vấn phí ship"],
     };
   }
 
-  // 4. Check FAQ Knowledge Base
+  // 4. General Product Info Query ("thong tin san pham", "san pham", "cac mau san pham")
+  if (normalized.includes("thong tin san pham") || normalized.includes("san pham") || normalized.includes("do noi that")) {
+    const defaultProducts = PRODUCTS_DATA.slice(0, 3);
+    const titleText = "Dưới đây là thông tin các mẫu sản phẩm nội thất nổi bật hàng đầu tại MINI SHOP:";
+    return {
+      id,
+      sender: "bot",
+      text: formatProductListToText(titleText, defaultProducts),
+      timestamp,
+      products: defaultProducts,
+      quickReplies: ["Tư vấn sản phẩm Bàn", "Tư vấn sản phẩm Sofa", "Lấy mã giảm giá"],
+    };
+  }
+
+  // 5. FAQ Knowledge Base
   for (const faq of FAQ_KNOWLEDGE) {
     if (faq.keywords.some((kw) => normalized.includes(kw))) {
       return {
@@ -161,36 +186,43 @@ export function processUserQuery(userQuery: string): ChatMessage {
     }
   }
 
-  // 5. Check Flash Sale / Discount Product Intent
+  // 6. Flash Sale / Discount Product Intent
   if (normalized.includes("flash sale") || normalized.includes("hot") || normalized.includes("ban chay") || normalized.includes("giam nhieu")) {
     const saleProducts = PRODUCTS_DATA.filter((p) => p.badge?.toLowerCase().includes("sale") || Boolean(p.oldPrice)).slice(0, 3);
+    const finalSale = saleProducts.length > 0 ? saleProducts : PRODUCTS_DATA.slice(0, 3);
+    const titleText = "Sản Phẩm Flash Sale Đang Giảm Giá Sốc Hôm Nay:";
+
     return {
       id,
       sender: "bot",
-      text: "⚡ **Sản Phẩm Flash Sale Đang Giảm Giá Sốc Hôm Nay:**",
+      text: formatProductListToText(titleText, finalSale),
       timestamp,
-      products: saleProducts.length > 0 ? saleProducts : PRODUCTS_DATA.slice(0, 3),
+      products: finalSale,
       quickReplies: ["Xem sản phẩm Bàn", "Xem sản phẩm Sofa", "Lấy mã giảm giá"],
     };
   }
 
-  // 6. Check Human Escalation Intent
+  // 7. Human Escalation Intent
   if (normalized.includes("tu van vien") || normalized.includes("nguoi that") || normalized.includes("hotline") || normalized.includes("tong dai")) {
     return {
       id,
       sender: "bot",
-      text: "🧑‍💼 **Kết Nối Tư Vấn Viên Showroom MINI SHOP:**\n- **Hotline trực tiếp:** `0988.123.456` (Miễn phí cuộc gọi)\n- **Zalo Official:** `0988.123.456` (Hỗ trợ gửi hình ảnh trực tiếp)\n- **Thời gian làm việc:** 8:00 - 21:00 hàng ngày.",
+      text: "Kết Nối Tư Vấn Viên Showroom MINI SHOP:\n- Hotline trực tiếp: 0988.123.456 (Miễn phí cuộc gọi)\n- Zalo Official: 0988.123.456 (Hỗ trợ gửi hình ảnh trực tiếp)\n- Thời gian làm việc: 8:00 - 21:00 hàng ngày.",
       timestamp,
       quickReplies: ["Tư vấn sản phẩm", "Tra cứu đơn hàng", "Mã giảm giá"],
     };
   }
 
-  // 7. Default Fallback Assistance
+  // 8. Default Fallback Assistance
+  const defaultProducts = PRODUCTS_DATA.slice(0, 3);
+  const fallbackTitle = "Xin chào! Em có thể hỗ trợ gì cho anh/chị ạ?\nDưới đây là một số sản phẩm nổi bật anh/chị có thể tham khảo:";
+
   return {
     id,
     sender: "bot",
-    text: "✨ **Em có thể giúp gì cho anh/chị ạ?**\nAnh/chị có thể nhập tên sản phẩm cần tìm (Sofa, Bàn ăn, Giường ngủ, Rèm cửa), mã đơn hàng hoặc chọn một trong các gợi ý bên dưới:",
+    text: formatProductListToText(fallbackTitle, defaultProducts),
     timestamp,
-    quickReplies: ["🛍️ Gợi ý Sofa & Bàn ghế", "🚚 Tra cứu đơn hàng", "🎟️ Lấy mã giảm giá 50k", "🛡️ Chính sách bảo hành"],
+    products: defaultProducts,
+    quickReplies: ["Gợi ý Sofa & Bàn ghế", "Tra cứu đơn hàng", "Lấy mã giảm giá 50k", "Chính sách bảo hành"],
   };
 }

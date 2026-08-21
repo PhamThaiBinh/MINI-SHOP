@@ -79,10 +79,10 @@ export const ChatbotWidget: React.FC = () => {
     id: "init-1",
     sender: "bot",
     text: user
-      ? `👋 **Xin chào ${user.name}! Em là Trợ Lý AI của MINI SHOP.**\nEm có thể giúp gì cho anh/chị hôm nay ạ?`
-      : "👋 **Xin chào! Em là Trợ Lý AI của MINI SHOP.**\nEm có thể giúp anh/chị chọn đồ nội thất đẹp, tra cứu đơn hàng hoặc săn mã giảm giá hôm nay!",
+      ? `Xin chào ${user.name}! Em là Trợ Lý AI của MINI SHOP.\nEm có thể giúp gì cho anh/chị hôm nay ạ?`
+      : "Xin chào! Em là Trợ Lý AI của MINI SHOP.\nEm có thể giúp anh/chị chọn đồ nội thất đẹp, tra cứu đơn hàng hoặc săn mã giảm giá hôm nay!",
     timestamp: "Vừa xong",
-    quickReplies: ["🛍️ Gợi ý Bàn ghế & Sofa", "🚚 Tra cứu đơn hàng", "🎟️ Lấy mã giảm giá", "🛡️ Chính sách bảo hành"],
+    quickReplies: ["Gợi ý Bàn ghế & Sofa", "Tra cứu đơn hàng", "Lấy mã giảm giá", "Chính sách bảo hành"],
   };
 
   const [messages, setMessages] = useState<ChatMessage[]>([welcomeMsg]);
