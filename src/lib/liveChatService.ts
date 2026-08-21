@@ -168,7 +168,7 @@ export async function syncInsertMessageToSupabase(msg: LiveChatMessage, sessionU
         customer_phone: sessionUpdate.customer_phone || "",
         avatar_bg: sessionUpdate.avatar_bg || "#2e7d32",
         avatar_text: sessionUpdate.avatar_text || "K",
-        mode: sessionUpdate.mode || "human",
+        mode: sessionUpdate.mode || "bot",
         last_message: sessionUpdate.last_message || msg.message,
         last_message_at: sessionUpdate.last_message_at || msg.created_at,
         unread_count: sessionUpdate.unread_count ?? 0,

@@ -132,7 +132,12 @@ export const ChatbotWidget: React.FC = () => {
     setMessages((prev) => [...prev, userMsg]);
     if (!textToSend) setInputText("");
 
-    // Sync to Supabase Database & Live Chat storage for Admin Dashboard
+    // Fetch existing session mode from Supabase DB to respect Admin toggle
+    const sessions = await fetchSupabaseSessions();
+    const currentSession = sessions.find((s) => s.id === activeSessionId);
+    const activeMode = currentSession?.mode || "bot";
+
+    // Sync customer message to Supabase Database & Live Chat storage for Admin Dashboard
     const newLiveMsg: LiveChatMessage = {
       id: `user-m-${Date.now()}`,
       session_id: activeSessionId,
@@ -149,21 +154,20 @@ export const ChatbotWidget: React.FC = () => {
       customer_phone: activeCustomerPhone,
       avatar_bg: activeAvatarBg,
       avatar_text: activeAvatarText,
+      mode: activeMode,
       last_message: text,
       last_message_at: userTime,
       unread_count: 1,
     });
 
-    // Check if session is currently in Human Admin mode
-    const sessions = await fetchSupabaseSessions();
-    const currentSession = sessions.find((s) => s.id === activeSessionId);
-    if (currentSession?.mode === "human") {
+    // If Admin has taken over in Human mode, skip auto AI bot response
+    if (activeMode === "human") {
       return;
     }
 
     setIsTyping(true);
 
-    // Simulate realistic typing latency for AI Bot
+    // Simulate realistic typing latency for AI Bot when in Bot mode
     setTimeout(async () => {
       const botResponse = processUserQuery(text);
       setMessages((prev) => [...prev, botResponse]);
@@ -185,6 +189,7 @@ export const ChatbotWidget: React.FC = () => {
         customer_phone: activeCustomerPhone,
         avatar_bg: activeAvatarBg,
         avatar_text: activeAvatarText,
+        mode: "bot",
         last_message: botResponse.text,
         last_message_at: botResponse.timestamp,
         unread_count: 0,
