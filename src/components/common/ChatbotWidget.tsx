@@ -24,7 +24,8 @@ import {
   Tag,
 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
-import { processUserQuery, ChatMessage } from "@/lib/chatbotKnowledge";
+import { processUserQuery, ChatMessage, VOUCHERS_DATA } from "@/lib/chatbotKnowledge";
+import { PRODUCTS_DATA } from "@/data/products";
 import {
   getLocalMessages,
   saveLocalMessages,
@@ -121,12 +122,26 @@ export const ChatbotWidget: React.FC = () => {
     const syncWithSupabase = async () => {
       const liveMsgs = await fetchSupabaseMessages(activeSessionId);
       if (liveMsgs.length > 0) {
-        const formattedLive: ChatMessage[] = liveMsgs.map((lm) => ({
-          id: lm.id,
-          sender: lm.sender_type === "customer" ? "user" : "bot",
-          text: lm.message,
-          timestamp: lm.created_at,
-        }));
+        const formattedLive: ChatMessage[] = liveMsgs.map((lm) => {
+          const isBot = lm.sender_type === "bot";
+          const matchedProducts = isBot
+            ? PRODUCTS_DATA.filter((p) => lm.message.toLowerCase().includes(p.name.toLowerCase())).slice(0, 3)
+            : [];
+
+          const matchedVouchers =
+            isBot && (lm.message.toLowerCase().includes("ma giam gia") || lm.message.toLowerCase().includes("voucher"))
+              ? VOUCHERS_DATA
+              : undefined;
+
+          return {
+            id: lm.id,
+            sender: lm.sender_type === "customer" ? "user" : "bot",
+            text: lm.message,
+            timestamp: lm.created_at,
+            products: matchedProducts.length > 0 ? matchedProducts : undefined,
+            vouchers: matchedVouchers,
+          };
+        });
         setMessages(formattedLive);
         // Only scroll if user hasn't scrolled up to read old history
         scrollToBottom(false);

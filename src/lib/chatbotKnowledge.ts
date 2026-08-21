@@ -53,7 +53,7 @@ const FAQ_KNOWLEDGE = [
 ];
 
 // Active Vouchers Data
-const VOUCHERS_DATA = [
+export const VOUCHERS_DATA = [
   {
     code: "WELCOME50",
     discount: "Giảm 50.000đ",
@@ -159,10 +159,17 @@ export function processUserQuery(userQuery: string): ChatMessage {
     };
   }
 
-  // 4. General Product Info Query ("thong tin san pham", "san pham", "cac mau san pham")
-  if (normalized.includes("thong tin san pham") || normalized.includes("san pham") || normalized.includes("do noi that")) {
+  // 4. General Product Info & Image Query ("hinh anh", "cho toi thong tin", "san pham", "mau san pham")
+  if (
+    normalized.includes("hinh anh") ||
+    normalized.includes("hinh") ||
+    normalized.includes("anh") ||
+    normalized.includes("thong tin san pham") ||
+    normalized.includes("san pham") ||
+    normalized.includes("do noi that")
+  ) {
     const defaultProducts = PRODUCTS_DATA.slice(0, 3);
-    const titleText = "Dưới đây là thông tin các mẫu sản phẩm nội thất nổi bật hàng đầu tại MINI SHOP:";
+    const titleText = "Dưới đây là hình ảnh và thông tin các mẫu sản phẩm nội thất nổi bật tại MINI SHOP:";
     return {
       id,
       sender: "bot",
