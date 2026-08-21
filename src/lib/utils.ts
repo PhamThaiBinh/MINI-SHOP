@@ -6,12 +6,12 @@ export function formatVND(amount: number): string {
 
 export function fixImagePath(path: string): string {
   if (!path) {
-    return `${SUPABASE_STORAGE_URL}/noi-that-gia-dung/sofa-phong-khach.webp`;
+    return `${SUPABASE_STORAGE_URL}/products/noi-that-gia-dung/sofa-phong-khach.webp`;
   }
 
-  // If already a full HTTP / HTTPS URL
+  // If already a full HTTP / HTTPS URL, return as-is without altering
   if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("//")) {
-    return path.replace("/products/products/", "/products/");
+    return path;
   }
 
   // Clean relative path prefixes
@@ -20,11 +20,6 @@ export function fixImagePath(path: string): string {
     .replace(/^public\//, "")
     .replace(/^assets\/images\/products\//, "")
     .replace(/^assets\/images\//, "");
-
-  // If cleanPath starts with products/, strip it to avoid duplication
-  if (cleanPath.startsWith("products/")) {
-    cleanPath = cleanPath.substring(9);
-  }
 
   return `${SUPABASE_STORAGE_URL}/${cleanPath}`;
 }
