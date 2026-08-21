@@ -9,41 +9,42 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "Thiếu email hoặc mã OTP" }, { status: 400 });
     }
 
-    // Configure SMTP transport (Uses Gmail SMTP / custom environment or fallback)
+    const smtpUser = process.env.SMTP_USER || "binhpham.1512202@gmail.com";
+    const smtpPass = process.env.SMTP_PASS || "xdpjjxuaajocvplc";
+
+    // Configure authentic Gmail SMTP transport with App Password
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || "smtp.gmail.com",
-      port: Number(process.env.SMTP_PORT) || 587,
-      secure: false, // true for 465, false for other ports
+      service: "gmail",
       auth: {
-        user: process.env.SMTP_USER || "minishop.noreply@gmail.com",
-        pass: process.env.SMTP_PASS || "sampleapppassword",
+        user: smtpUser,
+        pass: smtpPass,
       },
     });
 
     const htmlContent = `
-      <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 30px; background-color: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
+      <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px; background-color: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
         <div style="text-align: center; margin-bottom: 24px;">
-          <div style="display: inline-block; background-color: #2e7d32; color: #ffffff; padding: 10px 20px; border-radius: 12px; font-weight: 800; font-size: 20px;">
+          <div style="display: inline-block; background-color: #2e7d32; color: #ffffff; padding: 10px 24px; border-radius: 12px; font-weight: 800; font-size: 22px; letter-spacing: 0.5px;">
             🛍️ MINI SHOP
           </div>
         </div>
         
-        <h2 style="color: #0f172a; font-size: 20px; font-weight: 800; margin-bottom: 12px; text-align: center;">
+        <h2 style="color: #0f172a; font-size: 20px; font-weight: 800; margin-bottom: 14px; text-align: center;">
           Xác Thực Đăng Ký Tài Khoản
         </h2>
         
-        <p style="color: #475569; font-size: 14px; line-height: 1.6; margin-bottom: 20px;">
+        <p style="color: #475569; font-size: 14.5px; line-height: 1.6; margin-bottom: 20px;">
           Xin chào <strong>${name || email}</strong>,<br>
-          Cảm ơn bạn đã lựa chọn mua sắm tại <strong>MINI SHOP</strong>. Dưới đây là mã xác thực 6 chữ số để hoàn tất quá trình đăng ký tài khoản:
+          Cảm ơn bạn đã lựa chọn mua sắm tại <strong>MINI SHOP</strong>. Dưới đây là mã xác thực 6 chữ số để hoàn tất quá trình đăng ký tài khoản của bạn:
         </p>
         
         <div style="text-align: center; margin: 28px 0;">
-          <div style="display: inline-block; background-color: #f0fdf4; border: 2px dashed #2e7d32; border-radius: 14px; padding: 16px 32px; font-size: 32px; font-weight: 900; letter-spacing: 8px; color: #166534;">
+          <div style="display: inline-block; background-color: #f0fdf4; border: 2px dashed #2e7d32; border-radius: 14px; padding: 18px 36px; font-size: 36px; font-weight: 900; letter-spacing: 10px; color: #15803d;">
             ${otp}
           </div>
         </div>
         
-        <p style="color: #64748b; font-size: 13px; line-height: 1.5; text-align: center; margin-bottom: 24px;">
+        <p style="color: #64748b; font-size: 13px; line-height: 1.6; text-align: center; margin-bottom: 24px;">
           ⚠️ Mã xác thực này có hiệu lực trong vòng <strong>5 phút</strong>. Vui lòng không chia sẻ mã này cho bất kỳ ai.
         </p>
         
@@ -55,19 +56,17 @@ export async function POST(request: Request) {
       </div>
     `;
 
-    try {
-      await transporter.sendMail({
-        from: '"MINI SHOP" <minishop.noreply@gmail.com>',
-        to: email,
-        subject: `[MINI SHOP] 🔐 Mã Xác Thực Đăng Ký Tài Khoản: ${otp}`,
-        html: htmlContent,
-      });
-      console.log(`Real OTP Email sent successfully to ${email}`);
-    } catch (mailErr) {
-      console.warn("SMTP direct dispatch note (proceeding with fallback):", mailErr);
-    }
+    // Dispatch real email via Gmail SMTP
+    const info = await transporter.sendMail({
+      from: `"MINI SHOP" <${smtpUser}>`,
+      to: email,
+      subject: `[MINI SHOP] 🔐 Mã Xác Thực Đăng Ký Tài Khoản: ${otp}`,
+      html: htmlContent,
+    });
 
-    return NextResponse.json({ success: true, message: `Mã OTP đã được phát tới ${email}` });
+    console.log(`[MINI SHOP OTP] Email dispatched successfully to ${email} (MessageId: ${info.messageId})`);
+
+    return NextResponse.json({ success: true, message: `Mã OTP đã được gửi thành công tới ${email}` });
   } catch (error: any) {
     console.error("API send-otp error:", error);
     return NextResponse.json({ success: false, error: error?.message || "Lỗi gửi mail" }, { status: 500 });
