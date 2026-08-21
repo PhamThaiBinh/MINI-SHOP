@@ -10,6 +10,8 @@ import { useAuth } from "@/context/AuthContext";
 import { PRODUCTS_DATA } from "@/data/products";
 import { formatVND, fixImagePath } from "@/lib/utils";
 
+import { OnboardingModal } from "@/components/common/OnboardingModal";
+
 import { Zap, Search, ShoppingCart, Heart, LogOut } from "lucide-react";
 
 export const Header: React.FC = () => {
@@ -51,6 +53,7 @@ export const Header: React.FC = () => {
 
   return (
     <>
+      <OnboardingModal />
       {mobileMenuOpen && (
         <div
           onClick={() => setMobileMenuOpen(false)}
@@ -139,6 +142,19 @@ export const Header: React.FC = () => {
                   <span className="nav-two-lines" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
                     <Search style={{ width: 14, height: 14 }} />
                     <span>Tra cứu đơn</span>
+                  </span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/guide"
+                  className={`nav-link ${
+                    pathname === "/guide" ? "active" : ""
+                  }`}
+                  style={{ color: "#16a34a", fontWeight: 800 }}
+                >
+                  <span className="nav-two-lines" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                    <span>📖 Hướng dẫn</span>
                   </span>
                 </Link>
               </li>

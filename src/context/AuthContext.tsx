@@ -51,6 +51,7 @@ export interface UserProfile {
   vouchers: UserVoucher[];
   usedSystemCoupons?: string[];
   placedOrders?: PlacedOrder[];
+  hasCompletedOnboarding?: boolean;
 }
 
 interface AuthContextType {
@@ -73,6 +74,7 @@ interface AuthContextType {
   ) => void;
   consumeVoucher: (code: string) => void;
   addPlacedOrder: (order: PlacedOrder) => void;
+  completeOnboarding: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -569,6 +571,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setUser(updatedUser);
   };
 
+  const completeOnboarding = () => {
+    if (!user) return;
+    const hasWelcomeVoucher = (user.vouchers || []).some((v) => v.code === "WELCOME50");
+    const newVouchers = hasWelcomeVoucher
+      ? user.vouchers || []
+      : [
+          ...(user.vouchers || []),
+          {
+            code: "WELCOME50",
+            label: "Voucher Tân Thủ Giảm 50.000đ",
+            discount: 50000,
+            minOrder: 200000,
+            quantity: 1,
+          },
+        ];
+
+    const bonusPoints = 500;
+    const newPoints = user.points + bonusPoints;
+
+    const newTransaction: RedemptionHistory = {
+      id: `WELCOME-${Date.now().toString().slice(-4)}`,
+      date: new Date().toLocaleDateString("vi-VN"),
+      giftName: "🎁 Thưởng Tân Thủ Hoàn Thành Tour Hướng Dẫn",
+      pointsSpent: -bonusPoints,
+      code: "WELCOME50",
+    };
+
+    const updatedUser: UserProfile = {
+      ...user,
+      hasCompletedOnboarding: true,
+      points: newPoints,
+      vouchers: newVouchers,
+      history: [newTransaction, ...(user.history || [])],
+    };
+
+    setUser(updatedUser);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updatedUser));
+      localStorage.setItem(`minishop_onboarding_completed_${user.username}`, "true");
+      localStorage.setItem(`minishop_user_points_${user.username}`, String(newPoints));
+      localStorage.setItem(`minishop_user_history_${user.username}`, JSON.stringify(updatedUser.history));
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -582,6 +628,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         addPointsAndHistory,
         consumeVoucher,
         addPlacedOrder,
+        completeOnboarding,
       }}
     >
       {children}
