@@ -32,26 +32,55 @@ import {
   LiveChatSession,
 } from "@/lib/liveChatService";
 
+import { useAuth } from "@/context/AuthContext";
+
 export const ChatbotWidget: React.FC = () => {
   const { addToCart } = useCart();
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [inputText, setInputText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [hasUnread, setHasUnread] = useState(true);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [guestToken, setGuestToken] = useState<string>("");
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Initial welcome message
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: "init-1",
-      sender: "bot",
-      text: "👋 **Xin chào! Em là Trợ Lý AI của MINI SHOP.**\nEm có thể giúp anh/chị chọn đồ nội thất đẹp, tra cứu đơn hàng hoặc săn mã giảm giá hôm nay!",
-      timestamp: "Vừa xong",
-      quickReplies: ["🛍️ Gợi ý Bàn ghế & Sofa", "🚚 Tra cứu đơn hàng", "🎟️ Lấy mã giảm giá", "🛡️ Chính sách bảo hành"],
-    },
-  ]);
+  // Initialize guest token on client
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      let token = sessionStorage.getItem("minishop_guest_token");
+      if (!token) {
+        token = Math.floor(1000 + Math.random() * 9000).toString();
+        sessionStorage.setItem("minishop_guest_token", token);
+      }
+      setGuestToken(token);
+    }
+  }, []);
+
+  // Compute Per-User Dynamic Session ID & Info
+  const activeSessionId = user
+    ? `session-${user.email.replace(/[^a-zA-Z0-9]/g, "_")}`
+    : `session-guest-${guestToken || "default"}`;
+
+  const activeCustomerName = user ? user.name : `Khách Vãng Lai ${guestToken ? "#" + guestToken : ""}`;
+  const activeCustomerEmail = user ? user.email : `guest_${guestToken || "visitor"}@minishop.vn`;
+  const activeCustomerPhone = user ? user.phone || "" : "";
+  const activeAvatarText = user ? user.name.charAt(0).toUpperCase() : "K";
+  const activeAvatarBg = user ? "#2e7d32" : "#64748b";
+
+  // Initial welcome message template
+  const welcomeMsg: ChatMessage = {
+    id: "init-1",
+    sender: "bot",
+    text: user
+      ? `👋 **Xin chào ${user.name}! Em là Trợ Lý AI của MINI SHOP.**\nEm có thể giúp gì cho anh/chị hôm nay ạ?`
+      : "👋 **Xin chào! Em là Trợ Lý AI của MINI SHOP.**\nEm có thể giúp anh/chị chọn đồ nội thất đẹp, tra cứu đơn hàng hoặc săn mã giảm giá hôm nay!",
+    timestamp: "Vừa xong",
+    quickReplies: ["🛍️ Gợi ý Bàn ghế & Sofa", "🚚 Tra cứu đơn hàng", "🎟️ Lấy mã giảm giá", "🛡️ Chính sách bảo hành"],
+  };
+
+  const [messages, setMessages] = useState<ChatMessage[]>([welcomeMsg]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -64,10 +93,12 @@ export const ChatbotWidget: React.FC = () => {
     }
   }, [isOpen, messages, isTyping]);
 
-  // Realtime Sync with Supabase Database & Local Storage
+  // Sync with Supabase Database for Active User Session
   useEffect(() => {
+    if (!activeSessionId) return;
+
     const syncWithSupabase = async () => {
-      const liveMsgs = await fetchSupabaseMessages("session-binh");
+      const liveMsgs = await fetchSupabaseMessages(activeSessionId);
       if (liveMsgs.length > 0) {
         const formattedLive: ChatMessage[] = liveMsgs.map((lm) => ({
           id: lm.id,
@@ -75,19 +106,16 @@ export const ChatbotWidget: React.FC = () => {
           text: lm.message,
           timestamp: lm.created_at,
         }));
-        setMessages((prev) => {
-          if (formattedLive.length > prev.length) {
-            return formattedLive;
-          }
-          return prev;
-        });
+        setMessages(formattedLive);
+      } else {
+        setMessages([welcomeMsg]);
       }
     };
 
     syncWithSupabase();
     const interval = setInterval(syncWithSupabase, 800);
     return () => clearInterval(interval);
-  }, []);
+  }, [activeSessionId, user]);
 
   const handleSendMessage = async (textToSend?: string) => {
     const text = (textToSend || inputText).trim();
@@ -107,17 +135,20 @@ export const ChatbotWidget: React.FC = () => {
     // Sync to Supabase Database & Live Chat storage for Admin Dashboard
     const newLiveMsg: LiveChatMessage = {
       id: `user-m-${Date.now()}`,
-      session_id: "session-binh",
+      session_id: activeSessionId,
       sender_type: "customer",
-      sender_name: "Phạm Thái Bình",
+      sender_name: activeCustomerName,
       message: text,
       created_at: userTime,
     };
 
     await syncInsertMessageToSupabase(newLiveMsg, {
-      customer_name: "Phạm Thái Bình",
-      customer_email: "binhpham.1512202@gmail.com",
-      customer_phone: "0988123456",
+      id: activeSessionId,
+      customer_name: activeCustomerName,
+      customer_email: activeCustomerEmail,
+      customer_phone: activeCustomerPhone,
+      avatar_bg: activeAvatarBg,
+      avatar_text: activeAvatarText,
       last_message: text,
       last_message_at: userTime,
       unread_count: 1,
@@ -125,7 +156,7 @@ export const ChatbotWidget: React.FC = () => {
 
     // Check if session is currently in Human Admin mode
     const sessions = await fetchSupabaseSessions();
-    const currentSession = sessions.find((s) => s.id === "session-binh");
+    const currentSession = sessions.find((s) => s.id === activeSessionId);
     if (currentSession?.mode === "human") {
       return;
     }
@@ -140,7 +171,7 @@ export const ChatbotWidget: React.FC = () => {
       // Sync Bot response to Supabase Database for Admin
       const botLiveMsg: LiveChatMessage = {
         id: botResponse.id,
-        session_id: "session-binh",
+        session_id: activeSessionId,
         sender_type: "bot",
         sender_name: "Trợ Lý MINI SHOP",
         message: botResponse.text,
@@ -148,6 +179,12 @@ export const ChatbotWidget: React.FC = () => {
       };
 
       await syncInsertMessageToSupabase(botLiveMsg, {
+        id: activeSessionId,
+        customer_name: activeCustomerName,
+        customer_email: activeCustomerEmail,
+        customer_phone: activeCustomerPhone,
+        avatar_bg: activeAvatarBg,
+        avatar_text: activeAvatarText,
         last_message: botResponse.text,
         last_message_at: botResponse.timestamp,
         unread_count: 0,

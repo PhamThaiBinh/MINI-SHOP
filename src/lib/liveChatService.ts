@@ -162,13 +162,15 @@ export async function syncInsertMessageToSupabase(msg: LiveChatMessage, sessionU
 
     if (sessionUpdate) {
       await supabase.from("live_chat_sessions").upsert({
-        id: msg.session_id,
-        customer_name: sessionUpdate.customer_name || "Phạm Thái Bình",
-        customer_email: sessionUpdate.customer_email || "binhpham.1512202@gmail.com",
-        customer_phone: sessionUpdate.customer_phone || "0988123456",
+        id: sessionUpdate.id || msg.session_id,
+        customer_name: sessionUpdate.customer_name || "Khách Hàng",
+        customer_email: sessionUpdate.customer_email || "khach@minishop.vn",
+        customer_phone: sessionUpdate.customer_phone || "",
+        avatar_bg: sessionUpdate.avatar_bg || "#2e7d32",
+        avatar_text: sessionUpdate.avatar_text || "K",
         mode: sessionUpdate.mode || "human",
-        last_message: msg.message,
-        last_message_at: msg.created_at,
+        last_message: sessionUpdate.last_message || msg.message,
+        last_message_at: sessionUpdate.last_message_at || msg.created_at,
         unread_count: sessionUpdate.unread_count ?? 0,
         updated_at: new Date().toISOString(),
       });
