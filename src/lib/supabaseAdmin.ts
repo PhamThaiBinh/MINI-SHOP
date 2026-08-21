@@ -426,8 +426,12 @@ export const saveAdminProduct = async (product: Partial<Product>): Promise<boole
 export const deleteAdminProduct = async (id: number): Promise<boolean> => {
   try {
     const supabase = createClient();
-    const { error } = await supabase.from("products").delete().or(`original_id.eq.${id},id.eq.${id}`);
-    return !error;
+    const { error } = await supabase.from("products").delete().eq("id", id);
+    if (error) {
+      console.error("Error deleting product:", error.message);
+      return false;
+    }
+    return true;
   } catch (err) {
     console.error("Error deleting product:", err);
     return false;
