@@ -111,19 +111,22 @@ export const ChatbotWidget: React.FC = () => {
     };
     saveLocalMessages("session-binh", [...currentLiveMsgs, newLiveMsg]);
 
-    // Check if session is currently in Human Admin mode
+    // Always update session activity for Admin view
     const sessions = getLocalSessions();
-    const currentSession = sessions.find((s) => s.id === "session-binh");
+    const updatedSessions = sessions.map((s) =>
+      s.id === "session-binh"
+        ? {
+            ...s,
+            last_message: text,
+            last_message_at: userTime,
+            unread_count: (s.unread_count || 0) + 1,
+          }
+        : s
+    );
+    saveLocalSessions(updatedSessions);
 
+    const currentSession = sessions.find((s) => s.id === "session-binh");
     if (currentSession?.mode === "human") {
-      // Update unread count for Admin
-      saveLocalSessions(
-        sessions.map((s) =>
-          s.id === "session-binh"
-            ? { ...s, last_message: text, last_message_at: userTime, unread_count: s.unread_count + 1 }
-            : s
-        )
-      );
       return;
     }
 

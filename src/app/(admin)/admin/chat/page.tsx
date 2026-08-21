@@ -42,33 +42,52 @@ export default function AdminLiveChatPage() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Load sessions on mount
+  // Realtime Sync Polling & Storage Event Listener with Customer Chat
   useEffect(() => {
-    const loadedSessions = getLocalSessions();
-    setSessions(loadedSessions);
-    if (loadedSessions.length > 0 && !selectedSessionId) {
-      setSelectedSessionId(loadedSessions[0].id);
-    }
-  }, []);
+    const syncData = () => {
+      const latestSessions = getLocalSessions();
+      setSessions(latestSessions);
 
-  // Load messages whenever selected session changes
+      if (selectedSessionId) {
+        const latestMsgs = getLocalMessages(selectedSessionId);
+        setMessages(latestMsgs);
+      }
+    };
+
+    // Initial sync
+    syncData();
+
+    // Polling interval every 800ms
+    const interval = setInterval(syncData, 800);
+
+    // Cross-tab storage listener
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "minishop_live_sessions" || e.key?.startsWith("minishop_live_msg_")) {
+        syncData();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, [selectedSessionId]);
+
+  // Load messages & clear unread when selected session changes
   useEffect(() => {
     if (!selectedSessionId) return;
     const msgs = getLocalMessages(selectedSessionId);
     setMessages(msgs);
 
-    // Clear unread count for selected session
-    setSessions((prev) =>
-      prev.map((s) => (s.id === selectedSessionId ? { ...s, unread_count: 0 } : s))
+    const latestSessions = getLocalSessions();
+    const updatedSessions = latestSessions.map((s) =>
+      s.id === selectedSessionId ? { ...s, unread_count: 0 } : s
     );
+    setSessions(updatedSessions);
+    saveLocalSessions(updatedSessions);
   }, [selectedSessionId]);
-
-  // Save sessions whenever changed
-  useEffect(() => {
-    if (sessions.length > 0) {
-      saveLocalSessions(sessions);
-    }
-  }, [sessions]);
 
   // Scroll to bottom of chat
   useEffect(() => {
@@ -95,14 +114,15 @@ export default function AdminLiveChatPage() {
     setMessages(updatedMsgs);
     saveLocalMessages(selectedSessionId, updatedMsgs);
 
-    // Update last message in sessions list
-    setSessions((prev) =>
-      prev.map((s) =>
-        s.id === selectedSessionId
-          ? { ...s, last_message: `Admin: ${text}`, last_message_at: currentTime }
-          : s
-      )
+    // Update last message in sessions list & save to localStorage
+    const latestSessions = getLocalSessions();
+    const updatedSessions = latestSessions.map((s) =>
+      s.id === selectedSessionId
+        ? { ...s, last_message: `Admin: ${text}`, last_message_at: currentTime }
+        : s
     );
+    setSessions(updatedSessions);
+    saveLocalSessions(updatedSessions);
 
     if (!textToSend) setInputText("");
   };
@@ -111,9 +131,12 @@ export default function AdminLiveChatPage() {
     if (!selectedSessionId) return;
     const newMode = selectedSession?.mode === "human" ? "bot" : "human";
 
-    setSessions((prev) =>
-      prev.map((s) => (s.id === selectedSessionId ? { ...s, mode: newMode } : s))
+    const latestSessions = getLocalSessions();
+    const updatedSessions = latestSessions.map((s) =>
+      s.id === selectedSessionId ? { ...s, mode: newMode as "bot" | "human" } : s
     );
+    setSessions(updatedSessions);
+    saveLocalSessions(updatedSessions);
 
     // Add system notification message
     const sysMsg: LiveChatMessage = {
