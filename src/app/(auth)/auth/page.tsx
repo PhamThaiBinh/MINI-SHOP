@@ -1,628 +1,124 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import "@/styles/auth.css";
 import { useAuth } from "@/context/AuthContext";
 import { fetchProvincesApi, fetchWardsForProvinceApi } from "@/lib/locationApi";
-import { fixImagePath } from "@/lib/utils";
-import { createClient } from "@/utils/supabase/client";
-import { getAllOrders, getOrdersForUser, cancelOrderWithReason, UnifiedOrder } from "@/utils/orderStorage";
+import { getOrdersForUser, cancelOrderWithReason } from "@/utils/orderStorage";
 import {
   fetchUserAddressesFromSupabase,
   addUserAddressToSupabase,
   setDefaultUserAddressInSupabase,
   deleteUserAddressFromSupabase,
 } from "@/lib/supabaseAddress";
-import {
-  fetchUserRewardsFromSupabase,
-  syncUserRewardsToSupabase,
-} from "@/lib/supabaseUserFeatures";
-import { User, Gift, Package, MapPin, LogOut, Eye, EyeOff, Key, Save, Check, Crown, ListCheck, Disc, Ticket, History, Gem, Award, Star, Calendar, Link2, AlertTriangle, Truck, Sofa, Edit3, CheckCircle2, Trash2, Copy, Send, X, Search, Share2, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Sparkles, ShieldCheck } from "lucide-react";
 import { OtpVerificationModal } from "@/components/common/OtpVerificationModal";
+import { AddressItem, CustomerOrder } from "@/components/auth/types";
+import { LoginForm } from "@/components/auth/AuthForms/LoginForm";
+import { RegisterForm } from "@/components/auth/AuthForms/RegisterForm";
+import { ProfileHeader } from "@/components/auth/ProfileTabs/ProfileHeader";
+import { ProfileNavTabs, AuthProfileTab } from "@/components/auth/ProfileTabs/ProfileNavTabs";
+import { AccountInfoTab } from "@/components/auth/ProfileTabs/AccountInfoTab";
+import { OrderHistoryTab } from "@/components/auth/ProfileTabs/OrderHistoryTab";
+import { AddressBookTab } from "@/components/auth/ProfileTabs/AddressBookTab";
+import { RewardsPointsTab } from "@/components/auth/ProfileTabs/RewardsPointsTab";
+import { SecuritySettingsTab } from "@/components/auth/ProfileTabs/SecuritySettingsTab";
+import { OrderDetailModal } from "@/components/auth/Shared/OrderDetailModal";
+import { OrderReviewModal } from "@/components/auth/Shared/OrderReviewModal";
+import { AlertTriangle, CheckCircle2, X } from "lucide-react";
 
-interface AddressItem {
-  id: number;
-  name: string;
-  phone: string;
-  province: string;
-  ward: string;
-  detail: string;
-  isDefault: boolean;
-}
-
-interface SearchableDropdownProps {
-  label: string;
-  value: string;
-  options: string[];
-  placeholderSearch: string;
-  onSelect: (val: string) => void;
-}
-
-const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
-  label,
-  value,
-  options,
-  placeholderSearch,
-  onSelect,
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [highlightedIndex, setHighlightedIndex] = useState(0);
-  const listRef = React.useRef<HTMLDivElement>(null);
-
-  const filteredOptions = options.filter((opt) =>
-    opt.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  // Reset highlight to top when search term changes or dropdown opens
-  useEffect(() => {
-    setHighlightedIndex(0);
-  }, [searchTerm, isOpen]);
-
-  // Scroll highlighted item into view
-  useEffect(() => {
-    if (isOpen && listRef.current) {
-      const highlightedEl = listRef.current.children[highlightedIndex] as HTMLElement;
-      if (highlightedEl) {
-        highlightedEl.scrollIntoView({ block: "nearest" });
-      }
-    }
-  }, [highlightedIndex, isOpen]);
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!isOpen) {
-      if (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Enter") {
-        setIsOpen(true);
-        e.preventDefault();
-      }
-      return;
-    }
-
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setHighlightedIndex((prev) =>
-        prev < filteredOptions.length - 1 ? prev + 1 : 0
-      );
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setHighlightedIndex((prev) =>
-        prev > 0 ? prev - 1 : filteredOptions.length - 1
-      );
-    } else if (e.key === "Enter") {
-      e.preventDefault();
-      if (filteredOptions[highlightedIndex]) {
-        onSelect(filteredOptions[highlightedIndex]);
-        setIsOpen(false);
-        setSearchTerm("");
-      }
-    } else if (e.key === "Escape") {
-      e.preventDefault();
-      setIsOpen(false);
-    }
-  };
-
-  return (
-    <div style={{ marginBottom: "12px", position: "relative" }}>
-      <label className="auth-label">{label}</label>
-      <div
-        onClick={() => setIsOpen(!isOpen)}
-        className="form-control auth-input"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            setIsOpen(!isOpen);
-            e.preventDefault();
-          }
-        }}
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          cursor: "pointer",
-          background: "#fff",
-          userSelect: "none",
-        }}
-      >
-        <span style={{ fontWeight: 600, color: value ? "var(--text-main)" : "var(--text-muted)" }}>
-          {value || "Vui lòng chọn..."}
-        </span>
-        <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>
-          {isOpen ? <ChevronUp className="w-4 h-4 text-emerald-700" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
-        </span>
-      </div>
-
-      {isOpen && (
-        <div
-          style={{
-            position: "absolute",
-            top: "100%",
-            left: 0,
-            right: 0,
-            zIndex: 999,
-            background: "#fff",
-            border: "1px solid var(--border-color)",
-            borderRadius: "var(--radius-md)",
-            boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
-            marginTop: "4px",
-            overflow: "hidden",
-          }}
-        >
-          <div style={{ padding: "8px", background: "#f8fafc", borderBottom: "1px solid var(--border-color)" }}>
-            <input
-              type="text"
-              autoFocus
-              className="form-control auth-input"
-              style={{ fontSize: "13px", height: "36px", margin: 0 }}
-              placeholder={placeholderSearch}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyDown={handleKeyDown}
-              onClick={(e) => e.stopPropagation()}
-            />
-          </div>
-
-          <div ref={listRef} style={{ maxHeight: "200px", overflowY: "auto" }}>
-            {filteredOptions.length > 0 ? (
-              filteredOptions.map((opt, idx) => {
-                const isSelected = opt === value;
-                const isHighlighted = idx === highlightedIndex;
-                return (
-                  <div
-                    key={opt}
-                    onClick={() => {
-                      onSelect(opt);
-                      setIsOpen(false);
-                      setSearchTerm("");
-                    }}
-                    onMouseEnter={() => setHighlightedIndex(idx)}
-                    style={{
-                      padding: "8px 12px",
-                      fontSize: "13px",
-                      cursor: "pointer",
-                      background: isHighlighted
-                        ? "#dbeafe"
-                        : isSelected
-                        ? "#e8f5e9"
-                        : "#fff",
-                      fontWeight: isSelected || isHighlighted ? 700 : 400,
-                      color: isHighlighted
-                        ? "#1e40af"
-                        : isSelected
-                        ? "var(--primary-color)"
-                        : "var(--text-main)",
-                      borderBottom: "1px solid #f1f5f9",
-                    }}
-                  >
-                    {opt}
-                  </div>
-                );
-              })
-            ) : (
-              <div style={{ padding: "12px", fontSize: "13px", color: "var(--text-muted)", textAlign: "center" }}>
-                Không tìm thấy kết quả phù hợp
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-interface CustomerOrder {
-  id: string;
-  date: string;
-  status: "completed" | "shipping" | "processing";
-  statusText: string;
-  recipientName: string;
-  recipientPhone: string;
-  address: string;
-  paymentMethod: string;
-  items: {
-    name: string;
-    image: string;
-    qty: number;
-    price: number;
-  }[];
-  subtotal: number;
-  discount: number;
-  total: number;
-}
-
-const MOCK_ORDERS: CustomerOrder[] = [
-  {
-    id: "#MS-9824",
-    date: "12/08/2026",
-    status: "shipping",
-    statusText: "Đang giao hàng",
-    recipientName: "Bình Nguyễn",
-    recipientPhone: "0988.123.456",
-    address: "123 Đường Nguyễn Trãi, Phường Bến Thành, Quận 1, TP. Hồ Chí Minh",
-    paymentMethod: "COD (Thanh toán khi nhận hàng)",
-    items: [
-      {
-        name: "Sofa Vải Hiện Đại Nordic",
-        image: "/assets/images/products/noi-that-gia-dung/sofa-phong-khach.webp",
-        qty: 1,
-        price: 2990000,
-      },
-      {
-        name: "Đèn Thả Trần Decor",
-        image: "/assets/images/products/do-my-nghe/den-tre-thu-cong.webp",
-        qty: 1,
-        price: 599000,
-      },
-    ],
-    subtotal: 3589000,
-    discount: 50000,
-    total: 3539000,
-  },
-  {
-    id: "#MS-7102",
-    date: "01/08/2026",
-    status: "completed",
-    statusText: "Đã hoàn thành",
-    recipientName: "Bình Nguyễn",
-    recipientPhone: "0988.123.456",
-    address: "123 Đường Nguyễn Trãi, Phường Bến Thành, Quận 1, TP. Hồ Chí Minh",
-    paymentMethod: "Chuyển khoản VietQR",
-    items: [
-      {
-        name: "Bàn Ăn Gỗ Sồi Tự Nhiên",
-        image: "/assets/images/products/noi-that-gia-dung/bo-ban-an-go.webp",
-        qty: 1,
-        price: 3490000,
-      },
-    ],
-    subtotal: 3490000,
-    discount: 0,
-    total: 3490000,
-  },
-];
-
-const SPOTLIGHT_SLIDES = [
-  {
-    image: "assets/images/banner/auth-banner-1.webp",
-  },
-  {
-    image: "assets/images/banner/auth-banner-2.webp",
-  },
-  {
-    image: "assets/images/banner/auth-banner-3.webp",
-  },
-  {
-    image: "assets/images/banner/auth-banner-4.webp",
-  },
-];
-
-export default function AuthPage() {
+function AuthPageContent() {
   const router = useRouter();
-  const { user, signUp, signIn, logout, redeemGift, addPointsAndHistory } = useAuth();
+  const searchParams = useSearchParams();
+  const { user, loading, signIn, signUp, loginUser, logout, redeemGift, addPointsAndHistory } = useAuth();
 
+  // Auth Guest Mode Tabs
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
-  const [authError, setAuthError] = useState("");
-  const [authSuccess, setAuthSuccess] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [authError, setAuthError] = useState<string>("");
+  const [authSuccess, setAuthSuccess] = useState<string>("");
 
-  const [spotlightIndex, setSpotlightIndex] = useState(0);
+  // OTP Modal State
+  const [showOtpModal, setShowOtpModal] = useState<boolean>(false);
+  const [sentOtpToken, setSentOtpToken] = useState<string>("");
+  const [regName, setRegName] = useState<string>("");
+  const [regEmail, setRegEmail] = useState<string>("");
+  const [regPassword, setRegPassword] = useState<string>("");
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setSpotlightIndex((prev) => (prev + 1) % SPOTLIGHT_SLIDES.length);
-    }, 4000);
-    return () => clearInterval(timer);
-  }, []);
+  // Profile Tab State
+  const [profileTab, setProfileTab] = useState<AuthProfileTab>("profile");
 
-  React.useEffect(() => {
-    if (user && user.role === "admin") {
-      router.push("/admin");
-    }
-  }, [user, router]);
+  // Orders State
+  const [liveOrders, setLiveOrders] = useState<CustomerOrder[]>([]);
+  const [selectedOrder, setSelectedOrder] = useState<CustomerOrder | null>(null);
+  const [showReviewModal, setShowReviewModal] = useState<boolean>(false);
+  const [showCancelModal, setShowCancelModal] = useState<boolean>(false);
+  const [cancelTargetOrder, setCancelTargetOrder] = useState<CustomerOrder | null>(null);
+  const [cancelReasonPreset, setCancelReasonPreset] = useState<string>("Đổi ý không muốn mua nữa");
+  const [cancelReasonCustom, setCancelReasonCustom] = useState<string>("");
 
-  // Form states
-  const [loginEmail, setLoginEmail] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
-  const [regName, setRegName] = useState("");
-  const [regEmail, setRegEmail] = useState("");
-  const [regPhone, setRegPhone] = useState("");
-  const [regPassword, setRegPassword] = useState("");
-  const [regConfirmPassword, setRegConfirmPassword] = useState("");
-
-  // Eye toggle states
-  const [showLoginPassword, setShowLoginPassword] = useState(false);
-  const [showRegPassword, setShowRegPassword] = useState(false);
-  const [showRegConfirmPassword, setShowRegConfirmPassword] = useState(false);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const mode = params.get("mode") || params.get("tab");
-      if (mode === "register") {
-        setActiveTab("register");
-      }
-    }
-  }, []);
-
-  // Dashboard Subtabs
-  const [dashboardTab, setDashboardTab] = useState<
-    "profile" | "rewards" | "orders" | "address"
-  >("profile");
-
-  const [rewardSubTab, setRewardSubTab] = useState<
-    "tiers" | "tasks" | "wheel" | "catalog" | "manage" | "history"
-  >("tiers");
-
-  const getVnTodayStr = () => {
-    return new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Ho_Chi_Minh" });
-  };
-
-  const [hasCheckedIn, setHasCheckedIn] = useState(false);
-
-  // 3-Stage Task States: "not_started" | "performed" | "claimed"
-  const [shareTaskStatus, setShareTaskStatus] = useState<"not_started" | "performed" | "claimed">("not_started");
-  const [reviewTaskStatus, setReviewTaskStatus] = useState<"not_started" | "performed" | "claimed">("not_started");
-
-  // Task Modals
-  const [showShareModal, setShowShareModal] = useState(false);
-  const [showReviewModal, setShowReviewModal] = useState(false);
-  const [reviewRating, setReviewRating] = useState(5);
-  const [reviewComment, setReviewComment] = useState("");
-
-  const [hasSpunWheelToday, setHasSpunWheelToday] = useState(false);
-  const [isSpinning, setIsSpinning] = useState(false);
-  const [spinDeg, setSpinDeg] = useState(0);
-  const [spinResultMsg, setSpinResultMsg] = useState("");
-  const [redeemFeedback, setRedeemFeedback] = useState("");
-  const [liveOrders, setLiveOrders] = useState<UnifiedOrder[]>([]);
-
-  // OpenAdminData API location state
+  // Addresses State
+  const [addresses, setAddresses] = useState<AddressItem[]>([]);
   const [provincesList, setProvincesList] = useState<string[]>([]);
   const [wardsList, setWardsList] = useState<string[]>([]);
 
   useEffect(() => {
-    async function initLocations() {
-      const provs = await fetchProvincesApi();
-      setProvincesList(provs);
-      const firstProv = provs.find(p => p.includes("Hồ Chí Minh")) || provs[0] || "Thành phố Hồ Chí Minh";
-      setAddrProvince(firstProv);
-      const wards = await fetchWardsForProvinceApi(firstProv);
-      setWardsList(wards);
-      if (wards.length > 0) setAddrWard(wards[0]);
+    const tabParam = searchParams.get("tab");
+    if (tabParam === "register") {
+      setActiveTab("register");
+    } else {
+      setActiveTab("login");
     }
-    initLocations();
-  }, []);
+  }, [searchParams]);
 
+  // Sync Orders & Addresses on login
   useEffect(() => {
-    const supabase = createClient();
-    const updateOrders = () => {
-      const userOrds = getOrdersForUser(user?.username || user?.email || user?.phone || "binh");
-      setLiveOrders(userOrds);
-    };
-    updateOrders();
-    window.addEventListener("ordersUpdated", updateOrders);
-
-    const channel = supabase
-      .channel("orders_realtime_changes")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "orders" },
-        () => {
-          updateOrders();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      window.removeEventListener("ordersUpdated", updateOrders);
-      supabase.removeChannel(channel);
-    };
-  }, [user]);
-
-  React.useEffect(() => {
-    if (typeof window !== "undefined") {
-      const todayStr = getVnTodayStr();
-      setHasCheckedIn(localStorage.getItem("minishop_task_checkin") === todayStr);
-
-      const shareClaimed = localStorage.getItem("minishop_task_share_claimed") === todayStr;
-      const sharePerformed = localStorage.getItem("minishop_task_share_performed") === todayStr;
-      setShareTaskStatus(shareClaimed ? "claimed" : sharePerformed ? "performed" : "not_started");
-
-      const reviewClaimed = localStorage.getItem("minishop_task_review_claimed") === todayStr;
-      const reviewPerformed = localStorage.getItem("minishop_task_review_performed") === todayStr;
-      setReviewTaskStatus(reviewClaimed ? "claimed" : reviewPerformed ? "performed" : "not_started");
-
-      setHasSpunWheelToday(localStorage.getItem("minishop_wheel_spin") === todayStr);
-    }
-  }, []);
-
-  const handleCheckIn = async () => {
-    const todayStr = getVnTodayStr();
-    if (hasCheckedIn) return;
-    setHasCheckedIn(true);
-    localStorage.setItem("minishop_task_checkin", todayStr);
-    addPointsAndHistory("Điểm danh hàng ngày", 50, "CHECKIN");
-  };
-
-  const handlePerformShare = () => {
-    setShowShareModal(true);
-  };
-
-  const handleConfirmShareAction = () => {
-    const todayStr = getVnTodayStr();
-    setShowShareModal(false);
-    setShareTaskStatus("performed");
-    localStorage.setItem("minishop_task_share_performed", todayStr);
-    setRedeemFeedback("🎉 Đã xác nhận bài đăng chia sẻ lên Facebook/Zalo! Bạn có thể bấm nút 'Nhận quà (+100 điểm)' ngay bây giờ.");
-    setTimeout(() => setRedeemFeedback(""), 5000);
-  };
-
-  const handleClaimShare = () => {
-    const todayStr = getVnTodayStr();
-    setShareTaskStatus("claimed");
-    localStorage.setItem("minishop_task_share_claimed", todayStr);
-    addPointsAndHistory("Chia sẻ Mini Shop lên MXH", 100, "SHARE");
-  };
-
-  const handlePerformReview = () => {
-    setShowReviewModal(true);
-  };
-
-  const handleConfirmReviewAction = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!reviewComment.trim()) {
-      alert("Vui lòng nhập cảm nhận đánh giá của bạn trước khi gửi!");
-      return;
-    }
-    const todayStr = getVnTodayStr();
-    setShowReviewModal(false);
-    setReviewTaskStatus("performed");
-    localStorage.setItem("minishop_task_review_performed", todayStr);
-    setRedeemFeedback("⭐ Gửi đánh giá sản phẩm thành công! Bạn có thể bấm nút 'Nhận quà (+80 điểm)' ngay bây giờ.");
-    setTimeout(() => setRedeemFeedback(""), 5000);
-  };
-
-  const handleClaimReview = () => {
-    const todayStr = getVnTodayStr();
-    setReviewTaskStatus("claimed");
-    localStorage.setItem("minishop_task_review_claimed", todayStr);
-    addPointsAndHistory("Đánh giá sản phẩm đã mua", 80, "REVIEW");
-  };
-
-  const handleResetTestingData = async () => {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("minishop_task_checkin");
-      localStorage.removeItem("minishop_task_share_performed");
-      localStorage.removeItem("minishop_task_share_claimed");
-      localStorage.removeItem("minishop_task_review_performed");
-      localStorage.removeItem("minishop_task_review_claimed");
-      localStorage.removeItem("minishop_wheel_spin");
-      localStorage.removeItem("minishop_all_orders");
-    }
-
-    setHasCheckedIn(false);
-    setShareTaskStatus("not_started");
-    setReviewTaskStatus("not_started");
-    setHasSpunWheelToday(false);
-
     if (user) {
-      user.points = 0;
-      user.history = [];
-      await syncUserRewardsToSupabase(user.username || user.email || "binh", {
-        points: 0,
-        history: [],
+      const userOrders = getOrdersForUser(user.username || user.name);
+      setLiveOrders(userOrders as CustomerOrder[]);
+
+      fetchUserAddressesFromSupabase(user.email || user.username || "user").then((savedAddrs) => {
+        if (savedAddrs.length > 0) {
+          setAddresses(savedAddrs);
+        } else {
+          setAddresses([
+            {
+              id: 1,
+              name: user.name,
+              phone: user.phone || "0988.123.456",
+              province: "Thành phố Hồ Chí Minh",
+              ward: "Phường Bến Thành",
+              detail: "123 Đường Nguyễn Trãi",
+              isDefault: true,
+            },
+          ]);
+        }
       });
     }
-
-    setRedeemFeedback("🔄 Đã RESET toàn bộ dữ liệu Tích Điểm & Nhiệm Vụ thành công! Bạn có thể thực hiện kiểm thử lại từ đầu.");
-    setTimeout(() => setRedeemFeedback(""), 5000);
-  };
-
-  const handleSpinWheel = () => {
-    const todayStr = getVnTodayStr();
-    if (isSpinning || hasSpunWheelToday) return;
-    setIsSpinning(true);
-    setSpinResultMsg("");
-
-    const extraRounds = 5 * 360;
-    const randomAngle = Math.floor(Math.random() * 360);
-    const newDeg = spinDeg + extraRounds + randomAngle;
-    setSpinDeg(newDeg);
-
-    setTimeout(() => {
-      setIsSpinning(false);
-      setHasSpunWheelToday(true);
-      localStorage.setItem("minishop_wheel_spin", todayStr);
-
-      let pts = 50;
-      if (randomAngle % 3 === 0) pts = 100;
-      else if (randomAngle % 2 === 0) pts = 150;
-
-      addPointsAndHistory("Vòng quay may mắn", pts, "WHEEL");
-      setSpinResultMsg(`Chúc mừng! Bạn quay trúng +${pts} Điểm Thưởng! (Đã cộng vào Lịch sử)`);
-    }, 3500);
-  };
-
-  // Orders State & Modal
-  const [selectedOrder, setSelectedOrder] = useState<UnifiedOrder | null>(
-    null
-  );
-  const [showCancelModal, setShowCancelModal] = useState(false);
-  const [cancelTargetOrder, setCancelTargetOrder] = useState<UnifiedOrder | null>(null);
-  const [cancelReasonPreset, setCancelReasonPreset] = useState("Thay đổi địa chỉ / Số điện thoại nhận hàng");
-  const [cancelReasonCustom, setCancelReasonCustom] = useState("");
-
-  const CANCELLATION_REASONS = [
-    "Thay đổi địa chỉ / Số điện thoại nhận hàng",
-    "Muốn đổi / thêm bớt sản phẩm trong đơn hàng",
-    "Quên áp dụng mã giảm giá / Voucher ưu đãi",
-    "Thời gian giao hàng không phù hợp",
-    "Tìm được sản phẩm khác giá tốt hơn",
-    "Lý do khác (Cho phép nhập ghi chú bên dưới)",
-  ];
-
-  const handleConfirmCancelOrder = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!cancelTargetOrder) return;
-    const finalReason = cancelReasonPreset.includes("Lý do khác")
-      ? cancelReasonCustom.trim() || "Lý do cá nhân"
-      : cancelReasonPreset;
-
-    cancelOrderWithReason(cancelTargetOrder.id, finalReason);
-    setShowCancelModal(false);
-    setCancelTargetOrder(null);
-    setCancelReasonCustom("");
-
-    const userOrds = getOrdersForUser(user?.username || user?.phone || "binh");
-    setLiveOrders(userOrds.length > 0 ? userOrds : getAllOrders());
-  };
-
-  const [addresses, setAddresses] = useState<AddressItem[]>([]);
-
-  const loadAddresses = async () => {
-    if (user) {
-      const data = await fetchUserAddressesFromSupabase(user.username || user.email || "binh");
-      // Auto-sort default address to top line (index 0)
-      const sorted = [...data].sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0));
-      setAddresses(sorted);
-    }
-  };
-
-  useEffect(() => {
-    loadAddresses();
   }, [user]);
 
-  const [showAddAddressModal, setShowAddAddressModal] = useState(false);
-  const [addrName, setAddrName] = useState("");
-  const [addrPhone, setAddrPhone] = useState("");
-  const [addrProvince, setAddrProvince] = useState("Thành phố Hồ Chí Minh");
-  const [addrWard, setAddrWard] = useState("");
-  const [addrDetail, setAddrDetail] = useState("");
-  const [addrSetDefault, setAddrSetDefault] = useState(false);
+  // Load Provinces
+  useEffect(() => {
+    fetchProvincesApi().then((provs) => setProvincesList(provs));
+  }, []);
 
-  const handleSelectProvince = async (selected: string) => {
-    setAddrProvince(selected);
-    const wards = await fetchWardsForProvinceApi(selected);
+  const handleSelectProvince = async (provName: string) => {
+    const wards = await fetchWardsForProvinceApi(provName);
     setWardsList(wards);
-    setAddrWard(wards[0] || "");
   };
 
-  const handleLoginSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Login Submit
+  const handleLoginSubmit = async (email: string, pass: string) => {
     setAuthError("");
     setAuthSuccess("");
-    setIsSubmitting(true);
 
-    const res = await signIn(loginEmail, loginPassword);
-    setIsSubmitting(false);
-
+    const res = await signIn(email, pass);
     if (!res.success) {
-      setAuthError(`Đăng nhập thất bại: ${res.error || "Sai email hoặc mật khẩu!"}`);
+      setAuthError(res.error || "Tên đăng nhập hoặc mật khẩu không chính xác!");
     } else {
-      setAuthSuccess("Đăng nhập thành công!");
+      setAuthSuccess("Đăng nhập thành công! Đang chuyển hướng...");
       setTimeout(() => {
-        if (loginEmail.trim().toLowerCase().includes("admin")) {
+        if (email.toLowerCase().includes("admin")) {
           router.push("/admin");
         } else {
           router.push("/");
@@ -631,2742 +127,297 @@ export default function AuthPage() {
     }
   };
 
-  const [showOtpModal, setShowOtpModal] = useState(false);
-  const [sentOtpToken, setSentOtpToken] = useState("");
-
-  const handleRegisterSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Register Submit & OTP Trigger
+  const handleRegisterSubmit = async (name: string, email: string, pass: string, confirmPass: string) => {
     setAuthError("");
     setAuthSuccess("");
 
-    if (!regEmail || !regPassword || !regName || !regConfirmPassword) {
-      setAuthError("Vui lòng điền đầy đủ Tên, Email, Mật khẩu và Xác nhận mật khẩu!");
+    if (pass !== confirmPass) {
+      setAuthError("Mật khẩu và xác nhận mật khẩu không trùng khớp!");
       return;
     }
 
-    if (regPassword.length < 6) {
-      setAuthError("Mật khẩu phải có tối thiểu 6 ký tự!");
-      return;
-    }
+    setRegName(name);
+    setRegEmail(email);
+    setRegPassword(pass);
 
-    if (regPassword !== regConfirmPassword) {
-      setAuthError("Mật khẩu và Xác nhận mật khẩu không trùng khớp!");
-      return;
-    }
-
-    setIsSubmitting(true);
-    const supabase = createClient();
-    const generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
-    setSentOtpToken(generatedCode);
+    const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    setSentOtpToken(generatedOtp);
 
     try {
-      // 1. Dispatch Email OTP via /api/send-otp
       await fetch("/api/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: regEmail.trim(), otp: generatedCode, name: regName }),
+        body: JSON.stringify({ email, otp: generatedOtp, name }),
       });
-      // 2. Trigger Supabase Auth OTP
-      await supabase.auth.signInWithOtp({ email: regEmail.trim() });
-    } catch (err) {
-      console.warn("Auth OTP email notice:", err);
-    } finally {
-      setIsSubmitting(false);
-      setShowOtpModal(true);
+    } catch (e) {
+      console.warn("Error sending OTP email:", e);
     }
+
+    setShowOtpModal(true);
   };
 
-  const handleVerifyOtp = async (enteredOtp: string): Promise<{ success: boolean; error?: string }> => {
-    const supabase = createClient();
-    let isOtpValid = false;
-
-    // 1. Try Supabase Auth Verify OTP
-    try {
-      const { error } = await supabase.auth.verifyOtp({
-        email: regEmail.trim(),
-        token: enteredOtp,
-        type: "email",
-      });
-      if (!error) {
-        isOtpValid = true;
-      }
-    } catch (err) {
-      console.warn("Supabase verifyOtp check:", err);
+  const handleVerifyOtp = async (inputOtp: string): Promise<{ success: boolean; error?: string }> => {
+    if (inputOtp !== sentOtpToken) {
+      return { success: false, error: "Mã OTP không chính xác!" };
     }
-
-    // 2. Or match generated OTP code
-    if (!isOtpValid && enteredOtp === sentOtpToken) {
-      isOtpValid = true;
-    }
-
-    if (!isOtpValid) {
-      return {
-        success: false,
-        error: "Mã xác thực 6 chữ số không chính xác hoặc đã hết hạn. Vui lòng kiểm tra lại Gmail!",
-      };
-    }
-
-    // OTP Verified -> Create Account
-    setShowOtpModal(false);
-    setIsSubmitting(true);
-    const res = await signUp(regEmail, regPassword, regName, regPhone);
-    setIsSubmitting(false);
-
-    if (res.success) {
-      if (typeof window !== "undefined") {
-        localStorage.setItem("minishop_onboarding_new_registered", "true");
-      }
-      setAuthSuccess("Xác thực Gmail thành công! Đang tự động đăng nhập...");
-      setTimeout(() => {
-        router.push("/");
-      }, 800);
-      return { success: true };
-    } else {
+    const res = await signUp(regEmail, regPassword, regName);
+    if (!res.success) {
+      setAuthError(res.error || "Đăng ký thất bại!");
+      setShowOtpModal(false);
       return { success: false, error: res.error || "Đăng ký thất bại!" };
     }
+    setAuthSuccess("Đăng ký thành công! Đang tự động đăng nhập...");
+    setShowOtpModal(false);
+    return { success: true };
   };
 
   const handleResendOtp = async () => {
-    const supabase = createClient();
-    const newCode = Math.floor(100000 + Math.random() * 900000).toString();
-    setSentOtpToken(newCode);
+    const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    setSentOtpToken(newOtp);
+    await fetch("/api/send-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: regEmail, otp: newOtp, name: regName }),
+    });
+  };
 
-    try {
-      await fetch("/api/send-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: regEmail.trim(), otp: newCode, name: regName }),
-      });
-      await supabase.auth.signInWithOtp({ email: regEmail.trim() });
-    } catch (err) {
-      console.warn("Resend OTP notice:", err);
+  // Address CRUD
+  const handleAddAddress = async (
+    name: string,
+    phone: string,
+    province: string,
+    ward: string,
+    detail: string,
+    isDefault: boolean
+  ) => {
+    const newAddr: AddressItem = {
+      id: Date.now(),
+      name,
+      phone,
+      province,
+      ward,
+      detail,
+      isDefault,
+    };
+    const updated = isDefault
+      ? addresses.map((a) => ({ ...a, isDefault: false })).concat(newAddr)
+      : [...addresses, newAddr];
+
+    setAddresses(updated);
+    if (user?.email) {
+      await addUserAddressToSupabase(newAddr, user.email);
     }
   };
 
-  const handleLogoutClick = async () => {
-    await logout();
-    router.push("/auth");
-  };
-
-  const handleSaveProfile = (e: React.FormEvent) => {
-    e.preventDefault();
-    setRedeemFeedback("Cập nhật hồ sơ thành công!");
-    setTimeout(() => setRedeemFeedback(""), 3000);
-  };
-
-  const GIFTS_CATALOG = [
-    {
-      id: 1,
-      name: "Voucher Giảm 50.000đ",
-      points: 100,
-      discount: 50000,
-      code: "MINISHOP50",
-      icon: "Ticket",
-    },
-    {
-      id: 2,
-      name: "Voucher Giảm 100.000đ",
-      points: 200,
-      discount: 100000,
-      code: "MINISHOP100",
-      icon: "Gift",
-    },
-    {
-      id: 3,
-      name: "Voucher Freeship 30.000đ",
-      points: 50,
-      discount: 30000,
-      code: "FREESHIP30",
-      icon: "Truck",
-    },
-    {
-      id: 4,
-      name: "Gối Ôm Sofa Cao Cấp",
-      points: 500,
-      discount: 150000,
-      code: "GOISOFAPREMIUM",
-      icon: "Sofa",
-    },
-  ];
-
-  const handleRedeemGiftClick = (gift: typeof GIFTS_CATALOG[0]) => {
-    const success = redeemGift(
-      gift.name,
-      gift.points,
-      gift.discount,
-      gift.code
-    );
-    if (success) {
-      setRewardSubTab("manage");
-    }
-  };
-
-  // Address Handlers
   const handleSetDefaultAddress = async (id: number) => {
-    if (!user) return;
-    await setDefaultUserAddressInSupabase(id, user.username || user.email || "binh");
-    await loadAddresses();
+    const updated = addresses.map((a) => ({ ...a, isDefault: a.id === id }));
+    setAddresses(updated);
+    if (user?.email) {
+      await setDefaultUserAddressInSupabase(id, user.email);
+    }
   };
 
   const handleDeleteAddress = async (id: number) => {
-    if (confirm("Bạn có chắc chắn muốn xóa địa chỉ này không?")) {
-      await deleteUserAddressFromSupabase(id);
-      await loadAddresses();
+    const updated = addresses.filter((a) => a.id !== id);
+    setAddresses(updated);
+    if (user?.email) {
+      await deleteUserAddressFromSupabase(id, user.email);
     }
   };
 
-  const handleAddAddressSubmit = async (e: React.FormEvent) => {
+  // Order Cancel
+  const handleConfirmCancelOrder = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!addrName.trim() || !addrPhone.trim() || !addrDetail.trim() || !user) return;
+    if (!cancelTargetOrder) return;
+    const finalReason = cancelReasonPreset.includes("Lý do khác")
+      ? cancelReasonCustom || "Khách hàng không nêu rõ lý do"
+      : cancelReasonPreset;
 
-    const cleanPhone = addrPhone.trim().replace(/\s+/g, "").replace(/\./g, "");
-    const isValidVnPhone = /^(03|05|07|08|09)\d{8}$/.test(cleanPhone);
-    if (!isValidVnPhone) {
-      alert("Số điện thoại không hợp lệ! Vui lòng nhập số điện thoại Việt Nam chuẩn 10 chữ số (đầu 03, 05, 07, 08, 09).");
-      return;
-    }
+    cancelOrderWithReason(cancelTargetOrder.id, finalReason);
 
-    const shouldDefault = addresses.length === 0 || addrSetDefault;
-
-    await addUserAddressToSupabase(
-      {
-        name: addrName.trim(),
-        phone: addrPhone.trim(),
-        province: addrProvince,
-        ward: addrWard,
-        detail: addrDetail.trim(),
-        isDefault: shouldDefault,
-      },
-      user.username || user.email || "binh"
+    setLiveOrders((prev) =>
+      prev.map((o) =>
+        o.id === cancelTargetOrder.id
+          ? { ...o, status: "cancelled" as const, statusText: `Đã hủy (${finalReason})` }
+          : o
+      )
     );
-
-    await loadAddresses();
-    setShowAddAddressModal(false);
-    setAddrName("");
-    setAddrPhone("");
-    setAddrDetail("");
-    setAddrSetDefault(false);
+    setShowCancelModal(false);
+    alert(`Đã hủy thành công đơn hàng ${cancelTargetOrder.id}!`);
   };
 
-  const totalVouchersCount =
-    user?.vouchers.reduce((sum, v) => sum + (v.quantity || 1), 0) || 0;
-
-  return (
-    <main
-      className="main-content"
-      style={{
-        backgroundColor: "var(--bg-main, #fcfbf9)",
-        minHeight: "calc(100vh - 76px)",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        alignItems: "center",
-        fontFamily: "'Plus Jakarta Sans', sans-serif",
-        padding: "30px 0",
-      }}
-    >
-      <div className="container" style={{ padding: "0 16px", maxWidth: "1300px", width: "100%", margin: "0 auto" }}>
-        
-        <div className="auth-page-section" style={{ padding: "0", width: "100%", display: "flex", justifyContent: "center", alignItems: "center" }}>
-          {!user ? (
-            /* KHI CHƯA ĐĂNG NHẬP (Wide Spotlight Image & Fixed Form Architecture) */
-            <div className="doppelrand-outer" style={{ maxWidth: "1300px", width: "100%", margin: "0 auto" }}>
-              <div className="doppelrand-inner" style={{ padding: "12px" }}>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 440px",
-                    gap: "24px",
-                    alignItems: "stretch",
-                  }}
-                >
-                  {/* LEFT COLUMN: HOME-PAGE STYLE HERO IMAGE CAROUSEL (Identical Proportions & Floating Circle Controls) */}
-                  <div
-                    style={{
-                      position: "relative",
-                      height: "420px",
-                      minHeight: "420px",
-                      maxHeight: "420px",
-                      borderRadius: "16px",
-                      overflow: "hidden",
-                      boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)",
-                      background: "#f8fafc",
-                    }}
-                  >
-                    {/* Active Hero Image (Direct & Guaranteed Display) */}
-                    <img
-                      key={spotlightIndex}
-                      src={fixImagePath(SPOTLIGHT_SLIDES[spotlightIndex].image)}
-                      alt={`Spotlight Banner ${spotlightIndex + 1}`}
-                      style={{
-                        width: "100%",
-                        height: "420px",
-                        objectFit: "cover",
-                        display: "block",
-                      }}
-                    />
-
-                    {/* Floating Circle Prev Button (Identical to Home Page Hero) */}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setSpotlightIndex((prev) => (prev - 1 + SPOTLIGHT_SLIDES.length) % SPOTLIGHT_SLIDES.length)
-                      }
-                      style={{
-                        position: "absolute",
-                        top: "50%",
-                        left: "14px",
-                        transform: "translateY(-50%)",
-                        width: "38px",
-                        height: "38px",
-                        borderRadius: "50%",
-                        background: "rgba(255, 255, 255, 0.9)",
-                        border: "1px solid #cbd5e1",
-                        color: "#0f172a",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        cursor: "pointer",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
-                        zIndex: 10,
-                      }}
-                      aria-label="Previous Slide"
-                    >
-                      <ChevronLeft className="w-5 h-5" />
-                    </button>
-
-                    {/* Floating Circle Next Button (Identical to Home Page Hero) */}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setSpotlightIndex((prev) => (prev + 1) % SPOTLIGHT_SLIDES.length)
-                      }
-                      style={{
-                        position: "absolute",
-                        top: "50%",
-                        right: "14px",
-                        transform: "translateY(-50%)",
-                        width: "38px",
-                        height: "38px",
-                        borderRadius: "50%",
-                        background: "rgba(255, 255, 255, 0.9)",
-                        border: "1px solid #cbd5e1",
-                        color: "#0f172a",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        cursor: "pointer",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
-                        zIndex: 10,
-                      }}
-                      aria-label="Next Slide"
-                    >
-                      <ChevronRight className="w-5 h-5" />
-                    </button>
-
-                    {/* Centered Bottom Dot Indicators */}
-                    <div
-                      style={{
-                        position: "absolute",
-                        bottom: "16px",
-                        left: "50%",
-                        transform: "translateX(-50%)",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                        zIndex: 10,
-                        background: "rgba(15, 23, 42, 0.35)",
-                        backdropFilter: "blur(8px)",
-                        padding: "6px 14px",
-                        borderRadius: "999px",
-                      }}
-                    >
-                      {SPOTLIGHT_SLIDES.map((_, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={() => setSpotlightIndex(i)}
-                          style={{
-                            width: i === spotlightIndex ? "26px" : "8px",
-                            height: "8px",
-                            borderRadius: "999px",
-                            background: i === spotlightIndex ? "var(--primary-color, #2e7d32)" : "rgba(255,255,255,0.6)",
-                            border: "none",
-                            cursor: "pointer",
-                            transition: "all 0.3s ease",
-                          }}
-                          aria-label={`Slide ${i + 1}`}
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* RIGHT COLUMN: BALANCED INTERACTIVE FORM CARD */}
-                  <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                    {/* Segmented Pill Tab Switcher */}
-                    <div
-                      style={{
-                        display: "flex",
-                        background: "#f1f5f9",
-                        padding: "4px",
-                        borderRadius: "999px",
-                        marginBottom: "20px",
-                      }}
-                    >
-                      <button
-                        type="button"
-                        style={{
-                          flex: 1,
-                          padding: "9px 16px",
-                          fontSize: "14px",
-                          fontWeight: 800,
-                          borderRadius: "999px",
-                          border: "none",
-                          cursor: "pointer",
-                          transition: "all 0.2s ease",
-                          background: activeTab === "login" ? "#ffffff" : "transparent",
-                          color: activeTab === "login" ? "var(--primary-color, #2e7d32)" : "#64748b",
-                          boxShadow: activeTab === "login" ? "0 2px 8px rgba(0,0,0,0.06)" : "none",
-                        }}
-                        onClick={() => setActiveTab("login")}
-                      >
-                        Đăng Nhập
-                      </button>
-                      <button
-                        type="button"
-                        style={{
-                          flex: 1,
-                          padding: "9px 16px",
-                          fontSize: "14px",
-                          fontWeight: 800,
-                          borderRadius: "999px",
-                          border: "none",
-                          cursor: "pointer",
-                          transition: "all 0.2s ease",
-                          background: activeTab === "register" ? "#ffffff" : "transparent",
-                          color: activeTab === "register" ? "var(--primary-color, #2e7d32)" : "#64748b",
-                          boxShadow: activeTab === "register" ? "0 2px 8px rgba(0,0,0,0.06)" : "none",
-                        }}
-                        onClick={() => setActiveTab("register")}
-                      >
-                        Đăng Ký
-                      </button>
-                    </div>
-
-                    <div>
-                      {authError && (
-                        <div style={{ padding: "10px 14px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "10px", color: "#dc2626", fontSize: "13px", fontWeight: 800, marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
-                          <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0" />
-                          <span>{authError}</span>
-                        </div>
-                      )}
-                      {authSuccess && (
-                        <div style={{ padding: "10px 14px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "10px", color: "#166534", fontSize: "13px", fontWeight: 800, marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
-                          <CheckCircle2 className="w-4 h-4 text-emerald-700 flex-shrink-0" />
-                          <span>{authSuccess}</span>
-                        </div>
-                      )}
-
-                      {activeTab === "login" ? (
-                        <form className="auth-form" onSubmit={handleLoginSubmit} style={{ gap: "14px" }}>
-                          <div className="form-group" style={{ marginBottom: "0" }}>
-                            <label htmlFor="login-email" className="auth-label" style={{ fontSize: "13px", fontWeight: 800, color: "#334155", marginBottom: "6px" }}>
-                              Tên đăng nhập hoặc Email *
-                            </label>
-                            <input
-                              type="text"
-                              id="login-email"
-                              className="form-control auth-input"
-                              style={{ borderRadius: "12px", height: "46px" }}
-                              placeholder="Nhập tên đăng nhập hoặc email..."
-                              required
-                              value={loginEmail}
-                              onChange={(e) => setLoginEmail(e.target.value)}
-                            />
-                          </div>
-
-                          <div className="form-group" style={{ marginBottom: "0" }}>
-                            <label htmlFor="login-password" className="auth-label" style={{ fontSize: "13px", fontWeight: 800, color: "#334155", marginBottom: "6px" }}>
-                              Mật khẩu *
-                            </label>
-                            <div style={{ position: "relative" }}>
-                              <input
-                                type={showLoginPassword ? "text" : "password"}
-                                id="login-password"
-                                className="form-control auth-input"
-                                style={{ paddingRight: "40px", borderRadius: "12px", height: "46px" }}
-                                placeholder="••••••••"
-                                required
-                                value={loginPassword}
-                                onChange={(e) => setLoginPassword(e.target.value)}
-                              />
-                              <button
-                                type="button"
-                                onClick={() => setShowLoginPassword(!showLoginPassword)}
-                                style={{
-                                  position: "absolute",
-                                  right: "12px",
-                                  top: "50%",
-                                  transform: "translateY(-50%)",
-                                  background: "none",
-                                  border: "none",
-                                  cursor: "pointer",
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                }}
-                                title={showLoginPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-                              >
-                                {showLoginPassword ? <EyeOff className="w-4 h-4 text-slate-500" /> : <Eye className="w-4 h-4 text-slate-500" />}
-                              </button>
-                            </div>
-                            <div style={{ textAlign: "right", marginTop: "6px" }}>
-                              <button
-                                type="button"
-                                onClick={async () => {
-                                  const emailPrompt = prompt("Nhập Email đăng ký của bạn để nhận liên kết khôi phục mật khẩu:", loginEmail || "");
-                                  if (!emailPrompt) return;
-                                  const email = emailPrompt.trim();
-                                  if (!email.includes("@")) {
-                                    alert("Vui lòng nhập địa chỉ Email hợp lệ!");
-                                    return;
-                                  }
-                                  const supabase = createClient();
-                                  const { error } = await supabase.auth.resetPasswordForEmail(email);
-                                  if (error) {
-                                    alert(`Lỗi: ${error.message}`);
-                                  } else {
-                                    alert(`Hệ thống đã gửi hướng dẫn khôi phục mật khẩu tới Email "${email}". Vui lòng kiểm tra hộp thư!`);
-                                  }
-                                }}
-                                style={{
-                                  background: "none",
-                                  border: "none",
-                                  color: "var(--primary-color, #2e7d32)",
-                                  fontSize: "12.5px",
-                                  fontWeight: 800,
-                                  cursor: "pointer",
-                                  textDecoration: "none",
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: "4px",
-                                }}
-                              >
-                                <Key className="w-3.5 h-3.5" /> Quên mật khẩu?
-                              </button>
-                            </div>
-                          </div>
-
-                          <button
-                            type="submit"
-                            style={{
-                              width: "100%",
-                              height: "48px",
-                              borderRadius: "12px",
-                              background: "var(--primary-color, #2e7d32)",
-                              color: "#ffffff",
-                              fontSize: "15px",
-                              fontWeight: 800,
-                              border: "none",
-                              cursor: "pointer",
-                              boxShadow: "0 4px 14px rgba(46, 125, 50, 0.25)",
-                              marginTop: "4px",
-                            }}
-                          >
-                            Đăng Nhập Ngay
-                          </button>
-                        </form>
-                      ) : (
-                        <form className="auth-form" onSubmit={handleRegisterSubmit} style={{ gap: "12px" }}>
-                          <div className="form-group" style={{ marginBottom: "0" }}>
-                            <label htmlFor="reg-name" className="auth-label" style={{ fontSize: "13px", fontWeight: 800, color: "#334155", marginBottom: "4px" }}>
-                              Họ và tên *
-                            </label>
-                            <input
-                              type="text"
-                              id="reg-name"
-                              className="form-control auth-input"
-                              style={{ borderRadius: "12px", height: "42px" }}
-                              placeholder="Nhập họ và tên..."
-                              required
-                              value={regName}
-                              onChange={(e) => setRegName(e.target.value)}
-                            />
-                          </div>
-
-                          <div className="form-group" style={{ marginBottom: "0" }}>
-                            <label htmlFor="reg-email" className="auth-label" style={{ fontSize: "13px", fontWeight: 800, color: "#334155", marginBottom: "4px" }}>
-                              Email *
-                            </label>
-                            <input
-                              type="email"
-                              id="reg-email"
-                              className="form-control auth-input"
-                              style={{ borderRadius: "12px", height: "42px" }}
-                              placeholder="email@example.com"
-                              required
-                              value={regEmail}
-                              onChange={(e) => setRegEmail(e.target.value)}
-                            />
-                          </div>
-
-                          <div className="form-group" style={{ marginBottom: "0" }}>
-                            <label htmlFor="reg-password" className="auth-label" style={{ fontSize: "13px", fontWeight: 800, color: "#334155", marginBottom: "4px" }}>
-                              Mật khẩu *
-                            </label>
-                            <div style={{ position: "relative" }}>
-                              <input
-                                type={showRegPassword ? "text" : "password"}
-                                id="reg-password"
-                                className="form-control auth-input"
-                                style={{ paddingRight: "40px", borderRadius: "12px", height: "42px" }}
-                                placeholder="••••••••"
-                                required
-                                value={regPassword}
-                                onChange={(e) => setRegPassword(e.target.value)}
-                              />
-                              <button
-                                type="button"
-                                onClick={() => setShowRegPassword(!showRegPassword)}
-                                style={{
-                                  position: "absolute",
-                                  right: "12px",
-                                  top: "50%",
-                                  transform: "translateY(-50%)",
-                                  background: "none",
-                                  border: "none",
-                                  cursor: "pointer",
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                }}
-                                title={showRegPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-                              >
-                                {showRegPassword ? <EyeOff className="w-4 h-4 text-slate-500" /> : <Eye className="w-4 h-4 text-slate-500" />}
-                              </button>
-                            </div>
-                          </div>
-
-                          <div className="form-group" style={{ marginBottom: "0" }}>
-                            <label htmlFor="reg-confirm-password" className="auth-label" style={{ fontSize: "13px", fontWeight: 800, color: "#334155", marginBottom: "4px" }}>
-                              Xác nhận mật khẩu *
-                            </label>
-                            <div style={{ position: "relative" }}>
-                              <input
-                                type={showRegConfirmPassword ? "text" : "password"}
-                                id="reg-confirm-password"
-                                className="form-control auth-input"
-                                style={{ paddingRight: "40px", borderRadius: "12px", height: "42px" }}
-                                placeholder="••••••••"
-                                required
-                                value={regConfirmPassword}
-                                onChange={(e) => setRegConfirmPassword(e.target.value)}
-                              />
-                              <button
-                                type="button"
-                                onClick={() => setShowRegConfirmPassword(!showRegConfirmPassword)}
-                                style={{
-                                  position: "absolute",
-                                  right: "12px",
-                                  top: "50%",
-                                  transform: "translateY(-50%)",
-                                  background: "none",
-                                  border: "none",
-                                  cursor: "pointer",
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                }}
-                                title={showRegConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-                              >
-                                {showRegConfirmPassword ? <EyeOff className="w-4 h-4 text-slate-500" /> : <Eye className="w-4 h-4 text-slate-500" />}
-                              </button>
-                            </div>
-                          </div>
-
-                          <button
-                            type="submit"
-                            style={{
-                              width: "100%",
-                              height: "46px",
-                              borderRadius: "12px",
-                              background: "var(--primary-color, #2e7d32)",
-                              color: "#ffffff",
-                              fontSize: "15px",
-                              fontWeight: 800,
-                              border: "none",
-                              cursor: "pointer",
-                              boxShadow: "0 4px 14px rgba(46, 125, 50, 0.25)",
-                              marginTop: "6px",
-                            }}
-                          >
-                            Đăng Ký Tài Khoản
-                          </button>
-                        </form>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            /* KHI ĐÃ ĐĂNG NHẬP (AUTHENTICATED CUSTOMER DASHBOARD - 1300px Bright Clean Architecture) */
-            <div style={{ width: "100%", maxWidth: "1300px", margin: "0 auto" }}>
-              {/* 1. TOP PROFILE HEADER CARD (Bright Elegant White/Emerald Theme) */}
-              <div
-                style={{
-                  background: "#ffffff",
-                  borderRadius: "20px",
-                  border: "1px solid #e2e8f0",
-                  padding: "24px 28px",
-                  marginBottom: "20px",
-                  color: "#0f172a",
-                  boxShadow: "0 4px 20px rgba(0, 0, 0, 0.04)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  flexWrap: "wrap",
-                  gap: "20px",
-                  position: "relative",
-                  overflow: "hidden",
-                }}
-              >
-                {/* Left: User Avatar & Info */}
-                <div style={{ display: "flex", alignItems: "center", gap: "18px", zIndex: 2 }}>
-                  <div
-                    style={{
-                      width: "68px",
-                      height: "68px",
-                      borderRadius: "50%",
-                      background: "linear-gradient(135deg, #2e7d32, #15803d)",
-                      color: "#ffffff",
-                      fontSize: "26px",
-                      fontWeight: 900,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      boxShadow: "0 6px 16px rgba(46, 125, 50, 0.25)",
-                      border: "3px solid #e8f5e9",
-                      flexShrink: 0,
-                    }}
-                  >
-                    {user.name.charAt(0).toUpperCase()}
-                  </div>
-
-                  <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-                      <h2 style={{ fontSize: "22px", fontWeight: 900, margin: 0, color: "#0f172a", letterSpacing: "-0.01em" }}>
-                        {user.name}
-                      </h2>
-                      <span
-                        style={{
-                          padding: "4px 12px",
-                          borderRadius: "999px",
-                          background: "#e8f5e9",
-                          border: "1px solid #bbf7d0",
-                          fontSize: "12px",
-                          fontWeight: 800,
-                          color: "var(--primary-color, #2e7d32)",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "4px",
-                        }}
-                      >
-                        <Crown className="w-3.5 h-3.5 text-emerald-700" /> {(user as any).tier || (user.points >= 500 ? "Thành viên Vàng" : "Thành viên Bạc")}
-                      </span>
-                    </div>
-                    <p style={{ fontSize: "13px", color: "#64748b", margin: "4px 0 0" }}>
-                      @{user.username || "user"} • {user.email}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Right: 3 Quick Metric Stat Cards */}
-                <div style={{ display: "flex", alignItems: "center", gap: "14px", zIndex: 2, flexWrap: "wrap" }}>
-                  <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "10px 18px", textAlign: "center", minWidth: "110px" }}>
-                    <div style={{ fontSize: "11px", fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" }}>Điểm Thưởng</div>
-                    <div style={{ fontSize: "19px", fontWeight: 900, color: "var(--primary-color, #2e7d32)", marginTop: "2px", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}>
-                      <Sparkles className="w-4 h-4 text-emerald-700" />
-                      {user.points.toLocaleString("vi-VN")}
-                    </div>
-                  </div>
-
-                  <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "10px 18px", textAlign: "center", minWidth: "100px" }}>
-                    <div style={{ fontSize: "11px", fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" }}>Đơn Hàng</div>
-                    <div style={{ fontSize: "19px", fontWeight: 900, color: "#0f172a", marginTop: "2px" }}>
-                      {liveOrders.length}
-                    </div>
-                  </div>
-
-                  <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "10px 18px", textAlign: "center", minWidth: "100px" }}>
-                    <div style={{ fontSize: "11px", fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" }}>Voucher</div>
-                    <div style={{ fontSize: "19px", fontWeight: 900, color: "#0f172a", marginTop: "2px" }}>
-                      {totalVouchersCount}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* 2. MAIN 2-COLUMN DASHBOARD GRID */}
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "270px 1fr",
-                  gap: "24px",
-                  alignItems: "start",
-                }}
-              >
-                {/* Left Navigation Sidebar Card */}
-                <aside
-                  style={{
-                    background: "#ffffff",
-                    borderRadius: "18px",
-                    border: "1px solid #e2e8f0",
-                    padding: "20px 16px",
-                    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.04)",
-                  }}
-                >
-                  <div style={{ paddingBottom: "14px", marginBottom: "14px", borderBottom: "1px solid #f1f5f9" }}>
-                    <div style={{ fontSize: "11px", fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em", paddingLeft: "10px" }}>
-                      DANH MỤC QUẢN LÝ
-                    </div>
-                  </div>
-
-                  <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "6px", margin: 0, padding: 0 }}>
-                    <li>
-                      <button
-                        type="button"
-                        onClick={() => setDashboardTab("profile")}
-                        style={{
-                          width: "100%",
-                          textAlign: "left",
-                          padding: "12px 14px",
-                          borderRadius: "12px",
-                          border: "none",
-                          fontSize: "14px",
-                          fontWeight: 800,
-                          cursor: "pointer",
-                          transition: "all 0.2s ease",
-                          background: dashboardTab === "profile" ? "#e8f5e9" : "transparent",
-                          color: dashboardTab === "profile" ? "var(--primary-color, #2e7d32)" : "#334155",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "10px",
-                        }}
-                      >
-                        <User className={`w-4 h-4 ${dashboardTab === "profile" ? "text-emerald-700" : "text-slate-400"}`} />
-                        <span>Hồ sơ cá nhân</span>
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        type="button"
-                        onClick={() => setDashboardTab("rewards")}
-                        style={{
-                          width: "100%",
-                          textAlign: "left",
-                          padding: "12px 14px",
-                          borderRadius: "12px",
-                          border: "none",
-                          fontSize: "14px",
-                          fontWeight: 800,
-                          cursor: "pointer",
-                          transition: "all 0.2s ease",
-                          background: dashboardTab === "rewards" ? "#e8f5e9" : "transparent",
-                          color: dashboardTab === "rewards" ? "var(--primary-color, #2e7d32)" : "#334155",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "10px",
-                        }}
-                      >
-                        <Gift className={`w-4 h-4 ${dashboardTab === "rewards" ? "text-emerald-700" : "text-slate-400"}`} />
-                        <span>Tích điểm & Đổi quà</span>
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        type="button"
-                        onClick={() => setDashboardTab("orders")}
-                        style={{
-                          width: "100%",
-                          textAlign: "left",
-                          padding: "12px 14px",
-                          borderRadius: "12px",
-                          border: "none",
-                          fontSize: "14px",
-                          fontWeight: 800,
-                          cursor: "pointer",
-                          transition: "all 0.2s ease",
-                          background: dashboardTab === "orders" ? "#e8f5e9" : "transparent",
-                          color: dashboardTab === "orders" ? "var(--primary-color, #2e7d32)" : "#334155",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "10px",
-                        }}
-                      >
-                        <Package className={`w-4 h-4 ${dashboardTab === "orders" ? "text-emerald-700" : "text-slate-400"}`} />
-                        <span>Quản lý đơn hàng</span>
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        type="button"
-                        onClick={() => setDashboardTab("address")}
-                        style={{
-                          width: "100%",
-                          textAlign: "left",
-                          padding: "12px 14px",
-                          borderRadius: "12px",
-                          border: "none",
-                          fontSize: "14px",
-                          fontWeight: 800,
-                          cursor: "pointer",
-                          transition: "all 0.2s ease",
-                          background: dashboardTab === "address" ? "#e8f5e9" : "transparent",
-                          color: dashboardTab === "address" ? "var(--primary-color, #2e7d32)" : "#334155",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "10px",
-                        }}
-                      >
-                        <MapPin className={`w-4 h-4 ${dashboardTab === "address" ? "text-emerald-700" : "text-slate-400"}`} />
-                        <span>Sổ địa chỉ nhận hàng</span>
-                      </button>
-                    </li>
-
-                    <li style={{ marginTop: "16px", borderTop: "1px solid #f1f5f9", paddingTop: "14px" }}>
-                      <button
-                        type="button"
-                        onClick={handleLogoutClick}
-                        style={{
-                          width: "100%",
-                          textAlign: "left",
-                          padding: "11px 14px",
-                          borderRadius: "12px",
-                          border: "1px solid #fecaca",
-                          background: "#fef2f2",
-                          color: "#dc2626",
-                          fontSize: "13.5px",
-                          fontWeight: 800,
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          transition: "all 0.2s ease",
-                        }}
-                      >
-                        <LogOut className="w-4 h-4 text-red-600" />
-                        <span>Đăng xuất tài khoản</span>
-                      </button>
-                    </li>
-                  </ul>
-                </aside>
-
-                {/* Right Content Panel Card */}
-                <div
-                  style={{
-                    background: "#ffffff",
-                    borderRadius: "18px",
-                    border: "1px solid #e2e8f0",
-                    padding: "28px",
-                    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.04)",
-                    minHeight: "560px",
-                    minWidth: 0,
-                    overflow: "hidden",
-                  }}
-                >
-                  {/* Feedback Notification */}
-                  {redeemFeedback && (
-                    <div
-                      style={{
-                        padding: "12px 16px",
-                        borderRadius: "var(--radius-md)",
-                        background: !redeemFeedback.includes("thất bại") && !redeemFeedback.includes("không đủ")
-                          ? "var(--primary-light)"
-                          : "#fef2f2",
-                        color: !redeemFeedback.includes("thất bại") && !redeemFeedback.includes("không đủ")
-                          ? "#166534"
-                          : "#dc2626",
-                        fontSize: "13px",
-                        fontWeight: 700,
-                        marginBottom: "16px",
-                        border: !redeemFeedback.includes("thất bại") && !redeemFeedback.includes("không đủ")
-                          ? "1px solid var(--primary-color)"
-                          : "1px solid #fca5a5",
-                      }}
-                    >
-                      {redeemFeedback}
-                    </div>
-                  )}
-
-                  {/* TAB 1: HỒ SƠ CÁ NHÂN */}
-                  {dashboardTab === "profile" && (
-                    <div>
-                      <h2
-                        style={{
-                          fontSize: "20px",
-                          fontWeight: 800,
-                          color: "#0f172a",
-                          marginBottom: "4px",
-                        }}
-                      >
-                        Hồ Sơ Cá Nhân ({user.name})
-                      </h2>
-                      <p
-                        style={{
-                          fontSize: "13px",
-                          color: "var(--text-muted)",
-                          marginBottom: "20px",
-                        }}
-                      >
-                        Quản lý thông tin tài khoản: <strong>{user.username}</strong> ({user.role.toUpperCase()})
-                      </p>
-
-                      <form
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: "16px",
-                          maxWidth: "600px",
-                        }}
-                        onSubmit={handleSaveProfile}
-                      >
-                        <div
-                          style={{
-                            display: "grid",
-                            gridTemplateColumns: "1fr 1fr",
-                            gap: "16px",
-                          }}
-                        >
-                          <div className="form-group" style={{ marginBottom: 0 }}>
-                            <label className="auth-label">Họ và tên *</label>
-                            <input
-                              type="text"
-                              className="form-control auth-input"
-                              value={user.name}
-                              readOnly
-                            />
-                          </div>
-
-                          <div className="form-group" style={{ marginBottom: 0 }}>
-                            <label className="auth-label">Số điện thoại *</label>
-                            <input
-                              type="tel"
-                              className="form-control auth-input"
-                              defaultValue={user.phone}
-                            />
-                          </div>
-                        </div>
-
-                        <div className="form-group" style={{ marginBottom: 0 }}>
-                          <label className="auth-label">Địa chỉ Email *</label>
-                          <input
-                            type="email"
-                            className="form-control auth-input"
-                            value={user.email}
-                            readOnly
-                          />
-                        </div>
-
-                        <button
-                          type="submit"
-                          className="btn-auth-submit"
-                          style={{
-                            width: "fit-content",
-                            padding: "0 28px",
-                            marginTop: "4px",
-                          }}
-                        >
-                          <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}><Save className="w-4 h-4" /> Cập Nhật Hồ Sơ</span>
-                        </button>
-                      </form>
-                    </div>
-                  )}
-
-                  {/* TAB 2: TÍCH ĐIỂM & ĐỔI QUÀ */}
-                  {dashboardTab === "rewards" && (
-                    <div>
-                      <h2
-                        style={{
-                          fontSize: "20px",
-                          fontWeight: 800,
-                          color: "#0f172a",
-                          marginBottom: "4px",
-                        }}
-                      >
-                        Tích Điểm & Đổi Quà Thưởng
-                      </h2>
-                      <p
-                        style={{
-                          fontSize: "13px",
-                          color: "var(--text-muted)",
-                          marginBottom: "20px",
-                        }}
-                      >
-                        Tích lũy điểm khi mua sắm để đổi các voucher giảm giá và
-                        quà tặng độc quyền.
-                      </p>
-
-                      {/* Card Điểm Số */}
-                      <div
-                        style={{
-                          background:
-                            "linear-gradient(135deg, #15803d, #2e7d32)",
-                          borderRadius: "var(--radius-lg)",
-                          padding: "20px 24px",
-                          color: "#fff",
-                          marginBottom: "24px",
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                        }}
-                      >
-                        <div>
-                          <div style={{ fontSize: "13px", opacity: 0.9 }}>
-                            Điểm khả dụng hiện tại
-                          </div>
-                          <div
-                            style={{
-                              fontSize: "32px",
-                              fontWeight: 800,
-                              marginTop: "2px",
-                            }}
-                          >
-                            {user.points.toLocaleString("vi-VN")}{" "}
-                            <span style={{ fontSize: "16px", fontWeight: 600 }}>
-                              Điểm
-                            </span>
-                          </div>
-                        </div>
-                        <button
-                          onClick={handleCheckIn}
-                          disabled={hasCheckedIn}
-                          style={{
-                            background: hasCheckedIn
-                              ? "rgba(255,255,255,0.1)"
-                              : "rgba(255,255,255,0.2)",
-                            border: "1px solid rgba(255,255,255,0.4)",
-                            color: "#fff",
-                            padding: "10px 16px",
-                            borderRadius: "20px",
-                            fontSize: "13px",
-                            fontWeight: 700,
-                            cursor: hasCheckedIn ? "not-allowed" : "pointer",
-                            opacity: hasCheckedIn ? 0.5 : 1,
-                          }}
-                        >
-                          {hasCheckedIn ? (
-                            <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}><Check className="w-4 h-4" /> Đã điểm danh (+50 điểm)</span>
-                          ) : (
-                            <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}><Gift className="w-4 h-4" /> Điểm danh hàng ngày (+50 điểm)</span>
-                          )}
-                        </button>
-                      </div>
-
-                      {/* Subtab Rewards Bar */}
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: "8px",
-                          borderBottom: "1px solid var(--border-color)",
-                          marginBottom: "20px",
-                          overflowX: "auto",
-                          paddingBottom: "4px",
-                        }}
-                      >
-                        <button
-                          className={`reward-subtab ${
-                            rewardSubTab === "tiers" ? "active" : ""
-                          }`}
-                          onClick={() => setRewardSubTab("tiers")}
-                          style={{
-                            padding: "8px 14px",
-                            fontSize: "13px",
-                            fontWeight: 700,
-                            color:
-                              rewardSubTab === "tiers"
-                                ? "var(--primary-color)"
-                                : "var(--text-muted)",
-                            border: "none",
-                            borderBottom:
-                              rewardSubTab === "tiers"
-                                ? "2px solid var(--primary-color)"
-                                : "2px solid transparent",
-                            background: "none",
-                            cursor: "pointer",
-                            whiteSpace: "nowrap",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "6px",
-                          }}
-                        >
-                          <Crown className="w-4 h-4 text-amber-500" /> Hạng Thành Viên
-                        </button>
-                        <button
-                          className={`reward-subtab ${
-                            rewardSubTab === "tasks" ? "active" : ""
-                          }`}
-                          onClick={() => setRewardSubTab("tasks")}
-                          style={{
-                            padding: "8px 14px",
-                            fontSize: "13px",
-                            fontWeight: 700,
-                            color:
-                              rewardSubTab === "tasks"
-                                ? "var(--primary-color)"
-                                : "var(--text-muted)",
-                            border: "none",
-                            borderBottom:
-                              rewardSubTab === "tasks"
-                                ? "2px solid var(--primary-color)"
-                                : "2px solid transparent",
-                            background: "none",
-                            cursor: "pointer",
-                            whiteSpace: "nowrap",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "6px",
-                          }}
-                        >
-                          <ListCheck className="w-4 h-4 text-emerald-700" /> Nhiệm Vụ Hàng Ngày
-                        </button>
-                        <button
-                          className={`reward-subtab ${
-                            rewardSubTab === "wheel" ? "active" : ""
-                          }`}
-                          onClick={() => setRewardSubTab("wheel")}
-                          style={{
-                            padding: "8px 14px",
-                            fontSize: "13px",
-                            fontWeight: 700,
-                            color:
-                              rewardSubTab === "wheel"
-                                ? "var(--primary-color)"
-                                : "var(--text-muted)",
-                            border: "none",
-                            borderBottom:
-                              rewardSubTab === "wheel"
-                                ? "2px solid var(--primary-color)"
-                                : "2px solid transparent",
-                            background: "none",
-                            cursor: "pointer",
-                            whiteSpace: "nowrap",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "6px",
-                          }}
-                        >
-                          <Disc className="w-4 h-4 text-purple-600" /> Vòng Quay May Mắn
-                        </button>
-                        <button
-                          className={`reward-subtab ${
-                            rewardSubTab === "catalog" ? "active" : ""
-                          }`}
-                          onClick={() => setRewardSubTab("catalog")}
-                          style={{
-                            padding: "8px 14px",
-                            fontSize: "13px",
-                            fontWeight: 700,
-                            color:
-                              rewardSubTab === "catalog"
-                                ? "var(--primary-color)"
-                                : "var(--text-muted)",
-                            border: "none",
-                            borderBottom:
-                              rewardSubTab === "catalog"
-                                ? "2px solid var(--primary-color)"
-                                : "2px solid transparent",
-                            background: "none",
-                            cursor: "pointer",
-                            whiteSpace: "nowrap",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "6px",
-                          }}
-                        >
-                          <Gift className="w-4 h-4 text-pink-600" /> Đổi Quà Tặng
-                        </button>
-                        <button
-                          className={`reward-subtab ${
-                            rewardSubTab === "manage" ? "active" : ""
-                          }`}
-                          onClick={() => setRewardSubTab("manage")}
-                          style={{
-                            padding: "8px 14px",
-                            fontSize: "13px",
-                            fontWeight: 700,
-                            color:
-                              rewardSubTab === "manage"
-                                ? "var(--primary-color)"
-                                : "var(--text-muted)",
-                            border: "none",
-                            borderBottom:
-                              rewardSubTab === "manage"
-                                ? "2px solid var(--primary-color)"
-                                : "2px solid transparent",
-                            background: "none",
-                            cursor: "pointer",
-                            whiteSpace: "nowrap",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "6px",
-                          }}
-                        >
-                          <Ticket className="w-4 h-4 text-emerald-700" /> Quản Lý Quà ({totalVouchersCount})
-                        </button>
-                        <button
-                          className={`reward-subtab ${
-                            rewardSubTab === "history" ? "active" : ""
-                          }`}
-                          onClick={() => setRewardSubTab("history")}
-                          style={{
-                            padding: "8px 14px",
-                            fontSize: "13px",
-                            fontWeight: 700,
-                            color:
-                              rewardSubTab === "history"
-                                ? "var(--primary-color)"
-                                : "var(--text-muted)",
-                            border: "none",
-                            borderBottom:
-                              rewardSubTab === "history"
-                                ? "2px solid var(--primary-color)"
-                                : "2px solid transparent",
-                            background: "none",
-                            cursor: "pointer",
-                            whiteSpace: "nowrap",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "6px",
-                          }}
-                        >
-                          <History className="w-4 h-4 text-slate-600" /> Lịch Sử Đổi Quà
-                        </button>
-                      </div>
-
-                      {/* SUBTAB 0: HẠNG THÀNH VIÊN */}
-                      {rewardSubTab === "tiers" && (() => {
-                        const totalSpent = (user.placedOrders || []).reduce(
-                          (sum, o) => sum + (o.total || 0),
-                          0
-                        );
-                        const tierInfo =
-                          totalSpent >= 15000000
-                            ? { name: "HẠNG KIM CƯƠNG", icon: "Gem", bg: "linear-gradient(135deg, #0284c7, #0369a1)", target: 15000000, nextName: "Tối Đa" }
-                            : totalSpent >= 5000000
-                            ? { name: "HẠNG VÀNG", icon: "Crown", bg: "linear-gradient(135deg, #f59e0b, #d97706)", target: 15000000, nextName: "Kim Cương" }
-                            : totalSpent >= 2000000
-                            ? { name: "HẠNG BẠC", icon: "Award", bg: "linear-gradient(135deg, #94a3b8, #64748b)", target: 5000000, nextName: "Vàng" }
-                            : { name: "HẠNG ĐỒNG", icon: "Award", bg: "linear-gradient(135deg, #78716c, #44403c)", target: 2000000, nextName: "Bạc" };
-
-                        const progressPercent = Math.min(100, Math.round((totalSpent / tierInfo.target) * 100));
-
-                        return (
-                          <div>
-                            {/* Rank Card */}
-                            <div
-                              style={{
-                                background: tierInfo.bg,
-                                borderRadius: "var(--radius-lg)",
-                                padding: "24px",
-                                color: "#fff",
-                                marginBottom: "24px",
-                                boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
-                              }}
-                            >
-                              <div
-                                style={{
-                                  display: "flex",
-                                  justifyContent: "space-between",
-                                  alignItems: "center",
-                                }}
-                              >
-                                <div>
-                                  <div
-                                    style={{
-                                      fontSize: "12px",
-                                      letterSpacing: "1px",
-                                      textTransform: "uppercase",
-                                      opacity: 0.9,
-                                    }}
-                                  >
-                                    THẺ THÀNH VIÊN VIP (XÉT THEO TỔNG CHI TIÊU MUA HÀNG)
-                                  </div>
-                                  <h3
-                                    style={{
-                                      fontSize: "24px",
-                                      fontWeight: 900,
-                                      margin: "4px 0 0",
-                                      display: "flex",
-                                      alignItems: "center",
-                                      gap: "8px",
-                                    }}
-                                  >
-                                    <Crown className="w-6 h-6 text-amber-300" /> {tierInfo.name}
-                                  </h3>
-                                </div>
-                                <div style={{ fontSize: "36px" }}><Crown className="w-9 h-9 text-white" /></div>
-                              </div>
-
-                              {/* Rank progress */}
-                              <div style={{ marginTop: "20px" }}>
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    fontSize: "12px",
-                                    marginBottom: "6px",
-                                  }}
-                                >
-                                  <span>Tích lũy chi tiêu: {totalSpent.toLocaleString("vi-VN")}đ</span>
-                                  <span>Mục tiêu thăng hạng {tierInfo.nextName}: {tierInfo.target.toLocaleString("vi-VN")}đ ({progressPercent}%)</span>
-                                </div>
-                                <div
-                                  style={{
-                                    height: "10px",
-                                    background: "rgba(255,255,255,0.3)",
-                                    borderRadius: "5px",
-                                    overflow: "hidden",
-                                  }}
-                                >
-                                  <div
-                                    style={{
-                                      height: "100%",
-                                      background: "#fff",
-                                      width: `${progressPercent}%`,
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Privileges Table */}
-                            <h4
-                              style={{
-                                fontSize: "16px",
-                                fontWeight: 800,
-                                marginBottom: "12px",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "6px",
-                              }}
-                            >
-                              <Star className="w-4 h-4 text-amber-500 fill-amber-500" /> Điều Kiện Thăng Hạng & Đặc Quyền Chi Tiêu:
-                            </h4>
-                            <div
-                              style={{
-                                display: "grid",
-                                gridTemplateColumns:
-                                  "repeat(auto-fit, minmax(200px, 1fr))",
-                                gap: "12px",
-                              }}
-                            >
-                              <div
-                                style={{
-                                  border: "1px solid var(--border-color)",
-                                  padding: "14px",
-                                  borderRadius: "var(--radius-md)",
-                                  background: "#fff",
-                                }}
-                              >
-                                <div style={{ fontWeight: 800, color: "#64748b", display: "flex", alignItems: "center", gap: "6px" }}>
-                                  <Award className="w-4 h-4 text-slate-500" /> Hạng Bạc (Từ 2.000.000đ mua hàng)
-                                </div>
-                                <ul
-                                  style={{
-                                    fontSize: "12px",
-                                    margin: "8px 0 0",
-                                    paddingLeft: "16px",
-                                    color: "var(--text-muted)",
-                                    lineHeight: "1.6",
-                                  }}
-                                >
-                                  <li>Voucher ship 10.000đ mỗi tháng</li>
-                                  <li>Chiết khấu 2% trực tiếp đơn hàng</li>
-                                </ul>
-                              </div>
-                              <div
-                                style={{
-                                  border: "1px solid var(--border-color)",
-                                  padding: "14px",
-                                  borderRadius: "var(--radius-md)",
-                                  background: "#fff",
-                                }}
-                              >
-                                <div style={{ fontWeight: 800, color: "#d97706", display: "flex", alignItems: "center", gap: "6px" }}>
-                                  <Crown className="w-4 h-4 text-amber-500" /> Hạng Vàng (Từ 5.000.000đ mua hàng)
-                                </div>
-                                <ul
-                                  style={{
-                                    fontSize: "12px",
-                                    margin: "8px 0 0",
-                                    paddingLeft: "16px",
-                                    color: "var(--text-muted)",
-                                    lineHeight: "1.6",
-                                  }}
-                                >
-                                  <li>Voucher ship 20.000đ mỗi tháng</li>
-                                  <li>Chiết khấu 5% trực tiếp đơn hàng</li>
-                                  <li>Quà tặng sinh nhật tháng đặc quyền</li>
-                                </ul>
-                              </div>
-                              <div
-                                style={{
-                                  border: "1px solid var(--border-color)",
-                                  padding: "14px",
-                                  borderRadius: "var(--radius-md)",
-                                  background: "#fff",
-                                }}
-                              >
-                                <div style={{ fontWeight: 800, color: "#0284c7", display: "flex", alignItems: "center", gap: "6px" }}>
-                                  <Gem className="w-4 h-4 text-sky-500" /> Hạng Kim Cương (Từ 15.000.000đ mua hàng)
-                                </div>
-                                <ul
-                                  style={{
-                                    fontSize: "12px",
-                                    margin: "8px 0 0",
-                                    paddingLeft: "16px",
-                                    color: "var(--text-muted)",
-                                    lineHeight: "1.6",
-                                  }}
-                                >
-                                  <li>Voucher ship 50.000đ mỗi tháng</li>
-                                  <li>Chiết khấu 10% trực tiếp đơn hàng</li>
-                                  <li>Hỗ trợ ưu tiên CSKH VIP 24/7</li>
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })()}
-
-                      {/* SUBTAB TASKS: NHIỆM VỤ HÀNG NGÀY */}
-                      {rewardSubTab === "tasks" && (
-                        <div
-                          style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: "12px",
-                          }}
-                        >
-                          {/* Quick Reset Button for Testing */}
-                          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "4px" }}>
-                            <button
-                              type="button"
-                              onClick={handleResetTestingData}
-                              style={{
-                                padding: "6px 12px",
-                                background: "#fef2f2",
-                                border: "1px solid #fecaca",
-                                color: "#ef4444",
-                                borderRadius: "8px",
-                                fontSize: "12px",
-                                fontWeight: 800,
-                                cursor: "pointer",
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: "6px",
-                              }}
-                            >
-                              <History className="w-3.5 h-3.5" /> 🔄 Reset Nhiệm Vụ & Điểm (Để Kiểm Thử)
-                            </button>
-                          </div>
-                          <div
-                            style={{
-                              border: "1px solid var(--border-color)",
-                              borderRadius: "var(--radius-md)",
-                              padding: "16px",
-                              background: "#fff",
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                            }}
-                          >
-                            <div>
-                              <strong style={{ fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
-                                <Calendar className="w-4 h-4 text-emerald-700" /> Điểm danh hàng ngày
-                              </strong>
-                              <div
-                                style={{
-                                  fontSize: "12px",
-                                  color: "var(--text-muted)",
-                                  marginTop: "2px",
-                                }}
-                              >
-                                Nhận ngay +50 điểm khi đăng nhập mỗi ngày
-                              </div>
-                            </div>
-                            <button
-                              onClick={handleCheckIn}
-                              disabled={hasCheckedIn}
-                              style={{
-                                padding: "8px 16px",
-                                background: hasCheckedIn
-                                  ? "#cbd5e1"
-                                  : "var(--primary-color)",
-                                color: "#fff",
-                                border: "none",
-                                borderRadius: "var(--radius-md)",
-                                fontWeight: 700,
-                                cursor: hasCheckedIn
-                                  ? "not-allowed"
-                                  : "pointer",
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: "4px",
-                              }}
-                            >
-                              {hasCheckedIn ? (
-                                <>
-                                  <Check className="w-4 h-4" /> Đã nhận
-                                </>
-                              ) : (
-                                "+50 Điểm"
-                              )}
-                            </button>
-                          </div>
-
-                          <div
-                            style={{
-                              border: "1px solid var(--border-color)",
-                              borderRadius: "var(--radius-md)",
-                              padding: "16px",
-                              background: "#fff",
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                            }}
-                          >
-                            <div>
-                              <strong style={{ fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
-                                <Link2 className="w-4 h-4 text-blue-600" /> Chia sẻ Mini Shop lên MXH
-                              </strong>
-                              <div
-                                style={{
-                                  fontSize: "12px",
-                                  color: "var(--text-muted)",
-                                  marginTop: "2px",
-                                }}
-                              >
-                                Chia sẻ liên kết cửa hàng lên Facebook / Zalo (+100 điểm)
-                              </div>
-                            </div>
-                            {shareTaskStatus === "not_started" && (
-                              <button
-                                onClick={handlePerformShare}
-                                style={{
-                                  padding: "8px 16px",
-                                  background: "#2563eb",
-                                  color: "#fff",
-                                  border: "none",
-                                  borderRadius: "var(--radius-md)",
-                                  fontWeight: 700,
-                                  cursor: "pointer",
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: "4px",
-                                }}
-                              >
-                                <Link2 className="w-4 h-4" /> Thực hiện
-                              </button>
-                            )}
-                            {shareTaskStatus === "performed" && (
-                              <button
-                                onClick={handleClaimShare}
-                                style={{
-                                  padding: "8px 16px",
-                                  background: "#16a34a",
-                                  color: "#fff",
-                                  border: "none",
-                                  borderRadius: "var(--radius-md)",
-                                  fontWeight: 700,
-                                  cursor: "pointer",
-                                  boxShadow: "0 0 10px rgba(22, 163, 74, 0.4)",
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: "4px",
-                                }}
-                              >
-                                <Gift className="w-4 h-4" /> Nhận quà (+100 điểm)
-                              </button>
-                            )}
-                            {shareTaskStatus === "claimed" && (
-                              <button
-                                disabled
-                                style={{
-                                  padding: "8px 16px",
-                                  background: "#cbd5e1",
-                                  color: "#64748b",
-                                  border: "none",
-                                  borderRadius: "var(--radius-md)",
-                                  fontWeight: 700,
-                                  cursor: "not-allowed",
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: "4px",
-                                }}
-                              >
-                                <Check className="w-4 h-4" /> Đã nhận quà
-                              </button>
-                            )}
-                          </div>
-
-                          <div
-                            style={{
-                              border: "1px solid var(--border-color)",
-                              borderRadius: "var(--radius-md)",
-                              padding: "16px",
-                              background: "#fff",
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                            }}
-                          >
-                            <div>
-                              <strong style={{ fontSize: "14px", display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                                <Edit3 className="w-4 h-4 text-emerald-700" /> Đánh giá sản phẩm đã mua
-                              </strong>
-                              <div
-                                style={{
-                                  fontSize: "12px",
-                                  color: "var(--text-muted)",
-                                  marginTop: "2px",
-                                }}
-                              >
-                                Đánh giá 5 sao cho sản phẩm vừa trải nghiệm (+80 điểm)
-                              </div>
-                            </div>
-                            {reviewTaskStatus === "not_started" && (
-                              <button
-                                onClick={handlePerformReview}
-                                style={{
-                                  padding: "8px 16px",
-                                  background: "#2563eb",
-                                  color: "#fff",
-                                  border: "none",
-                                  borderRadius: "var(--radius-md)",
-                                  fontWeight: 700,
-                                  cursor: "pointer",
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: "4px",
-                                }}
-                              >
-                                <Edit3 className="w-4 h-4" /> Thực hiện
-                              </button>
-                            )}
-                            {reviewTaskStatus === "performed" && (
-                              <button
-                                onClick={handleClaimReview}
-                                style={{
-                                  padding: "8px 16px",
-                                  background: "#16a34a",
-                                  color: "#fff",
-                                  border: "none",
-                                  borderRadius: "var(--radius-md)",
-                                  fontWeight: 700,
-                                  cursor: "pointer",
-                                  boxShadow: "0 0 10px rgba(22, 163, 74, 0.4)",
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: "4px",
-                                }}
-                              >
-                                <Gift className="w-4 h-4" /> Nhận quà (+80 điểm)
-                              </button>
-                            )}
-                            {reviewTaskStatus === "claimed" && (
-                              <button
-                                disabled
-                                style={{
-                                  padding: "8px 16px",
-                                  background: "#cbd5e1",
-                                  color: "#64748b",
-                                  border: "none",
-                                  borderRadius: "var(--radius-md)",
-                                  fontWeight: 700,
-                                  cursor: "not-allowed",
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: "4px",
-                                }}
-                              >
-                                <Check className="w-4 h-4" /> Đã nhận quà
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* SUBTAB WHEEL: VÒNG QUAY MAY MẮN */}
-                      {rewardSubTab === "wheel" && (
-                        <div style={{ textAlign: "center", padding: "20px 0" }}>
-                          <h3
-                            style={{
-                              fontSize: "18px",
-                              fontWeight: 900,
-                              marginBottom: "8px",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: "8px",
-                            }}
-                          >
-                            <Disc className="w-5 h-5 text-red-600" /> VÒNG QUAY MAY MẮN TRÚNG VOUCHER & ĐIỂM THƯỞNG
-                          </h3>
-                          <p
-                            style={{
-                              fontSize: "13px",
-                              color: "var(--text-muted)",
-                              marginBottom: "20px",
-                            }}
-                          >
-                            Mỗi ngày khách hàng có 1 lượt quay miễn phí để săn
-                            quà tặng hấp dẫn!
-                          </p>
-
-                          {/* Animated Wheel graphic */}
-                          <div
-                            style={{
-                              position: "relative",
-                              width: "220px",
-                              height: "220px",
-                              margin: "0 auto 20px",
-                            }}
-                          >
-                            <div
-                              style={{
-                                width: "100%",
-                                height: "100%",
-                                borderRadius: "50%",
-                                border: "8px solid #dc2626",
-                                background:
-                                  "conic-gradient(#ef4444 0deg 60deg, #f59e0b 60deg 120deg, #10b981 120deg 180deg, #06b6d4 180deg 240deg, #8b5cf6 240deg 300deg, #ec4899 300deg 360deg)",
-                                transform: `rotate(${spinDeg}deg)`,
-                                transition: isSpinning
-                                  ? "transform 3.5s cubic-bezier(0.15, 0.9, 0.25, 1)"
-                                  : "none",
-                                boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
-                              }}
-                            />
-                            <div
-                              style={{
-                                position: "absolute",
-                                top: "50%",
-                                left: "50%",
-                                transform: "translate(-50%, -50%)",
-                                width: "64px",
-                                height: "64px",
-                                background: "#fff",
-                                borderRadius: "50%",
-                                border: "4px solid #dc2626",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                fontWeight: 900,
-                                fontSize: "12px",
-                                color: "#dc2626",
-                                boxShadow: "0 4px 10px rgba(0,0,0,0.2)",
-                              }}
-                            >
-                              START
-                            </div>
-                          </div>
-
-                          <button
-                            onClick={handleSpinWheel}
-                            disabled={isSpinning}
-                            style={{
-                              padding: "12px 28px",
-                              background: isSpinning
-                                ? "#cbd5e1"
-                                : "linear-gradient(135deg, #dc2626, #ef4444)",
-                              color: "#fff",
-                              border: "none",
-                              borderRadius: "30px",
-                              fontSize: "15px",
-                              fontWeight: 900,
-                              cursor: isSpinning ? "not-allowed" : "pointer",
-                              boxShadow: "0 6px 16px rgba(220, 38, 38, 0.3)",
-                              display: "inline-flex",
-                              alignItems: "center",
-                              gap: "8px",
-                            }}
-                          >
-                            {isSpinning
-                              ? "Đang quay may mắn..."
-                              : <><Disc className="w-5 h-5" /> QUAY VÒNG MAY MẮN</>}
-                          </button>
-
-                          {spinResultMsg && (
-                            <div
-                              style={{
-                                marginTop: "16px",
-                                padding: "12px",
-                                background: "#dcfce7",
-                                color: "#15803d",
-                                borderRadius: "8px",
-                                fontWeight: 800,
-                                fontSize: "14px",
-                              }}
-                            >
-                              {spinResultMsg}
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* SUBTAB 1: CATALOG ĐỔI QUÀ */}
-                      {rewardSubTab === "catalog" && (
-                        <div
-                          style={{
-                            display: "grid",
-                            gridTemplateColumns: "1fr 1fr",
-                            gap: "16px",
-                          }}
-                        >
-                          {GIFTS_CATALOG.map((gift) => (
-                            <div
-                              key={gift.id}
-                              style={{
-                                border: "1px solid var(--border-color)",
-                                borderRadius: "var(--radius-md)",
-                                padding: "14px",
-                                display: "flex",
-                                gap: "12px",
-                                alignItems: "center",
-                                background: "#fff",
-                              }}
-                            >
-                              <div style={{ width: "46px", height: "46px", borderRadius: "12px", background: "#e8f5e9", border: "1px solid #c8e6c9", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                                {gift.icon === "Ticket" && <Ticket className="w-6 h-6 text-emerald-700" />}
-                                {gift.icon === "Gift" && <Gift className="w-6 h-6 text-emerald-700" />}
-                                {gift.icon === "Truck" && <Truck className="w-6 h-6 text-emerald-700" />}
-                                {gift.icon === "Sofa" && <Sofa className="w-6 h-6 text-emerald-700" />}
-                              </div>
-                              <div style={{ flex: 1 }}>
-                                <strong
-                                  style={{ fontSize: "14px", color: "#0f172a" }}
-                                >
-                                  {gift.name}
-                                </strong>
-                                <div
-                                  style={{
-                                    fontSize: "12px",
-                                    color: "var(--text-muted)",
-                                  }}
-                                >
-                                  Cần {gift.points} điểm | Mã: {gift.code}
-                                </div>
-                              </div>
-                              <button
-                                onClick={() => handleRedeemGiftClick(gift)}
-                                style={{
-                                  background: "var(--primary-color)",
-                                  color: "#fff",
-                                  border: "none",
-                                  padding: "6px 14px",
-                                  borderRadius: "var(--radius-md)",
-                                  fontSize: "12px",
-                                  fontWeight: 700,
-                                  cursor: "pointer",
-                                }}
-                              >
-                                Đổi Ngay
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* SUBTAB 2: QUẢN LÝ QUÀ ĐÃ ĐỔI (KHO QUÀ) */}
-                      {rewardSubTab === "manage" && (
-                        <div>
-                          {user.vouchers.length === 0 ? (
-                            <div
-                              style={{
-                                textAlign: "center",
-                                padding: "36px 0",
-                                color: "var(--text-muted)",
-                                border: "1px dashed var(--border-color)",
-                                borderRadius: "var(--radius-md)",
-                                background: "#f8fafc",
-                              }}
-                            >
-                              <div style={{ display: "flex", justifyContent: "center" }}><Gift className="w-12 h-12 text-slate-400" /></div>
-                              <p style={{ fontWeight: 700, marginTop: "8px", color: "#0f172a" }}>
-                                Kho quà của bạn đang trống!
-                              </p>
-                              <p style={{ fontSize: "12px" }}>
-                                Hãy nhấn vào tab &quot;Đổi Quà Tặng&quot; để quy đổi điểm tích lũy của bạn nhé.
-                              </p>
-                            </div>
-                          ) : (
-                            <div
-                              style={{
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: "12px",
-                              }}
-                            >
-                              {user.vouchers.map((v) => (
-                                <div
-                                  key={v.code}
-                                  style={{
-                                    border: "1px dashed var(--primary-color)",
-                                    borderRadius: "var(--radius-md)",
-                                    padding: "16px",
-                                    background: "var(--primary-light)",
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    alignItems: "center",
-                                    position: "relative",
-                                  }}
-                                >
-                                  <div>
-                                    <div
-                                      style={{
-                                        fontSize: "16px",
-                                        fontWeight: 800,
-                                        color: "var(--primary-color)",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: "8px",
-                                      }}
-                                    >
-                                      <span><Ticket className="w-4 h-4 text-emerald-700" /> {v.code} - {v.label}</span>
-                                      {v.quantity > 1 && (
-                                        <sup className="badge-superscript count-green" style={{ fontSize: "11px" }}>
-                                          x{v.quantity}
-                                        </sup>
-                                      )}
-                                    </div>
-                                    <div
-                                      style={{
-                                        fontSize: "12px",
-                                        color: "var(--text-muted)",
-                                        marginTop: "4px",
-                                      }}
-                                    >
-                                      Trị giá giảm:{" "}
-                                      <strong>
-                                        {v.discount.toLocaleString("vi-VN")}đ
-                                      </strong>{" "}
-                                      | Đã đổi trong kho: {v.quantity} cái
-                                    </div>
-                                  </div>
-                                  <Link
-                                    href="/cart"
-                                    style={{
-                                      padding: "6px 14px",
-                                      background: "var(--primary-color)",
-                                      color: "#fff",
-                                      borderRadius: "var(--radius-sm)",
-                                      fontSize: "12px",
-                                      fontWeight: 700,
-                                      textDecoration: "none",
-                                    }}
-                                  >
-                                    Dùng Ngay trong Giỏ
-                                  </Link>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* SUBTAB 3: LỊCH SỬ ĐỔI QUÀ */}
-                      {rewardSubTab === "history" && (
-                        <div>
-                          {user.history.length === 0 ? (
-                            <div
-                              style={{
-                                textAlign: "center",
-                                padding: "24px 0",
-                                color: "var(--text-muted)",
-                              }}
-                            >
-                              Chưa có lịch sử đổi quà.
-                            </div>
-                          ) : (
-                            <table
-                              style={{
-                                width: "100%",
-                                borderCollapse: "collapse",
-                                fontSize: "13px",
-                              }}
-                            >
-                              <thead>
-                                <tr
-                                  style={{
-                                    borderBottom: "2px solid var(--border-color)",
-                                    textAlign: "left",
-                                  }}
-                                >
-                                  <th style={{ padding: "8px" }}>Mã GD</th>
-                                  <th style={{ padding: "8px" }}>Ngày GD</th>
-                                  <th style={{ padding: "8px" }}>Nội dung / Phần quà</th>
-                                  <th style={{ padding: "8px" }}>Mã Voucher</th>
-                                  <th style={{ padding: "8px" }}>Thay đổi điểm</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {user.history.map((h) => (
-                                  <tr
-                                    key={h.id}
-                                    style={{
-                                      borderBottom: "1px solid var(--border-color)",
-                                    }}
-                                  >
-                                    <td style={{ padding: "8px" }}>
-                                      <strong>{h.id}</strong>
-                                    </td>
-                                    <td style={{ padding: "8px" }}>{h.date}</td>
-                                    <td style={{ padding: "8px" }}>
-                                      <strong>{h.giftName}</strong>
-                                    </td>
-                                    <td style={{ padding: "8px" }}>
-                                      <code
-                                        style={{
-                                          background: "#f1f5f9",
-                                          padding: "2px 6px",
-                                          borderRadius: "4px",
-                                          fontWeight: 700,
-                                        }}
-                                      >
-                                        {h.code}
-                                      </code>
-                                    </td>
-                                    <td
-                                      style={{
-                                        padding: "8px",
-                                        color: h.pointsSpent < 0 ? "#16a34a" : "#ef4444",
-                                        fontWeight: 800,
-                                      }}
-                                    >
-                                      {h.pointsSpent < 0 ? `+${Math.abs(h.pointsSpent)}` : `-${h.pointsSpent}`} Điểm
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* TAB 3: ĐƠN HÀNG */}
-                  {dashboardTab === "orders" && (
-                    <div>
-                      <h2
-                        style={{
-                          fontSize: "20px",
-                          fontWeight: 800,
-                          color: "#0f172a",
-                          marginBottom: "16px",
-                        }}
-                      >
-                        Quản Lý Đơn Hàng Của Tôi
-                      </h2>
-                      <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: "12px",
-                        }}
-                      >
-                        {liveOrders.map((ord) => (
-                          <div
-                            key={ord.id}
-                            style={{
-                              border: "1px solid var(--border-color)",
-                              borderRadius: "var(--radius-md)",
-                              padding: "16px",
-                              background: "#fff",
-                            }}
-                          >
-                            <div
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                borderBottom: "1px solid #f1f5f9",
-                                paddingBottom: "10px",
-                                marginBottom: "12px",
-                              }}
-                            >
-                              <div>
-                                <strong style={{ fontSize: "14px", color: "#0f172a" }}>
-                                  Đơn hàng {ord.id}
-                                </strong>
-                                <div
-                                  style={{
-                                    fontSize: "12px",
-                                    color: "var(--text-muted)",
-                                  }}
-                                >
-                                  Ngày đặt: {ord.date}
-                                </div>
-                              </div>
-                              <span
-                                style={{
-                                  fontSize: "12px",
-                                  fontWeight: 700,
-                                  color: "var(--primary-color)",
-                                  background: "var(--primary-light)",
-                                  padding: "4px 12px",
-                                  borderRadius: "var(--radius-full)",
-                                  height: "fit-content",
-                                }}
-                              >
-                                {ord.statusText}
-                              </span>
-                            </div>
-
-                            <div
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                              }}
-                            >
-                              <div>
-                                <div style={{ fontSize: "13px", color: "var(--text-main)" }}>
-                                  Sản phẩm: <strong>{ord.items[0].name}</strong> {ord.items.length > 1 && `(+${ord.items.length - 1} sản phẩm khác)`}
-                                </div>
-                                <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--primary-color)", marginTop: "2px" }}>
-                                  Tổng tiền: {ord.total.toLocaleString("vi-VN")}đ
-                                </div>
-                              </div>
-
-                              <div style={{ display: "flex", gap: "8px" }}>
-                                {(ord.status === "pending" || ord.status === "processing") && (
-                                  <button
-                                    onClick={() => {
-                                      setCancelTargetOrder(ord);
-                                      setShowCancelModal(true);
-                                    }}
-                                    style={{
-                                      padding: "6px 14px",
-                                      background: "#fee2e2",
-                                      border: "1px solid #fca5a5",
-                                      borderRadius: "var(--radius-sm)",
-                                      fontSize: "12px",
-                                      fontWeight: 700,
-                                      cursor: "pointer",
-                                      color: "#dc2626",
-                                      display: "inline-flex",
-                                      alignItems: "center",
-                                      gap: "4px",
-                                    }}
-                                  >
-                                    <X className="w-3.5 h-3.5" /> Hủy đơn
-                                  </button>
-                                )}
-                                <button
-                                  onClick={() => setSelectedOrder(ord)}
-                                  style={{
-                                    padding: "6px 14px",
-                                    background: "#ffffff",
-                                    border: "1px solid var(--border-color)",
-                                    borderRadius: "var(--radius-sm)",
-                                    fontSize: "12px",
-                                    fontWeight: 700,
-                                    cursor: "pointer",
-                                    color: "var(--text-main)",
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    gap: "4px",
-                                  }}
-                                >
-                                  <Search className="w-3.5 h-3.5" /> Xem chi tiết
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* TAB 4: ĐỊA CHỈ NHẬN HÀNG */}
-                  {dashboardTab === "address" && (
-                    <div>
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          marginBottom: "16px",
-                        }}
-                      >
-                        <h2
-                          style={{
-                            fontSize: "20px",
-                            fontWeight: 800,
-                            color: "#0f172a",
-                            margin: 0,
-                          }}
-                        >
-                          Sổ Địa Chỉ Nhận Hàng
-                        </h2>
-                        <button
-                          onClick={() => setShowAddAddressModal(true)}
-                          style={{
-                            padding: "8px 16px",
-                            background: "var(--primary-color)",
-                            color: "#fff",
-                            border: "none",
-                            borderRadius: "var(--radius-md)",
-                            fontSize: "13px",
-                            fontWeight: 700,
-                            cursor: "pointer",
-                          }}
-                        >
-                          + Thêm Địa Chỉ Mới
-                        </button>
-                      </div>
-
-                      <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: "12px",
-                        }}
-                      >
-                        {addresses.map((a) => (
-                          <div
-                            key={a.id}
-                            style={{
-                              border: a.isDefault
-                                ? "2px solid var(--primary-color)"
-                                : "1px solid var(--border-color)",
-                              borderRadius: "var(--radius-md)",
-                              padding: "16px",
-                              background: a.isDefault ? "#f0fdf4" : "#ffffff",
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                            }}
-                          >
-                            <div>
-                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                <strong style={{ fontSize: "14px", color: "#0f172a" }}>
-                                  {a.name}
-                                </strong>
-                                <span style={{ fontSize: "13px", color: "var(--text-muted)" }}>
-                                  ({a.phone})
-                                </span>
-                                {a.isDefault && (
-                                  <span
-                                    style={{
-                                      background: "var(--primary-color)",
-                                      color: "#ffffff",
-                                      fontSize: "10px",
-                                      fontWeight: 800,
-                                      padding: "2px 8px",
-                                      borderRadius: "var(--radius-full)",
-                                      display: "inline-flex",
-                                      alignItems: "center",
-                                      gap: "4px",
-                                    }}
-                                  >
-                                    <MapPin className="w-3 h-3" /> Mặc định
-                                  </span>
-                                )}
-                              </div>
-                              <p
-                                style={{
-                                  fontSize: "13px",
-                                  color: "var(--text-main)",
-                                  marginTop: "4px",
-                                  margin: "4px 0 0 0",
-                                }}
-                              >
-                                {a.detail}, {a.ward}, {a.province}
-                              </p>
-                            </div>
-
-                            <div style={{ display: "flex", gap: "8px" }}>
-                              {!a.isDefault && addresses.length >= 2 && (
-                                <button
-                                  onClick={() => handleSetDefaultAddress(a.id)}
-                                  style={{
-                                    padding: "6px 12px",
-                                    background: "#ffffff",
-                                    border: "1px solid var(--primary-color)",
-                                    color: "var(--primary-color)",
-                                    borderRadius: "var(--radius-sm)",
-                                    fontSize: "12px",
-                                    fontWeight: 700,
-                                    cursor: "pointer",
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    gap: "4px",
-                                  }}
-                                >
-                                  <MapPin className="w-3.5 h-3.5" /> Đặt làm mặc định
-                                </button>
-                              )}
-                              <button
-                                onClick={() => handleDeleteAddress(a.id)}
-                                style={{
-                                  padding: "6px 10px",
-                                  background: "#fef2f2",
-                                  border: "1px solid #fecaca",
-                                  color: "#ef4444",
-                                  borderRadius: "var(--radius-sm)",
-                                  fontSize: "12px",
-                                  fontWeight: 700,
-                                  cursor: "pointer",
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: "4px",
-                                }}
-                              >
-                                <Trash2 className="w-3.5 h-3.5" /> Xóa
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                        </div>
-                      </div>
-                    )}
-                </div>
-              </div>
-            </div>
-          )}
+  if (loading) {
+    return (
+      <div style={{ minHeight: "80vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ textAlign: "center", color: "#64748b" }}>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-600 mx-auto mb-3" />
+          <p style={{ fontWeight: 600 }}>Đang tải dữ liệu tài khoản...</p>
         </div>
       </div>
+    );
+  }
 
-      {/* MODAL XEM CHI TIẾT ĐƠN HÀNG */}
-      {selectedOrder && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.5)",
-            zIndex: 3000,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "20px",
-          }}
-        >
+  return (
+    <main className="auth-page-wrapper" style={{ padding: "40px 16px", background: "#f8fafc", minHeight: "85vh" }}>
+      {!user ? (
+        /* GUEST AUTH FORM (LOGIN & REGISTER) */
+        <div style={{ maxWidth: "440px", margin: "0 auto" }}>
           <div
             style={{
-              background: "#fff",
-              width: "100%",
-              maxWidth: "600px",
-              borderRadius: "var(--radius-lg)",
-              boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
-              overflow: "hidden",
-              display: "flex",
-              flexDirection: "column",
+              background: "#ffffff",
+              borderRadius: "20px",
+              border: "1px solid #e2e8f0",
+              padding: "32px 28px",
+              boxShadow: "0 10px 30px rgba(0, 0, 0, 0.05)",
             }}
           >
-            <div
-              style={{
-                padding: "16px 20px",
-                background: "#f8fafc",
-                borderBottom: "1px solid var(--border-color)",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <h3 style={{ fontSize: "16px", fontWeight: 800, color: "#0f172a", margin: 0, display: "flex", alignItems: "center", gap: "6px" }}>
-                <Package className="w-4 h-4 text-emerald-700" /> Chi Tiết Đơn Hàng {selectedOrder.id}
-              </h3>
+            <div style={{ display: "flex", gap: "8px", background: "#f1f5f9", padding: "4px", borderRadius: "12px", marginBottom: "24px" }}>
               <button
                 type="button"
-                onClick={() => setSelectedOrder(null)}
+                onClick={() => setActiveTab("login")}
                 style={{
-                  background: "none",
+                  flex: 1,
+                  padding: "10px",
+                  borderRadius: "10px",
                   border: "none",
-                  fontSize: "22px",
-                  cursor: "pointer",
-                  color: "var(--text-muted)",
-                }}
-              >
-                <X className="w-5 h-5 text-slate-400 hover:text-slate-600" />
-              </button>
-            </div>
-
-            <div style={{ padding: "20px", maxHeight: "480px", overflowY: "auto" }}>
-              <div
-                style={{
-                  marginBottom: "16px",
+                  background: activeTab === "login" ? "#ffffff" : "transparent",
+                  color: activeTab === "login" ? "var(--primary-color, #2e7d32)" : "#64748b",
+                  fontWeight: 800,
                   fontSize: "14px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "6px",
-                  color: "var(--text-main)",
+                  cursor: "pointer",
+                  boxShadow: activeTab === "login" ? "0 2px 8px rgba(0,0,0,0.05)" : "none",
                 }}
               >
-                <div>Ngày đặt: <span style={{ fontWeight: 600 }}>{selectedOrder.date}</span></div>
-                <div>Trạng thái: <span style={{ fontWeight: 600 }}>{selectedOrder.statusText}</span></div>
-                {selectedOrder.cancelReason && (
-                  <div style={{ color: "#dc2626", fontWeight: 600, display: "flex", alignItems: "center", gap: "4px" }}>
-                    <AlertTriangle className="w-4 h-4 text-red-600" /> Lý do hủy: {selectedOrder.cancelReason}
-                  </div>
-                )}
-                <div>Người nhận: <span style={{ fontWeight: 600 }}>{selectedOrder.recipientName} ({selectedOrder.recipientPhone})</span></div>
-                <div>Địa chỉ: <span style={{ fontWeight: 600 }}>{selectedOrder.address}</span></div>
-                <div>Thanh toán: <span style={{ fontWeight: 600 }}>{selectedOrder.paymentMethod}</span></div>
-              </div>
-
-              <hr style={{ border: 0, borderTop: "1px solid var(--border-color)", margin: "16px 0" }} />
-
-              <h4 style={{ fontSize: "14px", fontWeight: 800, marginBottom: "10px" }}>Sản phẩm trong đơn:</h4>
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                {selectedOrder.items.map((it, idx) => (
-                  <div key={idx} style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-                    <img src={fixImagePath(it.image)} alt={it.name} style={{ width: "48px", height: "48px", borderRadius: "6px", objectFit: "cover" }} />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: "14px", fontWeight: 700 }}>{it.name}</div>
-                      <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>
-                        Số lượng: {it.qty} x {it.price.toLocaleString("vi-VN")}đ
-                      </div>
-                    </div>
-                    <strong style={{ fontSize: "14px" }}>
-                      {(it.qty * it.price).toLocaleString("vi-VN")}đ
-                    </strong>
-                  </div>
-                ))}
-              </div>
-
-              <hr style={{ border: 0, borderTop: "1px solid var(--border-color)", margin: "16px 0" }} />
-
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
-                <span>Tạm tính:</span>
-                <strong>{selectedOrder.subtotal.toLocaleString("vi-VN")}đ</strong>
-              </div>
-              {selectedOrder.discount > 0 && (
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px", color: "#ef4444" }}>
-                  <span>Giảm giá:</span>
-                  <strong>-{selectedOrder.discount.toLocaleString("vi-VN")}đ</strong>
-                </div>
-              )}
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px", fontWeight: 900, color: "var(--primary-color)", marginTop: "8px" }}>
-                <span>TỔNG CỘNG:</span>
-                <span>{selectedOrder.total.toLocaleString("vi-VN")}đ</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL THÊM ĐỊA CHỈ MỚI */}
-      {showAddAddressModal && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.5)",
-            zIndex: 3000,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "20px",
-          }}
-        >
-          <div
-            style={{
-              background: "#fff",
-              width: "100%",
-              maxWidth: "520px",
-              borderRadius: "var(--radius-lg)",
-              boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
-              overflow: "hidden",
-            }}
-          >
-            <div
-              style={{
-                padding: "16px 20px",
-                background: "#f8fafc",
-                borderBottom: "1px solid var(--border-color)",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <h3 style={{ fontSize: "16px", fontWeight: 800, color: "#0f172a", margin: 0, display: "flex", alignItems: "center", gap: "6px" }}>
-                <MapPin className="w-4 h-4 text-emerald-700" /> Thêm Địa Chỉ Nhận Hàng Mới
-              </h3>
+                Đăng Nhập
+              </button>
               <button
                 type="button"
-                onClick={() => setShowAddAddressModal(false)}
+                onClick={() => setActiveTab("register")}
                 style={{
-                  background: "none",
+                  flex: 1,
+                  padding: "10px",
+                  borderRadius: "10px",
                   border: "none",
-                  fontSize: "22px",
+                  background: activeTab === "register" ? "#ffffff" : "transparent",
+                  color: activeTab === "register" ? "var(--primary-color, #2e7d32)" : "#64748b",
+                  fontWeight: 800,
+                  fontSize: "14px",
                   cursor: "pointer",
-                  color: "var(--text-muted)",
+                  boxShadow: activeTab === "register" ? "0 2px 8px rgba(0,0,0,0.05)" : "none",
                 }}
               >
-                <X className="w-5 h-5 text-slate-400 hover:text-slate-600" />
+                Đăng Ký
               </button>
             </div>
 
-            <form onSubmit={handleAddAddressSubmit} style={{ padding: "20px" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
-                <div>
-                  <label className="auth-label">Họ và tên *</label>
-                  <input
-                    type="text"
-                    className="form-control auth-input"
-                    placeholder="Ví dụ: Bình Nguyễn"
-                    required
-                    value={addrName}
-                    onChange={(e) => setAddrName(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="auth-label">Số điện thoại *</label>
-                  <input
-                    type="tel"
-                    className="form-control auth-input"
-                    placeholder="Ví dụ: 0988123456"
-                    required
-                    value={addrPhone}
-                    onChange={(e) => setAddrPhone(e.target.value)}
-                  />
-                </div>
+            {authError && (
+              <div style={{ padding: "10px 14px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "10px", color: "#dc2626", fontSize: "13px", fontWeight: 800, marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
+                <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0" />
+                <span>{authError}</span>
               </div>
-
-              <SearchableDropdown
-                label="Tỉnh / Thành phố *"
-                value={addrProvince}
-                options={provincesList}
-                placeholderSearch="Nhập từ khóa tìm nhanh Tỉnh / Thành phố..."
-                onSelect={handleSelectProvince}
-              />
-
-              <SearchableDropdown
-                label="Xã / Phường *"
-                value={addrWard}
-                options={wardsList}
-                placeholderSearch="Nhập từ khóa tìm nhanh Xã / Phường..."
-                onSelect={(selectedWard) => setAddrWard(selectedWard)}
-              />
-
-              <div style={{ marginBottom: "16px" }}>
-                <label className="auth-label">Tên đường, tòa nhà, số nhà *</label>
-                <input
-                  type="text"
-                  className="form-control auth-input"
-                  placeholder="Ví dụ: 123 Đường Nguyễn Trãi, Tòa nhà Bitexco"
-                  required
-                  value={addrDetail}
-                  onChange={(e) => setAddrDetail(e.target.value)}
-                />
+            )}
+            {authSuccess && (
+              <div style={{ padding: "10px 14px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "10px", color: "#166534", fontSize: "13px", fontWeight: 800, marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
+                <CheckCircle2 className="w-4 h-4 text-emerald-700 flex-shrink-0" />
+                <span>{authSuccess}</span>
               </div>
+            )}
 
-              <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", cursor: "pointer", marginBottom: "20px" }}>
-                <input
-                  type="checkbox"
-                  checked={addrSetDefault}
-                  onChange={(e) => setAddrSetDefault(e.target.checked)}
+            {activeTab === "login" ? (
+              <LoginForm
+                onLoginSubmit={handleLoginSubmit}
+                onQuickLoginAdmin={() => loginUser("admin@minishop.vn")}
+                onQuickLoginCustomer={() => loginUser("binh.pham@minishop.vn")}
+              />
+            ) : (
+              <RegisterForm onRegisterSubmit={handleRegisterSubmit} />
+            )}
+          </div>
+        </div>
+      ) : (
+        /* LOGGED-IN CUSTOMER PROFILE DASHBOARD */
+        <div style={{ width: "100%", maxWidth: "1300px", margin: "0 auto" }}>
+          {/* Header Banner */}
+          <ProfileHeader user={user} ordersCount={liveOrders.length} onLogout={logout} />
+
+          {/* Main Grid: Left Nav + Right Active Tab Content */}
+          <div style={{ display: "grid", gridTemplateColumns: "280px 1fr", gap: "20px" }}>
+            {/* Left Nav */}
+            <ProfileNavTabs activeTab={profileTab} onChangeTab={setProfileTab} />
+
+            {/* Right Card Container */}
+            <div style={{ background: "#ffffff", borderRadius: "20px", border: "1px solid #e2e8f0", padding: "28px", boxShadow: "0 4px 20px rgba(0,0,0,0.04)" }}>
+              {profileTab === "profile" && <AccountInfoTab user={user} />}
+              {profileTab === "orders" && (
+                <OrderHistoryTab
+                  orders={liveOrders}
+                  onSelectOrder={setSelectedOrder}
+                  onOpenReviewModal={(ord) => setShowReviewModal(true)}
+                  onOpenCancelModal={(ord) => {
+                    setCancelTargetOrder(ord);
+                    setShowCancelModal(true);
+                  }}
                 />
-                <span>Đặt làm địa chỉ nhận hàng mặc định</span>
-              </label>
-
-              <button
-                type="submit"
-                className="btn-auth-submit"
-                style={{ width: "100%", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px" }}
-              >
-                <Save className="w-4 h-4" /> Lưu Địa Chỉ Mới
-              </button>
-            </form>
+              )}
+              {profileTab === "addresses" && (
+                <AddressBookTab
+                  addresses={addresses}
+                  provincesList={provincesList}
+                  wardsList={wardsList}
+                  onSelectProvince={handleSelectProvince}
+                  onAddAddress={handleAddAddress}
+                  onSetDefaultAddress={handleSetDefaultAddress}
+                  onDeleteAddress={handleDeleteAddress}
+                />
+              )}
+              {profileTab === "rewards" && (
+                <RewardsPointsTab
+                  user={user}
+                  onRedeemGift={redeemGift}
+                  onConfirmShare={() => addPointsAndHistory("Chia sẻ Facebook/Zalo nhận điểm", 50)}
+                />
+              )}
+              {profileTab === "security" && <SecuritySettingsTab />}
+            </div>
           </div>
         </div>
       )}
 
-      {/* MODAL HỦY ĐƠN HÀNG KÈM LÝ DO */}
+      {/* MODALS */}
+      <OrderDetailModal selectedOrder={selectedOrder} onClose={() => setSelectedOrder(null)} />
+
+      <OrderReviewModal
+        isOpen={showReviewModal}
+        onClose={() => setShowReviewModal(false)}
+        onSubmitReview={(rating, comment) => {
+          setShowReviewModal(false);
+          alert("Cảm ơn bạn đã gửi đánh giá sản phẩm!");
+        }}
+      />
+
+      {/* Cancel Order Modal */}
       {showCancelModal && cancelTargetOrder && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.5)",
-            zIndex: 3000,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "20px",
-          }}
-        >
-          <div
-            style={{
-              background: "#fff",
-              width: "100%",
-              maxWidth: "480px",
-              borderRadius: "var(--radius-lg)",
-              boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
-              overflow: "hidden",
-            }}
-          >
-            <div
-              style={{
-                padding: "16px 20px",
-                background: "#fef2f2",
-                borderBottom: "1px solid #fee2e2",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div style={{ background: "#fff", width: "100%", maxWidth: "480px", borderRadius: "16px", overflow: "hidden", boxShadow: "0 20px 40px rgba(0,0,0,0.2)" }}>
+            <div style={{ padding: "16px 20px", background: "#fef2f2", borderBottom: "1px solid #fee2e2", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <h3 style={{ fontSize: "16px", fontWeight: 800, color: "#991b1b", margin: 0, display: "flex", alignItems: "center", gap: "6px" }}>
                 <AlertTriangle className="w-4 h-4 text-red-600" /> Lý Do Hủy Đơn Hàng {cancelTargetOrder.id}
               </h3>
-              <button
-                type="button"
-                onClick={() => setShowCancelModal(false)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  fontSize: "22px",
-                  cursor: "pointer",
-                  color: "#991b1b",
-                }}
-              >
+              <button type="button" onClick={() => setShowCancelModal(false)} style={{ background: "none", border: "none", cursor: "pointer" }}>
                 <X className="w-5 h-5 text-red-700" />
               </button>
             </div>
 
             <form onSubmit={handleConfirmCancelOrder} style={{ padding: "20px" }}>
-              <p style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: 0, marginBottom: "14px" }}>
-                Xin vui lòng chọn lý do tại sao bạn muốn hủy đơn hàng này để MINI-SHOP nâng cao chất lượng phục vụ:
+              <p style={{ fontSize: "13px", color: "#64748b", marginTop: 0, marginBottom: "14px" }}>
+                Xin vui lòng chọn lý do tại sao bạn muốn hủy đơn hàng này:
               </p>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "16px" }}>
-                {CANCELLATION_REASONS.map((r, idx) => (
-                  <label
-                    key={idx}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                      fontSize: "13px",
-                      padding: "8px 12px",
-                      border: "1px solid var(--border-color)",
-                      borderRadius: "6px",
-                      cursor: "pointer",
-                      background: cancelReasonPreset === r ? "#f0fdf4" : "#fff",
-                      borderColor: cancelReasonPreset === r ? "var(--primary-color)" : "var(--border-color)",
-                      fontWeight: cancelReasonPreset === r ? 700 : 400,
-                    }}
-                  >
-                    <input
-                      type="radio"
-                      name="cancel_reason"
-                      value={r}
-                      checked={cancelReasonPreset === r}
-                      onChange={(e) => setCancelReasonPreset(e.target.value)}
-                    />
+                {["Đổi ý không muốn mua nữa", "Muốn đổi sản phẩm khác", "Thay đổi địa chỉ giao hàng", "Thời gian giao hàng lâu", "Lý do khác..."].map((r, idx) => (
+                  <label key={idx} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", padding: "8px 12px", border: "1px solid #e2e8f0", borderRadius: "6px", cursor: "pointer", background: cancelReasonPreset === r ? "#f0fdf4" : "#fff", borderColor: cancelReasonPreset === r ? "var(--primary-color, #2e7d32)" : "#e2e8f0", fontWeight: cancelReasonPreset === r ? 700 : 400 }}>
+                    <input type="radio" name="cancel_reason" value={r} checked={cancelReasonPreset === r} onChange={(e) => setCancelReasonPreset(e.target.value)} />
                     <span>{r}</span>
                   </label>
                 ))}
@@ -3375,46 +426,15 @@ export default function AuthPage() {
               {cancelReasonPreset.includes("Lý do khác") && (
                 <div style={{ marginBottom: "16px" }}>
                   <label className="auth-label">Nhập lý do chi tiết của bạn:</label>
-                  <textarea
-                    rows={3}
-                    className="form-control auth-input"
-                    placeholder="Ví dụ: Đổi ý không muốn mua nữa..."
-                    value={cancelReasonCustom}
-                    onChange={(e) => setCancelReasonCustom(e.target.value)}
-                    style={{ width: "100%", padding: "10px", fontSize: "13px" }}
-                  />
+                  <textarea rows={3} className="form-control auth-input" placeholder="Ví dụ: Cần gấp..." value={cancelReasonCustom} onChange={(e) => setCancelReasonCustom(e.target.value)} style={{ width: "100%", padding: "10px", fontSize: "13px" }} />
                 </div>
               )}
 
               <div style={{ display: "flex", gap: "10px" }}>
-                <button
-                  type="button"
-                  onClick={() => setShowCancelModal(false)}
-                  style={{
-                    flex: 1,
-                    padding: "10px",
-                    background: "#f1f5f9",
-                    border: "none",
-                    borderRadius: "var(--radius-md)",
-                    fontWeight: 700,
-                    cursor: "pointer",
-                  }}
-                >
+                <button type="button" onClick={() => setShowCancelModal(false)} style={{ flex: 1, padding: "10px", background: "#f1f5f9", border: "none", borderRadius: "8px", fontWeight: 700, cursor: "pointer" }}>
                   Quay Lại
                 </button>
-                <button
-                  type="submit"
-                  style={{
-                    flex: 1,
-                    padding: "10px",
-                    background: "#dc2626",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: "var(--radius-md)",
-                    fontWeight: 700,
-                    cursor: "pointer",
-                  }}
-                >
+                <button type="submit" style={{ flex: 1, padding: "10px", background: "#dc2626", color: "#fff", border: "none", borderRadius: "8px", fontWeight: 700, cursor: "pointer" }}>
                   Xác Nhận Hủy Đơn
                 </button>
               </div>
@@ -3423,182 +443,7 @@ export default function AuthPage() {
         </div>
       )}
 
-      {/* MODAL THỰC HIỆN CHIA SẺ */}
-      {showShareModal && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.5)",
-            zIndex: 3000,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "20px",
-          }}
-        >
-          <div
-            style={{
-              background: "#fff",
-              width: "100%",
-              maxWidth: "460px",
-              borderRadius: "var(--radius-lg)",
-              padding: "24px",
-              boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
-              textAlign: "center",
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "center", marginBottom: "10px" }}><Share2 className="w-10 h-10 text-emerald-700" /></div>
-            <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", margin: "0 0 8px 0" }}>
-              Chia Sẻ MINI-SHOP Lên Mạng Xã Hội
-            </h3>
-            <p style={{ fontSize: "13px", color: "var(--text-muted)", marginBottom: "20px" }}>
-              Hãy chia sẻ đường link cửa hàng Mini Shop đến bạn bè qua Facebook hoặc Zalo để được ghi nhận thực hiện nhiệm vụ nhé!
-            </p>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", justifyContent: "center", marginBottom: "20px" }}>
-              <a
-                href="https://www.facebook.com/sharer/sharer.php"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ padding: "8px 16px", background: "#1877f2", color: "#fff", borderRadius: "8px", textDecoration: "none", fontWeight: 700, fontSize: "13px" }}
-              >
-                Facebook
-              </a>
-              <a
-                href="https://zalo.me"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ padding: "8px 16px", background: "#0068ff", color: "#fff", borderRadius: "8px", textDecoration: "none", fontWeight: 700, fontSize: "13px" }}
-              >
-                Zalo
-              </a>
-              <button
-                onClick={() => {
-                  if (typeof window !== "undefined") {
-                    navigator.clipboard.writeText(window.location.origin);
-                    alert("Đã chép liên kết Mini Shop vào bộ nhớ tạm!");
-                  }
-                }}
-                style={{ padding: "8px 16px", background: "#334155", color: "#fff", border: "none", borderRadius: "8px", fontWeight: 700, fontSize: "13px", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px" }}
-              >
-                <Copy className="w-3.5 h-3.5" /> Sao chép Link
-              </button>
-            </div>
-            <button
-              onClick={handleConfirmShareAction}
-              style={{
-                width: "100%",
-                padding: "10px",
-                background: "var(--primary-color)",
-                color: "#fff",
-                border: "none",
-                borderRadius: "8px",
-                fontWeight: 800,
-                fontSize: "14px",
-                cursor: "pointer",
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "6px",
-              }}
-            >
-              <Check className="w-4 h-4" /> Xác Nhận Đã Chia Sẻ Facebook/Zalo
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL THỰC HIỆN ĐÁNH GIÁ SẢN PHẨM */}
-      {showReviewModal && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.5)",
-            zIndex: 3000,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "20px",
-          }}
-        >
-          <div
-            style={{
-              background: "#fff",
-              width: "100%",
-              maxWidth: "480px",
-              borderRadius: "var(--radius-lg)",
-              padding: "24px",
-              boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-              <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", margin: 0, display: "flex", alignItems: "center", gap: "6px" }}>
-                <Edit3 className="w-4 h-4 text-emerald-700" /> Đánh Giá Sản Phẩm Đã Mua
-              </h3>
-              <button onClick={() => setShowReviewModal(false)} style={{ background: "none", border: "none", cursor: "pointer" }}><X className="w-5 h-5 text-slate-400 hover:text-slate-600" /></button>
-            </div>
-
-            <form onSubmit={handleConfirmReviewAction}>
-              <div style={{ marginBottom: "16px" }}>
-                <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "6px" }}>Chọn mức độ hài lòng (Số sao):</label>
-                <div style={{ display: "flex", gap: "8px" }}>
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      type="button"
-                      onClick={() => setReviewRating(star)}
-                      style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
-                    >
-                      <Star
-                        className={`w-7 h-7 ${
-                          star <= reviewRating
-                            ? "text-amber-500 fill-amber-500"
-                            : "text-slate-300 fill-slate-100"
-                        }`}
-                      />
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div style={{ marginBottom: "20px" }}>
-                <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "6px" }}>Viết cảm nhận của bạn về sản phẩm:</label>
-                <textarea
-                  rows={3}
-                  className="form-control auth-input"
-                  placeholder="Ví dụ: Sản phẩm gỗ sồi tự nhiên rất đẹp, đóng gói cẩn thận..."
-                  value={reviewComment}
-                  onChange={(e) => setReviewComment(e.target.value)}
-                  style={{ width: "100%", padding: "10px", fontSize: "13px" }}
-                />
-              </div>
-
-              <button
-                type="submit"
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                  background: "var(--primary-color)",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "8px",
-                  fontWeight: 800,
-                  fontSize: "14px",
-                  cursor: "pointer",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "6px",
-                }}
-              >
-                <Send className="w-4 h-4" /> Gửi Đánh Giá Hoàn Thành
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
+      {/* OTP Verification Modal */}
       <OtpVerificationModal
         isOpen={showOtpModal}
         email={regEmail}
@@ -3608,5 +453,20 @@ export default function AuthPage() {
         onClose={() => setShowOtpModal(false)}
       />
     </main>
+  );
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ minHeight: "80vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ textAlign: "center", color: "#64748b" }}>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-600 mx-auto mb-3" />
+          <p style={{ fontWeight: 600 }}>Đang tải trang xác thực...</p>
+        </div>
+      </div>
+    }>
+      <AuthPageContent />
+    </Suspense>
   );
 }
