@@ -258,6 +258,14 @@ export const deleteAdminCategory = async (id: number): Promise<boolean> => {
 
 // ==================== 4. ORDERS CRUD ====================
 export const fetchAdminOrders = async (): Promise<UnifiedOrder[]> => {
+  let localOrders: UnifiedOrder[] = [];
+  try {
+    const { getAllOrders } = await import("@/utils/orderStorage");
+    localOrders = getAllOrders();
+  } catch (e) {
+    console.warn("Could not load local orders:", e);
+  }
+
   try {
     const supabase = createClient();
     const { data: orderRows, error } = await supabase
@@ -265,31 +273,40 @@ export const fetchAdminOrders = async (): Promise<UnifiedOrder[]> => {
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (error || !orderRows) return [];
+    if (error || !orderRows) {
+      console.warn("Supabase fetch orders error, returning local orders:", error?.message);
+      return localOrders;
+    }
 
     const { data: itemRows } = await supabase.from("order_items").select("*");
 
-    return orderRows.map((o: any) => {
-      const items = (itemRows || [])
-        .filter((it: any) => it.order_id === o.id)
-        .map((it: any) => ({
-          name: String(it.product_name),
-          image: String(it.image),
-          qty: Number(it.qty),
-          price: Number(it.price),
-        }));
+    const supabaseOrders: UnifiedOrder[] = orderRows.map((o: any) => {
+      // 1. Read items from JSONB column if present
+      let items: any[] = Array.isArray(o.items) ? o.items : [];
 
-      const finalItems =
-        items.length > 0
-          ? items
-          : [
-              {
-                name: "Sản phẩm Đơn Hàng #" + String(o.id),
-                image: "/assets/images/products/noi-that-gia-dung/sofa-phong-khach.webp",
-                qty: 1,
-                price: Number(o.subtotal || o.total || 0),
-              },
-            ];
+      // 2. If empty, fallback to order_items table
+      if (items.length === 0 && itemRows) {
+        items = itemRows
+          .filter((it: any) => it.order_id === o.id)
+          .map((it: any) => ({
+            name: String(it.product_name),
+            image: String(it.image),
+            qty: Number(it.qty),
+            price: Number(it.price),
+          }));
+      }
+
+      // 3. Fallback dummy if still empty
+      if (items.length === 0) {
+        items = [
+          {
+            name: "Sản phẩm Đơn Hàng " + String(o.id),
+            image: "/assets/images/banner/banner-trang-chu-mini-shop.webp",
+            qty: 1,
+            price: Number(o.subtotal || o.total || 0),
+          },
+        ];
+      }
 
       return {
         id: String(o.id),
@@ -300,7 +317,7 @@ export const fetchAdminOrders = async (): Promise<UnifiedOrder[]> => {
         recipientPhone: String(o.recipient_phone),
         address: String(o.address),
         paymentMethod: String(o.payment_method),
-        items: finalItems,
+        items: items,
         subtotal: Number(o.subtotal || 0),
         discount: Number(o.discount || 0),
         total: Number(o.total || 0),
@@ -308,9 +325,19 @@ export const fetchAdminOrders = async (): Promise<UnifiedOrder[]> => {
         cancelReason: o.cancel_reason ? String(o.cancel_reason) : undefined,
       };
     });
+
+    // Merge Supabase orders with local orders avoiding duplicates by ID
+    const mergedMap = new Map<string, UnifiedOrder>();
+    [...supabaseOrders, ...localOrders].forEach((ord) => {
+      if (ord && ord.id) {
+        mergedMap.set(ord.id.toUpperCase(), ord);
+      }
+    });
+
+    return Array.from(mergedMap.values());
   } catch (err) {
     console.error("Error fetching admin orders:", err);
-    return [];
+    return localOrders;
   }
 };
 

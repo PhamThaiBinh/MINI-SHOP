@@ -159,6 +159,22 @@ export const createOrderInSupabase = async (orderData: UnifiedOrder): Promise<bo
       return false;
     }
 
+    // Insert relational items into order_items table
+    if (orderData.items && orderData.items.length > 0) {
+      try {
+        const itemInserts = orderData.items.map((it) => ({
+          order_id: orderData.id,
+          product_name: it.name,
+          image: it.image,
+          qty: it.qty,
+          price: it.price,
+        }));
+        await supabase.from("order_items").insert(itemInserts);
+      } catch (e) {
+        console.warn("Could not insert order_items rows:", e);
+      }
+    }
+
     // Deduct stock for ordered items
     if (orderData.items && orderData.items.length > 0) {
       for (const item of orderData.items) {
