@@ -600,26 +600,27 @@ html, body {
 }
 
 /* ==========================================================================
-   DRIVER.JS CUSTOM ONBOARDING TOUR STYLES (GREEN ACCENT THEME)
+   DRIVER.JS CUSTOM ONBOARDING TOUR STYLES (HIGH-END VISUAL DESIGN & FRONTEND TASTE)
    ========================================================================== */
 
-/* Main Popover Container */
+/* Main Popover Double-Bezel Container */
 div.driver-popover {
     background-color: #ffffff !important;
-    border-radius: 20px !important;
-    border: 1.5px solid rgba(46, 125, 50, 0.2) !important;
-    box-shadow: 0 20px 40px -10px rgba(46, 125, 50, 0.22), 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
-    padding: 22px 24px 18px 24px !important;
-    max-width: 380px !important;
-    font-family: 'Plus Jakarta Sans', sans-serif !important;
+    border-radius: 24px !important;
+    border: 1.5px solid rgba(46, 125, 50, 0.18) !important;
+    box-shadow: 0 24px 50px -12px rgba(46, 125, 50, 0.22), 0 12px 24px -8px rgba(0, 0, 0, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.9) !important;
+    padding: 24px 26px 20px 26px !important;
+    max-width: 420px !important;
+    min-width: 320px !important;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
     color: #0f172a !important;
-    animation: driverFadeIn 0.3s ease-out !important;
+    animation: driverFadeIn 0.35s cubic-bezier(0.32, 0.72, 0, 1) !important;
 }
 
 @keyframes driverFadeIn {
     from {
         opacity: 0;
-        transform: translateY(6px) scale(0.97);
+        transform: translateY(8px) scale(0.96);
     }
     to {
         opacity: 1;
@@ -629,22 +630,37 @@ div.driver-popover {
 
 /* Popover Header Title */
 div.driver-popover-title {
-    font-size: 16px !important;
+    font-family: 'Plus Jakarta Sans', sans-serif !important;
+    font-size: 1.1rem !important;
     font-weight: 800 !important;
+    letter-spacing: -0.02em !important;
     color: #0f172a !important;
-    margin-bottom: 10px !important;
-    padding-bottom: 8px !important;
+    margin-bottom: 12px !important;
+    padding-bottom: 10px !important;
     border-bottom: 2px solid #e8f5e9 !important;
     line-height: 1.4 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
 }
 
 /* Popover Description Body */
 div.driver-popover-description {
+    font-family: 'Plus Jakarta Sans', sans-serif !important;
     font-size: 13.5px !important;
-    line-height: 1.6 !important;
+    line-height: 1.65 !important;
     color: #475569 !important;
     font-weight: 500 !important;
     margin-bottom: 16px !important;
+}
+
+div.driver-popover-description strong {
+    color: #1b5e20 !important;
+    font-weight: 800 !important;
+    background: #f0fdf4 !important;
+    padding: 2px 6px !important;
+    border-radius: 6px !important;
+    border: 1px solid #bbf7d0 !important;
 }
 
 /* Popover Footer Bar */
@@ -652,48 +668,61 @@ div.driver-popover-footer {
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    margin-top: 14px !important;
-    padding-top: 12px !important;
+    margin-top: 16px !important;
+    padding-top: 14px !important;
     border-top: 1px solid #f1f5f9 !important;
+    gap: 12px !important;
 }
 
-/* Progress Step Text (Bước 1 / 5) */
+/* Progress Step Text (Bước 5 / 5) - Strictly Prevent 2-Line Wrapping */
 span.driver-popover-progress-text {
+    font-family: 'Plus Jakarta Sans', sans-serif !important;
     font-size: 12px !important;
     font-weight: 800 !important;
     color: #2e7d32 !important;
     background: #e8f5e9 !important;
-    padding: 4px 12px !important;
-    border-radius: 999px !important;
-    border: 1px solid #c8e6c9 !important;
+    padding: 6px 14px !important;
+    border-radius: 9999px !important;
+    border: 1.5px solid #a7f3d0 !important;
+    white-space: nowrap !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    box-shadow: inset 0 1px 2px rgba(46, 125, 50, 0.08) !important;
 }
 
-/* Navigation Buttons */
+/* Navigation Buttons Container */
 div.driver-popover-footer button,
 div.driver-popover-footer .driver-popover-navigation-btns button {
-    border-radius: 10px !important;
-    padding: 8px 16px !important;
-    font-size: 12.5px !important;
+    font-family: 'Plus Jakarta Sans', sans-serif !important;
+    border-radius: 12px !important;
+    padding: 10px 18px !important;
+    font-size: 13px !important;
     font-weight: 800 !important;
+    white-space: nowrap !important;
     cursor: pointer !important;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    transition: all 0.3s cubic-bezier(0.32, 0.72, 0, 1) !important;
     outline: none !important;
     text-shadow: none !important;
+    flex-shrink: 0 !important;
 }
 
 /* Previous Button (← Quay lại) */
 button.driver-popover-prev-btn {
-    background: #f1f5f9 !important;
+    background: #f8fafc !important;
     color: #475569 !important;
-    border: 1px solid #cbd5e1 !important;
+    border: 1.5px solid #e2e8f0 !important;
 }
 
 button.driver-popover-prev-btn:hover {
-    background: #e2e8f0 !important;
+    background: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
     color: #0f172a !important;
+    transform: translateY(-1px) !important;
 }
 
-/* Next / Finish Button (Tiếp theo →) */
+/* Next / Finish Button (Hoàn Thành & Nhận Quà) */
 button.driver-popover-next-btn {
     background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%) !important;
     color: #ffffff !important;
@@ -702,32 +731,34 @@ button.driver-popover-next-btn {
 }
 
 button.driver-popover-next-btn:hover {
-    transform: translateY(-1px) !important;
-    box-shadow: 0 6px 18px rgba(46, 125, 50, 0.45) !important;
+    transform: translateY(-2px) scale(1.02) !important;
+    box-shadow: 0 8px 22px rgba(46, 125, 50, 0.45) !important;
 }
 
 /* Close Button (X) */
 button.driver-popover-close-btn {
     position: absolute !important;
-    top: 14px !important;
-    right: 14px !important;
-    width: 28px !important;
-    height: 28px !important;
+    top: 16px !important;
+    right: 16px !important;
+    width: 32px !important;
+    height: 32px !important;
     border-radius: 50% !important;
-    background: #f1f5f9 !important;
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
     color: #64748b !important;
     font-size: 16px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    border: none !important;
     cursor: pointer !important;
-    transition: all 0.2s ease !important;
+    transition: all 0.25s cubic-bezier(0.32, 0.72, 0, 1) !important;
 }
 
 button.driver-popover-close-btn:hover {
     background: #fee2e2 !important;
+    border-color: #fca5a5 !important;
     color: #ef4444 !important;
+    transform: rotate(90deg) !important;
 }
 
 /* Popover Arrow Pointer */
@@ -737,9 +768,10 @@ div.driver-popover-arrow {
 
 /* Stage Cut-out Highlight Ring for Active Element */
 .driver-active-element {
-    outline: 3px solid rgba(46, 125, 50, 0.6) !important;
-    outline-offset: 2px !important;
-    border-radius: 8px !important;
-    box-shadow: 0 0 25px rgba(46, 125, 50, 0.3) !important;
+    outline: 3px solid rgba(46, 125, 50, 0.7) !important;
+    outline-offset: 3px !important;
+    border-radius: 12px !important;
+    box-shadow: 0 0 30px rgba(46, 125, 50, 0.35) !important;
 }
+
 
