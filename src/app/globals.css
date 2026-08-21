@@ -598,3 +598,148 @@ html, body {
         gap: 2px !important;
     }
 }
+
+/* ==========================================================================
+   DRIVER.JS CUSTOM ONBOARDING TOUR STYLES (GREEN ACCENT THEME)
+   ========================================================================== */
+
+/* Main Popover Container */
+div.driver-popover {
+    background-color: #ffffff !important;
+    border-radius: 20px !important;
+    border: 1.5px solid rgba(46, 125, 50, 0.2) !important;
+    box-shadow: 0 20px 40px -10px rgba(46, 125, 50, 0.22), 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
+    padding: 22px 24px 18px 24px !important;
+    max-width: 380px !important;
+    font-family: 'Plus Jakarta Sans', sans-serif !important;
+    color: #0f172a !important;
+    animation: driverFadeIn 0.3s ease-out !important;
+}
+
+@keyframes driverFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(6px) scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Popover Header Title */
+div.driver-popover-title {
+    font-size: 16px !important;
+    font-weight: 800 !important;
+    color: #0f172a !important;
+    margin-bottom: 10px !important;
+    padding-bottom: 8px !important;
+    border-bottom: 2px solid #e8f5e9 !important;
+    line-height: 1.4 !important;
+}
+
+/* Popover Description Body */
+div.driver-popover-description {
+    font-size: 13.5px !important;
+    line-height: 1.6 !important;
+    color: #475569 !important;
+    font-weight: 500 !important;
+    margin-bottom: 16px !important;
+}
+
+/* Popover Footer Bar */
+div.driver-popover-footer {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    margin-top: 14px !important;
+    padding-top: 12px !important;
+    border-top: 1px solid #f1f5f9 !important;
+}
+
+/* Progress Step Text (Bước 1 / 5) */
+span.driver-popover-progress-text {
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    color: #2e7d32 !important;
+    background: #e8f5e9 !important;
+    padding: 4px 12px !important;
+    border-radius: 999px !important;
+    border: 1px solid #c8e6c9 !important;
+}
+
+/* Navigation Buttons */
+div.driver-popover-footer button,
+div.driver-popover-footer .driver-popover-navigation-btns button {
+    border-radius: 10px !important;
+    padding: 8px 16px !important;
+    font-size: 12.5px !important;
+    font-weight: 800 !important;
+    cursor: pointer !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    outline: none !important;
+    text-shadow: none !important;
+}
+
+/* Previous Button (← Quay lại) */
+button.driver-popover-prev-btn {
+    background: #f1f5f9 !important;
+    color: #475569 !important;
+    border: 1px solid #cbd5e1 !important;
+}
+
+button.driver-popover-prev-btn:hover {
+    background: #e2e8f0 !important;
+    color: #0f172a !important;
+}
+
+/* Next / Finish Button (Tiếp theo →) */
+button.driver-popover-next-btn {
+    background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%) !important;
+    color: #ffffff !important;
+    border: none !important;
+    box-shadow: 0 4px 14px rgba(46, 125, 50, 0.35) !important;
+}
+
+button.driver-popover-next-btn:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 18px rgba(46, 125, 50, 0.45) !important;
+}
+
+/* Close Button (X) */
+button.driver-popover-close-btn {
+    position: absolute !important;
+    top: 14px !important;
+    right: 14px !important;
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 50% !important;
+    background: #f1f5f9 !important;
+    color: #64748b !important;
+    font-size: 16px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: none !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+button.driver-popover-close-btn:hover {
+    background: #fee2e2 !important;
+    color: #ef4444 !important;
+}
+
+/* Popover Arrow Pointer */
+div.driver-popover-arrow {
+    border-color: #ffffff !important;
+}
+
+/* Stage Cut-out Highlight Ring for Active Element */
+.driver-active-element {
+    outline: 3px solid rgba(46, 125, 50, 0.6) !important;
+    outline-offset: 2px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 0 25px rgba(46, 125, 50, 0.3) !important;
+}
+
