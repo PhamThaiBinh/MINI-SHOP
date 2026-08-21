@@ -660,10 +660,16 @@ export default function AuthPage() {
     setSentOtpToken(generatedCode);
 
     try {
-      // Send real email OTP via Supabase Auth
+      // 1. Dispatch Email OTP via /api/send-otp
+      await fetch("/api/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: regEmail.trim(), otp: generatedCode, name: regName }),
+      });
+      // 2. Trigger Supabase Auth OTP
       await supabase.auth.signInWithOtp({ email: regEmail.trim() });
     } catch (err) {
-      console.warn("Supabase Auth OTP email notice:", err);
+      console.warn("Auth OTP email notice:", err);
     } finally {
       setIsSubmitting(false);
       setShowOtpModal(true);
@@ -726,6 +732,11 @@ export default function AuthPage() {
     setSentOtpToken(newCode);
 
     try {
+      await fetch("/api/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: regEmail.trim(), otp: newCode, name: regName }),
+      });
       await supabase.auth.signInWithOtp({ email: regEmail.trim() });
     } catch (err) {
       console.warn("Resend OTP notice:", err);
