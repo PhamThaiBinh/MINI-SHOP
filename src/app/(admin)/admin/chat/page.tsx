@@ -148,40 +148,40 @@ export default function AdminLiveChatPage() {
   ];
 
   return (
-    <div className="admin-wrapper" style={{ background: "#f8fafc", minHeight: "100vh", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+    <div className="admin-wrapper">
       <AdminSidebar activeMenu="chat" sidebarCollapsed={sidebarCollapsed} />
 
-      <div className={`admin-content ${sidebarCollapsed ? "collapsed" : ""}`}>
+      <div className={`admin-main ${sidebarCollapsed ? "collapsed" : ""}`}>
         <AdminHeader
           title="💬 Trợ Lý Live Chat & Tư Vấn Khách Hàng Realtime"
           sidebarCollapsed={sidebarCollapsed}
           setSidebarCollapsed={setSidebarCollapsed}
         />
 
-        <div style={{ padding: "20px 24px" }}>
-          {/* Main 2 Column Layout */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "340px 1fr",
-              gap: "20px",
-              height: "calc(100vh - 120px)",
-              background: "#ffffff",
-              borderRadius: "20px",
-              border: "1px solid #e2e8f0",
-              boxShadow: "0 4px 20px rgba(0,0,0,0.03)",
-              overflow: "hidden",
-            }}
-          >
-            {/* Left Column: Customer Conversations List */}
+        <div className="admin-content">
+          {/* Double-Bezel Architecture Container */}
+          <div className="admin-card-shell" style={{ padding: "6px" }}>
             <div
+              className="admin-card-core"
               style={{
-                borderRight: "1px solid #f1f5f9",
-                display: "flex",
-                flexDirection: "column",
-                background: "#ffffff",
+                padding: "0",
+                display: "grid",
+                gridTemplateColumns: "320px 1fr",
+                height: "calc(100vh - 165px)",
+                minHeight: "600px",
+                overflow: "hidden",
+                borderRadius: "calc(var(--radius-lg) - 8px)",
               }}
             >
+              {/* Left Column: Customer Conversations List */}
+              <div
+                style={{
+                  borderRight: "1px solid var(--border-color, #e2e8f0)",
+                  display: "flex",
+                  flexDirection: "column",
+                  background: "#ffffff",
+                }}
+              >
               {/* List Header & Search */}
               <div style={{ padding: "16px", borderBottom: "1px solid #f1f5f9" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
@@ -558,5 +558,6 @@ export default function AdminLiveChatPage() {
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 }
