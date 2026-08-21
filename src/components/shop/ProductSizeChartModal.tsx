@@ -123,7 +123,7 @@ export const ProductSizeChartModal: React.FC<ProductSizeChartModalProps> = ({
 
         {/* Footer Note */}
         <div style={{ marginTop: "20px", textAlign: "center", fontSize: "12px", color: "#94a3b8" }}>
-          💡 Sai số thủ công ±1-2cm do đo đạc thủ công. Cần tư vấn đo đạc thực tế xin liên hệ Hotline/Zalo: <strong>0901.234.567</strong>.
+          <i className="fa-solid fa-circle-info" style={{ color: "#2e7d32", marginRight: "4px" }}></i> Sai số thủ công ±1-2cm do đo đạc thủ công. Cần tư vấn đo đạc thực tế xin liên hệ Hotline/Zalo: <strong>0901.234.567</strong>.
         </div>
       </div>
     </div>

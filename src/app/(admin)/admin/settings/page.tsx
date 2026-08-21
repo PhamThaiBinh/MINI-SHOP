@@ -435,7 +435,7 @@ export default function AdminSettingsPage() {
                   boxShadow: "0 4px 12px rgba(2, 132, 199, 0.2)",
                 }}
               >
-                💾 Sao Lưu Dữ Liệu JSON
+                <i className="fa-solid fa-floppy-disk"></i> Sao Lưu Dữ Liệu JSON
               </button>
             </div>
 

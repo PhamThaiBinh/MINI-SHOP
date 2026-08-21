@@ -484,15 +484,15 @@ export default function AdminUsersPage() {
                           <td>
                             {u.roleType === "admin" ? (
                               <span style={{ padding: "4px 10px", background: "#fef3c7", border: "1px solid #fde68a", color: "#b45309", borderRadius: "12px", fontSize: "11px", fontWeight: 800, display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                                🛡️ {u.role || "Administrator"}
+                                <i className="fa-solid fa-user-shield"></i> {u.role || "Administrator"}
                               </span>
                             ) : (
                               <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
                                 <span style={{ padding: "4px 10px", background: "#e0f2fe", border: "1px solid #bae6fd", color: "#0369a1", borderRadius: "12px", fontSize: "11px", fontWeight: 800, display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                                  🛍️ Khách hàng
+                                  <i className="fa-solid fa-user"></i> Khách hàng
                                 </span>
-                                <span style={{ fontSize: "10px", fontWeight: 800, color: "#64748b" }}>
-                                  VIP: {u.name.toLowerCase().includes("binh") ? "💎 Kim Cương" : "🥈 Bạc"}
+                                <span style={{ fontSize: "10px", fontWeight: 800, color: "#64748b", display: "inline-flex", alignItems: "center", gap: "3px" }}>
+                                  VIP: {u.name.toLowerCase().includes("binh") ? <><i className="fa-solid fa-gem text-blue-500"></i> Kim Cương</> : <><i className="fa-solid fa-award text-slate-400"></i> Bạc</>}
                                 </span>
                               </div>
                             )}
@@ -695,9 +695,9 @@ export default function AdminUsersPage() {
                       cursor: "pointer",
                     }}
                   >
-                    <option value="Administrator">👑 Administrator (Toàn quyền quản trị cao cấp)</option>
-                    <option value="Store Manager">📦 Store Manager (Quản lý đơn hàng & sản phẩm)</option>
-                    <option value="Customer Support">💬 Customer Support (Chăm sóc khách hàng & xử lý đơn)</option>
+                    <option value="Administrator">Administrator (Toàn quyền quản trị cao cấp)</option>
+                    <option value="Store Manager">Store Manager (Quản lý đơn hàng & sản phẩm)</option>
+                    <option value="Customer Support">Customer Support (Chăm sóc khách hàng & xử lý đơn)</option>
                   </select>
                 </div>
 

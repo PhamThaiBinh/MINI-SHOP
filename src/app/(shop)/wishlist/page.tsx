@@ -142,8 +142,8 @@ export default function WishlistPage() {
                   boxShadow: "0 8px 25px rgba(46, 125, 50, 0.25)",
                 }}
               >
-                <LogIn className="w-5 h-5" />
-                <span>🔒 Đăng Nhập Ngay</span>
+                <i className="fa-solid fa-lock text-emerald-100"></i>
+                <span>Đăng Nhập Ngay</span>
               </Link>
             </div>
           </div>

@@ -607,7 +607,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const newTransaction: RedemptionHistory = {
       id: `WELCOME-${Date.now().toString().slice(-4)}`,
       date: new Date().toLocaleDateString("vi-VN"),
-      giftName: "🎁 Thưởng Tân Thủ Hoàn Thành Tour Hướng Dẫn",
+      giftName: "Thưởng Tân Thủ Hoàn Thành Tour Hướng Dẫn",
       pointsSpent: -bonusPoints,
       code: "WELCOME50",
     };

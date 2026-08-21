@@ -219,8 +219,8 @@ export default function FlashSalePage() {
           >
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-                <span style={{ fontSize: "11px", fontWeight: 900, background: "#fef08a", color: "#854d0e", padding: "4px 12px", borderRadius: "999px", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                  ⚡ CƠ HỘI SĂN DEAL GIỜ VÀNG
+                <span style={{ fontSize: "11px", fontWeight: 900, background: "#fef08a", color: "#854d0e", padding: "4px 12px", borderRadius: "999px", textTransform: "uppercase", letterSpacing: "0.08em", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                  <i className="fa-solid fa-bolt text-amber-600"></i> CƠ HỘI SĂN DEAL GIỜ VÀNG
                 </span>
                 <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.85)", fontWeight: 700 }}>
                   Khung Giờ Việt Nam (UTC+7)
@@ -270,8 +270,8 @@ export default function FlashSalePage() {
                   backdropFilter: "blur(8px)",
                 }}
               >
-                <Bell className={`w-4 h-4 ${reminderEnabled ? "text-slate-900 fill-slate-900" : ""}`} />
-                {reminderEnabled ? "Đã Đặt Nhắc Nhở Khung Giờ" : "🔔 Bật Nhắc Nhở Khung Giờ Kế Tiếp"}
+                <i className="fa-solid fa-bell"></i>
+                {reminderEnabled ? "Đã Đặt Nhắc Nhở Khung Giờ" : "Bật Nhắc Nhở Khung Giờ Kế Tiếp"}
               </button>
             </div>
           </div>
@@ -356,8 +356,8 @@ export default function FlashSalePage() {
                 {/* Right: Deal Details & Action */}
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-                    <span style={{ fontSize: "11px", fontWeight: 900, background: "#fee2e2", color: "#dc2626", padding: "3px 10px", borderRadius: "999px" }}>
-                      🔥 SẢN PHẨM GIẢM SỐC NHẤT KHUNG GIỜ
+                    <span style={{ fontSize: "11px", fontWeight: 900, background: "#fee2e2", color: "#dc2626", padding: "3px 10px", borderRadius: "999px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                      <i className="fa-solid fa-fire text-red-500"></i> SẢN PHẨM GIẢM SỐC NHẤT KHUNG GIỜ
                     </span>
                     <span style={{ fontSize: "12px", color: "#64748b", fontWeight: 700 }}>
                       {heroSuperDeal.product.categoryName || "Đồ Nội Thất Sồi"}

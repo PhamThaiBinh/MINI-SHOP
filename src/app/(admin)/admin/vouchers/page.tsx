@@ -180,8 +180,8 @@ export default function AdminVouchersPage() {
                   }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                    <span style={{ fontSize: "14px", fontWeight: 900, color: "#166534", letterSpacing: "0.05em" }}>
-                      🎟️ {v.code}
+                    <span style={{ fontSize: "14px", fontWeight: 900, color: "#166534", letterSpacing: "0.05em", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                      <i className="fa-solid fa-ticket"></i> {v.code}
                     </span>
                     <span style={{ padding: "2px 8px", background: v.isActive ? "#dcfce7" : "#ffe4e6", color: v.isActive ? "#15803d" : "#be123c", borderRadius: "10px", fontSize: "10px", fontWeight: 800 }}>
                       {v.isActive ? "ĐANG ÁP DỤNG" : "ĐÃ TẠM TẮT"}
@@ -504,7 +504,7 @@ export default function AdminVouchersPage() {
                         cursor: "pointer",
                       }}
                     >
-                      ✨ Tạo Mã Ngẫu Nhiên
+                      <i className="fa-solid fa-wand-magic-sparkles" style={{ marginRight: "4px" }}></i> Tạo Mã Ngẫu Nhiên
                     </button>
                   )}
                 </div>

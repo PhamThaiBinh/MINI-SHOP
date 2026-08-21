@@ -159,7 +159,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
             cursor: "pointer",
           }}
         >
-          👑 Test Admin
+          <i className="fa-solid fa-user-gear" style={{ marginRight: "4px" }}></i> Test Admin
         </button>
         <button
           type="button"
@@ -180,7 +180,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
             cursor: "pointer",
           }}
         >
-          🛍️ Test Khách hàng
+          <i className="fa-solid fa-user" style={{ marginRight: "4px" }}></i> Test Khách hàng
         </button>
       </div>
     </form>

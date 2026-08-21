@@ -25,7 +25,7 @@ export async function POST(request: Request) {
       <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px; background-color: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
         <div style="text-align: center; margin-bottom: 24px;">
           <div style="display: inline-block; background-color: #2e7d32; color: #ffffff; padding: 10px 24px; border-radius: 12px; font-weight: 800; font-size: 22px; letter-spacing: 0.5px;">
-            🛍️ MINI SHOP
+            MINI SHOP
           </div>
         </div>
         
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
         </div>
         
         <p style="color: #64748b; font-size: 13px; line-height: 1.6; text-align: center; margin-bottom: 24px;">
-          ⚠️ Mã xác thực này có hiệu lực trong vòng <strong>5 phút</strong>. Vui lòng không chia sẻ mã này cho bất kỳ ai.
+          Lưu ý: Mã xác thực này có hiệu lực trong vòng <strong>5 phút</strong>. Vui lòng không chia sẻ mã này cho bất kỳ ai.
         </p>
         
         <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 24px 0;">
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
     const info = await transporter.sendMail({
       from: `"MINI SHOP" <${smtpUser}>`,
       to: email,
-      subject: `[MINI SHOP] 🔐 Mã Xác Thực Đăng Ký Tài Khoản: ${otp}`,
+      subject: `[MINI SHOP] Mã Xác Thực Đăng Ký Tài Khoản: ${otp}`,
       html: htmlContent,
     });
 

@@ -371,7 +371,9 @@ export const ChatbotWidget: React.FC = () => {
                 <h4 style={{ margin: 0, fontSize: "15px", fontWeight: 800, color: "#ffffff", display: "flex", alignItems: "center", gap: "6px" }}>
                   Trợ Lý MINI SHOP
                 </h4>
-                <span style={{ fontSize: "11px", color: "#bbf7d0", fontWeight: 600 }}>🟢 Trực tuyến 24/7 (AI Support)</span>
+                <span style={{ fontSize: "11px", color: "#bbf7d0", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                  <i className="fa-solid fa-circle" style={{ fontSize: "8px", color: "#4ade80" }}></i> Trực tuyến 24/7 (AI Support)
+                </span>
               </div>
             </div>
 

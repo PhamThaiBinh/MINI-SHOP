@@ -401,9 +401,9 @@ function ProductDetailPageContent({
                   </div>
                   <div style={{ display: "flex", gap: "8px" }}>
                     {[
-                      { id: "soi", label: "Gỗ Sồi Tự Nhiên 🪵" },
-                      { id: "occho", label: "Gỗ Óc Chó Tối 🌰" },
-                      { id: "trangkem", label: "Trắng Kem Nordics ⚪" },
+                      { id: "soi", label: "Gỗ Sồi Tự Nhiên" },
+                      { id: "occho", label: "Gỗ Óc Chó Tối" },
+                      { id: "trangkem", label: "Trắng Kem Nordics" },
                     ].map((c) => (
                       <button
                         key={c.id}

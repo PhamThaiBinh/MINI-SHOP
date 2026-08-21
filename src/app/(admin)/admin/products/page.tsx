@@ -472,7 +472,15 @@ export default function AdminProductsPage() {
                       cursor: "pointer",
                     }}
                   >
-                    {onlyLowStock ? "⚠️ Đang lọc: Tồn kho thấp" : "⚠️ Cảnh báo tồn thấp"}
+                    {onlyLowStock ? (
+                      <>
+                        <i className="fa-solid fa-triangle-exclamation text-amber-500 mr-1"></i> Đang lọc: Tồn kho thấp
+                      </>
+                    ) : (
+                      <>
+                        <i className="fa-solid fa-triangle-exclamation text-amber-500 mr-1"></i> Cảnh báo tồn thấp
+                      </>
+                    )}
                   </button>
 
                   <button
@@ -494,7 +502,7 @@ export default function AdminProductsPage() {
                       boxShadow: "0 4px 12px rgba(6, 95, 70, 0.25)",
                     }}
                   >
-                    <PackageCheck className="w-4 h-4" /> 📦 Nhập Xuất Tồn Kho
+                    <i className="fa-solid fa-boxes-stacked"></i> Nhập Xuất Tồn Kho
                   </button>
 
                   <button
@@ -934,7 +942,9 @@ export default function AdminProductsPage() {
                         />
                       </div>
                       <div>
-                        <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "4px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>📦 Nhập Thêm Hàng (+Số lượng)</label>
+                        <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "flex", alignItems: "center", gap: "4px", marginBottom: "4px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                          <i className="fa-solid fa-box text-emerald-600"></i> Nhập Thêm Hàng (+Số lượng)
+                        </label>
                         <input
                           type="number"
                           className="form-control admin-setting-input"
@@ -954,8 +964,8 @@ export default function AdminProductsPage() {
                         onChange={(e) => setFormStatus(e.target.value as any)}
                         style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13.5px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
                       >
-                        <option value="Active">🟢 Đang bán (Hiển thị công khai)</option>
-                        <option value="Hidden">⚪ Đã ẩn (Không hiển thị)</option>
+                        <option value="Active">Đang bán (Hiển thị công khai)</option>
+                        <option value="Hidden">Đã ẩn (Không hiển thị)</option>
                       </select>
                     </div>
 
@@ -1081,7 +1091,19 @@ export default function AdminProductsPage() {
                       color: inventoryMode === "IMPORT" ? "#14532d" : inventoryMode === "EXPORT" ? "#7f1d1d" : "#78350f",
                     }}
                   >
-                    {inventoryMode === "IMPORT" ? "📦 Lập Phiếu Nhập Kho Hàng" : inventoryMode === "EXPORT" ? "📤 Lập Phiếu Xuất Kho Hàng" : "📋 Phiếu Kiểm Kê & Cân Bằng Kho"}
+                    {inventoryMode === "IMPORT" ? (
+                      <>
+                        <i className="fa-solid fa-box-archive mr-2"></i> Lập Phiếu Nhập Kho Hàng
+                      </>
+                    ) : inventoryMode === "EXPORT" ? (
+                      <>
+                        <i className="fa-solid fa-truck-ramp-box mr-2"></i> Lập Phiếu Xuất Kho Hàng
+                      </>
+                    ) : (
+                      <>
+                        <i className="fa-solid fa-clipboard-check mr-2"></i> Phiếu Kiểm Kê & Cân Bằng Kho
+                      </>
+                    )}
                   </h3>
                 </div>
                 <p
@@ -1144,7 +1166,7 @@ export default function AdminProductsPage() {
                       gap: "4px",
                     }}
                   >
-                    <span>🟢 Nhập Kho Hàng</span>
+                    <span><i className="fa-solid fa-box-archive text-emerald-400 mr-1"></i> Nhập Kho Hàng</span>
                     <span style={{ fontSize: "11px", opacity: 0.8, fontWeight: 600 }}>Tăng tồn thực tế</span>
                   </button>
 

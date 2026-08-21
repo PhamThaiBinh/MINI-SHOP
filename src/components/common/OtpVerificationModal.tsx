@@ -270,7 +270,8 @@ export const OtpVerificationModal: React.FC<OtpVerificationModalProps> = ({
                 textDecoration: "underline",
               }}
             >
-              💡 {showQuickHint ? "Ẩn hỗ trợ kiểm thử mã OTP" : "Chưa thấy thư trong Gmail? Bấm vào đây để xem trợ giúp"}
+              <i className="fa-solid fa-lightbulb" style={{ marginRight: "6px" }}></i>
+              {showQuickHint ? "Ẩn hỗ trợ kiểm thử mã OTP" : "Chưa thấy thư trong Gmail? Bấm vào đây để xem trợ giúp"}
             </button>
 
             {showQuickHint && (
@@ -287,8 +288,8 @@ export const OtpVerificationModal: React.FC<OtpVerificationModalProps> = ({
                   textAlign: "center",
                 }}
               >
-                <div style={{ fontWeight: 800, marginBottom: "6px", color: "#15803d" }}>
-                  📌 Hỗ Trợ Kiểm Thử Nhanh (Khi Supabase/Gmail bị nghẽn)
+                <div style={{ fontWeight: 800, marginBottom: "6px", color: "#15803d", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                  <i className="fa-solid fa-circle-info"></i> Hỗ Trợ Kiểm Thử Nhanh (Khi Supabase/Gmail bị nghẽn)
                 </div>
                 <div style={{ fontSize: "12px", color: "#475569", marginBottom: "10px" }}>
                   Mã xác thực của phiên này là: <strong style={{ fontSize: "16px", color: "#16a34a", letterSpacing: "2px", fontFamily: "monospace" }}>{fallbackOtp || "660073"}</strong>
@@ -314,7 +315,7 @@ export const OtpVerificationModal: React.FC<OtpVerificationModalProps> = ({
                       gap: "6px",
                     }}
                   >
-                    📋 Tự Động Điền Mã Nhanh
+                    <i className="fa-solid fa-paste"></i> Tự Động Điền Mã Nhanh
                   </button>
                 )}
               </div>
@@ -391,7 +392,13 @@ export const OtpVerificationModal: React.FC<OtpVerificationModalProps> = ({
               opacity: isVerifying ? 0.7 : 1,
             }}
           >
-            {isVerifying ? "Đang đối chiếu..." : "Xác Nhận & Đăng Ký 🚀"}
+            {isVerifying ? (
+              "Đang đối chiếu..."
+            ) : (
+              <>
+                Xác Nhận & Đăng Ký <i className="fa-solid fa-circle-check"></i>
+              </>
+            )}
           </button>
         </div>
       </div>

@@ -435,7 +435,11 @@ export default function AdminCategoriesPage() {
                                 fontSize: "18px",
                               }}
                             >
-                              {cat.icon || "📁"}
+                              {cat.icon && cat.icon.startsWith("fa-") ? (
+                                <i className={cat.icon}></i>
+                              ) : (
+                                <i className="fa-solid fa-folder"></i>
+                              )}
                             </div>
                           </td>
                           <td><strong style={{ fontSize: "14px", color: "#0f172a" }}>{cat.name}</strong></td>
@@ -648,18 +652,30 @@ export default function AdminCategoriesPage() {
                   Chọn Biểu Tượng Nhóm Hàng *
                 </label>
                 <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "8px" }}>
-                  {["🛋️", "🛏️", "🍳", "💡", "🖼️", "🌿", "📚", "🪴", "🚿", "🪑"].map((ic) => (
+                  {[
+                    "fa-couch",
+                    "fa-bed",
+                    "fa-kitchen-set",
+                    "fa-lightbulb",
+                    "fa-image",
+                    "fa-leaf",
+                    "fa-book",
+                    "fa-shower",
+                    "fa-chair",
+                    "fa-box",
+                  ].map((ic) => (
                     <button
                       key={ic}
                       type="button"
-                      onClick={() => setFormIcon(ic)}
+                      onClick={() => setFormIcon(`fa-solid ${ic}`)}
                       style={{
                         width: "40px",
                         height: "40px",
                         borderRadius: "12px",
-                        border: formIcon === ic ? "2px solid #2e7d32" : "1px solid #cbd5e1",
-                        background: formIcon === ic ? "#f0fdf4" : "#ffffff",
-                        fontSize: "20px",
+                        border: formIcon.includes(ic) ? "2px solid #2e7d32" : "1px solid #cbd5e1",
+                        background: formIcon.includes(ic) ? "#f0fdf4" : "#ffffff",
+                        fontSize: "16px",
+                        color: formIcon.includes(ic) ? "#2e7d32" : "#64748b",
                         cursor: "pointer",
                         display: "flex",
                         alignItems: "center",

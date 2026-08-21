@@ -513,11 +513,11 @@ export default function AdminDashboard() {
                       <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "20px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", background: "#f8fafc", padding: "6px", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
                           {[
-                            { key: "day", label: "📅 Theo Ngày" },
-                            { key: "month", label: "🗓️ Theo Tháng" },
-                            { key: "quarter", label: "📊 Theo Quý" },
-                            { key: "year", label: "📈 Theo Năm" },
-                            { key: "custom", label: "⚙️ Tùy Chỉnh Ngày" },
+                            { key: "day", label: "Theo Ngày" },
+                            { key: "month", label: "Theo Tháng" },
+                            { key: "quarter", label: "Theo Quý" },
+                            { key: "year", label: "Theo Năm" },
+                            { key: "custom", label: "Tùy Chỉnh Ngày" },
                           ].map((cat) => (
                             <button
                               key={cat.key}

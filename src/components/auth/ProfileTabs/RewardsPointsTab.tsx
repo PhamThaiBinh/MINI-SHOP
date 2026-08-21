@@ -57,12 +57,12 @@ export const RewardsPointsTab: React.FC<RewardsPointsTabProps> = ({
     setTimeout(() => {
       setIsSpinning(false);
       const gifts = [
-        "🎉 Chúc mừng! Bạn trúng Voucher Giảm 50K (Mã: MSWHEEL50K)!",
-        "✨ Bạn nhận được 100 Điểm Thưởng VIP vào tài khoản!",
-        "🚚 Chúc mừng! Bạn nhận Mã Miễn Phí Vận Chuyển 30K!",
-        "⭐ Chúc mừng! Bạn nhận được 50 Điểm Thưởng!",
-        "🎁 Bạn nhận Mã Độc Quyền Giảm 10% đơn hàng!",
-        "☘️ Chúc bạn may mắn lần sau!",
+        "Chúc mừng! Bạn trúng Voucher Giảm 50K (Mã: MSWHEEL50K)!",
+        "Bạn nhận được 100 Điểm Thưởng VIP vào tài khoản!",
+        "Chúc mừng! Bạn nhận Mã Miễn Phí Vận Chuyển 30K!",
+        "Chúc mừng! Bạn nhận được 50 Điểm Thưởng!",
+        "Bạn nhận Mã Độc Quyền Giảm 10% đơn hàng!",
+        "Chúc bạn may mắn lần sau!",
       ];
       const winMsg = gifts[Math.floor(Math.random() * gifts.length)];
       setSpinResultMsg(winMsg);
