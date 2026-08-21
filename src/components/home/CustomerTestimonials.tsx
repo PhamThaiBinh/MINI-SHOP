@@ -96,6 +96,9 @@ export const CustomerTestimonials: React.FC = () => {
                   src={fixImagePath(rev.roomImg)}
                   alt={rev.name}
                   style={{ width: "48px", height: "48px", borderRadius: "50%", objectFit: "cover", border: "2px solid #e2e8f0" }}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "/assets/images/banner/banner-trang-chu-mini-shop.webp";
+                  }}
                 />
                 <div>
                   <div style={{ fontSize: "14px", fontWeight: 800, color: "#0f172a" }}>{rev.name}</div>

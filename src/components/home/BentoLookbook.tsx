@@ -60,6 +60,9 @@ export const BentoLookbook: React.FC = () => {
               src={fixImagePath("assets/images/banner/banner-trang-chu-mini-shop.webp")}
               alt="Bộ Sưu Tập Mây Tre Thủ Công"
               style={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", inset: 0 }}
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = "/assets/images/banner/banner-trang-chu-mini-shop.webp";
+              }}
             />
             <div
               style={{
@@ -131,6 +134,9 @@ export const BentoLookbook: React.FC = () => {
                 src={fixImagePath("assets/images/products/noi-that-gia-dung/sofa-phong-khach.webp")}
                 alt="Sofa Nordic Hiện Đại"
                 style={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", inset: 0 }}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = "/assets/images/banner/banner-trang-chu-mini-shop.webp";
+                }}
               />
               <div
                 style={{
@@ -181,6 +187,9 @@ export const BentoLookbook: React.FC = () => {
                 src={fixImagePath("assets/images/products/noi-that-gia-dung/chau-cay-de-ban.webp")}
                 alt="Chậu Cây Trồng Trong Nhà"
                 style={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", inset: 0 }}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = "/assets/images/banner/banner-trang-chu-mini-shop.webp";
+                }}
               />
               <div
                 style={{

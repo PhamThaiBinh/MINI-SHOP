@@ -130,7 +130,7 @@ export const ProductComboOffer: React.FC<ProductComboOfferProps> = ({ currentPro
             alt={currentProduct.name}
             style={{ width: "80px", height: "80px", objectFit: "cover", borderRadius: "0.75rem", margin: "0 auto 8px" }}
             onError={(e) => {
-              (e.target as HTMLImageElement).src = "/assets/images/products/bo-binh-gom-minimal.webp";
+              (e.target as HTMLImageElement).src = "/assets/images/banner/banner-trang-chu-mini-shop.webp";
             }}
           />
           <div style={{ fontSize: "12.5px", fontWeight: 800, color: "#0f172a", height: "34px", overflow: "hidden" }}>
@@ -158,7 +158,7 @@ export const ProductComboOffer: React.FC<ProductComboOfferProps> = ({ currentPro
             alt={comboItems[0].name}
             style={{ width: "80px", height: "80px", objectFit: "cover", borderRadius: "0.75rem", margin: "0 auto 8px" }}
             onError={(e) => {
-              (e.target as HTMLImageElement).src = "/assets/images/products/do-my-nghe/den-long-tre.webp";
+              (e.target as HTMLImageElement).src = "/assets/images/banner/banner-trang-chu-mini-shop.webp";
             }}
           />
           <div style={{ fontSize: "12.5px", fontWeight: 800, color: "#0f172a", height: "34px", overflow: "hidden" }}>
@@ -186,7 +186,7 @@ export const ProductComboOffer: React.FC<ProductComboOfferProps> = ({ currentPro
             alt={comboItems[1].name}
             style={{ width: "80px", height: "80px", objectFit: "cover", borderRadius: "0.75rem", margin: "0 auto 8px" }}
             onError={(e) => {
-              (e.target as HTMLImageElement).src = "/assets/images/products/noi-that-gia-dung/chau-cay-de-ban.webp";
+              (e.target as HTMLImageElement).src = "/assets/images/banner/banner-trang-chu-mini-shop.webp";
             }}
           />
           <div style={{ fontSize: "12.5px", fontWeight: 800, color: "#0f172a", height: "34px", overflow: "hidden" }}>

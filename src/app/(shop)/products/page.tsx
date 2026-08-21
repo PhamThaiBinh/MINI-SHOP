@@ -500,7 +500,7 @@ function ProductsContent() {
                               alt={product.name}
                               style={{ width: "100%", height: "100%", objectFit: "cover" }}
                               onError={(e) => {
-                                (e.target as HTMLImageElement).src = "/assets/images/products/bo-binh-gom-minimal.webp";
+                                (e.target as HTMLImageElement).src = "/assets/images/banner/banner-trang-chu-mini-shop.webp";
                               }}
                             />
                           </Link>

@@ -9,30 +9,33 @@ export function fixImagePath(path: string): string {
     return "/assets/images/banner/banner-trang-chu-mini-shop.webp";
   }
 
-  // 1. If already a full HTTP / HTTPS URL, return as-is
+  // 1. If already a full HTTP / HTTPS URL
   if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("//")) {
+    if (
+      path.startsWith("https://sngmpumzlhomtvfvlbdn.supabase.co/storage/v1/object/public/products/") &&
+      !path.includes("/public/products/products/")
+    ) {
+      return path.replace("/public/products/", "/public/products/products/");
+    }
     return path;
   }
 
   const normalized = path.replace(/^\//, "");
 
-  // 2. If it's a site static asset (banner, blog, users, avatars, ui, etc.) and NOT in assets/images/products/
-  if (
-    normalized.startsWith("assets/images/banner/") ||
-    normalized.startsWith("assets/images/blog/") ||
-    normalized.startsWith("assets/images/users/") ||
-    normalized.startsWith("assets/images/avatars/") ||
-    normalized.startsWith("assets/images/lookbook/") ||
-    (normalized.startsWith("assets/") && !normalized.includes("assets/images/products/"))
-  ) {
-    return "/" + normalized;
+  // 2. If it's a site static banner asset in public/
+  if (normalized.startsWith("assets/images/banner/") || normalized.startsWith("banner/")) {
+    return "/" + (normalized.startsWith("assets/") ? normalized : "assets/images/" + normalized);
   }
 
-  // 3. For product images, route to Supabase Storage Bucket
+  // 3. For all product, blog, lookbook and shop images, route to Supabase Storage Bucket
   let cleanPath = normalized
     .replace(/^public\//, "")
-    .replace(/^assets\/images\/products\//, "")
-    .replace(/^assets\/images\//, "");
+    .replace(/^assets\/images\//, "")
+    .replace(/đồ mỹ nghệ/g, "do-my-nghe");
+
+  if (!cleanPath.startsWith("products/")) {
+    cleanPath = "products/" + cleanPath;
+  }
 
   return `${SUPABASE_STORAGE_URL}/${cleanPath}`;
 }

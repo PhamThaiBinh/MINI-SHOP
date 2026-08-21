@@ -614,6 +614,9 @@ export default function CheckoutPage() {
                       <img
                         src={fixImagePath(item.product.image)}
                         alt={item.product.name}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = "/assets/images/banner/banner-trang-chu-mini-shop.webp";
+                        }}
                       />
                       <div>
                         <div className="checkout-item-name">

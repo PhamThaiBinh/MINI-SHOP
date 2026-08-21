@@ -626,6 +626,9 @@ export default function AdminProductsPage() {
                                 src={fixImagePath(prod.image)}
                                 alt={prod.name}
                                 style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.3s ease" }}
+                                onError={(e) => {
+                                  (e.currentTarget as any).src = "/assets/images/banner/banner-trang-chu-mini-shop.webp";
+                                }}
                                 onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.15)")}
                                 onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1.0)")}
                               />

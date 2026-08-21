@@ -88,6 +88,9 @@ export const HomeBlogJournal: React.FC = () => {
                 src={fixImagePath(mainArticle.img)}
                 alt={mainArticle.title}
                 style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = "/assets/images/banner/banner-trang-chu-mini-shop.webp";
+                }}
               />
               <span
                 style={{
@@ -158,6 +161,9 @@ export const HomeBlogJournal: React.FC = () => {
                   src={fixImagePath(article.img)}
                   alt={article.title}
                   style={{ width: "100px", height: "100px", borderRadius: "1rem", objectFit: "cover", flexShrink: 0 }}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "/assets/images/banner/banner-trang-chu-mini-shop.webp";
+                  }}
                 />
                 <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", height: "100%" }}>
                   <span style={{ fontSize: "10px", fontWeight: 800, color: "#0369a1", background: "#e0f2fe", padding: "3px 10px", borderRadius: "999px", width: "fit-content", marginBottom: "4px" }}>

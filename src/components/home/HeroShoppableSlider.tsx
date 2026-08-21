@@ -138,6 +138,9 @@ export const HeroShoppableSlider: React.FC = () => {
             src={fixImagePath(slide.image)}
             alt={slide.title}
             style={{ width: "100%", height: "360px", objectFit: "cover", display: "block" }}
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = "/assets/images/banner/banner-trang-chu-mini-shop.webp";
+            }}
           />
 
           {/* Slider Prev / Next Overlay Buttons */}

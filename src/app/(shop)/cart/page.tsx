@@ -417,6 +417,9 @@ export default function CartPage() {
                               <img
                                 src={fixImagePath(item.product.image)}
                                 alt={item.product.name}
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = "/assets/images/banner/banner-trang-chu-mini-shop.webp";
+                                }}
                                 style={{
                                   width: "64px",
                                   height: "64px",
@@ -424,9 +427,6 @@ export default function CartPage() {
                                   objectFit: "cover",
                                   border: "1px solid #e2e8f0",
                                   flexShrink: 0,
-                                }}
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).src = "/assets/images/products/noi-that-gia-dung/sofa-phong-khach.webp";
                                 }}
                               />
                               <div>

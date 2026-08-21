@@ -275,7 +275,11 @@ function ProductDetailPageContent({
                             src={fixImagePath(imgSrc)}
                             alt={`Thumb ${idx + 1}`}
                             onError={(e) => {
-                              (e.target as HTMLImageElement).src = fixImagePath(currentProduct.image);
+                              const target = e.target as HTMLImageElement;
+                              if (!target.dataset.fallback) {
+                                target.dataset.fallback = "1";
+                                target.src = "/assets/images/banner/banner-trang-chu-mini-shop.webp";
+                              }
                             }}
                           />
                         </div>
@@ -290,7 +294,11 @@ function ProductDetailPageContent({
                         src={fixImagePath(galleryImages[activeImageIndex])}
                         alt={currentProduct.name}
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src = fixImagePath(currentProduct.image);
+                          const target = e.target as HTMLImageElement;
+                          if (!target.dataset.fallback) {
+                            target.dataset.fallback = "1";
+                            target.src = "/assets/images/banner/banner-trang-chu-mini-shop.webp";
+                          }
                         }}
                       />
                     </div>

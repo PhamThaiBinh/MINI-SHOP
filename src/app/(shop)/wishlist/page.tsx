@@ -303,6 +303,9 @@ export default function WishlistPage() {
                       <img
                         src={fixImagePath(product.image)}
                         alt={product.name}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = "/assets/images/banner/banner-trang-chu-mini-shop.webp";
+                        }}
                         style={{
                           position: "absolute",
                           inset: 0,

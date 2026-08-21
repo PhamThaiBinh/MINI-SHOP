@@ -476,6 +476,9 @@ export default function TrackOrderPage() {
                             <img
                               src={fixImagePath(firstItem.image)}
                               alt={firstItem.name}
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = "/assets/images/banner/banner-trang-chu-mini-shop.webp";
+                              }}
                               style={{
                                 width: "42px",
                                 height: "42px",
@@ -955,6 +958,9 @@ export default function TrackOrderPage() {
                         <img
                           src={fixImagePath(it.image)}
                           alt={it.name}
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "/assets/images/banner/banner-trang-chu-mini-shop.webp";
+                          }}
                           style={{ width: "46px", height: "46px", borderRadius: "8px", objectFit: "cover", border: "1px solid #e2e8f0" }}
                         />
                         <div>

@@ -310,7 +310,7 @@ export const PRODUCTS_DATA: Product[] = [
     status: "In stock",
     badge: "Bán chạy",
     badgeType: "badge-new",
-    image: "assets/images/products/đồ mỹ nghệ/hop-son-mai.webp",
+    image: "assets/images/products/do-my-nghe/hop-son-mai.webp",
     description: "Hộp nữ trang sơn mài truyền thống khảm vỏ trai óng ánh, lót nhung bảo vệ trang sức cao cấp.",
     fullDesc: "Hộp Sơn Mài Khảm Xà Cừ trải qua 12 bước sơn mài thủ công truyền thống. Họa tiết khảm trai lấp lánh phản chiếu ánh sáng sang trọng, món quà tặng ý nghĩa cho người thân.",
     specs: {
@@ -331,7 +331,7 @@ export const PRODUCTS_DATA: Product[] = [
     status: "In stock",
     badge: null,
     badgeType: null,
-    image: "assets/images/products/đồ mỹ nghệ/khay-kham-trai.webp",
+    image: "assets/images/products/do-my-nghe/khay-kham-trai.webp",
     description: "Khay tròn khảm xà cừ tinh xảo trang trí bàn trà hoặc đựng mứt ngày lễ tết vô cùng ấn tượng.",
     fullDesc: "Khay Khảm Trai Cao Cấp được ghép thủ công tỉ mỉ từng mảnh vỏ trai biển. Bề mặt phủ nhựa trong suốt bảo vệ độ bền đĩa không bị bong tróc hay ngấm nước.",
     specs: {
@@ -352,7 +352,7 @@ export const PRODUCTS_DATA: Product[] = [
     status: "In stock",
     badge: null,
     badgeType: null,
-    image: "assets/images/products/đồ mỹ nghệ/khay-go-thu-cong.webp",
+    image: "assets/images/products/do-my-nghe/khay-go-thu-cong.webp",
     description: "Khay gỗ nguyên khối đục đẽo thủ công giữ trọn đường nét vân gỗ mộc tự nhiên độc bản.",
     fullDesc: "Khay Gỗ Mỹ Nghệ Nguyên Khối được làm từ một khối gỗ tự nhiên không ghép nối. Mỗi chiếc khay đều sở hữu đường vân gỗ độc nhất vô nhị không đụng hàng.",
     specs: {
@@ -373,7 +373,7 @@ export const PRODUCTS_DATA: Product[] = [
     status: "In stock",
     badge: "-13%",
     badgeType: "badge-sale",
-    image: "assets/images/products/đồ mỹ nghệ/bo-binh-gom-thu-cong.webp",
+    image: "assets/images/products/do-my-nghe/bo-binh-gom-thu-cong.webp",
     description: "Bộ gốm nung củi truyền thống bề mặt thô mộc cá tính, điểm nhấn nghệ thuật cho không gian đương đại.",
     fullDesc: "Bộ Bình Gốm Mộc Mỹ Nghệ được nung thủ công trong lò củi truyền thống ở nhiệt độ cao. Hiệu ứng hỏa biến mộc mạc cho màu men tự nhiên tựa như kiệt tác điêu khắc.",
     specs: {

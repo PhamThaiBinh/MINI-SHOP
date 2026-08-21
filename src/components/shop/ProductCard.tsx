@@ -55,7 +55,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       )}
       <div className="product-img-wrapper" style={{ position: "relative" }}>
         <Link href={`/products/${product.id}`}>
-          <img src={fixImagePath(product.image)} alt={product.name} loading="lazy" />
+          <img
+            src={fixImagePath(product.image)}
+            alt={product.name}
+            loading="lazy"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              if (!target.dataset.fallback) {
+                target.dataset.fallback = "1";
+                target.src = "/assets/images/banner/banner-trang-chu-mini-shop.webp";
+              }
+            }}
+          />
         </Link>
         {!hideQuickView && (
           <button
@@ -197,6 +208,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               <img
                 src={fixImagePath(product.image)}
                 alt={product.name}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  if (!target.dataset.fallback) {
+                    target.dataset.fallback = "1";
+                    target.src = "/assets/images/banner/banner-trang-chu-mini-shop.webp";
+                  }
+                }}
                 style={{
                   width: "140px",
                   height: "140px",
