@@ -9,6 +9,7 @@ import { fixImagePath, formatVND } from "@/lib/utils";
 import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
 import { Edit, Trash2, Plus, X, Package, AlertTriangle, ArrowUpDown, PackageCheck, History, ArrowDownRight, ArrowUpRight, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { saveAdminProduct, deleteAdminProduct, fetchAdminCategories } from "@/lib/supabaseAdmin";
+import { uploadProductImage } from "@/lib/supabaseStorage";
 
 interface ProductItem {
   id: number;
@@ -79,6 +80,45 @@ export default function AdminProductsPage() {
   const [formDesc, setFormDesc] = useState("");
   const [formStock, setFormStock] = useState<string>("15");
   const [formImportQty, setFormImportQty] = useState<string>("0");
+
+  // Supabase Storage Image Upload States
+  const [isUploadingImage, setIsUploadingImage] = useState<boolean>(false);
+  const [uploadStatusMsg, setUploadStatusMsg] = useState<string>("");
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Vui lòng chọn 1 file định dạng hình ảnh (.png, .jpg, .jpeg, .webp)");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Dung lượng file tối đa là 5MB");
+      return;
+    }
+
+    try {
+      setIsUploadingImage(true);
+      setUploadStatusMsg("Đang tải ảnh lên Supabase Storage...");
+      const publicUrl = await uploadProductImage(file);
+      if (publicUrl) {
+        setFormImageUrl(publicUrl);
+        setUploadStatusMsg("Tải ảnh lên Supabase Storage thành công!");
+      } else {
+        alert("Có lỗi khi tải ảnh lên Supabase Storage. Vui lòng thử lại!");
+        setUploadStatusMsg("");
+      }
+    } catch (err) {
+      console.error("Upload failed:", err);
+      alert("Tải ảnh thất bại!");
+      setUploadStatusMsg("");
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
 
   // Pagination states
   const [pageSize, setPageSize] = useState<number>(10);
@@ -834,15 +874,15 @@ export default function AdminProductsPage() {
 
               <form onSubmit={handleFormSubmit}>
                 <div style={{ display: "grid", gridTemplateColumns: "240px 1fr", gap: "24px", marginBottom: "24px" }}>
-                  {/* Left Column: Image Live Preview Box */}
+                  {/* Left Column: Image Live Preview & Supabase Storage Upload Box */}
                   <div>
                     <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "6px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                      Xem Trước Hình Ảnh
+                      Hình Ảnh Sản Phẩm *
                     </label>
                     <div
                       style={{
                         width: "100%",
-                        height: "220px",
+                        height: "200px",
                         borderRadius: "16px",
                         border: "2px dashed #cbd5e1",
                         background: "#f8fafc",
@@ -866,19 +906,95 @@ export default function AdminProductsPage() {
                       ) : (
                         <div style={{ textAlign: "center", padding: "16px", color: "#94a3b8" }}>
                           <Package className="w-10 h-10 stroke-1 mb-2 text-slate-400" />
-                          <span style={{ fontSize: "12px", fontWeight: 600 }}>Dán URL ảnh để xem trước</span>
+                          <span style={{ fontSize: "12px", fontWeight: 600 }}>Chưa chọn ảnh sản phẩm</span>
+                        </div>
+                      )}
+
+                      {isUploadingImage && (
+                        <div
+                          style={{
+                            position: "absolute",
+                            inset: 0,
+                            background: "rgba(15, 23, 42, 0.7)",
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "#ffffff",
+                            fontSize: "12px",
+                            fontWeight: 800,
+                            gap: "8px",
+                            backdropFilter: "blur(4px)",
+                          }}
+                        >
+                          <i className="fa-solid fa-spinner fa-spin text-emerald-400 text-xl"></i>
+                          <span>Đang tải ảnh lên Cloud...</span>
                         </div>
                       )}
                     </div>
+
+                    {/* Supabase Storage Upload Button */}
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      accept="image/*"
+                      onChange={handleImageFileChange}
+                      style={{ display: "none" }}
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploadingImage}
+                      style={{
+                        width: "100%",
+                        marginTop: "10px",
+                        padding: "10px 14px",
+                        borderRadius: "12px",
+                        background: "linear-gradient(135deg, #065f46 0%, #047857 100%)",
+                        color: "#ffffff",
+                        border: "none",
+                        fontSize: "12.5px",
+                        fontWeight: 800,
+                        cursor: isUploadingImage ? "not-allowed" : "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "6px",
+                        boxShadow: "0 4px 12px rgba(6, 95, 70, 0.25)",
+                        transition: "all 0.2s ease",
+                      }}
+                    >
+                      <i className="fa-solid fa-cloud-arrow-up text-emerald-300"></i>
+                      <span>{isUploadingImage ? "Đang Tải Ảnh..." : "Tải Ảnh Từ Máy Tính"}</span>
+                    </button>
+
+                    {uploadStatusMsg && (
+                      <p
+                        style={{
+                          fontSize: "11px",
+                          fontWeight: 700,
+                          color: uploadStatusMsg.includes("thành công") ? "#15803d" : "#b45309",
+                          marginTop: "6px",
+                          marginBottom: 0,
+                          textAlign: "center",
+                        }}
+                      >
+                        {uploadStatusMsg}
+                      </p>
+                    )}
+
                     <div style={{ marginTop: "10px" }}>
-                      <label style={{ fontSize: "12px", fontWeight: 700, color: "#475569", display: "block", marginBottom: "4px" }}>URL Hình Ảnh *</label>
+                      <label style={{ fontSize: "11.5px", fontWeight: 700, color: "#64748b", display: "block", marginBottom: "4px" }}>
+                        Đường Dẫn URL (Tự Động Tạo Hoặc Nhập Thô):
+                      </label>
                       <input
                         type="text"
                         className="form-control admin-setting-input"
-                        placeholder="/assets/images/... hoặc https://..."
+                        placeholder="https://... hoặc /assets/images/..."
                         value={formImageUrl}
                         onChange={(e) => setFormImageUrl(e.target.value)}
-                        style={{ fontSize: "12px", borderRadius: "10px", padding: "8px 12px" }}
+                        style={{ fontSize: "11.5px", borderRadius: "10px", padding: "6px 10px", background: "#f8fafc" }}
                       />
                     </div>
                   </div>
