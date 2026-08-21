@@ -11,6 +11,7 @@ import {
   ShoppingCart,
   Ticket,
   Users,
+  MessageSquare,
   Settings,
   LogOut,
   Store,
@@ -25,6 +26,7 @@ interface AdminSidebarProps {
     | "orders"
     | "vouchers"
     | "users"
+    | "chat"
     | "settings";
   sidebarCollapsed: boolean;
 }
@@ -51,6 +53,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     { key: "orders", label: "Đơn hàng", href: "/admin/orders", icon: ShoppingCart },
     { key: "vouchers", label: "Mã giảm giá", href: "/admin/vouchers", icon: Ticket },
     { key: "users", label: "Tài khoản", href: "/admin/users", icon: Users },
+    { key: "chat", label: "Tư vấn Live Chat", href: "/admin/chat", icon: MessageSquare },
     { key: "settings", label: "Cấu hình Shop", href: "/admin/settings", icon: Settings },
   ];
 

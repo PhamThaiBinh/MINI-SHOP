@@ -20,6 +20,14 @@ import {
 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { processUserQuery, ChatMessage } from "@/lib/chatbotKnowledge";
+import {
+  getLocalMessages,
+  saveLocalMessages,
+  getLocalSessions,
+  saveLocalSessions,
+  LiveChatMessage,
+  LiveChatSession,
+} from "@/lib/liveChatService";
 
 export const ChatbotWidget: React.FC = () => {
   const { addToCart } = useCart();
@@ -53,6 +61,29 @@ export const ChatbotWidget: React.FC = () => {
     }
   }, [isOpen, messages, isTyping]);
 
+  // Sync with Live Chat Storage for Admin 2-Way Chat
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const liveMsgs = getLocalMessages("session-binh");
+      if (liveMsgs.length > 0) {
+        // Convert Admin messages into ChatMessage format
+        const formattedLive: ChatMessage[] = liveMsgs.map((lm) => ({
+          id: lm.id,
+          sender: lm.sender_type === "customer" ? "user" : "bot",
+          text: lm.message,
+          timestamp: lm.created_at,
+        }));
+        setMessages((prev) => {
+          if (formattedLive.length > prev.length) {
+            return formattedLive;
+          }
+          return prev;
+        });
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   const handleSendMessage = (textToSend?: string) => {
     const text = (textToSend || inputText).trim();
     if (!text) return;
@@ -68,12 +99,53 @@ export const ChatbotWidget: React.FC = () => {
     setMessages((prev) => [...prev, userMsg]);
     if (!textToSend) setInputText("");
 
+    // Sync to Live Chat storage for Admin Dashboard
+    const currentLiveMsgs = getLocalMessages("session-binh");
+    const newLiveMsg: LiveChatMessage = {
+      id: `user-m-${Date.now()}`,
+      session_id: "session-binh",
+      sender_type: "customer",
+      sender_name: "Phạm Thái Bình",
+      message: text,
+      created_at: userTime,
+    };
+    saveLocalMessages("session-binh", [...currentLiveMsgs, newLiveMsg]);
+
+    // Check if session is currently in Human Admin mode
+    const sessions = getLocalSessions();
+    const currentSession = sessions.find((s) => s.id === "session-binh");
+
+    if (currentSession?.mode === "human") {
+      // Update unread count for Admin
+      saveLocalSessions(
+        sessions.map((s) =>
+          s.id === "session-binh"
+            ? { ...s, last_message: text, last_message_at: userTime, unread_count: s.unread_count + 1 }
+            : s
+        )
+      );
+      return;
+    }
+
     setIsTyping(true);
 
-    // Simulate realistic typing latency (400ms - 800ms)
+    // Simulate realistic typing latency for AI Bot
     setTimeout(() => {
       const botResponse = processUserQuery(text);
       setMessages((prev) => [...prev, botResponse]);
+
+      // Sync Bot response to Live Chat storage for Admin
+      const updatedLiveMsgs = getLocalMessages("session-binh");
+      const botLiveMsg: LiveChatMessage = {
+        id: botResponse.id,
+        session_id: "session-binh",
+        sender_type: "bot",
+        sender_name: "Trợ Lý MINI SHOP",
+        message: botResponse.text,
+        created_at: botResponse.timestamp,
+      };
+      saveLocalMessages("session-binh", [...updatedLiveMsgs, botLiveMsg]);
+
       setIsTyping(false);
     }, 600);
   };
