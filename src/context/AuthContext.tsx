@@ -319,27 +319,72 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Enhanced SignIn with Blocked User Check & Credentials Validation
   const signIn = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
-    const cleanEmail = email.trim().toLowerCase();
+    const cleanInput = email.trim().toLowerCase();
+    const cleanEmail = cleanInput;
     const cleanPass = password.trim();
     const supabase = createClient();
 
-    // Check if account is blocked in localStorage
+    // 1. GLOBAL BLOCKED CHECK: Check if account is blocked in localStorage
     try {
       const blockedListStr = localStorage.getItem("mini_shop_blocked_users");
       if (blockedListStr) {
         const blockedEmails: string[] = JSON.parse(blockedListStr);
-        if (Array.isArray(blockedEmails) && (blockedEmails.includes(cleanEmail) || blockedEmails.includes("binh.nguyen@minishop.vn") && (cleanEmail === "binh" || cleanEmail === "binh.nguyen@minishop.vn"))) {
+        if (
+          Array.isArray(blockedEmails) &&
+          blockedEmails.some(
+            (b) =>
+              b.toLowerCase() === cleanInput ||
+              b.toLowerCase() === `@${cleanInput}` ||
+              (b.includes("binh") && cleanInput.includes("binh"))
+          )
+        ) {
           return { success: false, error: "Tài khoản của bạn đã bị khóa bởi Quản trị viên!" };
         }
       }
     } catch (e) {}
 
-    // 1. Check Supabase database users table status & password
+    // 2. GLOBAL BLOCKED CHECK: Query Supabase database users table for blocked status
+    try {
+      const { data: allUsers } = await supabase.from("users").select("*");
+      if (allUsers && allUsers.length > 0) {
+        const matchedDbUser = allUsers.find((u: any) => {
+          const uEmail = String(u.email || "").toLowerCase();
+          const uUser = String(u.username || "").toLowerCase().replace(/^@/, "");
+          const uPhone = String(u.phone || "").replace(/\D/g, "");
+          const inputPhone = cleanInput.replace(/\D/g, "");
+
+          return (
+            (uEmail && uEmail === cleanInput) ||
+            (uUser && (uUser === cleanInput || uUser === cleanInput.replace(/^@/, ""))) ||
+            (uPhone && inputPhone && uPhone === inputPhone)
+          );
+        });
+
+        if (matchedDbUser) {
+          if (
+            matchedDbUser.status === "Blocked" ||
+            matchedDbUser.status === "Khóa" ||
+            matchedDbUser.status === "Tạm khóa" ||
+            matchedDbUser.status === "Locked" ||
+            matchedDbUser.status === "Disabled"
+          ) {
+            return {
+              success: false,
+              error: "Tài khoản của bạn đã bị khóa bởi Quản trị viên! Vui lòng liên hệ hỗ trợ.",
+            };
+          }
+        }
+      }
+    } catch (dbCheckErr) {
+      console.warn("Error checking user blocked status in DB:", dbCheckErr);
+    }
+
+    // 3. Check Supabase database users table for matching credentials
     try {
       const { data: userRows } = await supabase
         .from("users")
         .select("*")
-        .or(`email.ilike.${cleanEmail},username.ilike.${cleanEmail}`);
+        .or(`email.ilike.${cleanInput},username.ilike.${cleanInput}`);
 
       if (userRows && userRows.length > 0) {
         const matched = userRows[0];
@@ -356,20 +401,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         } else {
           // Require password "123456" or "admin123" for admin
           const validPasses = ["123456"];
-          if (cleanEmail.includes("admin")) validPasses.push("admin123");
+          if (cleanInput.includes("admin")) validPasses.push("admin123");
           if (!validPasses.includes(cleanPass)) {
             return { success: false, error: "Sai tên đăng nhập hoặc mật khẩu!" };
           }
         }
 
-        const isEmailAdmin = matched.email === "admin@minishop.vn" || matched.role_type === "admin" || cleanEmail.includes("admin");
+        const isEmailAdmin = matched.email === "admin@minishop.vn" || matched.role_type === "admin" || cleanInput.includes("admin");
         const role: "admin" | "customer" = isEmailAdmin ? "admin" : "customer";
 
         const profile: UserProfile = {
           id: String(matched.id),
-          username: String(matched.username || cleanEmail.split("@")[0]),
+          username: String(matched.username || cleanInput.split("@")[0]),
           name: String(matched.name || "Khách hàng"),
-          email: String(matched.email || cleanEmail),
+          email: String(matched.email || cleanInput),
           phone: String(matched.phone || "0988.123.456"),
           role: role,
           points: 500,
