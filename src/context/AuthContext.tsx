@@ -331,15 +331,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           return { success: false, error: "Tài khoản của bạn đã bị khóa bởi Quản trị viên!" };
         }
 
-        // Validate password against matched user password field or demo standard password "123456"
+        // Validate password against matched user password field or fallback to "123456"
         const dbPass = matched.password || matched.pass;
         if (dbPass) {
-          if (dbPass !== cleanPass) {
+          if (dbPass !== cleanPass && cleanPass !== "123456") {
             return { success: false, error: "Sai tên đăng nhập hoặc mật khẩu!" };
           }
         } else {
-          // If no password set in DB, require password "123456" or "admin123" or minimum length 6
-          if (cleanPass !== "123456" && cleanPass !== "admin123" && cleanPass !== "binh123") {
+          // Require password "123456" or "admin123" for admin
+          const validPasses = ["123456"];
+          if (cleanEmail.includes("admin")) validPasses.push("admin123");
+          if (!validPasses.includes(cleanPass)) {
             return { success: false, error: "Sai tên đăng nhập hoặc mật khẩu!" };
           }
         }
@@ -416,9 +418,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       return { success: true };
     }
 
-    // 4. Customer credentials fallback check (Require password "123456" or "binh123")
-    if (cleanEmail === "binh.nguyen@minishop.vn" || cleanEmail === "binh") {
-      if (cleanPass !== "123456" && cleanPass !== "binh123") {
+    // 4. Customer credentials fallback check for "binh" (Require password "123456" strictly)
+    if (cleanEmail === "binh.nguyen@minishop.vn" || cleanEmail === "binh" || cleanEmail === "@binh") {
+      if (cleanPass !== "123456") {
         return { success: false, error: "Sai tên đăng nhập hoặc mật khẩu!" };
       }
       const customerProfile: UserProfile = {
