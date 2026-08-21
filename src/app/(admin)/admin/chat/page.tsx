@@ -45,6 +45,25 @@ export default function AdminLiveChatPage() {
   const [filterMode, setFilterMode] = useState<"all" | "human" | "bot">("all");
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatBodyRef = useRef<HTMLDivElement>(null);
+  const userHasScrolledUpRef = useRef<boolean>(false);
+
+  const handleScroll = () => {
+    if (!chatBodyRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = chatBodyRef.current;
+    const isNearBottom = scrollHeight - scrollTop - clientHeight < 80;
+    userHasScrolledUpRef.current = !isNearBottom;
+  };
+
+  const scrollToBottom = (force = false) => {
+    if (!chatBodyRef.current) return;
+    if (force || !userHasScrolledUpRef.current) {
+      chatBodyRef.current.scrollTo({
+        top: chatBodyRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  };
 
   // Realtime Supabase Database Sync & Polling Engine
   useEffect(() => {
@@ -55,6 +74,7 @@ export default function AdminLiveChatPage() {
       if (selectedSessionId) {
         const latestMsgs = await fetchSupabaseMessages(selectedSessionId);
         setMessages(latestMsgs);
+        scrollToBottom(false);
       }
     };
 
@@ -81,7 +101,11 @@ export default function AdminLiveChatPage() {
   // Load messages & clear unread when selected session changes
   useEffect(() => {
     if (!selectedSessionId) return;
-    fetchSupabaseMessages(selectedSessionId).then((msgs) => setMessages(msgs));
+    userHasScrolledUpRef.current = false;
+    fetchSupabaseMessages(selectedSessionId).then((msgs) => {
+      setMessages(msgs);
+      setTimeout(() => scrollToBottom(true), 50);
+    });
 
     fetchSupabaseSessions().then((latestSessions) => {
       const updatedSessions = latestSessions.map((s) =>
@@ -91,11 +115,6 @@ export default function AdminLiveChatPage() {
       saveLocalSessions(updatedSessions);
     });
   }, [selectedSessionId]);
-
-  // Scroll to bottom of chat
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
 
   const selectedSession = sessions.find((s) => s.id === selectedSessionId);
 
@@ -115,6 +134,8 @@ export default function AdminLiveChatPage() {
 
     setMessages((prev) => [...prev, newMsg]);
     if (!textToSend) setInputText("");
+    userHasScrolledUpRef.current = false;
+    setTimeout(() => scrollToBottom(true), 50);
 
     await syncInsertMessageToSupabase(newMsg, {
       id: selectedSessionId,
@@ -516,7 +537,11 @@ export default function AdminLiveChatPage() {
                 </div>
 
                 {/* Messages Stream Area */}
-                <div style={{ flex: 1, padding: "20px 24px", overflowY: "auto", background: "#f8fafc", display: "flex", flexDirection: "column", gap: "14px" }}>
+                <div
+                  ref={chatBodyRef}
+                  onScroll={handleScroll}
+                  style={{ flex: 1, padding: "20px 24px", overflowY: "auto", background: "#f8fafc", display: "flex", flexDirection: "column", gap: "14px" }}
+                >
                   {messages.map((m) => {
                     const isCustomer = m.sender_type === "customer";
                     const isAdmin = m.sender_type === "admin";
