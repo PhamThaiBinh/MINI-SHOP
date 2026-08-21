@@ -49,6 +49,8 @@ export const fetchCategoriesFromSupabase = async (): Promise<SupabaseCategory[]>
     { id: "Living Room", label: "Phòng khách", icon: "Sofa" },
     { id: "Bedroom", label: "Phòng ngủ", icon: "Bed" },
     { id: "Kitchen", label: "Nhà bếp", icon: "Utensils" },
+    { id: "Curtains", label: "Rèm cửa", icon: "Sliders" },
+    { id: "Lavabo", label: "Tủ lavabo", icon: "Droplets" },
     { id: "Lighting", label: "Đèn", icon: "Lamp" },
     { id: "Decor", label: "Trang trí", icon: "Sparkles" },
     { id: "Storage", label: "Lưu trữ", icon: "Box" },
