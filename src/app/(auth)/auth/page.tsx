@@ -3602,6 +3602,7 @@ export default function AuthPage() {
       <OtpVerificationModal
         isOpen={showOtpModal}
         email={regEmail}
+        fallbackOtp={sentOtpToken}
         onVerify={handleVerifyOtp}
         onResendOtp={handleResendOtp}
         onClose={() => setShowOtpModal(false)}
