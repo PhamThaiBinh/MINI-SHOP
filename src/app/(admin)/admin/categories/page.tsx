@@ -152,12 +152,48 @@ export default function AdminCategoriesPage() {
     setShowModal(true);
   };
 
-  const handleDeleteClick = async (id: number) => {
-    if (confirm("Bạn có chắc chắn muốn xóa danh mục này không?")) {
-      const supabase = createClient();
-      await supabase.from("categories").delete().eq("id", id);
-      setCategories((prev) => prev.filter((c) => c.id !== id));
+  const handleDeleteClick = async (cat: Category) => {
+    const supabase = createClient();
+    const categoryCode = (cat as any).code || cat.slug || `C${String(cat.id).padStart(4, "0")}`;
+
+    // Query related products in Supabase
+    const { data: relatedProds } = await supabase
+      .from("products")
+      .select("id, name")
+      .or(`category.eq.${categoryCode},category.eq.${cat.slug},category.eq.${cat.name},category_name.eq.${cat.name}`);
+
+    const realCount = relatedProds && relatedProds.length > 0 ? relatedProds.length : cat.productCount || 0;
+
+    if (realCount > 0) {
+      const confirmDelete = confirm(
+        `Danh mục "${cat.name}" hiện đang có ${realCount} sản phẩm liên quan.\n\nBạn có chắc chắn muốn xóa danh mục này cùng TẤT CẢ ${realCount} sản phẩm liên quan không?\n\nLưu ý: Thao tác này sẽ xóa vĩnh viễn danh mục và toàn bộ sản phẩm thuộc danh mục khỏi hệ thống!`
+      );
+      if (!confirmDelete) return;
+
+      // Delete all related products from products table
+      const { error: prodDelErr } = await supabase
+        .from("products")
+        .delete()
+        .or(`category.eq.${categoryCode},category.eq.${cat.slug},category.eq.${cat.name},category_name.eq.${cat.name}`);
+
+      if (prodDelErr) {
+        console.error("Error deleting related products:", prodDelErr.message);
+      }
+    } else {
+      const confirmDelete = confirm(`Bạn có chắc chắn muốn xóa danh mục "${cat.name}" không?`);
+      if (!confirmDelete) return;
     }
+
+    // Delete category row from categories table
+    const { error: catDelErr } = await supabase.from("categories").delete().eq("id", cat.id);
+
+    if (catDelErr) {
+      alert("Xóa danh mục thất bại: " + catDelErr.message);
+      return;
+    }
+
+    setCategories((prev) => prev.filter((c) => c.id !== cat.id));
+    alert(`Đã xóa thành công danh mục "${cat.name}"${realCount > 0 ? ` và toàn bộ ${realCount} sản phẩm liên quan` : ""}!`);
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -396,7 +432,6 @@ export default function AdminCategoriesPage() {
                   <thead>
                     <tr>
                       <th>MÃ SỐ</th>
-                      <th>BIỂU TƯỢNG</th>
                       <th>TÊN DANH MỤC</th>
                       <th>SLUG</th>
                       <th>SỐ SẢN PHẨM & TỶ TRỌNG</th>
@@ -408,7 +443,7 @@ export default function AdminCategoriesPage() {
                   <tbody>
                     {paginatedCategories.length === 0 ? (
                       <tr>
-                        <td colSpan={8} style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)" }}>
+                        <td colSpan={7} style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)" }}>
                           Không có danh mục nào khớp với tìm kiếm.
                         </td>
                       </tr>
@@ -419,28 +454,6 @@ export default function AdminCategoriesPage() {
                             <code style={{ padding: "3px 8px", background: "#f1f5f9", color: "#1e293b", borderRadius: "6px", fontWeight: 800, fontSize: "11px" }}>
                               C{String(cat.id || index + 1).padStart(4, "0")}
                             </code>
-                          </td>
-                          <td>
-                            <div
-                              style={{
-                                width: "38px",
-                                height: "38px",
-                                borderRadius: "12px",
-                                backgroundColor: "#f0fdf4",
-                                border: "1px solid #bbf7d0",
-                                color: "#166534",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                fontSize: "18px",
-                              }}
-                            >
-                              {cat.icon && cat.icon.startsWith("fa-") ? (
-                                <i className={cat.icon}></i>
-                              ) : (
-                                <i className="fa-solid fa-folder"></i>
-                              )}
-                            </div>
                           </td>
                           <td><strong style={{ fontSize: "14px", color: "#0f172a" }}>{cat.name}</strong></td>
                           <td><code style={{ background: "#f1f5f9", padding: "2px 8px", borderRadius: "6px", fontSize: "12px", color: "#475569" }}>{cat.slug}</code></td>
@@ -490,7 +503,7 @@ export default function AdminCategoriesPage() {
                                 <Edit3 className="w-3.5 h-3.5" /> Sửa
                               </button>
                               <button
-                                onClick={() => handleDeleteClick(cat.id)}
+                                onClick={() => handleDeleteClick(cat)}
                                 style={{
                                   padding: "4px 8px",
                                   background: "#fef2f2",
@@ -647,56 +660,6 @@ export default function AdminCategoriesPage() {
             </div>
 
             <form onSubmit={handleFormSubmit}>
-              <div style={{ marginBottom: "16px" }}>
-                <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "8px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                  Chọn Biểu Tượng Nhóm Hàng *
-                </label>
-                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "8px" }}>
-                  {[
-                    "fa-couch",
-                    "fa-bed",
-                    "fa-kitchen-set",
-                    "fa-lightbulb",
-                    "fa-image",
-                    "fa-leaf",
-                    "fa-book",
-                    "fa-shower",
-                    "fa-chair",
-                    "fa-box",
-                  ].map((ic) => (
-                    <button
-                      key={ic}
-                      type="button"
-                      onClick={() => setFormIcon(`fa-solid ${ic}`)}
-                      style={{
-                        width: "40px",
-                        height: "40px",
-                        borderRadius: "12px",
-                        border: formIcon.includes(ic) ? "2px solid #2e7d32" : "1px solid #cbd5e1",
-                        background: formIcon.includes(ic) ? "#f0fdf4" : "#ffffff",
-                        fontSize: "16px",
-                        color: formIcon.includes(ic) ? "#2e7d32" : "#64748b",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        transition: "all 0.15s ease",
-                      }}
-                    >
-                      {ic}
-                    </button>
-                  ))}
-                </div>
-                <input
-                  type="text"
-                  className="form-control admin-setting-input"
-                  placeholder="Hoặc nhập biểu tượng tự chọn"
-                  value={formIcon}
-                  onChange={(e) => setFormIcon(e.target.value)}
-                  style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13.5px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-                />
-              </div>
-
               <div style={{ marginBottom: "12px" }}>
                 <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "4px" }}>Tên Danh Mục *</label>
                 <input
