@@ -23,6 +23,7 @@ export const OtpVerificationModal: React.FC<OtpVerificationModalProps> = ({
   const [countdown, setCountdown] = useState(60);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isResending, setIsResending] = useState(false);
+  const [showQuickHint, setShowQuickHint] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
@@ -251,6 +252,43 @@ export const OtpVerificationModal: React.FC<OtpVerificationModalProps> = ({
               <span>{errorMsg}</span>
             </div>
           )}
+
+          {/* Quick Test Hint Toggle */}
+          <div style={{ textAlign: "center", marginBottom: "16px" }}>
+            <button
+              type="button"
+              onClick={() => setShowQuickHint((prev) => !prev)}
+              style={{
+                border: "none",
+                background: "transparent",
+                color: "#64748b",
+                fontSize: "12px",
+                fontWeight: 600,
+                cursor: "pointer",
+                textDecoration: "underline",
+              }}
+            >
+              💡 {showQuickHint ? "Ẩn hỗ trợ kiểm thử mã OTP" : "Chưa thấy thư trong Gmail? Bấm vào đây để xem trợ giúp"}
+            </button>
+
+            {showQuickHint && (
+              <div
+                style={{
+                  marginTop: "8px",
+                  padding: "10px 14px",
+                  background: "#fffbeb",
+                  border: "1px dashed #fde68a",
+                  borderRadius: "12px",
+                  fontSize: "12.5px",
+                  color: "#92400e",
+                  lineHeight: "1.5",
+                  textAlign: "center",
+                }}
+              >
+                ⚠️ Do chính sách bảo mật chống thư rác DMARC của Google, thư từ server chưa cấu hình tên miền riêng có thể bị Gmail chặn hoặc xử lý chậm. Hãy kiểm tra mục <strong>Spam/Thư rác</strong> hoặc bấm <strong>"Gửi lại mã"</strong> sau 60 giây.
+              </div>
+            )}
+          </div>
 
           {/* Resend OTP Section */}
           <div style={{ textAlign: "center", fontSize: "13px", color: "#64748b" }}>
