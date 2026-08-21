@@ -94,6 +94,7 @@ export default function AdminUsersPage() {
         .flatMap((u) => [u.email, u.username, u.username?.replace(/^@/, "")])
         .filter(Boolean);
       localStorage.setItem("mini_shop_blocked_users", JSON.stringify(blockedList));
+      window.dispatchEvent(new Event("userStatusChanged"));
     } catch (err) {
       console.error(err);
     }
@@ -102,6 +103,7 @@ export default function AdminUsersPage() {
     setTimeout(() => setToastMsg(""), 3000);
 
     await toggleAdminUserStatus(id, target.status);
+    window.dispatchEvent(new Event("userStatusChanged"));
   };
 
   const handleSaveNewAdmin = async (e: React.FormEvent) => {

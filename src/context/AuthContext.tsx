@@ -164,77 +164,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
     fetchSessionUser();
 
-    // Check if currently logged in user is blocked (ONLY FOR CUSTOMERS, NEVER ADMIN)
-    const checkBlockedStatus = async (currentUser: UserProfile) => {
-      // EXEMPT ADMIN COMPLETELY
-      if (
-        currentUser.role === "admin" ||
-        currentUser.email?.toLowerCase() === "admin@minishop.vn" ||
-        currentUser.username?.toLowerCase() === "admin"
-      ) {
-        return false;
-      }
-
-      try {
-        const myEmail = (currentUser.email || "").toLowerCase().trim();
-        const myUser = (currentUser.username || "").toLowerCase().replace(/^@/, "").trim();
-
-        // 1. Check localStorage blocked list
-        const blockedListStr = localStorage.getItem("mini_shop_blocked_users");
-        if (blockedListStr) {
-          const blockedList: string[] = JSON.parse(blockedListStr);
-          if (Array.isArray(blockedList)) {
-            const isBlocked = blockedList.some((item) => {
-              const b = String(item).toLowerCase().replace(/^@/, "").trim();
-              return (myEmail && b === myEmail) || (myUser && b === myUser);
-            });
-            if (isBlocked) {
-              alert("Tài khoản của bạn đã bị Quản trị viên khóa. Hệ thống tự động đăng xuất!");
-              logout();
-              return true;
-            }
-          }
-        }
-
-        // 2. Check Supabase DB users table status
-        const { data: userRows } = await supabase
-          .from("users")
-          .select("status, email, username, role_type");
-
-        if (userRows && userRows.length > 0) {
-          const matched = userRows.find((u: any) => {
-            const uEmail = String(u.email || "").toLowerCase().trim();
-            const uUser = String(u.username || "").toLowerCase().replace(/^@/, "").trim();
-            return (uEmail && myEmail && uEmail === myEmail) || (uUser && myUser && uUser === myUser);
-          });
-
-          if (
-            matched &&
-            matched.role_type !== "admin" &&
-            (matched.status === "Blocked" ||
-              matched.status === "Khóa" ||
-              matched.status === "Tạm khóa")
-          ) {
-            alert("Tài khoản của bạn đã bị Quản trị viên khóa. Hệ thống tự động đăng xuất!");
-            logout();
-            return true;
-          }
-        }
-      } catch (e) {
-        console.error("Blocked status check error:", e);
-      }
-      return false;
-    };
-
-    // Cross-tab auto-logout if customer account is blocked by Admin
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === "mini_shop_blocked_users" && user && user.role !== "admin") {
-        checkBlockedStatus(user);
-      }
-    };
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-
     // Listen to Auth State Changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
       if (session?.user) {
@@ -263,6 +192,118 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       subscription.unsubscribe();
     };
   }, []);
+
+  // Dedicated Realtime & 1.5s Active Polling to IMMEDIATELY kick out blocked customers
+  useEffect(() => {
+    if (!user || user.role === "admin") return;
+
+    const supabase = createClient();
+    const myEmail = (user.email || "").toLowerCase().trim();
+    const myUser = (user.username || "").toLowerCase().replace(/^@/, "").trim();
+
+    const kickOutUser = () => {
+      setUser(null);
+      if (typeof window !== "undefined") {
+        localStorage.removeItem(AUTH_STORAGE_KEY);
+      }
+      alert("Tài khoản của bạn đã bị Quản trị viên khóa. Hệ thống tự động đăng xuất!");
+      if (typeof window !== "undefined") {
+        window.location.href = "/auth";
+      }
+    };
+
+    const verifyActiveStatus = async () => {
+      try {
+        // 1. Check local blocked list
+        const blockedListStr = localStorage.getItem("mini_shop_blocked_users");
+        if (blockedListStr) {
+          const blockedList: string[] = JSON.parse(blockedListStr);
+          if (Array.isArray(blockedList)) {
+            const isBlocked = blockedList.some((item) => {
+              const b = String(item).toLowerCase().replace(/^@/, "").trim();
+              return (myEmail && b === myEmail) || (myUser && b === myUser);
+            });
+            if (isBlocked) {
+              kickOutUser();
+              return;
+            }
+          }
+        }
+
+        // 2. Query Supabase DB 'users' table directly
+        const { data: dbUsers } = await supabase
+          .from("users")
+          .select("status, email, username, role_type");
+
+        if (dbUsers && dbUsers.length > 0) {
+          const matched = dbUsers.find((u: any) => {
+            const uEmail = String(u.email || "").toLowerCase().trim();
+            const uUser = String(u.username || "").toLowerCase().replace(/^@/, "").trim();
+            return (uEmail && myEmail && uEmail === myEmail) || (uUser && myUser && uUser === myUser);
+          });
+
+          if (
+            matched &&
+            matched.role_type !== "admin" &&
+            (matched.status === "Blocked" ||
+              matched.status === "Khóa" ||
+              matched.status === "Tạm khóa")
+          ) {
+            kickOutUser();
+          }
+        }
+      } catch (err) {
+        console.error("Error verifying active status:", err);
+      }
+    };
+
+    // Run check immediately
+    verifyActiveStatus();
+
+    // Active poll every 1.5s
+    const pollInterval = setInterval(verifyActiveStatus, 1500);
+
+    // Cross-tab storage listener
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "mini_shop_blocked_users" || e.key === "userStatusChanged") {
+        verifyActiveStatus();
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+    window.addEventListener("userStatusChanged", verifyActiveStatus);
+
+    // Supabase Realtime channel subscription
+    const channel = supabase
+      .channel("realtime_user_block_check")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "users" },
+        (payload: any) => {
+          const updated = payload.new;
+          if (!updated) return;
+          const uEmail = String(updated.email || "").toLowerCase().trim();
+          const uUser = String(updated.username || "").toLowerCase().replace(/^@/, "").trim();
+
+          if ((uEmail && myEmail && uEmail === myEmail) || (uUser && myUser && uUser === myUser)) {
+            if (
+              updated.status === "Blocked" ||
+              updated.status === "Khóa" ||
+              updated.status === "Tạm khóa"
+            ) {
+              kickOutUser();
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      clearInterval(pollInterval);
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("userStatusChanged", verifyActiveStatus);
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
 
   // Save active user profile to localStorage
   useEffect(() => {
