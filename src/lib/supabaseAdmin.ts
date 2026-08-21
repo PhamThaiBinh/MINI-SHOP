@@ -354,37 +354,47 @@ export const saveAdminProduct = async (product: Partial<Product>): Promise<boole
   try {
     const supabase = createClient();
 
+    let nextProductId = "";
+    if (!product.id) {
+      const { data: maxRows } = await supabase
+        .from("products")
+        .select("id")
+        .order("id", { ascending: false })
+        .limit(1);
+
+      const maxId = maxRows && maxRows.length > 0 ? Number(maxRows[0].id) : 47;
+      nextProductId = `P${String(maxId + 1).padStart(4, "0")}`;
+    }
+
     const payload: any = {
       name: product.name,
       category: product.category,
+      category_name: product.categoryName || product.category,
       price: product.price,
       stock: product.stock !== undefined ? Number(product.stock) : 15,
       status: product.status || "Active",
       image: product.image,
       description: product.description || "",
+      full_desc: product.fullDesc || product.description || "",
     };
 
     if (product.id) {
-      // 1. Try update by id
-      const { error: err1 } = await supabase.from("products").update(payload).eq("id", product.id);
-      if (!err1) return true;
-
-      // 2. Try update by original_id
-      const { error: err2 } = await supabase.from("products").update(payload).eq("original_id", product.id);
-      if (!err2) return true;
-
-      // 3. Try update by name
-      if (product.name) {
-        const { error: err3 } = await supabase.from("products").update(payload).eq("name", product.name);
-        if (!err3) return true;
+      const { error } = await supabase.from("products").update(payload).eq("id", product.id);
+      if (error) {
+        console.error("Error updating product:", error.message);
+        return false;
       }
-      return false;
+      return true;
     } else {
       const { error } = await supabase.from("products").insert({
         ...payload,
-        original_id: Math.floor(1000 + Math.random() * 9000),
+        product_id: nextProductId,
       });
-      return !error;
+      if (error) {
+        console.error("Error inserting product:", error.message);
+        return false;
+      }
+      return true;
     }
   } catch (err) {
     console.error("Error saving admin product:", err);

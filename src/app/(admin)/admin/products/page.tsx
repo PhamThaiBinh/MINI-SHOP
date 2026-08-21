@@ -240,6 +240,7 @@ export default function AdminProductsPage() {
       category: selectedCategory,
       categoryName: selectedCategory,
       price: Number(formPrice),
+      stock: Number(formStock) || 10,
       image: finalImage,
       status: formStatus,
       description: formDesc,
@@ -1045,31 +1046,36 @@ export default function AdminProductsPage() {
                       </div>
                     </div>
 
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "14px" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: editingProduct ? "1fr 1fr" : "1fr", gap: "12px", marginBottom: "14px" }}>
                       <div>
-                        <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "4px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Số Lượng Tồn Kho</label>
-                        <input
-                          type="number"
-                          className="form-control admin-setting-input"
-                          placeholder="15"
-                          value={formStock}
-                          onChange={(e) => setFormStock(e.target.value)}
-                          style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13.5px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-                        />
-                      </div>
-                      <div>
-                        <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "flex", alignItems: "center", gap: "4px", marginBottom: "4px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                          <i className="fa-solid fa-box text-emerald-600"></i> Nhập Thêm Hàng (+Số lượng)
+                        <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "4px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                          {editingProduct ? "Số Lượng Tồn Kho Hiện Tại" : "Số Lượng Tồn Kho Ban Đầu *"}
                         </label>
                         <input
                           type="number"
                           className="form-control admin-setting-input"
-                          placeholder="0"
-                          value={formImportQty}
-                          onChange={(e) => setFormImportQty(e.target.value)}
-                          style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13.5px", fontFamily: "'Plus Jakarta Sans', sans-serif", borderColor: "#86efac", background: "#f0fdf4" }}
+                          placeholder="10"
+                          value={formStock}
+                          onChange={(e) => setFormStock(e.target.value)}
+                          required
+                          style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13.5px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
                         />
                       </div>
+                      {editingProduct && (
+                        <div>
+                          <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "flex", alignItems: "center", gap: "4px", marginBottom: "4px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                            <i className="fa-solid fa-box text-emerald-600"></i> Nhập Thêm Hàng (+Số lượng)
+                          </label>
+                          <input
+                            type="number"
+                            className="form-control admin-setting-input"
+                            placeholder="0"
+                            value={formImportQty}
+                            onChange={(e) => setFormImportQty(e.target.value)}
+                            style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13.5px", fontFamily: "'Plus Jakarta Sans', sans-serif", borderColor: "#86efac", background: "#f0fdf4" }}
+                          />
+                        </div>
+                      )}
                     </div>
 
                     <div style={{ marginBottom: "14px" }}>
