@@ -167,7 +167,7 @@ export default function AdminProductsPage() {
     (p) =>
       (p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.categoryName.toLowerCase().includes(searchQuery.toLowerCase())) &&
-      (!onlyLowStock || ((p as any).stock !== undefined && (p as any).stock <= 5))
+      (!onlyLowStock || ((p as any).stock !== undefined && (p as any).stock <= 10))
   );
 
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize));
