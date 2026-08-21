@@ -242,22 +242,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const formattedUsername = username.startsWith("@") ? username : "@" + username;
     const supabase = createClient();
 
+    const userCode = "U" + Math.floor(1000 + Math.random() * 9000).toString();
+
     // 1. Always insert record into Supabase users table for Admin view (/admin/users)
+    const newUserRecord = {
+      code: userCode,
+      name: cleanName,
+      username: formattedUsername,
+      email: cleanEmail,
+      phone: cleanPhone,
+      role: role === "admin" ? "Administrator" : "Khách hàng",
+      role_type: role,
+      avatar_text: cleanName.charAt(0).toUpperCase() || "U",
+      avatar_bg: "#2e7d32",
+      registered_date: new Date().toLocaleDateString("vi-VN"),
+      status: "Active",
+    };
+
     try {
-      await supabase.from("users").insert({
-        name: cleanName,
-        username: formattedUsername,
-        email: cleanEmail,
-        phone: cleanPhone,
-        role: role === "admin" ? "Administrator" : "Khách hàng",
-        role_type: role,
-        avatar_text: cleanName.charAt(0).toUpperCase() || "U",
-        avatar_bg: "#2e7d32",
-        registered_date: new Date().toLocaleDateString("vi-VN"),
-        status: "Active",
-      });
+      await supabase.from("users").insert(newUserRecord);
     } catch (dbErr) {
       console.warn("Database users table insert warning:", dbErr);
+    }
+
+    // Save to local registered users storage as fallback sync
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("minishop_registered_users");
+        const list = stored ? JSON.parse(stored) : [];
+        if (!list.some((u: any) => u.email === cleanEmail)) {
+          list.push({ ...newUserRecord, id: Date.now() });
+          localStorage.setItem("minishop_registered_users", JSON.stringify(list));
+        }
+      } catch (err) {
+        console.warn("Local registered users storage error:", err);
+      }
     }
 
     // 2. Try Supabase Auth SignUp

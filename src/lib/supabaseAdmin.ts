@@ -82,6 +82,7 @@ export interface AdminUserItem {
 }
 
 export const fetchAdminUsers = async (): Promise<AdminUserItem[]> => {
+  let dbUsers: AdminUserItem[] = [];
   try {
     const supabase = createClient();
     const { data, error } = await supabase
@@ -89,27 +90,57 @@ export const fetchAdminUsers = async (): Promise<AdminUserItem[]> => {
       .select("*")
       .order("id", { ascending: true });
 
-    if (error || !data || data.length === 0) {
-      return [];
+    if (!error && data && data.length > 0) {
+      dbUsers = data.map((u: any) => ({
+        id: Number(u.id || Math.floor(Math.random() * 100000)),
+        avatarText: String(u.avatar_text || u.name?.charAt(0).toUpperCase() || "U"),
+        avatarBg: String(u.avatar_bg || "#2e7d32"),
+        name: String(u.name),
+        username: String(u.username),
+        email: String(u.email || ""),
+        phone: String(u.phone || ""),
+        role: String(u.role || "Khách hàng"),
+        roleType: (u.role_type === "admin" ? "admin" : "customer") as any,
+        registeredDate: String(u.registered_date || new Date().toLocaleDateString("vi-VN")),
+        status: (u.status === "Blocked" ? "Blocked" : "Active") as any,
+      }));
     }
-
-    return data.map((u: any) => ({
-      id: Number(u.id),
-      avatarText: String(u.avatar_text || "U"),
-      avatarBg: String(u.avatar_bg || "#2563eb"),
-      name: String(u.name),
-      username: String(u.username),
-      email: String(u.email || ""),
-      phone: String(u.phone || ""),
-      role: String(u.role || "Khách hàng"),
-      roleType: (u.role_type === "admin" ? "admin" : "customer") as any,
-      registeredDate: String(u.registered_date || "01/01/2026"),
-      status: (u.status === "Blocked" ? "Blocked" : "Active") as any,
-    }));
   } catch (err) {
-    console.error("Error fetching admin users:", err);
-    return [];
+    console.error("Error fetching admin users from Supabase:", err);
   }
+
+  // Merge with local registered users storage
+  if (typeof window !== "undefined") {
+    try {
+      const stored = localStorage.getItem("minishop_registered_users");
+      if (stored) {
+        const localList = JSON.parse(stored);
+        if (Array.isArray(localList)) {
+          localList.forEach((localUser: any) => {
+            if (!dbUsers.some((u) => u.email.toLowerCase() === localUser.email.toLowerCase())) {
+              dbUsers.push({
+                id: Number(localUser.id || Date.now()),
+                avatarText: String(localUser.avatar_text || localUser.name?.charAt(0).toUpperCase() || "U"),
+                avatarBg: String(localUser.avatar_bg || "#2e7d32"),
+                name: String(localUser.name),
+                username: String(localUser.username),
+                email: String(localUser.email || ""),
+                phone: String(localUser.phone || ""),
+                role: String(localUser.role || "Khách hàng"),
+                roleType: (localUser.role_type === "admin" ? "admin" : "customer") as any,
+                registeredDate: String(localUser.registered_date || new Date().toLocaleDateString("vi-VN")),
+                status: (localUser.status === "Blocked" ? "Blocked" : "Active") as any,
+              });
+            }
+          });
+        }
+      }
+    } catch (err) {
+      console.warn("Local registered users parse notice:", err);
+    }
+  }
+
+  return dbUsers;
 };
 
 export const saveAdminUser = async (user: AdminUserItem): Promise<boolean> => {
