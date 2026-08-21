@@ -1,7 +1,11 @@
 "use client";
 
 import React, { RefObject } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { ExternalLink } from "lucide-react";
 import { LiveChatMessage } from "@/lib/liveChatService";
+import { PRODUCTS_DATA } from "@/data/products";
 
 interface ChatMessageStreamProps {
   messages: LiveChatMessage[];
@@ -16,6 +20,14 @@ export const ChatMessageStream: React.FC<ChatMessageStreamProps> = ({
   messagesEndRef,
   onScroll,
 }) => {
+  const getMatchedProducts = (messageText: string) => {
+    if (!messageText) return [];
+    const found = PRODUCTS_DATA.filter((p) =>
+      messageText.toLowerCase().includes(p.name.toLowerCase())
+    );
+    return found.slice(0, 3);
+  };
+
   return (
     <div
       ref={chatBodyRef}
@@ -33,6 +45,9 @@ export const ChatMessageStream: React.FC<ChatMessageStreamProps> = ({
       {messages.map((m) => {
         const isCustomer = m.sender_type === "customer";
         const isAdmin = m.sender_type === "admin";
+        const isBot = m.sender_type === "bot";
+        const matchedProducts = isBot ? getMatchedProducts(m.message) : [];
+
         return (
           <div
             key={m.id}
@@ -65,6 +80,87 @@ export const ChatMessageStream: React.FC<ChatMessageStreamProps> = ({
             >
               {m.message}
             </div>
+
+            {/* Product Cards Container in Admin Live Chat */}
+            {matchedProducts.length > 0 && (
+              <div
+                style={{
+                  maxWidth: "75%",
+                  width: "360px",
+                  marginTop: "4px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "8px",
+                }}
+              >
+                {matchedProducts.map((p) => (
+                  <div
+                    key={p.id}
+                    style={{
+                      background: "#ffffff",
+                      borderRadius: "12px",
+                      padding: "10px 12px",
+                      border: "1px solid #e2e8f0",
+                      display: "flex",
+                      gap: "12px",
+                      alignItems: "center",
+                      boxShadow: "0 2px 6px rgba(0,0,0,0.03)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        position: "relative",
+                        width: "56px",
+                        height: "56px",
+                        borderRadius: "8px",
+                        overflow: "hidden",
+                        flexShrink: 0,
+                      }}
+                    >
+                      <Image src={p.image} alt={p.name} fill style={{ objectFit: "cover" }} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <h5
+                        style={{
+                          margin: "0 0 2px 0",
+                          fontSize: "12.5px",
+                          fontWeight: 700,
+                          color: "#0f172a",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {p.name}
+                      </h5>
+                      <div style={{ fontSize: "12.5px", fontWeight: 800, color: "#2e7d32" }}>
+                        {p.price.toLocaleString("vi-VN")}đ
+                      </div>
+                      <div style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
+                        <Link
+                          href={`/products/${p.id}`}
+                          target="_blank"
+                          style={{
+                            padding: "3px 8px",
+                            borderRadius: "6px",
+                            background: "#f1f5f9",
+                            color: "#475569",
+                            fontSize: "11px",
+                            fontWeight: 700,
+                            textDecoration: "none",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px",
+                          }}
+                        >
+                          <ExternalLink style={{ width: "11px", height: "11px" }} /> Xem chi tiết
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         );
       })}
