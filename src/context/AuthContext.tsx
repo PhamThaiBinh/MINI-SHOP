@@ -231,7 +231,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [user]);
 
-  // Enhanced SignUp (No email rate limit error)
+  // Enhanced SignUp (Strictly saved to Supabase DB 'users' table, NO Supabase Auth)
   const signUp = async (email: string, password: string, name: string, phone?: string): Promise<{ success: boolean; error?: string }> => {
     const cleanEmail = email.trim().toLowerCase();
     const cleanName = name.trim();
@@ -244,13 +244,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
     const userCode = "U" + Math.floor(1000 + Math.random() * 9000).toString();
 
-    // 1. Always insert record into Supabase users table for Admin view (/admin/users)
+    // 1. Insert record into Supabase 'users' database table
     const newUserRecord = {
       code: userCode,
       name: cleanName,
       username: formattedUsername,
       email: cleanEmail,
       phone: cleanPhone,
+      password: password,
+      pass: password,
       role: role === "admin" ? "Administrator" : "Khách hàng",
       role_type: role,
       avatar_text: cleanName.charAt(0).toUpperCase() || "U",
@@ -260,7 +262,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     };
 
     try {
-      await supabase.from("users").insert(newUserRecord);
+      const { error: dbErr } = await supabase.from("users").insert(newUserRecord);
+      if (dbErr) {
+        console.warn("Database users table insert warning:", dbErr.message);
+      }
     } catch (dbErr) {
       console.warn("Database users table insert warning:", dbErr);
     }
@@ -277,22 +282,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       } catch (err) {
         console.warn("Local registered users storage error:", err);
       }
-    }
-
-    // 2. Try Supabase Auth SignUp
-    try {
-      await supabase.auth.signUp({
-        email: cleanEmail,
-        password: password,
-        options: {
-          data: {
-            name: cleanName,
-            role: role,
-          },
-        },
-      });
-    } catch (e) {
-      console.warn("Supabase Auth signUp error, proceeding:", e);
     }
 
     const profile: UserProfile = {
