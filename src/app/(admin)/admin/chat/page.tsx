@@ -148,17 +148,17 @@ export default function AdminLiveChatPage() {
   ];
 
   return (
-    <div className="admin-wrapper">
+    <div className="admin-wrapper" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       <AdminSidebar activeMenu="chat" sidebarCollapsed={sidebarCollapsed} />
 
-      <div className={`admin-main ${sidebarCollapsed ? "collapsed" : ""}`}>
+      <main className="admin-main">
         <AdminHeader
           title="💬 Trợ Lý Live Chat & Tư Vấn Khách Hàng Realtime"
           sidebarCollapsed={sidebarCollapsed}
           setSidebarCollapsed={setSidebarCollapsed}
         />
 
-        <div className="admin-content">
+        <div className="dashboard-content-body">
           {/* Double-Bezel Architecture Container */}
           <div className="admin-card-shell" style={{ padding: "6px" }}>
             <div
@@ -557,7 +557,7 @@ export default function AdminLiveChatPage() {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   </div>
 );
 }
