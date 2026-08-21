@@ -172,20 +172,17 @@ export default function AdminLiveChatPage() {
           searchPlaceholder="Tìm kiếm tên, email khách hàng tư vấn..."
         />
 
-        {/* Standard Dashboard Content Body */}
-        <div className="dashboard-content-body">
+        {/* Standard Dashboard Content Body with 100px top padding to clear fixed 72px header */}
+        <div className="dashboard-content-body" style={{ padding: "100px 32px 24px 32px", height: "100vh", boxSizing: "border-box", overflow: "hidden" }}>
           
-          {/* ==================================================================== */}
-          {/* ==================================================================== */}
-          {/* 2. MAIN CHAT WORKSTATION (Structured standard Admin Card Grid)    */}
-          {/* ==================================================================== */}
+          {/* MAIN CHAT WORKSTATION */}
           <div
             style={{
               display: "grid",
               gridTemplateColumns: "330px 1fr",
               gap: "24px",
-              minHeight: "650px",
-              alignItems: "start",
+              height: "calc(100vh - 130px)",
+              alignItems: "stretch",
             }}
           >
             {/* LEFT CONTAINER: Conversation List Card */}
@@ -195,8 +192,9 @@ export default function AdminLiveChatPage() {
                 padding: "20px",
                 display: "flex",
                 flexDirection: "column",
-                height: "calc(100vh - 280px)",
-                minHeight: "600px",
+                height: "100%",
+                boxSizing: "border-box",
+                overflow: "hidden",
               }}
             >
               <div className="card-header-row" style={{ marginBottom: "14px" }}>
@@ -411,8 +409,8 @@ export default function AdminLiveChatPage() {
                   padding: "0",
                   display: "flex",
                   flexDirection: "column",
-                  height: "calc(100vh - 280px)",
-                  minHeight: "600px",
+                  height: "100%",
+                  boxSizing: "border-box",
                   overflow: "hidden",
                 }}
               >
