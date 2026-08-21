@@ -18,6 +18,9 @@ import {
   Sparkles,
 } from "lucide-react";
 
+import { useState, useEffect } from "react";
+import { getLocalSessions } from "@/lib/liveChatService";
+
 interface AdminSidebarProps {
   activeMenu:
     | "overview"
@@ -37,6 +40,28 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
 }) => {
   const router = useRouter();
   const { logout } = useAuth();
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
+
+  useEffect(() => {
+    const syncUnread = () => {
+      const sessions = getLocalSessions();
+      const count = sessions.reduce((sum, s) => sum + (s.unread_count || 0), 0);
+      setUnreadChatCount(count);
+    };
+
+    syncUnread();
+    const interval = setInterval(syncUnread, 800);
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "minishop_live_sessions" || e.key?.startsWith("minishop_live_msg_")) {
+        syncUnread();
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, []);
 
   const handleAdminLogout = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -53,7 +78,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     { key: "orders", label: "Đơn hàng", href: "/admin/orders", icon: ShoppingCart },
     { key: "vouchers", label: "Mã giảm giá", href: "/admin/vouchers", icon: Ticket },
     { key: "users", label: "Tài khoản", href: "/admin/users", icon: Users },
-    { key: "chat", label: "Tư vấn Live Chat", href: "/admin/chat", icon: MessageSquare },
+    { key: "chat", label: "Tư vấn Live Chat", href: "/admin/chat", icon: MessageSquare, badge: unreadChatCount },
     { key: "settings", label: "Cấu hình Shop", href: "/admin/settings", icon: Settings },
   ];
 
@@ -81,9 +106,26 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
               key={item.key}
               className={`sidebar-menu-item ${isActive ? "active" : ""}`}
             >
-              <Link href={item.href} title={sidebarCollapsed ? item.label : undefined}>
-                <IconComp className={`w-4 h-4 ${isActive ? "text-emerald-700" : "text-slate-500"}`} />
-                {!sidebarCollapsed && <span>{item.label}</span>}
+              <Link href={item.href} title={sidebarCollapsed ? item.label : undefined} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  <IconComp className={`w-4 h-4 ${isActive ? "text-emerald-700" : "text-slate-500"}`} />
+                  {!sidebarCollapsed && <span>{item.label}</span>}
+                </div>
+                {!sidebarCollapsed && item.badge && item.badge > 0 ? (
+                  <span
+                    style={{
+                      background: "#ef4444",
+                      color: "#ffffff",
+                      fontSize: "10px",
+                      fontWeight: 900,
+                      padding: "2px 7px",
+                      borderRadius: "999px",
+                      boxShadow: "0 2px 6px rgba(239, 68, 68, 0.4)",
+                    }}
+                  >
+                    {item.badge}
+                  </span>
+                ) : null}
               </Link>
             </li>
           );

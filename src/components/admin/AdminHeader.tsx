@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { ShoppingCart, AlertTriangle, UserCheck, MessageSquare, Menu, Bell, Settings, Users, LogOut, ArrowRight } from "lucide-react";
 
+import { getLocalSessions, LiveChatSession } from "@/lib/liveChatService";
+
 interface AdminHeaderProps {
   title: string;
   sidebarCollapsed: boolean;
@@ -28,13 +30,48 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
 
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(3);
+  const [chatUnreadTotal, setChatUnreadTotal] = useState(0);
+  const [chatNotifications, setChatNotifications] = useState<any[]>([]);
 
   const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
 
-  // Notifications List Data
-  const notifications = [
+  // Sync Live Chat Notifications in Realtime
+  useEffect(() => {
+    const syncChatNotifs = () => {
+      const sessions = getLocalSessions();
+      const unreadSessions = sessions.filter((s) => (s.unread_count || 0) > 0);
+      const totalUnread = unreadSessions.reduce((sum, s) => sum + (s.unread_count || 0), 0);
+      setChatUnreadTotal(totalUnread);
+
+      const dynamicNotifs = unreadSessions.map((s) => ({
+        id: `chat-${s.id}`,
+        icon: <MessageSquare className="w-4 h-4 text-emerald-600" />,
+        title: `Tin nhắn từ ${s.customer_name}`,
+        desc: s.last_message || "Đang chờ tư vấn trực tiếp...",
+        time: s.last_message_at || "Vừa xong",
+        unread: true,
+        link: "/admin/chat",
+      }));
+      setChatNotifications(dynamicNotifs);
+    };
+
+    syncChatNotifs();
+    const interval = setInterval(syncChatNotifs, 800);
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "minishop_live_sessions" || e.key?.startsWith("minishop_live_msg_")) {
+        syncChatNotifs();
+      }
+    };
+
+    window.addEventListener("storage", handleStorage);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, []);
+
+  const baseNotifications = [
     {
       id: 1,
       icon: <ShoppingCart className="w-4 h-4 text-emerald-600" />,
@@ -44,34 +81,10 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
       unread: true,
       link: "/admin/orders",
     },
-    {
-      id: 2,
-      icon: <AlertTriangle className="w-4 h-4 text-amber-600" />,
-      title: "Cảnh báo tồn kho thấp",
-      desc: "Sản phẩm Kệ gỗ đa năng còn dưới 10 món",
-      time: "15 phút trước",
-      unread: true,
-      link: "/admin/products",
-    },
-    {
-      id: 3,
-      icon: <UserCheck className="w-4 h-4 text-blue-600" />,
-      title: "Thành viên VIP mới",
-      desc: "Tài khoản @binh_nguyen vừa kích hoạt VIP",
-      time: "1 giờ trước",
-      unread: true,
-      link: "/admin/users",
-    },
-    {
-      id: 4,
-      icon: <MessageSquare className="w-4 h-4 text-purple-600" />,
-      title: "Đánh giá 5 sao mới",
-      desc: "Đánh giá tuyệt vời cho Bàn ăn gỗ sồi",
-      time: "3 giờ trước",
-      unread: false,
-      link: "/admin/products",
-    },
   ];
+
+  const notifications = [...chatNotifications, ...baseNotifications];
+  const unreadCount = chatUnreadTotal + baseNotifications.filter((n) => n.unread).length;
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -166,7 +179,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
                 </strong>
                 {unreadCount > 0 && (
                   <button
-                    onClick={() => setUnreadCount(0)}
+                    onClick={() => setChatUnreadTotal(0)}
                     style={{
                       background: "none",
                       border: "none",
