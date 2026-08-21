@@ -6,17 +6,15 @@ import { Mail, ShieldCheck, RefreshCw, X, AlertCircle } from "lucide-react";
 interface OtpVerificationModalProps {
   isOpen: boolean;
   email: string;
-  generatedOtp: string;
-  onSuccess: () => void;
-  onResendOtp: () => void;
+  onVerify: (otp: string) => Promise<{ success: boolean; error?: string }>;
+  onResendOtp: () => Promise<void>;
   onClose: () => void;
 }
 
 export const OtpVerificationModal: React.FC<OtpVerificationModalProps> = ({
   isOpen,
   email,
-  generatedOtp,
-  onSuccess,
+  onVerify,
   onResendOtp,
   onClose,
 }) => {
@@ -24,6 +22,7 @@ export const OtpVerificationModal: React.FC<OtpVerificationModalProps> = ({
   const [errorMsg, setErrorMsg] = useState("");
   const [countdown, setCountdown] = useState(60);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
@@ -37,7 +36,7 @@ export const OtpVerificationModal: React.FC<OtpVerificationModalProps> = ({
         }
       }, 200);
     }
-  }, [isOpen, generatedOtp]);
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -81,31 +80,40 @@ export const OtpVerificationModal: React.FC<OtpVerificationModalProps> = ({
     }
   };
 
-  const handleVerify = () => {
+  const handleVerifySubmit = async () => {
     const enteredCode = digits.join("");
     if (enteredCode.length < 6) {
       setErrorMsg("Vui lòng nhập đầy đủ 6 chữ số mã xác thực!");
       return;
     }
 
-    if (enteredCode !== generatedOtp) {
-      setErrorMsg("Mã xác thực 6 chữ số không đúng. Vui lòng kiểm tra lại Email!");
-      return;
-    }
-
     setIsVerifying(true);
-    setTimeout(() => {
+    setErrorMsg("");
+    try {
+      const res = await onVerify(enteredCode);
+      if (!res.success) {
+        setErrorMsg(res.error || "Mã xác thực 6 chữ số không chính xác hoặc đã hết hạn. Vui lòng kiểm tra lại Gmail!");
+      }
+    } catch (err: any) {
+      setErrorMsg(err?.message || "Mã xác thực không đúng. Vui lòng thử lại!");
+    } finally {
       setIsVerifying(false);
-      onSuccess();
-    }, 600);
+    }
   };
 
-  const handleResend = () => {
-    if (countdown > 0) return;
-    setCountdown(60);
-    setDigits(["", "", "", "", "", ""]);
+  const handleResend = async () => {
+    if (countdown > 0 || isResending) return;
+    setIsResending(true);
     setErrorMsg("");
-    onResendOtp();
+    try {
+      await onResendOtp();
+      setCountdown(60);
+      setDigits(["", "", "", "", "", ""]);
+    } catch (err: any) {
+      setErrorMsg("Không thể gửi lại mã. Vui lòng thử lại sau!");
+    } finally {
+      setIsResending(false);
+    }
   };
 
   return (
@@ -170,7 +178,7 @@ export const OtpVerificationModal: React.FC<OtpVerificationModalProps> = ({
                   borderRadius: "999px",
                 }}
               >
-                Xác Thực Email
+                Xác Thực Gmail
               </span>
               <h3 style={{ margin: "2px 0 0 0", fontSize: "17px", fontWeight: 800, color: "#0f172a" }}>
                 Nhập Mã Xác Nhận 6 Chữ Số
@@ -188,45 +196,9 @@ export const OtpVerificationModal: React.FC<OtpVerificationModalProps> = ({
 
         {/* Body */}
         <div style={{ padding: "24px" }}>
-          <p style={{ fontSize: "13.5px", color: "#475569", lineHeight: "1.6", margin: "0 0 16px 0" }}>
-            Mã xác thực gồm 6 chữ số đã được gửi đến email: <strong style={{ color: "#0f172a" }}>{email}</strong>. Vui lòng nhập mã để hoàn tất đăng ký.
+          <p style={{ fontSize: "13.5px", color: "#475569", lineHeight: "1.6", margin: "0 0 20px 0" }}>
+            Mã xác thực gồm 6 chữ số đã được gửi trực tiếp đến địa chỉ Gmail: <strong style={{ color: "#0f172a" }}>{email}</strong>. Vui lòng mở hộp thư Gmail hoặc thư mục Spam/Hộp thư rác để kiểm tra.
           </p>
-
-          {/* Test OTP Helper Badge */}
-          <div
-            style={{
-              background: "#f8fafc",
-              border: "1px dashed #cbd5e1",
-              borderRadius: "14px",
-              padding: "12px 16px",
-              marginBottom: "20px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: "8px",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <ShieldCheck style={{ width: "18px", height: "18px", color: "#16a34a" }} />
-              <span style={{ fontSize: "12.5px", color: "#334155", fontWeight: 700 }}>
-                Mã xác thực của bạn:
-              </span>
-            </div>
-            <span
-              style={{
-                fontFamily: "monospace",
-                fontSize: "18px",
-                fontWeight: 900,
-                letterSpacing: "3px",
-                color: "#15803d",
-                background: "#dcfce7",
-                padding: "2px 10px",
-                borderRadius: "8px",
-              }}
-            >
-              {generatedOtp}
-            </span>
-          </div>
 
           {/* 6 Digit Input Boxes */}
           <div style={{ display: "flex", gap: "8px", justifyContent: "center", marginBottom: "20px" }}>
@@ -282,24 +254,24 @@ export const OtpVerificationModal: React.FC<OtpVerificationModalProps> = ({
 
           {/* Resend OTP Section */}
           <div style={{ textAlign: "center", fontSize: "13px", color: "#64748b" }}>
-            Chưa nhận được mã?{" "}
+            Chưa nhận được thư?{" "}
             <button
               type="button"
               onClick={handleResend}
-              disabled={countdown > 0}
+              disabled={countdown > 0 || isResending}
               style={{
                 border: "none",
                 background: "transparent",
-                color: countdown > 0 ? "#94a3b8" : "var(--primary-color, #2e7d32)",
+                color: countdown > 0 || isResending ? "#94a3b8" : "var(--primary-color, #2e7d32)",
                 fontWeight: 800,
-                cursor: countdown > 0 ? "not-allowed" : "pointer",
+                cursor: countdown > 0 || isResending ? "not-allowed" : "pointer",
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "4px",
               }}
             >
               <RefreshCw style={{ width: "13px", height: "13px" }} />
-              Gửi lại mã {countdown > 0 ? `(${countdown}s)` : ""}
+              {isResending ? "Đang gửi..." : `Gửi lại mã ${countdown > 0 ? `(${countdown}s)` : ""}`}
             </button>
           </div>
         </div>
@@ -332,7 +304,7 @@ export const OtpVerificationModal: React.FC<OtpVerificationModalProps> = ({
 
           <button
             type="button"
-            onClick={handleVerify}
+            onClick={handleVerifySubmit}
             disabled={isVerifying}
             style={{
               padding: "12px 24px",
@@ -350,7 +322,7 @@ export const OtpVerificationModal: React.FC<OtpVerificationModalProps> = ({
               opacity: isVerifying ? 0.7 : 1,
             }}
           >
-            {isVerifying ? "Đang xác nhận..." : "Xác Nhận & Đăng Ký 🚀"}
+            {isVerifying ? "Đang đối chiếu..." : "Xác Nhận & Đăng Ký 🚀"}
           </button>
         </div>
       </div>

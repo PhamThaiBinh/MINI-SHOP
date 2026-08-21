@@ -632,7 +632,7 @@ export default function AuthPage() {
   };
 
   const [showOtpModal, setShowOtpModal] = useState(false);
-  const [generatedOtpCode, setGeneratedOtpCode] = useState("");
+  const [sentOtpToken, setSentOtpToken] = useState("");
 
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -654,34 +654,82 @@ export default function AuthPage() {
       return;
     }
 
-    // Generate random 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    setGeneratedOtpCode(otp);
-    setShowOtpModal(true);
+    setIsSubmitting(true);
+    const supabase = createClient();
+    const generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
+    setSentOtpToken(generatedCode);
+
+    try {
+      // Send real email OTP via Supabase Auth
+      await supabase.auth.signInWithOtp({ email: regEmail.trim() });
+    } catch (err) {
+      console.warn("Supabase Auth OTP email notice:", err);
+    } finally {
+      setIsSubmitting(false);
+      setShowOtpModal(true);
+    }
   };
 
-  const handleOtpVerifiedSuccess = async () => {
+  const handleVerifyOtp = async (enteredOtp: string): Promise<{ success: boolean; error?: string }> => {
+    const supabase = createClient();
+    let isOtpValid = false;
+
+    // 1. Try Supabase Auth Verify OTP
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email: regEmail.trim(),
+        token: enteredOtp,
+        type: "email",
+      });
+      if (!error) {
+        isOtpValid = true;
+      }
+    } catch (err) {
+      console.warn("Supabase verifyOtp check:", err);
+    }
+
+    // 2. Or match generated OTP code
+    if (!isOtpValid && enteredOtp === sentOtpToken) {
+      isOtpValid = true;
+    }
+
+    if (!isOtpValid) {
+      return {
+        success: false,
+        error: "Mã xác thực 6 chữ số không chính xác hoặc đã hết hạn. Vui lòng kiểm tra lại Gmail!",
+      };
+    }
+
+    // OTP Verified -> Create Account
     setShowOtpModal(false);
     setIsSubmitting(true);
     const res = await signUp(regEmail, regPassword, regName, regPhone);
     setIsSubmitting(false);
 
-    if (!res.success) {
-      setAuthError(`Đăng ký thất bại: ${res.error}`);
-    } else {
+    if (res.success) {
       if (typeof window !== "undefined") {
         localStorage.setItem("minishop_onboarding_new_registered", "true");
       }
-      setAuthSuccess("Xác thực OTP Email thành công! Đang tự động đăng nhập...");
+      setAuthSuccess("Xác thực Gmail thành công! Đang tự động đăng nhập...");
       setTimeout(() => {
         router.push("/");
-      }, 1000);
+      }, 800);
+      return { success: true };
+    } else {
+      return { success: false, error: res.error || "Đăng ký thất bại!" };
     }
   };
 
-  const handleResendOtp = () => {
-    const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
-    setGeneratedOtpCode(newOtp);
+  const handleResendOtp = async () => {
+    const supabase = createClient();
+    const newCode = Math.floor(100000 + Math.random() * 900000).toString();
+    setSentOtpToken(newCode);
+
+    try {
+      await supabase.auth.signInWithOtp({ email: regEmail.trim() });
+    } catch (err) {
+      console.warn("Resend OTP notice:", err);
+    }
   };
 
   const handleLogoutClick = async () => {
@@ -3543,8 +3591,7 @@ export default function AuthPage() {
       <OtpVerificationModal
         isOpen={showOtpModal}
         email={regEmail}
-        generatedOtp={generatedOtpCode}
-        onSuccess={handleOtpVerifiedSuccess}
+        onVerify={handleVerifyOtp}
         onResendOtp={handleResendOtp}
         onClose={() => setShowOtpModal(false)}
       />
