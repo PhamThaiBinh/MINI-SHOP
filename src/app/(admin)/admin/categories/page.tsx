@@ -30,6 +30,19 @@ export default function AdminCategoriesPage() {
   const [showModal, setShowModal] = useState<boolean>(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
 
+  // Custom Delete Confirm Modal State
+  const [deleteModalState, setDeleteModalState] = useState<{
+    isOpen: boolean;
+    category: Category | null;
+    relatedCount: number;
+    deleting: boolean;
+  }>({
+    isOpen: false,
+    category: null,
+    relatedCount: 0,
+    deleting: false,
+  });
+
   // Pagination states
   const [pageSize, setPageSize] = useState<number>(10);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -164,12 +177,24 @@ export default function AdminCategoriesPage() {
 
     const realCount = relatedProds && relatedProds.length > 0 ? relatedProds.length : cat.productCount || 0;
 
-    if (realCount > 0) {
-      const confirmDelete = confirm(
-        `Danh mục "${cat.name}" hiện đang có ${realCount} sản phẩm liên quan.\n\nBạn có chắc chắn muốn xóa danh mục này cùng TẤT CẢ ${realCount} sản phẩm liên quan không?\n\nLưu ý: Thao tác này sẽ xóa vĩnh viễn danh mục và toàn bộ sản phẩm thuộc danh mục khỏi hệ thống!`
-      );
-      if (!confirmDelete) return;
+    setDeleteModalState({
+      isOpen: true,
+      category: cat,
+      relatedCount: realCount,
+      deleting: false,
+    });
+  };
 
+  const handleConfirmDeleteCategory = async () => {
+    const { category: cat, relatedCount } = deleteModalState;
+    if (!cat) return;
+
+    setDeleteModalState((prev) => ({ ...prev, deleting: true }));
+
+    const supabase = createClient();
+    const categoryCode = (cat as any).code || cat.slug || `C${String(cat.id).padStart(4, "0")}`;
+
+    if (relatedCount > 0) {
       // Delete all related products from products table
       const { error: prodDelErr } = await supabase
         .from("products")
@@ -179,9 +204,6 @@ export default function AdminCategoriesPage() {
       if (prodDelErr) {
         console.error("Error deleting related products:", prodDelErr.message);
       }
-    } else {
-      const confirmDelete = confirm(`Bạn có chắc chắn muốn xóa danh mục "${cat.name}" không?`);
-      if (!confirmDelete) return;
     }
 
     // Delete category row from categories table
@@ -189,11 +211,12 @@ export default function AdminCategoriesPage() {
 
     if (catDelErr) {
       alert("Xóa danh mục thất bại: " + catDelErr.message);
+      setDeleteModalState({ isOpen: false, category: null, relatedCount: 0, deleting: false });
       return;
     }
 
     setCategories((prev) => prev.filter((c) => c.id !== cat.id));
-    alert(`Đã xóa thành công danh mục "${cat.name}"${realCount > 0 ? ` và toàn bộ ${realCount} sản phẩm liên quan` : ""}!`);
+    setDeleteModalState({ isOpen: false, category: null, relatedCount: 0, deleting: false });
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -739,6 +762,157 @@ export default function AdminCategoriesPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* THẺ DIV THÔNG BÁO XÁC NHẬN XÓA GIỮA MÀN HÌNH */}
+      {deleteModalState.isOpen && deleteModalState.category && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(15, 23, 42, 0.6)",
+            backdropFilter: "blur(4px)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
+          }}
+        >
+          <div
+            style={{
+              background: "#ffffff",
+              width: "100%",
+              maxWidth: "460px",
+              borderRadius: "20px",
+              padding: "28px",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+              textAlign: "center",
+              position: "relative",
+              border: "1px solid #f1f5f9",
+            }}
+          >
+            {/* Warning Icon Badge */}
+            <div
+              style={{
+                width: "60px",
+                height: "60px",
+                borderRadius: "50%",
+                background: "#fef2f2",
+                color: "#ef4444",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto 18px",
+                boxShadow: "0 8px 16px rgba(239, 68, 68, 0.15)",
+              }}
+            >
+              <Trash2 className="w-7 h-7" />
+            </div>
+
+            {/* Title */}
+            <h3
+              style={{
+                fontSize: "19px",
+                fontWeight: 800,
+                color: "#0f172a",
+                margin: "0 0 10px",
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+              }}
+            >
+              Xác Nhận Xóa Danh Mục
+            </h3>
+
+            {/* Message Body */}
+            <div
+              style={{
+                fontSize: "14px",
+                color: "#475569",
+                lineHeight: 1.6,
+                marginBottom: "24px",
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+              }}
+            >
+              {deleteModalState.relatedCount > 0 ? (
+                <>
+                  Danh mục <strong>&quot;{deleteModalState.category.name}&quot;</strong> hiện đang có{" "}
+                  <span style={{ color: "#ef4444", fontWeight: 800 }}>
+                    {deleteModalState.relatedCount} sản phẩm liên quan
+                  </span>
+                  .
+                  <br />
+                  <br />
+                  Bạn có chắc chắn muốn xóa danh mục này cùng{" "}
+                  <strong>TẤT CẢ {deleteModalState.relatedCount} sản phẩm liên quan</strong> không?
+                  <div
+                    style={{
+                      marginTop: "12px",
+                      padding: "10px 14px",
+                      background: "#fff1f2",
+                      border: "1px solid #fecdd3",
+                      borderRadius: "10px",
+                      color: "#9f1239",
+                      fontSize: "12.5px",
+                      fontWeight: 600,
+                      textAlign: "left",
+                    }}
+                  >
+                    ⚠️ <strong>Lưu ý quan trọng:</strong> Thao tác này sẽ xóa vĩnh viễn danh mục và toàn bộ sản phẩm thuộc danh mục khỏi hệ thống!
+                  </div>
+                </>
+              ) : (
+                <>
+                  Bạn có chắc chắn muốn xóa danh mục <strong>&quot;{deleteModalState.category.name}&quot;</strong> không?
+                  <br />
+                  Thao tác này không thể khôi phục.
+                </>
+              )}
+            </div>
+
+            {/* Buttons */}
+            <div style={{ display: "flex", gap: "12px" }}>
+              <button
+                type="button"
+                onClick={() => setDeleteModalState({ isOpen: false, category: null, relatedCount: 0, deleting: false })}
+                disabled={deleteModalState.deleting}
+                style={{
+                  flex: 1,
+                  padding: "11px 18px",
+                  borderRadius: "12px",
+                  border: "1px solid #cbd5e1",
+                  background: "#ffffff",
+                  color: "#334155",
+                  fontWeight: 700,
+                  fontSize: "14px",
+                  cursor: "pointer",
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                }}
+              >
+                Hủy Bỏ
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDeleteCategory}
+                disabled={deleteModalState.deleting}
+                style={{
+                  flex: 1,
+                  padding: "11px 18px",
+                  borderRadius: "12px",
+                  border: "none",
+                  background: deleteModalState.deleting ? "#94a3b8" : "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
+                  color: "#ffffff",
+                  fontWeight: 800,
+                  fontSize: "14px",
+                  cursor: deleteModalState.deleting ? "not-allowed" : "pointer",
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  boxShadow: "0 4px 12px rgba(239, 68, 68, 0.3)",
+                }}
+              >
+                {deleteModalState.deleting ? "Đang Xóa..." : "Đồng Ý Xóa"}
+              </button>
+            </div>
           </div>
         </div>
       )}
