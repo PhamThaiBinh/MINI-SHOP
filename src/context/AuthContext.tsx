@@ -253,9 +253,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       });
 
       if (!error && data.user) {
+        const username = cleanName.toLowerCase().replace(/\s+/g, "_");
         const profile: UserProfile = {
           id: data.user.id,
-          username: cleanName.toLowerCase().replace(/\s+/g, "_"),
+          username,
           name: cleanName,
           email: cleanEmail,
           phone: "0988.123.456",
@@ -263,9 +264,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           points: 500,
           history: [],
           vouchers: [],
+          hasCompletedOnboarding: false,
         };
         setUser(profile);
         localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(profile));
+        localStorage.setItem("minishop_onboarding_new_registered", "true");
+        localStorage.removeItem(`minishop_onboarding_completed_${username}`);
         return { success: true };
       }
     } catch (e) {
@@ -288,8 +292,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       console.warn("Database insert warning:", dbErr);
     }
 
+    const username = cleanName.toLowerCase().replace(/\s+/g, "_");
     const fallbackProfile: UserProfile = {
-      username: cleanName.toLowerCase().replace(/\s+/g, "_"),
+      username,
       name: cleanName,
       email: cleanEmail,
       phone: "0988.123.456",
@@ -297,9 +302,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       points: 500,
       history: [],
       vouchers: [],
+      hasCompletedOnboarding: false,
     };
     setUser(fallbackProfile);
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(fallbackProfile));
+    localStorage.setItem("minishop_onboarding_new_registered", "true");
+    localStorage.removeItem(`minishop_onboarding_completed_${username}`);
     return { success: true };
   };
 
@@ -610,6 +618,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     if (typeof window !== "undefined") {
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updatedUser));
       localStorage.setItem(`minishop_onboarding_completed_${user.username}`, "true");
+      localStorage.removeItem("minishop_onboarding_new_registered");
       localStorage.setItem(`minishop_user_points_${user.username}`, String(newPoints));
       localStorage.setItem(`minishop_user_history_${user.username}`, JSON.stringify(updatedUser.history));
     }

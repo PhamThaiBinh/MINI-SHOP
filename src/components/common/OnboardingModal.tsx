@@ -21,15 +21,26 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ forceOpen, onC
       return;
     }
 
-    // Check if onboarding needs to be shown for logged in user
-    if (user && !user.hasCompletedOnboarding) {
-      if (typeof window !== "undefined") {
+    const checkAndShowOnboarding = () => {
+      if (typeof window === "undefined") return;
+
+      const isNewReg = localStorage.getItem("minishop_onboarding_new_registered");
+      if (isNewReg === "true") {
+        setIsOpen(true);
+        setCurrentStep(0);
+        return;
+      }
+
+      if (user && !user.hasCompletedOnboarding) {
         const isDone = localStorage.getItem(`minishop_onboarding_completed_${user.username}`);
         if (!isDone) {
           setIsOpen(true);
+          setCurrentStep(0);
         }
       }
-    }
+    };
+
+    const timer = setTimeout(checkAndShowOnboarding, 500);
 
     // Listen to custom re-trigger event
     const handleTrigger = () => {
@@ -37,7 +48,10 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ forceOpen, onC
       setCurrentStep(0);
     };
     window.addEventListener("minishop_trigger_onboarding", handleTrigger);
-    return () => window.removeEventListener("minishop_trigger_onboarding", handleTrigger);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("minishop_trigger_onboarding", handleTrigger);
+    };
   }, [user, forceOpen]);
 
   if (!isOpen) return null;

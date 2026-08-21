@@ -656,6 +656,9 @@ export default function AuthPage() {
     if (!res.success) {
       setAuthError(`Đăng ký thất bại: ${res.error}`);
     } else {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("minishop_onboarding_new_registered", "true");
+      }
       setAuthSuccess("Đăng ký tài khoản thành công! Hệ thống đang tự động đăng nhập...");
       setTimeout(() => {
         router.push("/");
