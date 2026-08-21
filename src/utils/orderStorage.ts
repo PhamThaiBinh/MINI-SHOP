@@ -159,6 +159,34 @@ export const getAllOrders = (): UnifiedOrder[] => {
   }
 };
 
+export const clearAllLocalOrders = () => {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+    const usersRaw = localStorage.getItem("mini_shop_users");
+    if (usersRaw) {
+      const users = JSON.parse(usersRaw);
+      if (Array.isArray(users)) {
+        users.forEach((u: any) => {
+          u.placedOrders = [];
+        });
+        localStorage.setItem("mini_shop_users", JSON.stringify(users));
+      }
+    }
+    const currentUserRaw = localStorage.getItem("mini_shop_user_v2");
+    if (currentUserRaw) {
+      const cu = JSON.parse(currentUserRaw);
+      if (cu) {
+        cu.placedOrders = [];
+        localStorage.setItem("mini_shop_user_v2", JSON.stringify(cu));
+      }
+    }
+    window.dispatchEvent(new Event("ordersUpdated"));
+  } catch (e) {
+    console.error("Error clearing local orders:", e);
+  }
+};
+
 export const saveAllOrders = (orders: UnifiedOrder[]) => {
   if (typeof window === "undefined") return;
   try {
