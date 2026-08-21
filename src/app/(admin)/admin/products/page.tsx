@@ -1026,7 +1026,7 @@ export default function AdminProductsPage() {
                           style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13.5px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
                         >
                           {dbCategories.map((c) => (
-                            <option key={c.id} value={c.name}>
+                            <option key={c.id} value={(c as any).code || c.name}>
                               {c.name}
                             </option>
                           ))}

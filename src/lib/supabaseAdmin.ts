@@ -366,10 +366,31 @@ export const saveAdminProduct = async (product: Partial<Product>): Promise<boole
       nextProductId = `P${String(maxId + 1).padStart(4, "0")}`;
     }
 
+    // Resolve valid category_id matching fk_products_categories foreign key
+    const { data: catList } = await supabase.from("categories").select("category_id, name, slug");
+    let validCategoryId = product.category || "C0001";
+    let catDisplayName = product.categoryName || product.category || "Phòng khách";
+
+    if (catList && catList.length > 0) {
+      const match = catList.find(
+        (c: any) =>
+          c.category_id === product.category ||
+          c.name === product.category ||
+          c.slug === product.category
+      );
+      if (match) {
+        validCategoryId = match.category_id;
+        catDisplayName = match.name;
+      } else {
+        validCategoryId = catList[0].category_id;
+        catDisplayName = catList[0].name;
+      }
+    }
+
     const payload: any = {
       name: product.name,
-      category: product.category,
-      category_name: product.categoryName || product.category,
+      category: validCategoryId,
+      category_name: catDisplayName,
       price: product.price,
       stock: product.stock !== undefined ? Number(product.stock) : 15,
       status: product.status || "Active",
