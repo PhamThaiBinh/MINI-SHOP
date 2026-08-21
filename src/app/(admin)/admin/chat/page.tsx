@@ -29,6 +29,10 @@ import {
   saveLocalSessions,
   getLocalMessages,
   saveLocalMessages,
+  fetchSupabaseSessions,
+  fetchSupabaseMessages,
+  syncInsertMessageToSupabase,
+  syncUpdateSessionModeInSupabase,
 } from "@/lib/liveChatService";
 
 export default function AdminLiveChatPage() {
@@ -42,14 +46,14 @@ export default function AdminLiveChatPage() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Realtime Sync Polling & Storage Event Listener with Customer Chat
+  // Realtime Supabase Database Sync & Polling Engine
   useEffect(() => {
-    const syncData = () => {
-      const latestSessions = getLocalSessions();
+    const syncData = async () => {
+      const latestSessions = await fetchSupabaseSessions();
       setSessions(latestSessions);
 
       if (selectedSessionId) {
-        const latestMsgs = getLocalMessages(selectedSessionId);
+        const latestMsgs = await fetchSupabaseMessages(selectedSessionId);
         setMessages(latestMsgs);
       }
     };
@@ -60,7 +64,6 @@ export default function AdminLiveChatPage() {
     // Polling interval every 800ms
     const interval = setInterval(syncData, 800);
 
-    // Cross-tab storage listener
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === "minishop_live_sessions" || e.key?.startsWith("minishop_live_msg_")) {
         syncData();
@@ -78,15 +81,15 @@ export default function AdminLiveChatPage() {
   // Load messages & clear unread when selected session changes
   useEffect(() => {
     if (!selectedSessionId) return;
-    const msgs = getLocalMessages(selectedSessionId);
-    setMessages(msgs);
+    fetchSupabaseMessages(selectedSessionId).then((msgs) => setMessages(msgs));
 
-    const latestSessions = getLocalSessions();
-    const updatedSessions = latestSessions.map((s) =>
-      s.id === selectedSessionId ? { ...s, unread_count: 0 } : s
-    );
-    setSessions(updatedSessions);
-    saveLocalSessions(updatedSessions);
+    fetchSupabaseSessions().then((latestSessions) => {
+      const updatedSessions = latestSessions.map((s) =>
+        s.id === selectedSessionId ? { ...s, unread_count: 0 } : s
+      );
+      setSessions(updatedSessions);
+      saveLocalSessions(updatedSessions);
+    });
   }, [selectedSessionId]);
 
   // Scroll to bottom of chat
@@ -96,7 +99,7 @@ export default function AdminLiveChatPage() {
 
   const selectedSession = sessions.find((s) => s.id === selectedSessionId);
 
-  const handleSendMessage = (textToSend?: string) => {
+  const handleSendMessage = async (textToSend?: string) => {
     const text = (textToSend || inputText).trim();
     if (!text || !selectedSessionId) return;
 
@@ -110,28 +113,28 @@ export default function AdminLiveChatPage() {
       created_at: currentTime,
     };
 
-    const updatedMsgs = [...messages, newMsg];
-    setMessages(updatedMsgs);
-    saveLocalMessages(selectedSessionId, updatedMsgs);
-
-    // Update last message in sessions list & save to localStorage
-    const latestSessions = getLocalSessions();
-    const updatedSessions = latestSessions.map((s) =>
-      s.id === selectedSessionId
-        ? { ...s, last_message: `Admin: ${text}`, last_message_at: currentTime }
-        : s
-    );
-    setSessions(updatedSessions);
-    saveLocalSessions(updatedSessions);
-
+    setMessages((prev) => [...prev, newMsg]);
     if (!textToSend) setInputText("");
+
+    await syncInsertMessageToSupabase(newMsg, {
+      id: selectedSessionId,
+      customer_name: selectedSession?.customer_name || "Phạm Thái Bình",
+      customer_email: selectedSession?.customer_email || "binhpham.1512202@gmail.com",
+      customer_phone: selectedSession?.customer_phone || "0988123456",
+      mode: selectedSession?.mode || "human",
+      last_message: `Admin: ${text}`,
+      last_message_at: currentTime,
+      unread_count: 0,
+    });
   };
 
-  const handleToggleMode = () => {
+  const handleToggleMode = async () => {
     if (!selectedSessionId) return;
     const newMode = selectedSession?.mode === "human" ? "bot" : "human";
 
-    const latestSessions = getLocalSessions();
+    await syncUpdateSessionModeInSupabase(selectedSessionId, newMode);
+
+    const latestSessions = await fetchSupabaseSessions();
     const updatedSessions = latestSessions.map((s) =>
       s.id === selectedSessionId ? { ...s, mode: newMode as "bot" | "human" } : s
     );
@@ -151,9 +154,11 @@ export default function AdminLiveChatPage() {
       created_at: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
     };
 
-    const updatedMsgs = [...messages, sysMsg];
-    setMessages(updatedMsgs);
-    saveLocalMessages(selectedSessionId, updatedMsgs);
+    await syncInsertMessageToSupabase(sysMsg, {
+      mode: newMode,
+      last_message: sysMsg.message,
+      last_message_at: sysMsg.created_at,
+    });
   };
 
   const filteredSessions = sessions.filter((s) => {

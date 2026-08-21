@@ -22,76 +22,25 @@ export interface LiveChatMessage {
   created_at: string;
 }
 
-// Initial Mock Sessions for Demo / Local Test
 const INITIAL_SESSIONS: LiveChatSession[] = [
   {
     id: "session-binh",
     customer_name: "Phạm Thái Bình",
     customer_email: "binhpham.1512202@gmail.com",
     customer_phone: "0988123456",
-    mode: "bot",
-    unread_count: 1,
-    last_message: "Tư vấn sofa vải cao cấp phòng khách giúp em",
+    mode: "human",
+    unread_count: 0,
+    last_message: "Xin chào shop!",
     last_message_at: "Vừa xong",
     avatar_bg: "#2e7d32",
     avatar_text: "TB",
   },
-  {
-    id: "session-lan",
-    customer_name: "Nguyễn Hương Lan",
-    customer_email: "lan.nguyen@gmail.com",
-    customer_phone: "0909112233",
-    mode: "human",
-    unread_count: 0,
-    last_message: "Shop cho mình hỏi bộ bàn ăn gỗ sồi có hỗ trợ phí ship về Bình Dương không?",
-    last_message_at: "10 phút trước",
-    avatar_bg: "#d97706",
-    avatar_text: "HL",
-  },
 ];
-
-const INITIAL_MESSAGES: Record<string, LiveChatMessage[]> = {
-  "session-binh": [
-    {
-      id: "m-1",
-      session_id: "session-binh",
-      sender_type: "customer",
-      sender_name: "Phạm Thái Bình",
-      message: "Tư vấn sofa vải cao cấp phòng khách giúp em",
-      created_at: "17:35",
-    },
-    {
-      id: "m-2",
-      session_id: "session-binh",
-      sender_type: "bot",
-      sender_name: "Trợ Lý MINI SHOP",
-      message: "🛋️ Dưới đây là các mẫu Ghế Sofa nổi bật được chọn mua nhiều nhất...",
-      created_at: "17:35",
-    },
-  ],
-  "session-lan": [
-    {
-      id: "m-3",
-      session_id: "session-lan",
-      sender_type: "customer",
-      sender_name: "Nguyễn Hương Lan",
-      message: "Shop cho mình hỏi bộ bàn ăn gỗ sồi có hỗ trợ phí ship về Bình Dương không?",
-      created_at: "17:25",
-    },
-    {
-      id: "m-4",
-      session_id: "session-lan",
-      sender_type: "admin",
-      sender_name: "Admin MINI SHOP",
-      message: "Dạ em chào chị Lan ạ! MINI SHOP hỗ trợ MIỄN PHÍ VẬN CHUYỂN cho bộ bàn ăn gỗ sồi về Bình Dương luôn chị nhé!",
-      created_at: "17:27",
-    },
-  ],
-};
 
 const STORAGE_SESSIONS_KEY = "minishop_live_chat_sessions";
 const STORAGE_MESSAGES_KEY = "minishop_live_chat_messages";
 
+// ---------------- LOCAL STORAGE CACHE HELPERS ----------------
 export function getLocalSessions(): LiveChatSession[] {
   if (typeof window === "undefined") return INITIAL_SESSIONS;
   const data = localStorage.getItem(STORAGE_SESSIONS_KEY);
@@ -113,22 +62,130 @@ export function saveLocalSessions(sessions: LiveChatSession[]) {
 }
 
 export function getLocalMessages(sessionId: string): LiveChatMessage[] {
-  if (typeof window === "undefined") return INITIAL_MESSAGES[sessionId] || [];
+  if (typeof window === "undefined") return [];
   const data = localStorage.getItem(`${STORAGE_MESSAGES_KEY}_${sessionId}`);
-  if (!data) {
-    const initMsg = INITIAL_MESSAGES[sessionId] || [];
-    localStorage.setItem(`${STORAGE_MESSAGES_KEY}_${sessionId}`, JSON.stringify(initMsg));
-    return initMsg;
-  }
+  if (!data) return [];
   try {
     return JSON.parse(data);
   } catch {
-    return INITIAL_MESSAGES[sessionId] || [];
+    return [];
   }
 }
 
 export function saveLocalMessages(sessionId: string, messages: LiveChatMessage[]) {
   if (typeof window !== "undefined") {
     localStorage.setItem(`${STORAGE_MESSAGES_KEY}_${sessionId}`, JSON.stringify(messages));
+  }
+}
+
+// ---------------- SUPABASE REALTIME SYNC ENGINE ----------------
+export async function fetchSupabaseSessions(): Promise<LiveChatSession[]> {
+  try {
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from("live_chat_sessions")
+      .select("*")
+      .order("updated_at", { ascending: false });
+
+    if (error || !data || data.length === 0) {
+      return getLocalSessions();
+    }
+
+    const formatted: LiveChatSession[] = data.map((s: any) => ({
+      id: s.id,
+      customer_name: s.customer_name,
+      customer_email: s.customer_email,
+      customer_phone: s.customer_phone || "",
+      mode: s.mode === "human" ? "human" : "bot",
+      unread_count: Number(s.unread_count || 0),
+      last_message: s.last_message || "",
+      last_message_at: s.last_message_at || "Vừa xong",
+      avatar_bg: s.avatar_bg || "#2e7d32",
+      avatar_text: s.avatar_text || "U",
+    }));
+
+    saveLocalSessions(formatted);
+    return formatted;
+  } catch (err) {
+    console.warn("Supabase fetch sessions fallback to local:", err);
+    return getLocalSessions();
+  }
+}
+
+export async function fetchSupabaseMessages(sessionId: string): Promise<LiveChatMessage[]> {
+  try {
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from("live_chat_messages")
+      .select("*")
+      .eq("session_id", sessionId)
+      .order("timestamp", { ascending: true });
+
+    if (error || !data || data.length === 0) {
+      return getLocalMessages(sessionId);
+    }
+
+    const formatted: LiveChatMessage[] = data.map((m: any) => ({
+      id: m.id,
+      session_id: m.session_id,
+      sender_type: m.sender_type,
+      sender_name: m.sender_name,
+      message: m.message,
+      created_at: m.created_at,
+    }));
+
+    saveLocalMessages(sessionId, formatted);
+    return formatted;
+  } catch (err) {
+    console.warn("Supabase fetch messages fallback to local:", err);
+    return getLocalMessages(sessionId);
+  }
+}
+
+export async function syncInsertMessageToSupabase(msg: LiveChatMessage, sessionUpdate?: Partial<LiveChatSession>) {
+  // Save local first
+  const currentLocalMsgs = getLocalMessages(msg.session_id);
+  if (!currentLocalMsgs.some((m) => m.id === msg.id)) {
+    saveLocalMessages(msg.session_id, [...currentLocalMsgs, msg]);
+  }
+
+  try {
+    const supabase = createClient();
+    await supabase.from("live_chat_messages").insert({
+      id: msg.id,
+      session_id: msg.session_id,
+      sender_type: msg.sender_type,
+      sender_name: msg.sender_name,
+      message: msg.message,
+      created_at: msg.created_at,
+    });
+
+    if (sessionUpdate) {
+      await supabase.from("live_chat_sessions").upsert({
+        id: msg.session_id,
+        customer_name: sessionUpdate.customer_name || "Phạm Thái Bình",
+        customer_email: sessionUpdate.customer_email || "binhpham.1512202@gmail.com",
+        customer_phone: sessionUpdate.customer_phone || "0988123456",
+        mode: sessionUpdate.mode || "human",
+        last_message: msg.message,
+        last_message_at: msg.created_at,
+        unread_count: sessionUpdate.unread_count ?? 0,
+        updated_at: new Date().toISOString(),
+      });
+    }
+  } catch (err) {
+    console.warn("Supabase insert message notice:", err);
+  }
+}
+
+export async function syncUpdateSessionModeInSupabase(sessionId: string, newMode: "bot" | "human") {
+  try {
+    const supabase = createClient();
+    await supabase
+      .from("live_chat_sessions")
+      .update({ mode: newMode, updated_at: new Date().toISOString() })
+      .eq("id", sessionId);
+  } catch (err) {
+    console.warn("Supabase update session mode notice:", err);
   }
 }

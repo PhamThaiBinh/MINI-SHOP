@@ -25,6 +25,9 @@ import {
   saveLocalMessages,
   getLocalSessions,
   saveLocalSessions,
+  fetchSupabaseMessages,
+  fetchSupabaseSessions,
+  syncInsertMessageToSupabase,
   LiveChatMessage,
   LiveChatSession,
 } from "@/lib/liveChatService";
@@ -61,12 +64,11 @@ export const ChatbotWidget: React.FC = () => {
     }
   }, [isOpen, messages, isTyping]);
 
-  // Sync with Live Chat Storage for Admin 2-Way Chat
+  // Realtime Sync with Supabase Database & Local Storage
   useEffect(() => {
-    const interval = setInterval(() => {
-      const liveMsgs = getLocalMessages("session-binh");
+    const syncWithSupabase = async () => {
+      const liveMsgs = await fetchSupabaseMessages("session-binh");
       if (liveMsgs.length > 0) {
-        // Convert Admin messages into ChatMessage format
         const formattedLive: ChatMessage[] = liveMsgs.map((lm) => ({
           id: lm.id,
           sender: lm.sender_type === "customer" ? "user" : "bot",
@@ -80,11 +82,14 @@ export const ChatbotWidget: React.FC = () => {
           return prev;
         });
       }
-    }, 1000);
+    };
+
+    syncWithSupabase();
+    const interval = setInterval(syncWithSupabase, 800);
     return () => clearInterval(interval);
   }, []);
 
-  const handleSendMessage = (textToSend?: string) => {
+  const handleSendMessage = async (textToSend?: string) => {
     const text = (textToSend || inputText).trim();
     if (!text) return;
 
@@ -99,8 +104,7 @@ export const ChatbotWidget: React.FC = () => {
     setMessages((prev) => [...prev, userMsg]);
     if (!textToSend) setInputText("");
 
-    // Sync to Live Chat storage for Admin Dashboard
-    const currentLiveMsgs = getLocalMessages("session-binh");
+    // Sync to Supabase Database & Live Chat storage for Admin Dashboard
     const newLiveMsg: LiveChatMessage = {
       id: `user-m-${Date.now()}`,
       session_id: "session-binh",
@@ -109,22 +113,18 @@ export const ChatbotWidget: React.FC = () => {
       message: text,
       created_at: userTime,
     };
-    saveLocalMessages("session-binh", [...currentLiveMsgs, newLiveMsg]);
 
-    // Always update session activity for Admin view
-    const sessions = getLocalSessions();
-    const updatedSessions = sessions.map((s) =>
-      s.id === "session-binh"
-        ? {
-            ...s,
-            last_message: text,
-            last_message_at: userTime,
-            unread_count: (s.unread_count || 0) + 1,
-          }
-        : s
-    );
-    saveLocalSessions(updatedSessions);
+    await syncInsertMessageToSupabase(newLiveMsg, {
+      customer_name: "Phạm Thái Bình",
+      customer_email: "binhpham.1512202@gmail.com",
+      customer_phone: "0988123456",
+      last_message: text,
+      last_message_at: userTime,
+      unread_count: 1,
+    });
 
+    // Check if session is currently in Human Admin mode
+    const sessions = await fetchSupabaseSessions();
     const currentSession = sessions.find((s) => s.id === "session-binh");
     if (currentSession?.mode === "human") {
       return;
@@ -133,12 +133,11 @@ export const ChatbotWidget: React.FC = () => {
     setIsTyping(true);
 
     // Simulate realistic typing latency for AI Bot
-    setTimeout(() => {
+    setTimeout(async () => {
       const botResponse = processUserQuery(text);
       setMessages((prev) => [...prev, botResponse]);
 
-      // Sync Bot response to Live Chat storage for Admin
-      const updatedLiveMsgs = getLocalMessages("session-binh");
+      // Sync Bot response to Supabase Database for Admin
       const botLiveMsg: LiveChatMessage = {
         id: botResponse.id,
         session_id: "session-binh",
@@ -147,7 +146,12 @@ export const ChatbotWidget: React.FC = () => {
         message: botResponse.text,
         created_at: botResponse.timestamp,
       };
-      saveLocalMessages("session-binh", [...updatedLiveMsgs, botLiveMsg]);
+
+      await syncInsertMessageToSupabase(botLiveMsg, {
+        last_message: botResponse.text,
+        last_message_at: botResponse.timestamp,
+        unread_count: 0,
+      });
 
       setIsTyping(false);
     }, 600);
