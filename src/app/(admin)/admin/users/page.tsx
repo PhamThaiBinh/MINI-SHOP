@@ -28,6 +28,11 @@ export default function AdminUsersPage() {
 
   useEffect(() => {
     loadData();
+    const interval = setInterval(async () => {
+      const latest = await fetchAdminUsers();
+      setUsers(latest);
+    }, 2000);
+    return () => clearInterval(interval);
   }, []);
 
   // Form State for Add Admin/Staff Modal
