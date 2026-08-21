@@ -696,7 +696,7 @@ export default function AdminOrdersPage() {
                             />
                           </td>
                           <td>
-                            <strong>#{order.id}</strong>
+                            <strong>{order.id.startsWith("#") ? order.id : "#" + order.id}</strong>
                             <br />
                             <span
                               style={{
@@ -728,7 +728,7 @@ export default function AdminOrdersPage() {
                               }}
                             >
                               <img
-                                src={fixImagePath(order.items[0]?.image || "/assets/images/products/noi-that-gia-dung/sofa-phong-khach.webp")}
+                                src={fixImagePath(order.items[0]?.image || "/assets/images/banner/banner-trang-chu-mini-shop.webp")}
                                 width="32"
                                 height="32"
                                 style={{
@@ -736,6 +736,9 @@ export default function AdminOrdersPage() {
                                   objectFit: "cover",
                                 }}
                                 alt={order.items[0]?.name || "Sản phẩm"}
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = "/assets/images/banner/banner-trang-chu-mini-shop.webp";
+                                }}
                               />
                               <span>
                                 {order.items[0]?.name || "Sản phẩm"}{" "}

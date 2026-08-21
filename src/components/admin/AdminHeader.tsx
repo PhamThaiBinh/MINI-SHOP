@@ -71,20 +71,34 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
     };
   }, []);
 
-  const baseNotifications = [
-    {
-      id: 1,
-      icon: <ShoppingCart className="w-4 h-4 text-emerald-600" />,
-      title: "Đơn hàng mới #MS-9824",
-      desc: "Khách hàng Bình Nguyễn vừa đặt 3.539.000đ",
-      time: "Vừa xong",
-      unread: true,
-      link: "/admin/orders",
-    },
-  ];
+  const [orderNotifs, setOrderNotifs] = useState<any[]>([]);
 
-  const notifications = [...chatNotifications, ...baseNotifications];
-  const unreadCount = chatUnreadTotal + baseNotifications.filter((n) => n.unread).length;
+  useEffect(() => {
+    const syncOrderNotifs = async () => {
+      try {
+        const { getAllOrders } = await import("@/utils/orderStorage");
+        const orders = getAllOrders();
+        const latest = orders.slice(0, 3).map((o, idx) => ({
+          id: `ord-${o.id}-${idx}`,
+          icon: <ShoppingCart className="w-4 h-4 text-emerald-600" />,
+          title: `Đơn hàng mới ${o.id.startsWith("#") ? o.id : "#" + o.id}`,
+          desc: `Khách hàng ${o.recipientName || "Ẩn danh"} vừa đặt ${o.total.toLocaleString("vi-VN")}đ`,
+          time: o.date || "Vừa xong",
+          unread: true,
+          link: "/admin/orders",
+        }));
+        setOrderNotifs(latest);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    syncOrderNotifs();
+    window.addEventListener("ordersUpdated", syncOrderNotifs);
+    return () => window.removeEventListener("ordersUpdated", syncOrderNotifs);
+  }, []);
+
+  const notifications = [...chatNotifications, ...orderNotifs];
+  const unreadCount = chatUnreadTotal + orderNotifs.length;
 
   // Close dropdowns on outside click
   useEffect(() => {

@@ -54,30 +54,7 @@ export const parseOrderDate = (dateStr: string): number => {
   }
 };
 
-export const DEFAULT_UNIFIED_ORDERS: UnifiedOrder[] = [
-  {
-    id: "#MS-1024",
-    date: "08/08/2026 11:15:20",
-    status: "completed",
-    statusText: "Đã hoàn thành",
-    recipientName: "Nguyễn Văn An",
-    recipientPhone: "0901.234.567",
-    address: "456 Đường Lê Lợi, Phường Hải Châu 1, Quận Hải Châu, TP. Đà Nẵng",
-    paymentMethod: "Chuyển khoản Ngân hàng (QR)",
-    items: [
-      {
-        name: "Bàn Ăn Gỗ Sồi Tự Nhiên",
-        image: "/assets/images/products/noi-that-gia-dung/bo-ban-an-go.webp",
-        qty: 1,
-        price: 2990000,
-      },
-    ],
-    subtotal: 2990000,
-    discount: 50000,
-    total: 2940000,
-    username: "an",
-  },
-];
+export const DEFAULT_UNIFIED_ORDERS: UnifiedOrder[] = [];
 
 const STORAGE_KEY = "minishop_all_orders";
 
@@ -99,25 +76,86 @@ export const getStatusText = (status: UnifiedOrder["status"]): string => {
 };
 
 export const getAllOrders = (): UnifiedOrder[] => {
-  if (typeof window === "undefined") return DEFAULT_UNIFIED_ORDERS;
+  if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    let list: UnifiedOrder[] = DEFAULT_UNIFIED_ORDERS;
+    let list: UnifiedOrder[] = [];
     if (raw) {
       list = JSON.parse(raw);
     }
-    // Explicitly purge old mock orders for Bình Nguyễn (#MS-9824 & #MS-7102)
-    const cleanList = list.filter(
-      (o) => o.id !== "#MS-9824" && o.id !== "#MS-7102" && o.username !== "binh"
-    );
-    if (list.length !== cleanList.length) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(cleanList));
+
+    // Extract orders stored inside mini_shop_users / mini_shop_user_v2
+    const extraOrders: UnifiedOrder[] = [];
+    try {
+      const usersRaw = localStorage.getItem("mini_shop_users");
+      if (usersRaw) {
+        const users = JSON.parse(usersRaw);
+        if (Array.isArray(users)) {
+          users.forEach((u: any) => {
+            if (u.placedOrders && Array.isArray(u.placedOrders)) {
+              u.placedOrders.forEach((po: any) => {
+                extraOrders.push({
+                  id: po.id,
+                  date: po.date,
+                  status: po.status || "pending",
+                  statusText: po.statusText || "Đang xử lý",
+                  recipientName: po.recipientName || u.name || u.username,
+                  recipientPhone: po.recipientPhone || u.phone || "",
+                  address: po.address || "",
+                  paymentMethod: po.paymentMethod || "COD",
+                  items: po.items || [],
+                  subtotal: po.subtotal || po.total || 0,
+                  discount: po.discount || 0,
+                  total: po.total || 0,
+                  username: u.username,
+                });
+              });
+            }
+          });
+        }
+      }
+      const currentUserRaw = localStorage.getItem("mini_shop_user_v2");
+      if (currentUserRaw) {
+        const cu = JSON.parse(currentUserRaw);
+        if (cu && cu.placedOrders && Array.isArray(cu.placedOrders)) {
+          cu.placedOrders.forEach((po: any) => {
+            extraOrders.push({
+              id: po.id,
+              date: po.date,
+              status: po.status || "pending",
+              statusText: po.statusText || "Đang xử lý",
+              recipientName: po.recipientName || cu.name || cu.username,
+              recipientPhone: po.recipientPhone || cu.phone || "",
+              address: po.address || "",
+              paymentMethod: po.paymentMethod || "COD",
+              items: po.items || [],
+              subtotal: po.subtotal || po.total || 0,
+              discount: po.discount || 0,
+              total: po.total || 0,
+              username: cu.username,
+            });
+          });
+        }
+      }
+    } catch (err) {
+      console.error("Error reading extra user orders:", err);
     }
-    // Always return sorted descending by timestamp
-    return cleanList.sort((a, b) => parseOrderDate(b.date) - parseOrderDate(a.date));
+
+    // Merge orders avoiding duplicates by ID
+    const mergedMap = new Map<string, UnifiedOrder>();
+    [...list, ...extraOrders].forEach((o) => {
+      if (o && o.id && o.id !== "#MS-1024" && o.id !== "#MS-9824" && o.id !== "#MS-7102") {
+        mergedMap.set(o.id.toUpperCase(), o);
+      }
+    });
+
+    const result = Array.from(mergedMap.values()).sort(
+      (a, b) => parseOrderDate(b.date) - parseOrderDate(a.date)
+    );
+    return result;
   } catch (e) {
     console.error("Error reading orders:", e);
-    return DEFAULT_UNIFIED_ORDERS;
+    return [];
   }
 };
 
