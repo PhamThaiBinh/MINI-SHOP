@@ -214,10 +214,10 @@ function ProductDetailPageContent({
 
   const galleryImages = [
     currentProduct.image,
-    "/assets/images/products/do-my-nghe/binh-gom-trang-tri.webp",
-    "/assets/images/products/do-my-nghe/bo-binh-gom-minimal.webp",
-    "/assets/images/products/bo-binh-gom-minimal.webp",
-    "/assets/images/products/noi-that-gia-dung/chau-cay-de-ban.webp",
+    "https://sngmpumzlhomtvfvlbdn.supabase.co/storage/v1/object/public/products/products/do-my-nghe/binh-gom-trang-tri.webp",
+    "https://sngmpumzlhomtvfvlbdn.supabase.co/storage/v1/object/public/products/products/do-my-nghe/bo-binh-gom-minimal.webp",
+    "https://sngmpumzlhomtvfvlbdn.supabase.co/storage/v1/object/public/products/products/do-thu-cong/khay-go-trang-tri.webp",
+    "https://sngmpumzlhomtvfvlbdn.supabase.co/storage/v1/object/public/products/products/noi-that-gia-dung/chau-cay-de-ban.webp",
   ];
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
