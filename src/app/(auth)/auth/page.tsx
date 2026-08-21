@@ -20,6 +20,7 @@ import {
   syncUserRewardsToSupabase,
 } from "@/lib/supabaseUserFeatures";
 import { User, Gift, Package, MapPin, LogOut, Eye, EyeOff, Key, Save, Check, Crown, ListCheck, Disc, Ticket, History, Gem, Award, Star, Calendar, Link2, AlertTriangle, Truck, Sofa, Edit3, CheckCircle2, Trash2, Copy, Send, X, Search, Share2, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Sparkles, ShieldCheck } from "lucide-react";
+import { OtpVerificationModal } from "@/components/common/OtpVerificationModal";
 
 interface AddressItem {
   id: number;
@@ -325,6 +326,7 @@ export default function AuthPage() {
   const [loginPassword, setLoginPassword] = useState("");
   const [regName, setRegName] = useState("");
   const [regEmail, setRegEmail] = useState("");
+  const [regPhone, setRegPhone] = useState("");
   const [regPassword, setRegPassword] = useState("");
   const [regConfirmPassword, setRegConfirmPassword] = useState("");
 
@@ -629,6 +631,9 @@ export default function AuthPage() {
     }
   };
 
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [generatedOtpCode, setGeneratedOtpCode] = useState("");
+
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError("");
@@ -649,8 +654,16 @@ export default function AuthPage() {
       return;
     }
 
+    // Generate random 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    setGeneratedOtpCode(otp);
+    setShowOtpModal(true);
+  };
+
+  const handleOtpVerifiedSuccess = async () => {
+    setShowOtpModal(false);
     setIsSubmitting(true);
-    const res = await signUp(regEmail, regPassword, regName);
+    const res = await signUp(regEmail, regPassword, regName, regPhone);
     setIsSubmitting(false);
 
     if (!res.success) {
@@ -659,11 +672,16 @@ export default function AuthPage() {
       if (typeof window !== "undefined") {
         localStorage.setItem("minishop_onboarding_new_registered", "true");
       }
-      setAuthSuccess("Đăng ký tài khoản thành công! Hệ thống đang tự động đăng nhập...");
+      setAuthSuccess("Xác thực OTP Email thành công! Đang tự động đăng nhập...");
       setTimeout(() => {
         router.push("/");
       }, 1000);
     }
+  };
+
+  const handleResendOtp = () => {
+    const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    setGeneratedOtpCode(newOtp);
   };
 
   const handleLogoutClick = async () => {
@@ -3521,6 +3539,15 @@ export default function AuthPage() {
           </div>
         </div>
       )}
+
+      <OtpVerificationModal
+        isOpen={showOtpModal}
+        email={regEmail}
+        generatedOtp={generatedOtpCode}
+        onSuccess={handleOtpVerifiedSuccess}
+        onResendOtp={handleResendOtp}
+        onClose={() => setShowOtpModal(false)}
+      />
     </main>
   );
 }

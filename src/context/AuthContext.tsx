@@ -57,7 +57,7 @@ export interface UserProfile {
 interface AuthContextType {
   user: UserProfile | null;
   loading: boolean;
-  signUp: (email: string, password: string, name: string) => Promise<{ success: boolean; error?: string }>;
+  signUp: (email: string, password: string, name: string, phone?: string) => Promise<{ success: boolean; error?: string }>;
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   loginUser: (identifier: string) => UserProfile | null;
   logout: () => Promise<void>;
@@ -232,16 +232,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [user]);
 
   // Enhanced SignUp (No email rate limit error)
-  const signUp = async (email: string, password: string, name: string): Promise<{ success: boolean; error?: string }> => {
+  const signUp = async (email: string, password: string, name: string, phone?: string): Promise<{ success: boolean; error?: string }> => {
     const cleanEmail = email.trim().toLowerCase();
     const cleanName = name.trim();
+    const cleanPhone = phone?.trim() || "0988.123.456";
     const isEmailAdmin = cleanEmail === "admin@minishop.vn";
     const role: "admin" | "customer" = isEmailAdmin ? "admin" : "customer";
+    const username = cleanName.toLowerCase().replace(/\s+/g, "_");
+    const formattedUsername = username.startsWith("@") ? username : "@" + username;
     const supabase = createClient();
 
+    // 1. Always insert record into Supabase users table for Admin view (/admin/users)
     try {
-      // 1. Try Supabase Auth SignUp
-      const { data, error } = await supabase.auth.signUp({
+      await supabase.from("users").insert({
+        name: cleanName,
+        username: formattedUsername,
+        email: cleanEmail,
+        phone: cleanPhone,
+        role: role === "admin" ? "Administrator" : "Khách hàng",
+        role_type: role,
+        avatar_text: cleanName.charAt(0).toUpperCase() || "U",
+        avatar_bg: "#2e7d32",
+        registered_date: new Date().toLocaleDateString("vi-VN"),
+        status: "Active",
+      });
+    } catch (dbErr) {
+      console.warn("Database users table insert warning:", dbErr);
+    }
+
+    // 2. Try Supabase Auth SignUp
+    try {
+      await supabase.auth.signUp({
         email: cleanEmail,
         password: password,
         options: {
@@ -251,63 +272,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           },
         },
       });
-
-      if (!error && data.user) {
-        const username = cleanName.toLowerCase().replace(/\s+/g, "_");
-        const profile: UserProfile = {
-          id: data.user.id,
-          username,
-          name: cleanName,
-          email: cleanEmail,
-          phone: "0988.123.456",
-          role: role,
-          points: 500,
-          history: [],
-          vouchers: [],
-          hasCompletedOnboarding: false,
-        };
-        setUser(profile);
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(profile));
-        localStorage.setItem("minishop_onboarding_new_registered", "true");
-        localStorage.removeItem(`minishop_onboarding_completed_${username}`);
-        return { success: true };
-      }
     } catch (e) {
-      console.warn("Supabase Auth signUp error, proceeding with database fallback:", e);
+      console.warn("Supabase Auth signUp error, proceeding:", e);
     }
 
-    // 2. Fallback to Supabase users table (Bypasses email rate limit exceeded)
-    try {
-      await supabase.from("users").insert({
-        name: cleanName,
-        username: "@" + cleanName.toLowerCase().replace(/\s+/g, "_"),
-        email: cleanEmail,
-        phone: "0988.123.456",
-        role: role === "admin" ? "Administrator" : "Khách hàng",
-        role_type: role,
-        registered_date: new Date().toLocaleDateString("vi-VN"),
-        status: "Active",
-      });
-    } catch (dbErr) {
-      console.warn("Database insert warning:", dbErr);
-    }
-
-    const username = cleanName.toLowerCase().replace(/\s+/g, "_");
-    const fallbackProfile: UserProfile = {
+    const profile: UserProfile = {
       username,
       name: cleanName,
       email: cleanEmail,
-      phone: "0988.123.456",
+      phone: cleanPhone,
       role: role,
       points: 500,
       history: [],
       vouchers: [],
       hasCompletedOnboarding: false,
     };
-    setUser(fallbackProfile);
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(fallbackProfile));
-    localStorage.setItem("minishop_onboarding_new_registered", "true");
-    localStorage.removeItem(`minishop_onboarding_completed_${username}`);
+
+    setUser(profile);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(profile));
+      localStorage.setItem("minishop_onboarding_new_registered", "true");
+      localStorage.removeItem(`minishop_onboarding_completed_${username}`);
+    }
+
     return { success: true };
   };
 
