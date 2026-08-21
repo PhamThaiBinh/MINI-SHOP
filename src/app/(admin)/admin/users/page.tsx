@@ -82,11 +82,16 @@ export default function AdminUsersPage() {
       prev.map((u) => (u.id === id ? { ...u, status: newStatus } : u))
     );
 
-    // Save blocked identifiers (email, username, phone) to localStorage for instant cross-tab logout sync
+    // Save blocked identifiers (email, username) to localStorage for instant cross-tab logout sync
     try {
       const blockedList = users
-        .filter((u) => (u.id === id ? newStatus === "Blocked" : u.status === "Blocked"))
-        .flatMap((u) => [u.email, u.username, u.phone])
+        .filter(
+          (u) =>
+            (u.id === id ? newStatus === "Blocked" : u.status === "Blocked") &&
+            u.roleType !== "admin" &&
+            u.email !== "admin@minishop.vn"
+        )
+        .flatMap((u) => [u.email, u.username, u.username?.replace(/^@/, "")])
         .filter(Boolean);
       localStorage.setItem("mini_shop_blocked_users", JSON.stringify(blockedList));
     } catch (err) {

@@ -164,27 +164,71 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
     fetchSessionUser();
 
-    // Check if currently logged in user is blocked
-    const checkBlockedStatus = (currentUser: UserProfile) => {
+    // Check if currently logged in user is blocked (ONLY FOR CUSTOMERS, NEVER ADMIN)
+    const checkBlockedStatus = async (currentUser: UserProfile) => {
+      // EXEMPT ADMIN COMPLETELY
+      if (
+        currentUser.role === "admin" ||
+        currentUser.email?.toLowerCase() === "admin@minishop.vn" ||
+        currentUser.username?.toLowerCase() === "admin"
+      ) {
+        return false;
+      }
+
       try {
+        const myEmail = (currentUser.email || "").toLowerCase().trim();
+        const myUser = (currentUser.username || "").toLowerCase().replace(/^@/, "").trim();
+
+        // 1. Check localStorage blocked list
         const blockedListStr = localStorage.getItem("mini_shop_blocked_users");
         if (blockedListStr) {
-          const blockedEmails: string[] = JSON.parse(blockedListStr);
-          if (Array.isArray(blockedEmails) && blockedEmails.includes(currentUser.email)) {
+          const blockedList: string[] = JSON.parse(blockedListStr);
+          if (Array.isArray(blockedList)) {
+            const isBlocked = blockedList.some((item) => {
+              const b = String(item).toLowerCase().replace(/^@/, "").trim();
+              return (myEmail && b === myEmail) || (myUser && b === myUser);
+            });
+            if (isBlocked) {
+              alert("Tài khoản của bạn đã bị Quản trị viên khóa. Hệ thống tự động đăng xuất!");
+              logout();
+              return true;
+            }
+          }
+        }
+
+        // 2. Check Supabase DB users table status
+        const { data: userRows } = await supabase
+          .from("users")
+          .select("status, email, username, role_type");
+
+        if (userRows && userRows.length > 0) {
+          const matched = userRows.find((u: any) => {
+            const uEmail = String(u.email || "").toLowerCase().trim();
+            const uUser = String(u.username || "").toLowerCase().replace(/^@/, "").trim();
+            return (uEmail && myEmail && uEmail === myEmail) || (uUser && myUser && uUser === myUser);
+          });
+
+          if (
+            matched &&
+            matched.role_type !== "admin" &&
+            (matched.status === "Blocked" ||
+              matched.status === "Khóa" ||
+              matched.status === "Tạm khóa")
+          ) {
             alert("Tài khoản của bạn đã bị Quản trị viên khóa. Hệ thống tự động đăng xuất!");
             logout();
             return true;
           }
         }
       } catch (e) {
-        console.error(e);
+        console.error("Blocked status check error:", e);
       }
       return false;
     };
 
-    // Cross-tab auto-logout if blocked by Admin
+    // Cross-tab auto-logout if customer account is blocked by Admin
     const handleStorage = (e: StorageEvent) => {
-      if (e.key === "mini_shop_blocked_users" && user) {
+      if (e.key === "mini_shop_blocked_users" && user && user.role !== "admin") {
         checkBlockedStatus(user);
       }
     };
