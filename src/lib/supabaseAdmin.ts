@@ -258,14 +258,6 @@ export const deleteAdminCategory = async (id: number): Promise<boolean> => {
 
 // ==================== 4. ORDERS CRUD ====================
 export const fetchAdminOrders = async (): Promise<UnifiedOrder[]> => {
-  let localOrders: UnifiedOrder[] = [];
-  try {
-    const { getAllOrders } = await import("@/utils/orderStorage");
-    localOrders = getAllOrders();
-  } catch (e) {
-    console.warn("Could not load local orders:", e);
-  }
-
   try {
     const supabase = createClient();
     const { data: orderRows, error } = await supabase
@@ -273,14 +265,18 @@ export const fetchAdminOrders = async (): Promise<UnifiedOrder[]> => {
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (error || !orderRows) {
-      console.warn("Supabase fetch orders error, returning local orders:", error?.message);
-      return localOrders;
+    if (error) {
+      console.warn("Supabase fetch orders error:", error.message);
+      return [];
+    }
+
+    if (!orderRows || orderRows.length === 0) {
+      return [];
     }
 
     const { data: itemRows } = await supabase.from("order_items").select("*");
 
-    const supabaseOrders: UnifiedOrder[] = orderRows.map((o: any) => {
+    return orderRows.map((o: any) => {
       // 1. Read items from JSONB column if present
       let items: any[] = Array.isArray(o.items) ? o.items : [];
 
@@ -325,19 +321,9 @@ export const fetchAdminOrders = async (): Promise<UnifiedOrder[]> => {
         cancelReason: o.cancel_reason ? String(o.cancel_reason) : undefined,
       };
     });
-
-    // Merge Supabase orders with local orders avoiding duplicates by ID
-    const mergedMap = new Map<string, UnifiedOrder>();
-    [...supabaseOrders, ...localOrders].forEach((ord) => {
-      if (ord && ord.id) {
-        mergedMap.set(ord.id.toUpperCase(), ord);
-      }
-    });
-
-    return Array.from(mergedMap.values());
   } catch (err) {
     console.error("Error fetching admin orders:", err);
-    return localOrders;
+    return [];
   }
 };
 

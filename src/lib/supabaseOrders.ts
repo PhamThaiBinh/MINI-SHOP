@@ -70,16 +70,7 @@ export const fetchUserOrdersFromSupabase = async (
   const cleanEmail = email ? email.trim().toLowerCase() : "";
   const cleanUsername = username ? username.trim().toLowerCase() : "";
 
-  // Get local user orders first
-  const { getAllOrders, parseOrderDate } = await import("@/utils/orderStorage");
-  const localAll = getAllOrders();
-  const localUserOrders = localAll.filter((o) => {
-    const oPhone = (o.recipientPhone || "").replace(/\D/g, "");
-    const oUser = (o.username || "").toLowerCase();
-    const matchPhone = cleanPhone && (oPhone.includes(cleanPhone) || cleanPhone.includes(oPhone));
-    const matchUser = cleanUsername && oUser === cleanUsername;
-    return matchPhone || matchUser;
-  });
+  const { parseOrderDate } = await import("@/utils/orderStorage");
 
   try {
     const supabase = createClient();
@@ -87,8 +78,13 @@ export const fetchUserOrdersFromSupabase = async (
       .from("orders")
       .select("*");
 
-    if (error || !orderRows || orderRows.length === 0) {
-      return localUserOrders;
+    if (error) {
+      console.warn("Supabase fetch user orders error:", error.message);
+      return [];
+    }
+
+    if (!orderRows || orderRows.length === 0) {
+      return [];
     }
 
     const matchedSupabaseOrders: UnifiedOrder[] = orderRows
@@ -97,7 +93,7 @@ export const fetchUserOrdersFromSupabase = async (
         const oUser = String(o.username || "").toLowerCase();
         const matchPhone = cleanPhone && (oPhone.includes(cleanPhone) || cleanPhone.includes(oPhone));
         const matchUser = cleanUsername && oUser === cleanUsername;
-        return matchPhone || matchUser;
+        return matchPhone || matchUser || (!cleanPhone && !cleanUsername);
       })
       .map((o: any) => ({
         id: String(o.id),
@@ -116,19 +112,12 @@ export const fetchUserOrdersFromSupabase = async (
         cancelReason: o.cancel_reason ? String(o.cancel_reason) : undefined,
       }));
 
-    // Merge Supabase orders with local orders avoiding duplicates by ID
-    const mergedMap = new Map<string, UnifiedOrder>();
-    [...matchedSupabaseOrders, ...localUserOrders].forEach((ord) => {
-      mergedMap.set(ord.id.toUpperCase(), ord);
-    });
-
-    const result = Array.from(mergedMap.values()).sort(
+    return matchedSupabaseOrders.sort(
       (a, b) => parseOrderDate(b.date) - parseOrderDate(a.date)
     );
-    return result;
   } catch (err) {
     console.error("Error fetching user orders from Supabase:", err);
-    return localUserOrders;
+    return [];
   }
 };
 
