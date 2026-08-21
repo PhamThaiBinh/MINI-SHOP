@@ -244,30 +244,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
     const userCode = "U" + Math.floor(1000 + Math.random() * 9000).toString();
 
+    // Check if user already exists in Supabase DB
+    try {
+      const { data: existingUsers } = await supabase
+        .from("users")
+        .select("id, email, username")
+        .or(`email.ilike.${cleanEmail},username.ilike.${formattedUsername}`);
+
+      if (existingUsers && existingUsers.length > 0) {
+        return {
+          success: false,
+          error: "Email hoặc tên người dùng đã tồn tại! Vui lòng chọn tên khác hoặc đăng nhập.",
+        };
+      }
+    } catch (checkErr) {
+      console.warn("Check existing user warning:", checkErr);
+    }
+
     // 1. Insert record into Supabase 'users' database table
     const newUserRecord = {
       code: userCode,
+      user_id: userCode,
       name: cleanName,
       username: formattedUsername,
       email: cleanEmail,
       phone: cleanPhone,
       password: password,
-      pass: password,
       role: role === "admin" ? "Administrator" : "Khách hàng",
       role_type: role,
       avatar_text: cleanName.charAt(0).toUpperCase() || "U",
       avatar_bg: "#2e7d32",
       registered_date: new Date().toLocaleDateString("vi-VN"),
       status: "Active",
+      addresses: [],
+      cart: [],
+      wishlist: [],
+      rewards: { points: 500, history: [] },
     };
 
     try {
       const { error: dbErr } = await supabase.from("users").insert(newUserRecord);
       if (dbErr) {
-        console.warn("Database users table insert warning:", dbErr.message);
+        console.error("Database users table insert error:", dbErr.message);
+        return { success: false, error: "Lỗi lưu tài khoản: " + dbErr.message };
       }
-    } catch (dbErr) {
-      console.warn("Database users table insert warning:", dbErr);
+    } catch (dbErr: any) {
+      console.error("Database users table insert error:", dbErr);
+      return { success: false, error: "Lỗi hệ thống khi tạo tài khoản!" };
     }
 
     // Save to local registered users storage as fallback sync
