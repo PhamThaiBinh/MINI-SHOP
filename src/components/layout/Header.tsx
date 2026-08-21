@@ -10,7 +10,7 @@ import { useAuth } from "@/context/AuthContext";
 import { PRODUCTS_DATA } from "@/data/products";
 import { formatVND, fixImagePath } from "@/lib/utils";
 
-import { OnboardingModal } from "@/components/common/OnboardingModal";
+import { DriverOnboardingTour } from "@/components/common/DriverOnboardingTour";
 
 import { Zap, Search, ShoppingCart, Heart, LogOut } from "lucide-react";
 
@@ -53,7 +53,7 @@ export const Header: React.FC = () => {
 
   return (
     <>
-      <OnboardingModal />
+      <DriverOnboardingTour />
       {mobileMenuOpen && (
         <div
           onClick={() => setMobileMenuOpen(false)}
@@ -121,6 +121,7 @@ export const Header: React.FC = () => {
               <li>
                 <Link
                   href="/flash-sale"
+                  id="nav-flash-sale"
                   className={`nav-link ${
                     pathname === "/flash-sale" ? "active" : ""
                   }`}
@@ -135,6 +136,7 @@ export const Header: React.FC = () => {
               <li>
                 <Link
                   href="/track-order"
+                  id="nav-track-order"
                   className={`nav-link ${
                     pathname === "/track-order" ? "active" : ""
                   }`}
@@ -142,19 +144,6 @@ export const Header: React.FC = () => {
                   <span className="nav-two-lines" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
                     <Search style={{ width: 14, height: 14 }} />
                     <span>Tra cứu đơn</span>
-                  </span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/guide"
-                  className={`nav-link ${
-                    pathname === "/guide" ? "active" : ""
-                  }`}
-                  style={{ color: "#16a34a", fontWeight: 800 }}
-                >
-                  <span className="nav-two-lines" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                    <span>📖 Hướng dẫn</span>
                   </span>
                 </Link>
               </li>
@@ -304,6 +293,7 @@ export const Header: React.FC = () => {
 
             <Link
               href="/cart"
+              id="header-cart-icon"
               className="btn-stacked btn-stacked-green"
               title="Giỏ hàng"
             >

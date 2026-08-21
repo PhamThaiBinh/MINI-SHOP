@@ -12,6 +12,7 @@
     "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.112.3",
     "@types/three": "^0.185.4",
+    "driver.js": "^1.8.0",
     "lucide-react": "^1.32.0",
     "next": "16.3.0",
     "pg": "^8.23.0",
