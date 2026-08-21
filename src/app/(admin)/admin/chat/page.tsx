@@ -140,25 +140,6 @@ export default function AdminLiveChatPage() {
     );
     setSessions(updatedSessions);
     saveLocalSessions(updatedSessions);
-
-    // Add system notification message
-    const sysMsg: LiveChatMessage = {
-      id: `sys-${Date.now()}`,
-      session_id: selectedSessionId,
-      sender_type: "bot",
-      sender_name: "Hệ Thống",
-      message:
-        newMode === "human"
-          ? "🧑‍💼 Admin đã tiếp quản cuộc trò chuyện. Chế độ AI Chatbot đã tạm dừng."
-          : "🤖 Đã kích hoạt lại AI Chatbot tự động.",
-      created_at: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
-    };
-
-    await syncInsertMessageToSupabase(sysMsg, {
-      mode: newMode,
-      last_message: sysMsg.message,
-      last_message_at: sysMsg.created_at,
-    });
   };
 
   const filteredSessions = sessions.filter((s) => {
