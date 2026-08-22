@@ -10,6 +10,7 @@ import { fetchUserOrdersFromSupabase } from "@/lib/supabaseOrders";
 import {
   fetchUserAddressesFromSupabase,
   addUserAddressToSupabase,
+  updateUserAddressInSupabase,
   setDefaultUserAddressInSupabase,
   deleteUserAddressFromSupabase,
 } from "@/lib/supabaseAddress";
@@ -213,6 +214,18 @@ function AuthPageContent() {
     }
   };
 
+  const handleUpdateAddress = async (updatedAddr: AddressItem) => {
+    const updated = addresses.map((a) => {
+      if (a.id === updatedAddr.id) return updatedAddr;
+      if (updatedAddr.isDefault) return { ...a, isDefault: false };
+      return a;
+    });
+    setAddresses(updated);
+    if (user?.email) {
+      await updateUserAddressInSupabase(updatedAddr, user.email);
+    }
+  };
+
   const handleSetDefaultAddress = async (id: number) => {
     const updated = addresses.map((a) => ({ ...a, isDefault: a.id === id }));
     setAddresses(updated);
@@ -411,7 +424,12 @@ function AuthPageContent() {
         /* LOGGED-IN CUSTOMER PROFILE DASHBOARD */
         <div style={{ width: "100%", maxWidth: "1300px", margin: "0 auto" }}>
           {/* Header Banner */}
-          <ProfileHeader user={user} ordersCount={liveOrders.length} onLogout={logout} />
+          <ProfileHeader
+            user={user}
+            ordersCount={liveOrders.length}
+            totalSpent={liveOrders.filter((o) => o.status === "completed").reduce((sum, o) => sum + (o.total || 0), 0)}
+            onLogout={logout}
+          />
 
           {/* Main Grid: Left Nav + Right Active Tab Content */}
           <div style={{ display: "grid", gridTemplateColumns: "280px 1fr", gap: "20px" }}>
@@ -439,6 +457,7 @@ function AuthPageContent() {
                   wardsList={wardsList}
                   onSelectProvince={handleSelectProvince}
                   onAddAddress={handleAddAddress}
+                  onUpdateAddress={handleUpdateAddress}
                   onSetDefaultAddress={handleSetDefaultAddress}
                   onDeleteAddress={handleDeleteAddress}
                 />

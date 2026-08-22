@@ -8,7 +8,7 @@ export interface UnifiedOrderItem {
 export interface UnifiedOrder {
   id: string; // e.g. "#MS-9824"
   date: string; // e.g. "15/08/2026 17:30:50"
-  status: "pending" | "processing" | "shipping" | "completed" | "cancelled";
+  status: "pending" | "processing" | "shipping" | "completed" | "cancelled" | "returned";
   statusText: string;
   recipientName: string;
   recipientPhone: string;

@@ -8,6 +8,7 @@ import { useCart } from "@/context/CartContext";
 import { useAuth, PlacedOrder } from "@/context/AuthContext";
 import { formatVND, fixImagePath } from "@/lib/utils";
 import { fetchAdminVouchers } from "@/lib/supabaseAdmin";
+import { fetchUserAddressesFromSupabase } from "@/lib/supabaseAddress";
 import { formatFullTimestamp, UnifiedOrder } from "@/utils/orderStorage";
 import { createOrderInSupabase } from "@/lib/supabaseOrders";
 import { CreditCard, ShieldCheck, ShoppingCart, MapPin, Ticket, Gift, Home, CheckCircle2, AlertTriangle, Check, X, Printer, Clock, ArrowRight } from "lucide-react";
@@ -27,13 +28,31 @@ export default function CheckoutPage() {
   const { user, consumeVoucher, addPlacedOrder } = useAuth();
 
   // Form Fields (Pre-filled from user profile)
-  const [fullname, setFullname] = useState(user?.name || "Bình Nguyễn");
-  const [phone, setPhone] = useState(user?.phone || "0988.123.456");
-  const [email, setEmail] = useState(user?.email || "binh.nguyen@minishop.vn");
-  const [address, setAddress] = useState(
-    "123 Đường Nguyễn Trãi, Thành phố Hồ Chí Minh"
-  );
+  const [fullname, setFullname] = useState(user?.name || "");
+  const [phone, setPhone] = useState(user?.phone || "");
+  const [email, setEmail] = useState(user?.email || "");
+  const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
+
+  // Auto-sync user information & default address from Supabase when user loads
+  React.useEffect(() => {
+    if (user) {
+      if (user.name) setFullname(user.name);
+      if (user.email) setEmail(user.email);
+      if (user.phone) setPhone(user.phone);
+
+      fetchUserAddressesFromSupabase(user.username || user.email).then((addrs) => {
+        if (addrs && addrs.length > 0) {
+          const defaultAddr = addrs.find((a) => a.isDefault) || addrs[0];
+          if (defaultAddr) {
+            setAddress(`${defaultAddr.detail}, ${defaultAddr.ward}, ${defaultAddr.province}`);
+            if (defaultAddr.name && !user.name) setFullname(defaultAddr.name);
+            if (defaultAddr.phone && !user.phone) setPhone(defaultAddr.phone);
+          }
+        }
+      });
+    }
+  }, [user]);
 
   // Payment Method
   const [paymentMethod, setPaymentMethod] = useState<"cod" | "bank" | "ewallet">(
@@ -258,7 +277,28 @@ export default function CheckoutPage() {
     };
 
     const unifiedRecord: UnifiedOrder = {
-      ...placedOrderRecord,
+      id: finalCode,
+      date: fullDateStr,
+      status: "processing",
+      statusText: "Đang xử lý đơn hàng",
+      recipientName: fullname,
+      recipientPhone: phone,
+      address: address,
+      paymentMethod:
+        paymentMethod === "cod"
+          ? "COD (Thanh toán khi nhận hàng)"
+          : paymentMethod === "bank"
+          ? "Chuyển khoản Ngân hàng (QR)"
+          : `Ví điện tử (${selectedWallet})`,
+      items: cart.map((it) => ({
+        name: it.product.name,
+        image: fixImagePath(it.product.image),
+        qty: it.quantity,
+        price: it.product.price,
+      })),
+      subtotal: subtotal,
+      discount: discountAmount,
+      total: grandTotal,
       username: user?.username || "binh",
     };
 

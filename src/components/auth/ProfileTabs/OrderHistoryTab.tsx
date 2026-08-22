@@ -65,9 +65,12 @@ export const OrderHistoryTab: React.FC<OrderHistoryTabProps> = ({
         <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
           {[
             { id: "all", label: "Tất cả" },
-            { id: "processing", label: "Đang xử lý" },
-            { id: "shipping", label: "Đang giao" },
-            { id: "completed", label: "Hoàn thành" },
+            { id: "pending", label: "Chờ xác nhận" },
+            { id: "processing", label: "Chờ lấy hàng" },
+            { id: "shipping", label: "Chờ giao hàng" },
+            { id: "completed", label: "Đã giao" },
+            { id: "returned", label: "Trả hàng" },
+            { id: "cancelled", label: "Đã hủy" },
           ].map((st) => (
             <button
               key={st.id}
@@ -82,6 +85,7 @@ export const OrderHistoryTab: React.FC<OrderHistoryTabProps> = ({
                 fontSize: "12px",
                 fontWeight: 700,
                 cursor: "pointer",
+                transition: "all 0.2s ease",
               }}
             >
               {st.label}

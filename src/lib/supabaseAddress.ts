@@ -100,6 +100,36 @@ export const setDefaultUserAddressInSupabase = async (
   }
 };
 
+export const updateUserAddressInSupabase = async (
+  updatedAddr: UserAddressItem,
+  username: string
+): Promise<boolean> => {
+  try {
+    const currentAddresses = await fetchUserAddressesFromSupabase(username);
+    let updatedAddresses = currentAddresses.map((a) => {
+      if (a.id === updatedAddr.id) {
+        return updatedAddr;
+      }
+      if (updatedAddr.isDefault) {
+        return { ...a, isDefault: false };
+      }
+      return a;
+    });
+
+    const supabase = createClient();
+    const cleanUser = username.trim().replace(/^@/, "");
+    await supabase
+      .from("users")
+      .update({ addresses: updatedAddresses })
+      .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${cleanUser}`);
+
+    return true;
+  } catch (err) {
+    console.error("Error updating address:", err);
+    return false;
+  }
+};
+
 export const deleteUserAddressFromSupabase = async (
   id: number,
   username: string = "binh"

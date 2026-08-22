@@ -66,8 +66,8 @@ export const DriverOnboardingTour: React.FC = () => {
             {
               element: "#header-cart-icon",
               popover: {
-                title: '<i class="fa-solid fa-cart-shopping" style="color: #2e7d32; margin-right: 6px;"></i> Giỏ Hàng & Quà Tân Thủ WELCOME50',
-                description: "Bạn đã hoàn thành Tour! Mã <strong>WELCOME50 (Giảm 50K)</strong> + <strong>500 Điểm thưởng</strong> đã được tự động trao vào tài khoản của bạn!",
+                title: '<i class="fa-solid fa-gift" style="color: #2e7d32; margin-right: 6px;"></i> Quà Tân Thủ WELCOME50 & Cập Nhật SĐT',
+                description: "Mã <strong>WELCOME50 (Giảm 50K)</strong> + <strong>500 Điểm thưởng</strong> đã sẵn sàng trong ví của bạn! Đừng quên vào mục <strong>Tài Khoản</strong> để cập nhật Số điện thoại chính xác giúp việc nhận hàng thuận tiện nhé!",
                 side: "bottom",
                 align: "end",
               },

@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { UserProfile } from "@/context/AuthContext";
-import { Sparkles, Ticket, Gift, Truck, Sofa, Disc, Check, Copy } from "lucide-react";
+import { Sparkles, Ticket, Gift, Truck, Sofa, Disc, Check, Copy, Crown, Shield } from "lucide-react";
 
 interface RewardsPointsTabProps {
   user: UserProfile;
@@ -26,7 +26,7 @@ export const RewardsPointsTab: React.FC<RewardsPointsTabProps> = ({
   onAddVoucher,
   onAddPoints,
 }) => {
-  const [rewardSubTab, setRewardSubTab] = useState<"catalog" | "myvouchers" | "history" | "tasks" | "wheel">("catalog");
+  const [rewardSubTab, setRewardSubTab] = useState<"catalog" | "myvouchers" | "history" | "tasks" | "wheel" | "tiers">("catalog");
   const [spinDeg, setSpinDeg] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
   const [spinResultMsg, setSpinResultMsg] = useState("");
@@ -151,6 +151,7 @@ export const RewardsPointsTab: React.FC<RewardsPointsTabProps> = ({
           { id: "myvouchers", label: `Kho Voucher Của Tôi (${userVouchers.length})` },
           { id: "tasks", label: "Nhiệm Vụ Nhận Điểm" },
           { id: "wheel", label: "Vòng Quay May Mắn" },
+          { id: "tiers", label: "Hạng Thành Viên" },
           { id: "history", label: "Lịch Sử Đổi Điểm" },
         ].map((sub) => (
           <button
@@ -457,6 +458,99 @@ export const RewardsPointsTab: React.FC<RewardsPointsTabProps> = ({
               })}
             </div>
           )}
+        </div>
+      )}
+
+      {/* SUBTAB 6: QUY TẮC THĂNG HẠNG THÀNH VIÊN */}
+      {rewardSubTab === "tiers" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+          <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "18px 20px" }}>
+            <h4 style={{ fontSize: "16px", fontWeight: 900, color: "#0f172a", margin: "0 0 6px 0", display: "flex", alignItems: "center", gap: "8px" }}>
+              <Crown className="w-5 h-5 text-amber-500" /> Bảng Quy Tắc Thăng Hạng Thành Viên MINI SHOP
+            </h4>
+            <p style={{ fontSize: "13px", color: "#64748b", margin: 0 }}>
+              Hạng thành viên được hệ thống tự động xét duyệt dựa trên tổng chi tiêu thanh toán thành công của bạn.
+            </p>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "14px" }}>
+            {/* Tier 1: Thành viên Mới */}
+            <div style={{ border: "1px solid #e2e8f0", borderRadius: "16px", padding: "18px", background: "#ffffff", display: "flex", flexDirection: "column", gap: "8px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ padding: "4px 10px", borderRadius: "999px", background: "#f1f5f9", color: "#64748b", fontSize: "12px", fontWeight: 800 }}>
+                  Thành viên Mới
+                </span>
+                <span style={{ fontSize: "13px", fontWeight: 800, color: "#0f172a" }}>Dưới 2.000.000đ</span>
+              </div>
+              <ul style={{ margin: "8px 0 0 0", paddingLeft: "18px", fontSize: "13px", color: "#475569", lineHeight: "1.6" }}>
+                <li>Tặng ngay <strong>500 điểm</strong> khi đăng ký</li>
+                <li>Tặng <strong>Voucher WELCOME50</strong> giảm 50K</li>
+                <li>Tích lũy điểm khi hoàn thành nhiệm vụ</li>
+              </ul>
+            </div>
+
+            {/* Tier 2: Thành viên Đồng */}
+            <div style={{ border: "1px solid #fed7aa", borderRadius: "16px", padding: "18px", background: "#fffaf5", display: "flex", flexDirection: "column", gap: "8px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ padding: "4px 10px", borderRadius: "999px", background: "#ffedd5", color: "#9a3412", fontSize: "12px", fontWeight: 800 }}>
+                  Thành viên Đồng
+                </span>
+                <span style={{ fontSize: "13px", fontWeight: 800, color: "#c2410c" }}>Từ 2.000.000đ</span>
+              </div>
+              <ul style={{ margin: "8px 0 0 0", paddingLeft: "18px", fontSize: "13px", color: "#475569", lineHeight: "1.6" }}>
+                <li>Tích lũy <strong>1%</strong> giá trị đơn hàng thành điểm</li>
+                <li>Tặng voucher sinh nhật trị giá <strong>50.000đ</strong></li>
+                <li>Mở khóa quyền đổi quà VIP</li>
+              </ul>
+            </div>
+
+            {/* Tier 3: Thành viên Bạc */}
+            <div style={{ border: "1px solid #cbd5e1", borderRadius: "16px", padding: "18px", background: "#ffffff", display: "flex", flexDirection: "column", gap: "8px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ padding: "4px 10px", borderRadius: "999px", background: "#f1f5f9", color: "#334155", fontSize: "12px", fontWeight: 800 }}>
+                  Thành viên Bạc
+                </span>
+                <span style={{ fontSize: "13px", fontWeight: 800, color: "#334155" }}>Từ 5.000.000đ</span>
+              </div>
+              <ul style={{ margin: "8px 0 0 0", paddingLeft: "18px", fontSize: "13px", color: "#475569", lineHeight: "1.6" }}>
+                <li>Tích lũy <strong>2%</strong> giá trị đơn hàng thành điểm</li>
+                <li>Miễn phí vận chuyển <strong>2 lần/tháng</strong></li>
+                <li>Tặng voucher sinh nhật trị giá <strong>100.000đ</strong></li>
+              </ul>
+            </div>
+
+            {/* Tier 4: Thành viên Vàng */}
+            <div style={{ border: "1px solid #fde047", borderRadius: "16px", padding: "18px", background: "#fefce8", display: "flex", flexDirection: "column", gap: "8px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ padding: "4px 10px", borderRadius: "999px", background: "#fef9c3", color: "#854d0e", fontSize: "12px", fontWeight: 800 }}>
+                  Thành viên Vàng
+                </span>
+                <span style={{ fontSize: "13px", fontWeight: 800, color: "#854d0e" }}>Từ 10.000.000đ</span>
+              </div>
+              <ul style={{ margin: "8px 0 0 0", paddingLeft: "18px", fontSize: "13px", color: "#475569", lineHeight: "1.6" }}>
+                <li>Tích lũy <strong>3%</strong> giá trị đơn hàng thành điểm</li>
+                <li>Miễn phí vận chuyển <strong>4 lần/tháng</strong></li>
+                <li>Ưu tiên chuẩn bị và giao hàng hỏa tốc</li>
+                <li>Hỗ trợ CSKH VIP 24/7</li>
+              </ul>
+            </div>
+
+            {/* Tier 5: Thành viên Kim Cương */}
+            <div style={{ border: "1px solid #7dd3fc", borderRadius: "16px", padding: "18px", background: "#f0f9ff", display: "flex", flexDirection: "column", gap: "8px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ padding: "4px 10px", borderRadius: "999px", background: "#e0f2fe", color: "#0369a1", fontSize: "12px", fontWeight: 800 }}>
+                  Thành viên Kim Cương
+                </span>
+                <span style={{ fontSize: "13px", fontWeight: 800, color: "#0369a1" }}>Từ 20.000.000đ</span>
+              </div>
+              <ul style={{ margin: "8px 0 0 0", paddingLeft: "18px", fontSize: "13px", color: "#475569", lineHeight: "1.6" }}>
+                <li>Tích lũy <strong>5%</strong> giá trị đơn hàng thành điểm</li>
+                <li><strong>Miễn phí vận chuyển không giới hạn</strong></li>
+                <li>Tặng Voucher độc quyền <strong>500.000đ</strong> mỗi quý</li>
+                <li>Đặc quyền trải nghiệm sản phẩm mới đầu tiên</li>
+              </ul>
+            </div>
+          </div>
         </div>
       )}
 

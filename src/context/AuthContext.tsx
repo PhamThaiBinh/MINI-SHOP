@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
+import { generateCleanUsername } from "@/lib/userUtils";
 
 export interface RedemptionHistory {
   id: string;
@@ -22,21 +23,16 @@ export interface UserVoucher {
 export interface PlacedOrder {
   id: string;
   date: string;
-  status: "completed" | "shipping" | "processing";
+  status: "completed" | "shipping" | "processing" | "pending" | "cancelled" | "returned";
   statusText: string;
   recipientName: string;
   recipientPhone: string;
   address: string;
   paymentMethod: string;
-  items: {
-    name: string;
-    image: string;
-    qty: number;
-    price: number;
-  }[];
-  subtotal: number;
-  discount: number;
+  subtotal?: number;
+  discount?: number;
   total: number;
+  items: Array<any>;
 }
 
 export interface UserProfile {
@@ -45,7 +41,7 @@ export interface UserProfile {
   name: string;
   email: string;
   phone: string;
-  role: "customer" | "admin";
+  role: "admin" | "customer";
   points: number;
   history: RedemptionHistory[];
   vouchers: UserVoucher[];
@@ -59,6 +55,7 @@ interface AuthContextType {
   loading: boolean;
   signUp: (email: string, password: string, name: string, phone?: string) => Promise<{ success: boolean; error?: string }>;
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  updateUserProfile: (name: string, phone: string) => Promise<{ success: boolean; error?: string }>;
   loginUser: (identifier: string) => UserProfile | null;
   logout: () => Promise<void>;
   redeemGift: (
@@ -330,11 +327,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const signUp = async (email: string, password: string, name: string, phone?: string): Promise<{ success: boolean; error?: string }> => {
     const cleanEmail = email.trim().toLowerCase();
     const cleanName = name.trim();
-    const cleanPhone = phone?.trim() || "0988.123.456";
+    const cleanPhone = phone?.trim() || "";
     const isEmailAdmin = cleanEmail === "admin@minishop.vn";
     const role: "admin" | "customer" = isEmailAdmin ? "admin" : "customer";
-    const username = cleanName.toLowerCase().replace(/\s+/g, "_");
-    const formattedUsername = username.startsWith("@") ? username : "@" + username;
+    const formattedUsername = generateCleanUsername(cleanName);
+    const username = formattedUsername.replace(/^@/, "");
     const supabase = createClient();
 
     const userCode = "U" + Math.floor(1000 + Math.random() * 9000).toString();
@@ -517,16 +514,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         const isEmailAdmin = matched.email === "admin@minishop.vn" || matched.role_type === "admin" || cleanInput.includes("admin");
         const role: "admin" | "customer" = isEmailAdmin ? "admin" : "customer";
 
+        const rawUsername = matched.username ? String(matched.username).replace(/^@/, "") : generateCleanUsername(String(matched.name || cleanInput)).replace(/^@/, "");
+        const cleanUsername = generateCleanUsername(rawUsername).replace(/^@/, "");
+
         const profile: UserProfile = {
           id: String(matched.id),
-          username: String(matched.username || cleanInput.split("@")[0]),
+          username: cleanUsername,
           name: String(matched.name || "Khách hàng"),
           email: String(matched.email || cleanInput),
-          phone: String(matched.phone || "0988.123.456"),
+          phone: String(matched.phone || ""),
           role: role,
-          points: 500,
-          history: [],
-          vouchers: [],
+          points: matched.rewards?.points !== undefined ? Number(matched.rewards.points) : 500,
+          history: Array.isArray(matched.rewards?.history) ? matched.rewards.history : [],
+          vouchers: Array.isArray(matched.vouchers) ? matched.vouchers : [],
         };
         setUser(profile);
         localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(profile));
@@ -548,13 +548,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         const metadata = sbUser.user_metadata || {};
         const isEmailAdmin = sbUser.email === "admin@minishop.vn";
         const role = metadata.role === "admin" || isEmailAdmin ? "admin" : "customer";
+        const cleanUsername = generateCleanUsername(metadata.name || sbUser.email || "user").replace(/^@/, "");
 
         const profile: UserProfile = {
           id: sbUser.id,
-          username: metadata.name ? metadata.name.toLowerCase().replace(/\s+/g, "_") : sbUser.email?.split("@")[0] || "user",
+          username: cleanUsername,
           name: metadata.name || sbUser.email?.split("@")[0] || "Khách hàng",
           email: sbUser.email || cleanEmail,
-          phone: metadata.phone || "0988.123.456",
+          phone: metadata.phone || "",
           role: role,
           points: 500,
           history: [],
@@ -586,27 +587,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       return { success: true };
     }
 
-    // 4. Customer credentials fallback check for "binh" (Require password "123456" strictly)
-    if (cleanEmail === "binh.nguyen@minishop.vn" || cleanEmail === "binh" || cleanEmail === "@binh") {
-      if (cleanPass !== "123456") {
-        return { success: false, error: "Sai tên đăng nhập hoặc mật khẩu!" };
-      }
-      const customerProfile: UserProfile = {
-        username: "binh",
-        name: "Bình Nguyễn",
-        email: "binh.nguyen@minishop.vn",
-        phone: "0988.123.456",
-        role: "customer",
-        points: 500,
-        history: [],
-        vouchers: [],
-      };
-      setUser(customerProfile);
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(customerProfile));
-      return { success: true };
-    }
-
     return { success: false, error: "Sai tên đăng nhập hoặc mật khẩu!" };
+  };
+
+  const updateUserProfile = async (
+    name: string,
+    phone: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    if (!user) return { success: false, error: "Chưa đăng nhập!" };
+    const cleanName = name.trim();
+    const cleanPhone = phone.trim();
+    const cleanUsername = generateCleanUsername(cleanName).replace(/^@/, "");
+
+    try {
+      const supabase = createClient();
+      const cleanUser = user.username?.trim().replace(/^@/, "") || "";
+      const userEmail = user.email?.trim() || "";
+
+      await supabase
+        .from("users")
+        .update({
+          name: cleanName,
+          phone: cleanPhone,
+          username: `@${cleanUsername}`,
+        })
+        .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${userEmail}`);
+
+      const updatedUser: UserProfile = {
+        ...user,
+        name: cleanName,
+        phone: cleanPhone,
+        username: cleanUsername,
+      };
+
+      setUser(updatedUser);
+      if (typeof window !== "undefined") {
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updatedUser));
+      }
+      return { success: true };
+    } catch (err: any) {
+      console.error("Error updating user profile in Supabase:", err);
+      return { success: false, error: err.message || "Lỗi cập nhật hồ sơ!" };
+    }
   };
 
   const loginUser = (identifier: string): UserProfile | null => {
@@ -828,23 +850,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           },
         ];
 
-    const bonusPoints = 500;
-    const newPoints = user.points + bonusPoints;
-
-    const newTransaction: RedemptionHistory = {
-      id: `WELCOME-${Date.now().toString().slice(-4)}`,
-      date: new Date().toLocaleDateString("vi-VN"),
-      giftName: "Thưởng Tân Thủ Hoàn Thành Tour Hướng Dẫn",
-      pointsSpent: -bonusPoints,
-      code: "WELCOME50",
-    };
-
     const updatedUser: UserProfile = {
       ...user,
       hasCompletedOnboarding: true,
-      points: newPoints,
+      points: user.points || 500,
       vouchers: newVouchers,
-      history: [newTransaction, ...(user.history || [])],
+      history: user.history || [],
     };
 
     setUser(updatedUser);
@@ -852,8 +863,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updatedUser));
       localStorage.setItem(`minishop_onboarding_completed_${user.username}`, "true");
       localStorage.removeItem("minishop_onboarding_new_registered");
-      localStorage.setItem(`minishop_user_points_${user.username}`, String(newPoints));
-      localStorage.setItem(`minishop_user_history_${user.username}`, JSON.stringify(updatedUser.history));
     }
   };
 
@@ -864,6 +873,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         loading,
         signUp,
         signIn,
+        updateUserProfile,
         loginUser,
         logout,
         redeemGift,

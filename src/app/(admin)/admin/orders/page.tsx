@@ -24,7 +24,7 @@ interface OrderItem {
   totalPrice: number;
   paymentMethod: string;
   paymentBadgeClass: string;
-  status: "pending" | "processing" | "shipping" | "completed" | "cancelled";
+  status: "pending" | "processing" | "shipping" | "completed" | "returned" | "cancelled";
   address: string;
 }
 
@@ -480,7 +480,7 @@ export default function AdminOrdersPage() {
                 }`}
                 onClick={() => setActiveTab("shipping")}
               >
-                Đang giao{" "}
+                Chờ giao hàng{" "}
                 <span className="tab-badge">
                   {orders.filter((o) => o.status === "shipping").length}
                 </span>
@@ -494,6 +494,17 @@ export default function AdminOrdersPage() {
                 Đã giao{" "}
                 <span className="tab-badge">
                   {orders.filter((o) => o.status === "completed").length}
+                </span>
+              </button>
+              <button
+                className={`order-tab-btn ${
+                  activeTab === "returned" ? "active" : ""
+                }`}
+                onClick={() => setActiveTab("returned")}
+              >
+                Trả hàng{" "}
+                <span className="tab-badge">
+                  {orders.filter((o) => o.status === "returned").length}
                 </span>
               </button>
               <button

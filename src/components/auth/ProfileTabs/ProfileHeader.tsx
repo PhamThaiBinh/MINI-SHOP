@@ -3,18 +3,23 @@
 import React from "react";
 import { Crown, Sparkles, LogOut } from "lucide-react";
 import { UserProfile } from "@/context/AuthContext";
+import { getMembershipTierInfo } from "@/lib/userUtils";
 
 interface ProfileHeaderProps {
   user: UserProfile;
   ordersCount: number;
+  totalSpent?: number;
   onLogout: () => void;
 }
 
 export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   user,
   ordersCount,
+  totalSpent = 0,
   onLogout,
 }) => {
+  const tierInfo = getMembershipTierInfo(totalSpent);
+
   return (
     <div
       style={{
@@ -65,21 +70,21 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               style={{
                 padding: "4px 12px",
                 borderRadius: "999px",
-                background: "#e8f5e9",
-                border: "1px solid #bbf7d0",
+                background: tierInfo.badgeBg,
+                border: `1px solid ${tierInfo.badgeBorder}`,
                 fontSize: "12px",
                 fontWeight: 800,
-                color: "var(--primary-color, #2e7d32)",
+                color: tierInfo.badgeColor,
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "4px",
               }}
             >
-              <Crown className="w-3.5 h-3.5 text-emerald-700" /> {(user as any).tier || (user.points >= 500 ? "Thành viên Vàng" : "Thành viên Bạc")}
+              <Crown className="w-3.5 h-3.5" style={{ color: tierInfo.iconColor }} /> {tierInfo.name}
             </span>
           </div>
           <p style={{ fontSize: "13px", color: "#64748b", margin: "4px 0 0" }}>
-            @{user.username || "user"} • {user.email}
+            @{user.username ? user.username.replace(/^@/, "") : "user"} • {user.email}
           </p>
         </div>
       </div>
