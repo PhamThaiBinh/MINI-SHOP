@@ -127,7 +127,9 @@ export const fetchCategoriesFromSupabase = async (): Promise<SupabaseCategory[]>
   }
 };
 
-export const fetchProductByIdFromSupabase = async (id: number): Promise<Product | null> => {
+export const fetchProductByIdFromSupabase = async (
+  idOrCode: number | string
+): Promise<Product | null> => {
   try {
     const supabase = createClient();
 
@@ -146,14 +148,23 @@ export const fetchProductByIdFromSupabase = async (id: number): Promise<Product 
       });
     }
 
-    const { data, error } = await supabase
-      .from("products")
-      .select("*")
-      .or(`original_id.eq.${id},id.eq.${id}`)
-      .limit(1);
+    const rawStr = String(idOrCode).trim();
+    const parsedNum = typeof idOrCode === "number" ? idOrCode : parseInt(rawStr.replace(/\D/g, ""), 10);
+    const formattedCode = !isNaN(parsedNum) && parsedNum > 0 ? `P${String(parsedNum).padStart(4, "0")}` : rawStr;
+
+    let query = supabase.from("products").select("*");
+
+    if (!isNaN(parsedNum) && parsedNum > 0) {
+      query = query.or(`id.eq.${parsedNum},product_id.eq.${rawStr},product_id.eq.${formattedCode}`);
+    } else {
+      query = query.eq("product_id", rawStr);
+    }
+
+    const { data, error } = await query.limit(1);
 
     if (error || !data || data.length === 0) {
-      const fallback = PRODUCTS_DATA.find((p) => p.id === id);
+      const numId = typeof idOrCode === "number" ? idOrCode : parsedNum;
+      const fallback = PRODUCTS_DATA.find((p) => p.id === numId);
       if (fallback && fallback.status !== "Hidden") {
         return fallback;
       }
@@ -175,7 +186,7 @@ export const fetchProductByIdFromSupabase = async (id: number): Promise<Product 
     }
 
     return {
-      id: Number(row.original_id || row.id),
+      id: Number(row.id),
       name: String(row.name),
       category: String(row.category),
       categoryName: String(row.category_name || row.category),
@@ -191,8 +202,9 @@ export const fetchProductByIdFromSupabase = async (id: number): Promise<Product 
       specs: typeof row.specs === "object" && row.specs ? row.specs : {},
     };
   } catch (err) {
-    console.error(`Error fetching product ${id} from Supabase:`, err);
-    const fallback = PRODUCTS_DATA.find((p) => p.id === id);
+    console.error(`Error fetching product ${idOrCode} from Supabase:`, err);
+    const numId = typeof idOrCode === "number" ? idOrCode : parseInt(String(idOrCode), 10);
+    const fallback = PRODUCTS_DATA.find((p) => p.id === numId);
     if (fallback && fallback.status !== "Hidden") {
       return fallback;
     }

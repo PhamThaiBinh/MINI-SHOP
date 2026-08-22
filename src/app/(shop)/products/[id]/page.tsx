@@ -92,7 +92,8 @@ function ProductDetailPageContent({
   const flashSalePrice = flashSalePriceParam ? parseInt(flashSalePriceParam, 10) : null;
 
   const resolvedParams = use(params);
-  const productId = parseInt(resolvedParams.id, 10) || 1;
+  const rawParamId = resolvedParams?.id ? String(resolvedParams.id).trim() : "1";
+  const productId = parseInt(rawParamId, 10) || 1;
 
   const [product, setProduct] = useState<Product | null>(null);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
@@ -105,7 +106,7 @@ function ProductDetailPageContent({
     async function loadData() {
       setLoading(true);
       const [fetchedProduct, fetchedList] = await Promise.all([
-        fetchProductByIdFromSupabase(productId),
+        fetchProductByIdFromSupabase(rawParamId),
         fetchProductsFromSupabase(),
       ]);
       if (fetchedProduct && fetchedProduct.status !== "Hidden") {
