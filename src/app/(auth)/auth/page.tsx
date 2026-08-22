@@ -13,6 +13,7 @@ import {
   setDefaultUserAddressInSupabase,
   deleteUserAddressFromSupabase,
 } from "@/lib/supabaseAddress";
+import { createClient } from "@/utils/supabase/client";
 import { OtpVerificationModal } from "@/components/common/OtpVerificationModal";
 import { AddressItem, CustomerOrder } from "@/components/auth/types";
 import { LoginForm } from "@/components/auth/AuthForms/LoginForm";
