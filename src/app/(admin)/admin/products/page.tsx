@@ -134,7 +134,7 @@ export default function AdminProductsPage() {
   const loadData = async () => {
     setLoading(true);
     const [list, cats] = await Promise.all([
-      fetchProductsFromSupabase(),
+      fetchProductsFromSupabase(true),
       fetchAdminCategories(),
     ]);
 

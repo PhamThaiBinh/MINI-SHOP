@@ -94,7 +94,7 @@ function ProductDetailPageContent({
   const resolvedParams = use(params);
   const productId = parseInt(resolvedParams.id, 10) || 1;
 
-  const [product, setProduct] = useState<Product>(PRODUCTS_DATA[0]);
+  const [product, setProduct] = useState<Product | null>(null);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -108,10 +108,15 @@ function ProductDetailPageContent({
         fetchProductByIdFromSupabase(productId),
         fetchProductsFromSupabase(),
       ]);
-      if (fetchedProduct) {
+      if (fetchedProduct && fetchedProduct.status !== "Hidden") {
         setProduct(fetchedProduct);
         if (typeof document !== "undefined") {
           document.title = `${fetchedProduct.name} - Mini Shop`;
+        }
+      } else {
+        setProduct(null);
+        if (typeof document !== "undefined") {
+          document.title = "Sản phẩm tạm ngưng kinh doanh - Mini Shop";
         }
       }
       if (fetchedList && fetchedList.length > 0) {
@@ -122,20 +127,6 @@ function ProductDetailPageContent({
 
     loadData();
   }, [productId]);
-
-  const currentProduct = product || PRODUCTS_DATA[0];
-  const isFlashSaleActive = flashSalePrice !== null && !isNaN(flashSalePrice);
-  const effectivePrice = isFlashSaleActive ? flashSalePrice : currentProduct.price;
-
-  const displayOldPrice = isFlashSaleActive
-    ? currentProduct.price
-    : currentProduct.oldPrice;
-
-  const discountPercent = isFlashSaleActive
-    ? Math.round(((currentProduct.price - flashSalePrice) / currentProduct.price) * 100)
-    : currentProduct.oldPrice
-    ? Math.round(((currentProduct.oldPrice - currentProduct.price) / currentProduct.oldPrice) * 100)
-    : 0;
 
   const { addToCart } = useCart();
   const { isWishlisted, toggleWishlist } = useWishlist();
@@ -150,25 +141,19 @@ function ProductDetailPageContent({
   const [selectedColor, setSelectedColor] = useState<"soi" | "occho" | "trangkem">("soi");
   const [selectedSize, setSelectedSize] = useState<"S" | "M" | "L">("M");
   const [activeInfoTab, setActiveInfoTab] = useState<"showroom" | "baoquan" | "danhgia">("showroom");
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
-  // Dynamic Price Multiplier based on Size
-  const sizeMultiplier = selectedSize === "S" ? 0.9 : selectedSize === "L" ? 1.2 : 1.0;
-  const finalDisplayPrice = Math.round(effectivePrice * sizeMultiplier);
-
-  const totalReviewsCount = currentProduct.reviews || 20;
-  const initialReviews = useMemo(
-    () => generateMockReviews(productId, totalReviewsCount),
-    [productId, totalReviewsCount]
-  );
-
-  const [reviewsList, setReviewsList] = useState<ReviewItem[]>(initialReviews);
-
-  // Review Form Input States
   const [reviewerName, setReviewerName] = useState("");
   const [reviewerComment, setReviewerComment] = useState("");
   const [reviewRating, setReviewRating] = useState(5);
   const [hoverRating, setHoverRating] = useState(0);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
+
+  const initialReviews = useMemo(
+    () => generateMockReviews(productId, product?.reviews || 20),
+    [productId, product?.reviews]
+  );
+  const [reviewsList, setReviewsList] = useState<ReviewItem[]>(initialReviews);
 
   const handleAddReview = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -206,6 +191,112 @@ function ProductDetailPageContent({
     setTimeout(() => setReviewSubmitted(false), 4000);
   };
 
+  if (loading) {
+    return (
+      <main className="main-content" style={{ paddingTop: "60px", paddingBottom: "100px", textAlign: "center" }}>
+        <div className="container" style={{ padding: "40px 16px", color: "#64748b", fontWeight: 800 }}>
+          Đang tải thông tin sản phẩm...
+        </div>
+      </main>
+    );
+  }
+
+  if (!product || product.status === "Hidden") {
+    return (
+      <main className="main-content" style={{ paddingTop: "60px", paddingBottom: "100px", textAlign: "center" }}>
+        <div className="container" style={{ maxWidth: "600px", margin: "0 auto", padding: "0 16px" }}>
+          <div
+            style={{
+              background: "#ffffff",
+              border: "1.5px solid #e2e8f0",
+              borderRadius: "24px",
+              padding: "48px 24px",
+              boxShadow: "0 10px 30px rgba(0,0,0,0.05)",
+            }}
+          >
+            <div
+              style={{
+                width: "72px",
+                height: "72px",
+                borderRadius: "50%",
+                background: "#fef2f2",
+                color: "#dc2626",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto 20px",
+                fontSize: "30px",
+              }}
+            >
+              <i className="fa-solid fa-eye-slash" />
+            </div>
+            <h1 style={{ fontSize: "24px", fontWeight: 900, color: "#0f172a", marginBottom: "12px", letterSpacing: "-0.02em" }}>
+              Sản Phẩm Tạm Ngưng Kinh Doanh
+            </h1>
+            <p style={{ fontSize: "14px", color: "#64748b", lineHeight: 1.6, marginBottom: "28px" }}>
+              Rất tiếc, sản phẩm bạn đang tìm kiếm hiện đang được tạm ẩn hoặc đã ngừng kinh doanh. Quý khách vui lòng tham khảo các sản phẩm nội thất cao cấp khác tại Mini Shop.
+            </p>
+            <div style={{ display: "flex", justifyContent: "center", gap: "12px", flexWrap: "wrap" }}>
+              <Link
+                href="/products"
+                style={{
+                  padding: "12px 24px",
+                  borderRadius: "999px",
+                  background: "var(--primary-color, #2e7d32)",
+                  color: "#ffffff",
+                  fontSize: "14px",
+                  fontWeight: 800,
+                  textDecoration: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  boxShadow: "0 4px 14px rgba(46, 125, 50, 0.25)",
+                }}
+              >
+                <i className="fa-solid fa-arrow-left" /> Khám Phá Sản Phẩm Khác
+              </Link>
+              <Link
+                href="/"
+                style={{
+                  padding: "12px 24px",
+                  borderRadius: "999px",
+                  background: "#f1f5f9",
+                  color: "#334155",
+                  fontSize: "14px",
+                  fontWeight: 800,
+                  textDecoration: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                }}
+              >
+                Về Trang Chủ
+              </Link>
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  const currentProduct = product;
+  const isFlashSaleActive = flashSalePrice !== null && !isNaN(flashSalePrice);
+  const effectivePrice = isFlashSaleActive ? flashSalePrice : currentProduct.price;
+
+  const displayOldPrice = isFlashSaleActive
+    ? currentProduct.price
+    : currentProduct.oldPrice;
+
+  const discountPercent = isFlashSaleActive
+    ? Math.round(((currentProduct.price - flashSalePrice) / currentProduct.price) * 100)
+    : currentProduct.oldPrice
+    ? Math.round(((currentProduct.oldPrice - currentProduct.price) / currentProduct.oldPrice) * 100)
+    : 0;
+
+  // Dynamic Price Multiplier based on Size
+  const sizeMultiplier = selectedSize === "S" ? 0.9 : selectedSize === "L" ? 1.2 : 1.0;
+  const finalDisplayPrice = Math.round(effectivePrice * sizeMultiplier);
+
   const galleryImages = [
     currentProduct.image,
     "https://sngmpumzlhomtvfvlbdn.supabase.co/storage/v1/object/public/products/products/do-my-nghe/binh-gom-trang-tri.webp",
@@ -213,8 +304,6 @@ function ProductDetailPageContent({
     "https://sngmpumzlhomtvfvlbdn.supabase.co/storage/v1/object/public/products/products/do-thu-cong/khay-go-trang-tri.webp",
     "https://sngmpumzlhomtvfvlbdn.supabase.co/storage/v1/object/public/products/products/noi-that-gia-dung/chau-cay-de-ban.webp",
   ];
-
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   const sameCatProducts = allProducts.filter(
     (p) => p.id !== currentProduct.id && (p.category === currentProduct.category || p.categoryName === currentProduct.categoryName)
