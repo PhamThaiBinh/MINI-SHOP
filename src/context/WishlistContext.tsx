@@ -5,9 +5,9 @@ import { useAuth } from "@/context/AuthContext";
 import { syncUserWishlistToSupabase, fetchUserWishlistFromSupabase } from "@/lib/supabaseUserFeatures";
 
 interface WishlistContextType {
-  wishlistIds: number[];
-  toggleWishlist: (productId: number) => void;
-  isWishlisted: (productId: number) => boolean;
+  wishlistIds: (number | string)[];
+  toggleWishlist: (productId: number | string) => void;
+  isWishlisted: (productId: number | string) => boolean;
   totalWishlistItems: number;
 }
 
@@ -16,7 +16,7 @@ const WishlistContext = createContext<WishlistContextType | undefined>(undefined
 const WISHLIST_STORAGE_KEY = "mini_shop_wishlist";
 
 export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [wishlistIds, setWishlistIds] = useState<number[]>([]);
+  const [wishlistIds, setWishlistIds] = useState<(number | string)[]>([]);
   const [isMounted, setIsMounted] = useState(false);
   const { user } = useAuth();
 
@@ -69,23 +69,30 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
 
       if (user?.username) {
-        syncUserWishlistToSupabase(user.username, wishlistIds);
+        const numIds = wishlistIds.map((id) => Number(id)).filter((id) => !isNaN(id));
+        syncUserWishlistToSupabase(user.username, numIds);
       }
     }
   }, [wishlistIds, isMounted, user]);
 
-  const toggleWishlist = (productId: number) => {
+  const toggleWishlist = (productId: number | string) => {
+    if (productId === undefined || productId === null) return;
     setWishlistIds((prev) => {
-      const isAlreadyIn = prev.includes(productId);
+      const isAlreadyIn = prev.some((id) => String(id) === String(productId));
       if (isAlreadyIn) {
-        return prev.filter((id) => id !== productId);
+        return prev.filter((id) => String(id) !== String(productId));
       } else {
-        return [...prev, productId];
+        const numVal = Number(productId);
+        const targetVal = !isNaN(numVal) && String(numVal) === String(productId).trim() ? numVal : productId;
+        return [...prev, targetVal];
       }
     });
   };
 
-  const isWishlisted = (productId: number) => wishlistIds.includes(productId);
+  const isWishlisted = (productId: number | string) => {
+    if (productId === undefined || productId === null) return false;
+    return wishlistIds.some((id) => String(id) === String(productId));
+  };
 
   return (
     <WishlistContext.Provider
