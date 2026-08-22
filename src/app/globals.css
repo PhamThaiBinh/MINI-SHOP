@@ -695,45 +695,59 @@ span.driver-popover-progress-text {
 
 /* Navigation Buttons Container */
 div.driver-popover-footer button,
-div.driver-popover-footer .driver-popover-navigation-btns button {
-    font-family: 'Plus Jakarta Sans', sans-serif !important;
-    border-radius: 12px !important;
-    padding: 10px 18px !important;
-    font-size: 13px !important;
-    font-weight: 800 !important;
+div.driver-popover-footer .driver-popover-navigation-btns button,
+.driver-popover-footer button,
+.driver-popover-footer .driver-popover-navigation-btns button,
+.driver-popover-btn-group button {
+    font-family: 'Plus Jakarta Sans', var(--font-sans), sans-serif !important;
+    border-radius: 9999px !important;
+    padding: 8px 18px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
     white-space: nowrap !important;
     cursor: pointer !important;
-    transition: all 0.3s cubic-bezier(0.32, 0.72, 0, 1) !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
     outline: none !important;
     text-shadow: none !important;
     flex-shrink: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    line-height: 1.4 !important;
 }
 
 /* Previous Button (← Quay lại) */
-button.driver-popover-prev-btn {
-    background: #f8fafc !important;
+button.driver-popover-prev-btn,
+.driver-popover-prev-btn {
+    background: #f1f5f9 !important;
     color: #475569 !important;
-    border: 1.5px solid #e2e8f0 !important;
+    border: 1px solid #cbd5e1 !important;
 }
 
-button.driver-popover-prev-btn:hover {
-    background: #f1f5f9 !important;
-    border-color: #cbd5e1 !important;
+button.driver-popover-prev-btn:hover,
+.driver-popover-prev-btn:hover {
+    background: #e2e8f0 !important;
+    border-color: #94a3b8 !important;
     color: #0f172a !important;
     transform: translateY(-1px) !important;
 }
 
 /* Next / Finish Button (Hoàn Thành & Nhận Quà) */
-button.driver-popover-next-btn {
-    background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%) !important;
+button.driver-popover-next-btn,
+.driver-popover-next-btn {
+    background: #2e7d32 !important;
     color: #ffffff !important;
-    border: none !important;
-    box-shadow: 0 4px 14px rgba(46, 125, 50, 0.35) !important;
+    border: 1px solid #2e7d32 !important;
+    box-shadow: 0 2px 8px rgba(46, 125, 50, 0.25) !important;
 }
 
-button.driver-popover-next-btn:hover {
-    transform: translateY(-2px) scale(1.02) !important;
-    box-shadow: 0 8px 22px rgba(46, 125, 50, 0.45) !important;
+button.driver-popover-next-btn:hover,
+.driver-popover-next-btn:hover {
+    background: #1b5e20 !important;
+    border-color: #1b5e20 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(46, 125, 50, 0.35) !important;
 }
 
 /* Close Button (X) */
