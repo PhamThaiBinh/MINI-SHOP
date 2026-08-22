@@ -11,28 +11,46 @@ import { BentoLookbook } from "@/components/home/BentoLookbook";
 import { HomeBlogJournal } from "@/components/home/HomeBlogJournal";
 import { CustomerTestimonials } from "@/components/home/CustomerTestimonials";
 import { Product } from "@/types/product";
-import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
+import { fetchProductsFromSupabase, fetchCategoriesFromSupabase } from "@/lib/supabaseProducts";
 import { PRODUCTS_DATA } from "@/data/products";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { formatVND, fixImagePath } from "@/lib/utils";
 import {
-  Package,
-  Sofa,
-  Bed,
-  Utensils,
-  Lamp,
-  Sparkles,
-  Box,
   ArrowRight,
   Heart,
   ShoppingCart,
   Check,
 } from "lucide-react";
 
+interface CategoryFilterItem {
+  id: string;
+  label: string;
+  icon: React.ReactNode;
+}
+
+const getCategoryIcon = (iconName: string, id: string): React.ReactNode => {
+  const name = (iconName || "").toLowerCase();
+  const catId = (id || "").toLowerCase();
+  if (catId === "all" || name.includes("package") || name.includes("boxes")) return <i className="fa-solid fa-boxes-stacked w-4 h-4 text-center inline-block" />;
+  if (name.includes("sofa") || name.includes("couch") || name.includes("phong-khach") || name.includes("khách") || catId === "c0001") return <i className="fa-solid fa-couch w-4 h-4 text-center inline-block" />;
+  if (name.includes("bed") || name.includes("phong-ngu") || name.includes("ngủ") || catId === "c0002") return <i className="fa-solid fa-bed w-4 h-4 text-center inline-block" />;
+  if (name.includes("utensil") || name.includes("bếp") || name.includes("phong-an") || name.includes("ăn") || catId === "c0003") return <i className="fa-solid fa-utensils w-4 h-4 text-center inline-block" />;
+  if (name.includes("lamp") || name.includes("đèn") || catId === "c0004") return <i className="fa-solid fa-lightbulb w-4 h-4 text-center inline-block" />;
+  if (name.includes("sparkle") || name.includes("decor") || name.includes("trang-tri") || name.includes("trí") || catId === "c0005") return <i className="fa-solid fa-wand-magic-sparkles w-4 h-4 text-center inline-block" />;
+  if (name.includes("box") || name.includes("storage") || name.includes("luu-tru") || name.includes("trữ") || catId === "c0006") return <i className="fa-solid fa-box-archive w-4 h-4 text-center inline-block" />;
+  if (name.includes("rem") || name.includes("slider") || name.includes("curtain") || catId === "c0007") return <i className="fa-solid fa-sliders w-4 h-4 text-center inline-block" />;
+  if (name.includes("lavabo") || name.includes("tam") || catId === "c0008") return <i className="fa-solid fa-sink w-4 h-4 text-center inline-block" />;
+  if (iconName && iconName.startsWith("fa-")) return <i className={`${iconName} w-4 h-4 text-center inline-block`} />;
+  return <i className="fa-solid fa-folder w-4 h-4 text-center inline-block" />;
+};
+
 export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<CategoryFilterItem[]>([
+    { id: "All", label: "Tất cả sản phẩm", icon: <i className="fa-solid fa-boxes-stacked w-4 h-4 text-center inline-block" /> },
+  ]);
   const [loading, setLoading] = useState<boolean>(true);
   const [addedId, setAddedId] = useState<number | null>(null);
 
@@ -42,22 +60,24 @@ export default function Home() {
   useEffect(() => {
     async function loadData() {
       setLoading(true);
-      const data = await fetchProductsFromSupabase();
-      setProducts(data.length > 0 ? data : PRODUCTS_DATA);
+      const [prods, cats] = await Promise.all([
+        fetchProductsFromSupabase(),
+        fetchCategoriesFromSupabase(),
+      ]);
+      setProducts(prods.length > 0 ? prods : PRODUCTS_DATA);
+      if (cats && cats.length > 0) {
+        setCategories(
+          cats.map((c) => ({
+            id: c.id,
+            label: c.label,
+            icon: getCategoryIcon(c.icon, c.id),
+          }))
+        );
+      }
       setLoading(false);
     }
     loadData();
   }, []);
-
-  const categories = [
-    { id: "All", label: "Tất cả sản phẩm", icon: <Package className="w-4 h-4" /> },
-    { id: "C0001", label: "Phòng khách", icon: <Sofa className="w-4 h-4" /> },
-    { id: "C0002", label: "Phòng ngủ", icon: <Bed className="w-4 h-4" /> },
-    { id: "C0003", label: "Nhà bếp", icon: <Utensils className="w-4 h-4" /> },
-    { id: "C0004", label: "Đèn chiếu sáng", icon: <Lamp className="w-4 h-4" /> },
-    { id: "C0005", label: "Trang trí", icon: <Sparkles className="w-4 h-4" /> },
-    { id: "C0006", label: "Lưu trữ", icon: <Box className="w-4 h-4" /> },
-  ];
 
   const isCategoryMatch = (productCategory: string, activeCategory: string, categoryName?: string) => {
     if (!activeCategory || activeCategory === "All" || activeCategory === "all") return true;
@@ -67,6 +87,16 @@ export default function Home() {
 
     if (prodCat === target || prodName === target) return true;
 
+    // Check matched category label/id from dynamic Supabase categories
+    const matchedCategory = categories.find((c) => c.id.toLowerCase() === target || c.label.toLowerCase() === target);
+    if (matchedCategory) {
+      const catLabel = matchedCategory.label.toLowerCase().trim();
+      const catId = matchedCategory.id.toLowerCase().trim();
+      if (prodCat === catId || prodCat === catLabel || prodName === catLabel || prodName === catId) {
+        return true;
+      }
+    }
+
     const synonymMap: Record<string, string[]> = {
       "c0001": ["c0001", "living room", "phòng khách", "phong khach", "phong-khach"],
       "c0002": ["c0002", "bedroom", "phòng ngủ", "phong ngu", "phong-ngu"],
@@ -74,6 +104,8 @@ export default function Home() {
       "c0004": ["c0004", "lighting", "đèn chiếu sáng", "den chieu sang", "den-chieu-sang", "đèn"],
       "c0005": ["c0005", "decor", "trang trí", "trang tri", "trang-tri"],
       "c0006": ["c0006", "storage", "lưu trữ", "luu tru", "luu-tru"],
+      "c0007": ["c0007", "rèm", "màn cửa", "rem cua", "curtain"],
+      "c0008": ["c0008", "phòng tắm", "phong tam", "bathroom"],
     };
 
     const synonyms = synonymMap[target];
