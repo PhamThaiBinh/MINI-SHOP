@@ -52,6 +52,11 @@ export default function CartPage() {
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
   const [couponMsg, setCouponMsg] = useState("");
   const [showModal, setShowModal] = useState(false);
+  const [ineligibleModalInfo, setIneligibleModalInfo] = useState<{
+    code: string;
+    minOrder: number;
+    missingAmount: number;
+  } | null>(null);
   const [userProvince, setUserProvince] = useState("Thành phố Hồ Chí Minh");
 
   useEffect(() => {
@@ -172,10 +177,14 @@ export default function CartPage() {
     const found = allAvailableCoupons.find((c) => c.code.trim().toUpperCase() === targetCode);
     if (found) {
       if (found.minOrder && subtotal < found.minOrder) {
+        const missing = found.minOrder - subtotal;
+        setIneligibleModalInfo({
+          code: found.code,
+          minOrder: found.minOrder,
+          missingAmount: missing,
+        });
         setCouponMsg(
-          `Mã này chỉ áp dụng cho đơn hàng từ ${found.minOrder.toLocaleString(
-            "vi-VN"
-          )}đ trở lên!`
+          `Bạn chưa đủ điều kiện để áp mã. Bạn cần đặt thêm ${formatVND(missing)} để có thể áp được mã giảm.`
         );
         return;
       }
@@ -868,6 +877,9 @@ export default function CartPage() {
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                     {allAvailableCoupons.map((c) => {
                       const isApplied = appliedCoupon?.code === c.code;
+                      const minOrder = c.minOrder || 0;
+                      const isEligible = subtotal >= minOrder;
+                      const missingAmount = minOrder > subtotal ? minOrder - subtotal : 0;
                       const label = c.fixedDiscount
                         ? `Giảm ${c.fixedDiscount.toLocaleString("vi-VN")}đ`
                         : `Giảm ${c.percent}%`;
@@ -877,20 +889,59 @@ export default function CartPage() {
                           style={{
                             padding: "14px 16px",
                             borderRadius: "1rem",
-                            border: isApplied ? "2px solid var(--primary-color, #2e7d32)" : "1px solid #e2e8f0",
-                            background: isApplied ? "#f0fdf4" : "#f8fafc",
+                            border: isApplied
+                              ? "2px solid var(--primary-color, #2e7d32)"
+                              : !isEligible
+                              ? "1px dashed #cbd5e1"
+                              : "1px solid #e2e8f0",
+                            background: isApplied
+                              ? "#f0fdf4"
+                              : !isEligible
+                              ? "#f8fafc"
+                              : "#ffffff",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "space-between",
                             gap: "12px",
+                            opacity: isEligible || isApplied ? 1 : 0.85,
                           }}
                         >
                           <div>
-                            <div style={{ fontSize: "14px", fontWeight: 900, color: "#0f172a" }}>
-                              {c.code} ({label})
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                              <span style={{ fontSize: "14px", fontWeight: 900, color: "#0f172a" }}>
+                                {c.code} ({label})
+                              </span>
+                              {!isEligible ? (
+                                <span
+                                  style={{
+                                    fontSize: "11px",
+                                    fontWeight: 700,
+                                    color: "#b45309",
+                                    background: "#fffbeb",
+                                    padding: "2px 8px",
+                                    borderRadius: "6px",
+                                    border: "1px solid #fde68a",
+                                  }}
+                                >
+                                  Cần thêm {formatVND(missingAmount)}
+                                </span>
+                              ) : (
+                                <span
+                                  style={{
+                                    fontSize: "11px",
+                                    fontWeight: 700,
+                                    color: "#166534",
+                                    background: "#dcfce7",
+                                    padding: "2px 8px",
+                                    borderRadius: "6px",
+                                  }}
+                                >
+                                  Đủ điều kiện
+                                </span>
+                              )}
                             </div>
-                            <div style={{ fontSize: "12px", color: "#64748b", marginTop: "2px" }}>
-                              {c.desc}
+                            <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>
+                              {c.desc} {minOrder > 0 && `(Đơn từ ${formatVND(minOrder)})`}
                             </div>
                           </div>
 
@@ -902,7 +953,11 @@ export default function CartPage() {
                               borderRadius: "999px",
                               fontSize: "12px",
                               fontWeight: 800,
-                              background: isApplied ? "#dc2626" : "var(--primary-color, #2e7d32)",
+                              background: isApplied
+                                ? "#dc2626"
+                                : isEligible
+                                ? "var(--primary-color, #2e7d32)"
+                                : "#94a3b8",
                               color: "#ffffff",
                               border: "none",
                               cursor: "pointer",
@@ -916,6 +971,110 @@ export default function CartPage() {
                     })}
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Centered Ineligible Alert Modal */}
+        {ineligibleModalInfo && (
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: "rgba(15, 23, 42, 0.6)",
+              backdropFilter: "blur(4px)",
+              zIndex: 99999,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "16px",
+            }}
+            onClick={() => setIneligibleModalInfo(null)}
+          >
+            <div
+              style={{
+                background: "#ffffff",
+                borderRadius: "24px",
+                padding: "36px 28px",
+                maxWidth: "480px",
+                width: "100%",
+                textAlign: "center",
+                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+                border: "1.5px solid #fee2e2",
+                position: "relative",
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                style={{
+                  width: "68px",
+                  height: "68px",
+                  borderRadius: "50%",
+                  background: "#fff1f2",
+                  color: "#e11d48",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  margin: "0 auto 18px",
+                  fontSize: "28px",
+                }}
+              >
+                <AlertTriangle className="w-8 h-8 text-rose-600" />
+              </div>
+
+              <h3 style={{ fontSize: "20px", fontWeight: 900, color: "#0f172a", marginBottom: "12px", letterSpacing: "-0.02em" }}>
+                Chưa Đủ Điều Kiện Áp Dụng Mã
+              </h3>
+
+              <p style={{ fontSize: "14.5px", color: "#475569", lineHeight: 1.6, marginBottom: "24px" }}>
+                Bạn chưa đủ điều kiện để áp mã <strong style={{ color: "#0f172a" }}>{ineligibleModalInfo.code}</strong>.<br />
+                Bạn cần đặt thêm{" "}
+                <strong style={{ color: "#dc2626", fontSize: "16px", fontWeight: 900 }}>
+                  {formatVND(ineligibleModalInfo.missingAmount)}
+                </strong>{" "}
+                để có thể áp được mã giảm (Đơn tối thiểu {formatVND(ineligibleModalInfo.minOrder)}).
+              </p>
+
+              <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
+                <button
+                  type="button"
+                  onClick={() => setIneligibleModalInfo(null)}
+                  style={{
+                    padding: "11px 22px",
+                    borderRadius: "999px",
+                    background: "#f1f5f9",
+                    color: "#334155",
+                    fontWeight: 800,
+                    fontSize: "14px",
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  Đã hiểu
+                </button>
+                <Link
+                  href="/products"
+                  style={{
+                    padding: "11px 22px",
+                    borderRadius: "999px",
+                    background: "var(--primary-color, #2e7d32)",
+                    color: "#ffffff",
+                    fontWeight: 800,
+                    fontSize: "14px",
+                    textDecoration: "none",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    boxShadow: "0 4px 14px rgba(46, 125, 50, 0.25)",
+                  }}
+                  onClick={() => setIneligibleModalInfo(null)}
+                >
+                  <ShoppingCart className="w-4 h-4" /> Mua Thêm Sản Phẩm
+                </Link>
               </div>
             </div>
           </div>

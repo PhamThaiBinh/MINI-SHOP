@@ -65,6 +65,11 @@ export default function CheckoutPage() {
   const [appliedVoucher, setAppliedVoucher] = useState<Coupon | null>(null);
   const [voucherMsg, setVoucherMsg] = useState("");
   const [showCouponModal, setShowCouponModal] = useState(false);
+  const [ineligibleModalInfo, setIneligibleModalInfo] = useState<{
+    code: string;
+    minOrder: number;
+    missingAmount: number;
+  } | null>(null);
 
   // Modals
   const [showQrModal, setShowQrModal] = useState(false);
@@ -180,12 +185,16 @@ export default function CheckoutPage() {
 
     const found = allAvailableCoupons.find((c) => c.code === targetCode);
     if (found) {
-      // REQUIREMENT 1: Check minOrder
+      // REQUIREMENT: Check minOrder
       if (found.minOrder && subtotal < found.minOrder) {
+        const missing = found.minOrder - subtotal;
+        setIneligibleModalInfo({
+          code: found.code,
+          minOrder: found.minOrder,
+          missingAmount: missing,
+        });
         setVoucherMsg(
-          `Mã này chỉ áp dụng cho đơn hàng từ ${found.minOrder.toLocaleString(
-            "vi-VN"
-          )}đ trở lên!`
+          `Bạn chưa đủ điều kiện để áp mã. Bạn cần đặt thêm ${formatVND(missing)} để có thể áp được mã giảm.`
         );
         return;
       }
@@ -1051,7 +1060,7 @@ export default function CheckoutPage() {
                               x{coupon.quantity}
                             </sup>
                           )}
-                          {coupon.isRedeemed && (
+                          {coupon.isRedeemed ? (
                             <span
                               style={{
                                 background: "var(--primary-color)",
@@ -1067,6 +1076,33 @@ export default function CheckoutPage() {
                             >
                               <Gift className="w-3 h-3" /> Quà đã đổi
                             </span>
+                          ) : coupon.minOrder && subtotal < coupon.minOrder ? (
+                            <span
+                              style={{
+                                background: "#fffbeb",
+                                color: "#b45309",
+                                fontSize: "10.5px",
+                                fontWeight: 700,
+                                padding: "1px 6px",
+                                borderRadius: "4px",
+                                border: "1px solid #fde68a",
+                              }}
+                            >
+                              Thiếu {formatVND(coupon.minOrder - subtotal)}
+                            </span>
+                          ) : (
+                            <span
+                              style={{
+                                background: "#dcfce7",
+                                color: "#166534",
+                                fontSize: "10.5px",
+                                fontWeight: 700,
+                                padding: "1px 6px",
+                                borderRadius: "4px",
+                              }}
+                            >
+                              Đủ điều kiện
+                            </span>
                           )}
                         </div>
                         <div
@@ -1076,7 +1112,7 @@ export default function CheckoutPage() {
                             marginTop: "2px",
                           }}
                         >
-                          {coupon.desc}
+                          {coupon.desc} {coupon.minOrder && coupon.minOrder > 0 ? `(Đơn từ ${formatVND(coupon.minOrder)})` : ""}
                         </div>
                       </div>
                     </div>
@@ -1091,6 +1127,8 @@ export default function CheckoutPage() {
                         background:
                           appliedVoucher?.code === coupon.code
                             ? "#15803d"
+                            : coupon.minOrder && subtotal < coupon.minOrder
+                            ? "#94a3b8"
                             : "var(--primary-color)",
                         color: "#fff",
                         border: "none",
@@ -1114,6 +1152,110 @@ export default function CheckoutPage() {
                   </div>
                 ))
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Centered Ineligible Alert Modal on Checkout */}
+      {ineligibleModalInfo && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(15, 23, 42, 0.6)",
+            backdropFilter: "blur(4px)",
+            zIndex: 99999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "16px",
+          }}
+          onClick={() => setIneligibleModalInfo(null)}
+        >
+          <div
+            style={{
+              background: "#ffffff",
+              borderRadius: "24px",
+              padding: "36px 28px",
+              maxWidth: "480px",
+              width: "100%",
+              textAlign: "center",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+              border: "1.5px solid #fee2e2",
+              position: "relative",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                width: "68px",
+                height: "68px",
+                borderRadius: "50%",
+                background: "#fff1f2",
+                color: "#e11d48",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto 18px",
+                fontSize: "28px",
+              }}
+            >
+              <AlertTriangle className="w-8 h-8 text-rose-600" />
+            </div>
+
+            <h3 style={{ fontSize: "20px", fontWeight: 900, color: "#0f172a", marginBottom: "12px", letterSpacing: "-0.02em" }}>
+              Chưa Đủ Điều Kiện Áp Dụng Mã
+            </h3>
+
+            <p style={{ fontSize: "14.5px", color: "#475569", lineHeight: 1.6, marginBottom: "24px" }}>
+              Bạn chưa đủ điều kiện để áp mã <strong style={{ color: "#0f172a" }}>{ineligibleModalInfo.code}</strong>.<br />
+              Bạn cần đặt thêm{" "}
+              <strong style={{ color: "#dc2626", fontSize: "16px", fontWeight: 900 }}>
+                {formatVND(ineligibleModalInfo.missingAmount)}
+              </strong>{" "}
+              để có thể áp được mã giảm (Đơn tối thiểu {formatVND(ineligibleModalInfo.minOrder)}).
+            </p>
+
+            <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
+              <button
+                type="button"
+                onClick={() => setIneligibleModalInfo(null)}
+                style={{
+                  padding: "11px 22px",
+                  borderRadius: "999px",
+                  background: "#f1f5f9",
+                  color: "#334155",
+                  fontWeight: 800,
+                  fontSize: "14px",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                Đã hiểu
+              </button>
+              <Link
+                href="/products"
+                style={{
+                  padding: "11px 22px",
+                  borderRadius: "999px",
+                  background: "var(--primary-color, #2e7d32)",
+                  color: "#ffffff",
+                  fontWeight: 800,
+                  fontSize: "14px",
+                  textDecoration: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  boxShadow: "0 4px 14px rgba(46, 125, 50, 0.25)",
+                }}
+                onClick={() => setIneligibleModalInfo(null)}
+              >
+                <ShoppingCart className="w-4 h-4" /> Mua Thêm Sản Phẩm
+              </Link>
             </div>
           </div>
         </div>
