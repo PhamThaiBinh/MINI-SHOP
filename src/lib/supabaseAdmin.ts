@@ -322,27 +322,6 @@ export const fetchAdminOrders = async (): Promise<UnifiedOrder[]> => {
       };
     });
 
-    // Merge status updates from localStorage if available
-    if (typeof window !== "undefined") {
-      const { getAllOrders } = await import("@/utils/orderStorage");
-      const localOrders = getAllOrders();
-      const localMap = new Map(localOrders.map((lo) => [lo.id.toUpperCase().replace("#", ""), lo]));
-
-      return dbOrders.map((dbo) => {
-        const cleanId = dbo.id.toUpperCase().replace("#", "");
-        const matchedLocal = localMap.get(cleanId);
-        if (matchedLocal && matchedLocal.status === "cancelled" && dbo.status !== "cancelled") {
-          return {
-            ...dbo,
-            status: "cancelled",
-            statusText: matchedLocal.statusText || "Đã hủy đơn",
-            cancelReason: matchedLocal.cancelReason || dbo.cancelReason,
-          };
-        }
-        return dbo;
-      });
-    }
-
     return dbOrders;
   } catch (err) {
     console.error("Error fetching admin orders:", err);
