@@ -18,6 +18,7 @@ import { OtpVerificationModal } from "@/components/common/OtpVerificationModal";
 import { AddressItem, CustomerOrder } from "@/components/auth/types";
 import { LoginForm } from "@/components/auth/AuthForms/LoginForm";
 import { RegisterForm } from "@/components/auth/AuthForms/RegisterForm";
+import { AuthCarousel } from "@/components/auth/AuthCarousel";
 import { ProfileHeader } from "@/components/auth/ProfileTabs/ProfileHeader";
 import { ProfileNavTabs, AuthProfileTab } from "@/components/auth/ProfileTabs/ProfileNavTabs";
 import { AccountInfoTab } from "@/components/auth/ProfileTabs/AccountInfoTab";
@@ -276,78 +277,134 @@ function AuthPageContent() {
   return (
     <main className="auth-page-wrapper" style={{ padding: "40px 16px", background: "#f8fafc", minHeight: "85vh" }}>
       {!user ? (
-        /* GUEST AUTH FORM (LOGIN & REGISTER) */
-        <div style={{ maxWidth: "440px", margin: "0 auto" }}>
+        /* GUEST AUTH FORM (SPLIT LAYOUT: LEFT IMAGE CAROUSEL, RIGHT FORM) */
+        <div
+          style={{
+            maxWidth: "1000px",
+            margin: "0 auto",
+            background: "#ffffff",
+            borderRadius: "24px",
+            border: "1px solid #e2e8f0",
+            boxShadow: "0 20px 40px rgba(0, 0, 0, 0.06)",
+            overflow: "hidden",
+          }}
+        >
           <div
             style={{
-              background: "#ffffff",
-              borderRadius: "20px",
-              border: "1px solid #e2e8f0",
-              padding: "32px 28px",
-              boxShadow: "0 10px 30px rgba(0, 0, 0, 0.05)",
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+              minHeight: "540px",
             }}
           >
-            <div style={{ display: "flex", gap: "8px", background: "#f1f5f9", padding: "4px", borderRadius: "12px", marginBottom: "24px" }}>
-              <button
-                type="button"
-                onClick={() => setActiveTab("login")}
-                style={{
-                  flex: 1,
-                  padding: "10px",
-                  borderRadius: "10px",
-                  border: "none",
-                  background: activeTab === "login" ? "#ffffff" : "transparent",
-                  color: activeTab === "login" ? "var(--primary-color, #2e7d32)" : "#64748b",
-                  fontWeight: 800,
-                  fontSize: "14px",
-                  cursor: "pointer",
-                  boxShadow: activeTab === "login" ? "0 2px 8px rgba(0,0,0,0.05)" : "none",
-                }}
-              >
-                Đăng Nhập
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab("register")}
-                style={{
-                  flex: 1,
-                  padding: "10px",
-                  borderRadius: "10px",
-                  border: "none",
-                  background: activeTab === "register" ? "#ffffff" : "transparent",
-                  color: activeTab === "register" ? "var(--primary-color, #2e7d32)" : "#64748b",
-                  fontWeight: 800,
-                  fontSize: "14px",
-                  cursor: "pointer",
-                  boxShadow: activeTab === "register" ? "0 2px 8px rgba(0,0,0,0.05)" : "none",
-                }}
-              >
-                Đăng Ký
-              </button>
+            {/* LEFT SIDE: Image Slider Carousel */}
+            <div className="hidden md:block" style={{ height: "100%", minHeight: "540px" }}>
+              <AuthCarousel />
             </div>
 
-            {authError && (
-              <div style={{ padding: "10px 14px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "10px", color: "#dc2626", fontSize: "13px", fontWeight: 800, marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
-                <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0" />
-                <span>{authError}</span>
+            {/* RIGHT SIDE: Login / Register Form */}
+            <div
+              style={{
+                padding: "36px 32px",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  gap: "8px",
+                  background: "#f1f5f9",
+                  padding: "4px",
+                  borderRadius: "12px",
+                  marginBottom: "24px",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("login")}
+                  style={{
+                    flex: 1,
+                    padding: "10px",
+                    borderRadius: "10px",
+                    border: "none",
+                    background: activeTab === "login" ? "#ffffff" : "transparent",
+                    color: activeTab === "login" ? "var(--primary-color, #2e7d32)" : "#64748b",
+                    fontWeight: 800,
+                    fontSize: "14px",
+                    cursor: "pointer",
+                    boxShadow: activeTab === "login" ? "0 2px 8px rgba(0,0,0,0.05)" : "none",
+                  }}
+                >
+                  Đăng Nhập
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("register")}
+                  style={{
+                    flex: 1,
+                    padding: "10px",
+                    borderRadius: "10px",
+                    border: "none",
+                    background: activeTab === "register" ? "#ffffff" : "transparent",
+                    color: activeTab === "register" ? "var(--primary-color, #2e7d32)" : "#64748b",
+                    fontWeight: 800,
+                    fontSize: "14px",
+                    cursor: "pointer",
+                    boxShadow: activeTab === "register" ? "0 2px 8px rgba(0,0,0,0.05)" : "none",
+                  }}
+                >
+                  Đăng Ký
+                </button>
               </div>
-            )}
-            {authSuccess && (
-              <div style={{ padding: "10px 14px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "10px", color: "#166534", fontSize: "13px", fontWeight: 800, marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
-                <CheckCircle2 className="w-4 h-4 text-emerald-700 flex-shrink-0" />
-                <span>{authSuccess}</span>
-              </div>
-            )}
 
-            {activeTab === "login" ? (
-              <LoginForm
-                onLoginSubmit={handleLoginSubmit}
-                onQuickLoginAdmin={() => loginUser("admin@minishop.vn")}
-                onQuickLoginCustomer={() => loginUser("binh.pham@minishop.vn")}
-              />
-            ) : (
-              <RegisterForm onRegisterSubmit={handleRegisterSubmit} />
-            )}
+              {authError && (
+                <div
+                  style={{
+                    padding: "10px 14px",
+                    background: "#fef2f2",
+                    border: "1px solid #fecaca",
+                    borderRadius: "10px",
+                    color: "#dc2626",
+                    fontSize: "13px",
+                    fontWeight: 800,
+                    marginBottom: "16px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                  }}
+                >
+                  <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0" />
+                  <span>{authError}</span>
+                </div>
+              )}
+              {authSuccess && (
+                <div
+                  style={{
+                    padding: "10px 14px",
+                    background: "#f0fdf4",
+                    border: "1px solid #bbf7d0",
+                    borderRadius: "10px",
+                    color: "#166534",
+                    fontSize: "13px",
+                    fontWeight: 800,
+                    marginBottom: "16px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                  }}
+                >
+                  <CheckCircle2 className="w-4 h-4 text-emerald-700 flex-shrink-0" />
+                  <span>{authSuccess}</span>
+                </div>
+              )}
+
+              {activeTab === "login" ? (
+                <LoginForm onLoginSubmit={handleLoginSubmit} />
+              ) : (
+                <RegisterForm onRegisterSubmit={handleRegisterSubmit} />
+              )}
+            </div>
           </div>
         </div>
       ) : (

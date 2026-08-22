@@ -6,14 +6,10 @@ import { createClient } from "@/utils/supabase/client";
 
 interface LoginFormProps {
   onLoginSubmit: (email: string, pass: string) => void;
-  onQuickLoginAdmin: () => void;
-  onQuickLoginCustomer: () => void;
 }
 
 export const LoginForm: React.FC<LoginFormProps> = ({
   onLoginSubmit,
-  onQuickLoginAdmin,
-  onQuickLoginCustomer,
 }) => {
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -137,52 +133,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       >
         Đăng Nhập Ngay
       </button>
-
-      {/* Quick Fill buttons */}
-      <div style={{ display: "flex", gap: "10px", marginTop: "8px" }}>
-        <button
-          type="button"
-          onClick={() => {
-            setLoginEmail("admin@minishop.vn");
-            setLoginPassword("12345678");
-            onQuickLoginAdmin();
-          }}
-          style={{
-            flex: 1,
-            padding: "8px",
-            borderRadius: "8px",
-            border: "1px solid #e2e8f0",
-            background: "#f8fafc",
-            fontSize: "12px",
-            fontWeight: 700,
-            color: "#334155",
-            cursor: "pointer",
-          }}
-        >
-          <i className="fa-solid fa-user-gear" style={{ marginRight: "4px" }}></i> Test Admin
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setLoginEmail("binh.pham@minishop.vn");
-            setLoginPassword("12345678");
-            onQuickLoginCustomer();
-          }}
-          style={{
-            flex: 1,
-            padding: "8px",
-            borderRadius: "8px",
-            border: "1px solid #e2e8f0",
-            background: "#f8fafc",
-            fontSize: "12px",
-            fontWeight: 700,
-            color: "#334155",
-            cursor: "pointer",
-          }}
-        >
-          <i className="fa-solid fa-user" style={{ marginRight: "4px" }}></i> Test Khách hàng
-        </button>
-      </div>
     </form>
   );
 };
