@@ -219,6 +219,8 @@ export default function CheckoutPage() {
   // Re-validate applied voucher when cart subtotal changes
   React.useEffect(() => {
     if (appliedVoucher && appliedVoucher.minOrder && subtotal < appliedVoucher.minOrder) {
+      const kickedCode = appliedVoucher.code;
+      const requiredMin = appliedVoucher.minOrder;
       setAppliedVoucher(null);
       setVoucherCode("");
       try {
@@ -227,7 +229,7 @@ export default function CheckoutPage() {
         console.error(e);
       }
       setVoucherMsg(
-        `Mã ${appliedVoucher.code} đã bị hủy do tổng tiền đơn hàng (${subtotal.toLocaleString("vi-VN")}đ) chưa đạt mức tối thiểu ${appliedVoucher.minOrder.toLocaleString("vi-VN")}đ!`
+        `⚠️ Mã ${kickedCode} đã tự động bị hủy do giá trị đơn hàng (${formatVND(subtotal)}) không còn đủ điều kiện tối thiểu ${formatVND(requiredMin)}.`
       );
     }
   }, [subtotal, appliedVoucher]);

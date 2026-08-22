@@ -206,12 +206,34 @@ export default function CartPage() {
     }
   };
 
+  // Auto-kick applied voucher if subtotal drops below minOrder when user modifies cart items
+  React.useEffect(() => {
+    if (appliedCoupon && appliedCoupon.minOrder && subtotal < appliedCoupon.minOrder) {
+      const kickedCode = appliedCoupon.code;
+      const requiredMin = appliedCoupon.minOrder;
+      setAppliedCoupon(null);
+      setCouponCode("");
+      try {
+        localStorage.removeItem("mini_shop_applied_coupon");
+      } catch (e) {
+        console.error(e);
+      }
+      setCouponMsg(
+        `⚠️ Mã ${kickedCode} đã tự động bị hủy do giá trị đơn hàng (${formatVND(subtotal)}) không còn đủ điều kiện tối thiểu ${formatVND(requiredMin)}.`
+      );
+    }
+  }, [subtotal, appliedCoupon]);
+
   React.useEffect(() => {
     try {
       const savedCode = localStorage.getItem("mini_shop_applied_coupon");
       if (savedCode) {
         const found = allAvailableCoupons.find((c) => c.code === savedCode);
         if (found) {
+          if (found.minOrder && subtotal < found.minOrder) {
+            localStorage.removeItem("mini_shop_applied_coupon");
+            return;
+          }
           setAppliedCoupon(found);
           setCouponCode(found.code);
           const label = found.fixedDiscount
