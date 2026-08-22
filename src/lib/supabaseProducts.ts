@@ -67,17 +67,11 @@ export const fetchProductsFromSupabase = async (): Promise<Product[]> => {
 };
 
 export const fetchCategoriesFromSupabase = async (): Promise<SupabaseCategory[]> => {
-  const defaultCategories: SupabaseCategory[] = [
-    { id: "All", label: "Tất cả sản phẩm", icon: "Package" },
-    { id: "C0001", label: "Phòng khách", icon: "Sofa" },
-    { id: "C0002", label: "Phòng ngủ", icon: "Bed" },
-    { id: "C0003", label: "Nhà bếp", icon: "Utensils" },
-    { id: "C0004", label: "Đèn chiếu sáng", icon: "Lamp" },
-    { id: "C0005", label: "Trang trí", icon: "Sparkles" },
-    { id: "C0006", label: "Lưu trữ", icon: "Box" },
-    { id: "C0007", label: "Rèm cửa", icon: "Sliders" },
-    { id: "C0008", label: "Tủ lavabo", icon: "Droplets" },
-  ];
+  const allCategoryItem: SupabaseCategory = {
+    id: "All",
+    label: "Tất cả sản phẩm",
+    icon: "fa-solid fa-boxes-stacked",
+  };
 
   try {
     const supabase = createClient();
@@ -87,23 +81,23 @@ export const fetchCategoriesFromSupabase = async (): Promise<SupabaseCategory[]>
       .neq("status", "Hidden")
       .order("id", { ascending: true });
 
-    if (error || !data || data.length === 0) {
-      return defaultCategories;
+    if (error || !data) {
+      return [allCategoryItem];
     }
 
     const dynamicCats: SupabaseCategory[] = [
-      { id: "All", label: "Tất cả sản phẩm", icon: "Package" },
+      allCategoryItem,
       ...data.map((row: any) => ({
         id: String(row.category_id || `C${String(row.id).padStart(4, "0")}`),
         label: String(row.name),
-        icon: String(row.icon || "Folder"),
+        icon: String(row.icon || "fa-solid fa-folder"),
       })),
     ];
 
     return dynamicCats;
   } catch (err) {
     console.error("Error fetching categories from Supabase:", err);
-    return defaultCategories;
+    return [allCategoryItem];
   }
 };
 

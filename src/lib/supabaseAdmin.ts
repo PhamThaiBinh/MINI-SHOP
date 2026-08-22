@@ -218,8 +218,19 @@ export const saveAdminCategory = async (cat: Partial<AdminCategoryItem>): Promis
 export const deleteAdminCategory = async (id: number): Promise<boolean> => {
   try {
     const supabase = createClient();
+    const { data: cat } = await supabase.from("categories").select("*").eq("id", id).maybeSingle();
+    if (cat) {
+      const catCode = cat.category_id || `C${String(cat.id).padStart(4, "0")}`;
+      await supabase.from("products").delete().or(
+        `category.eq.${catCode},category.eq.${cat.slug},category.eq.${cat.name}`
+      );
+    }
     const { error } = await supabase.from("categories").delete().eq("id", id);
-    return !error;
+    if (error) {
+      console.error("Error deleting category:", error.message);
+      return false;
+    }
+    return true;
   } catch (err) {
     console.error("Error deleting category:", err);
     return false;

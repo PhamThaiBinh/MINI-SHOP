@@ -534,8 +534,8 @@ export default function AdminVouchersPage() {
                         color: "#0369a1",
                         border: "none",
                         borderRadius: "8px",
-                        padding: "3px 10px",
-                        fontSize: "11px",
+                        padding: "4px 10px",
+                        fontSize: "11.5px",
                         fontWeight: 800,
                         cursor: "pointer",
                         display: "inline-flex",
@@ -543,7 +543,7 @@ export default function AdminVouchersPage() {
                         gap: "4px",
                       }}
                     >
-                      <span>✨ Random Mã Nhanh</span>
+                      <i className="fa-solid fa-wand-magic-sparkles"></i> Random Mã Nhanh
                     </button>
                   )}
                 </div>

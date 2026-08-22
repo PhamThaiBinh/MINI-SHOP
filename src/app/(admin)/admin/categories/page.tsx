@@ -10,11 +10,11 @@ import { fetchAdminCategories, saveAdminCategory, deleteAdminCategory, fetchAdmi
 import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
 import { formatVND, fixImagePath } from "@/lib/utils";
 import { createClient } from "@/utils/supabase/client";
-import { Edit3, Trash2, Folder, Plus, X, Eye, Package, Layers, ExternalLink, ShieldCheck } from "lucide-react";
+import { Edit3, Trash2, Folder, Plus, X, Eye, Package, Layers, ExternalLink } from "lucide-react";
 
 interface Category {
   id: number;
-  icon: string;
+  icon?: string;
   name: string;
   slug: string;
   productCount: number;
@@ -73,7 +73,6 @@ export default function AdminCategoriesPage() {
   // Form inputs state
   const [formName, setFormName] = useState("");
   const [formSlug, setFormSlug] = useState("");
-  const [formIcon, setFormIcon] = useState("");
   const [formStatus, setFormStatus] = useState<"Active" | "Hidden">("Active");
   const [formDesc, setFormDesc] = useState("");
 
@@ -84,18 +83,7 @@ export default function AdminCategoriesPage() {
     setLoading(true);
     const data = await fetchAdminCategories();
     const cleanData = data.filter((c) => c.name.trim() !== "Tất cả" && c.name.trim() !== "All");
-
-    if (cleanData.length > 0) {
-      setCategories(cleanData);
-    } else {
-      setCategories([
-        { id: 1, icon: "Bed", name: "Nội Thất Phòng Ngủ", slug: "phong-ngu", productCount: 4, status: "Active", desc: "Giường ngủ, tủ quần áo, bàn trang điểm" },
-        { id: 2, icon: "Sofa", name: "Nội Thất Phòng Khách", slug: "phong-khach", productCount: 5, status: "Active", desc: "Sofa, bàn trà, kệ TV" },
-        { id: 3, icon: "Utensils", name: "Nội Thất Phòng Ăn", slug: "phong-an", productCount: 4, status: "Active", desc: "Bàn ăn, ghế ăn, tủ bếp" },
-        { id: 4, icon: "Briefcase", name: "Nội Thất Phòng Làm Việc", slug: "phong-lam-viec", productCount: 3, status: "Active", desc: "Bàn làm việc, ghế công thái học" },
-        { id: 5, icon: "Sparkles", name: "Trang Trí & Decor", slug: "trang-tri", productCount: 2, status: "Active", desc: "Đèn trang trí, thảm, tranh treo tường" },
-      ]);
-    }
+    setCategories(cleanData);
     setLoading(false);
   };
 
@@ -228,7 +216,6 @@ export default function AdminCategoriesPage() {
     setEditingCategory(null);
     setFormName("");
     setFormSlug("");
-    setFormIcon("");
     setFormStatus("Active");
     setFormDesc("");
     setShowModal(true);
@@ -238,7 +225,6 @@ export default function AdminCategoriesPage() {
     setEditingCategory(cat);
     setFormName(cat.name);
     setFormSlug(cat.slug);
-    setFormIcon(cat.icon || "");
     setFormStatus(cat.status);
     setFormDesc(cat.desc || "");
     setShowModal(true);
@@ -277,22 +263,19 @@ export default function AdminCategoriesPage() {
     setDeleteModalState((prev) => ({ ...prev, deleting: true }));
 
     try {
-      const supabase = createClient();
-      const catCode = `C${String(cat.id).padStart(4, "0")}`;
-      await supabase
-        .from("products")
-        .delete()
-        .or(`category.eq.${cat.slug},category.eq.${catCode},category.eq.${cat.name}`);
-
-      await deleteAdminCategory(cat.id);
-
-      setCategories((prev) => prev.filter((c) => c.id !== cat.id));
-      setDeleteModalState({
-        isOpen: false,
-        category: null,
-        relatedCount: 0,
-        deleting: false,
-      });
+      const success = await deleteAdminCategory(cat.id);
+      if (success) {
+        setCategories((prev) => prev.filter((c) => c.id !== cat.id));
+        setDeleteModalState({
+          isOpen: false,
+          category: null,
+          relatedCount: 0,
+          deleting: false,
+        });
+      } else {
+        alert("Lỗi khi xóa danh mục khỏi cơ sở dữ liệu!");
+        setDeleteModalState((prev) => ({ ...prev, deleting: false }));
+      }
     } catch (err) {
       console.error(err);
       alert("Đã xảy ra lỗi khi xóa danh mục.");
@@ -305,7 +288,6 @@ export default function AdminCategoriesPage() {
     if (!formName.trim()) return;
 
     const cleanSlug = formSlug.trim() || formName.trim().toLowerCase().replace(/\s+/g, "-");
-    const cleanIcon = formIcon || "";
 
     const supabase = createClient();
     if (editingCategory) {
@@ -314,7 +296,6 @@ export default function AdminCategoriesPage() {
         .update({
           name: formName.trim(),
           slug: cleanSlug,
-          icon: cleanIcon,
           status: formStatus,
           description: formDesc.trim(),
         })
@@ -327,7 +308,6 @@ export default function AdminCategoriesPage() {
                 ...c,
                 name: formName.trim(),
                 slug: cleanSlug,
-                icon: cleanIcon,
                 status: formStatus,
                 desc: formDesc.trim(),
               }
@@ -342,7 +322,6 @@ export default function AdminCategoriesPage() {
           category_id: generatedCategoryId,
           name: formName.trim(),
           slug: cleanSlug,
-          icon: cleanIcon,
           status: formStatus,
           description: formDesc.trim(),
         })
@@ -354,7 +333,6 @@ export default function AdminCategoriesPage() {
         id: newId,
         name: formName.trim(),
         slug: cleanSlug,
-        icon: cleanIcon,
         productCount: 0,
         status: formStatus,
         desc: formDesc.trim(),
@@ -419,7 +397,7 @@ export default function AdminCategoriesPage() {
                   boxShadow: "0 6px 16px rgba(46, 125, 50, 0.25)",
                 }}
               >
-                <Folder className="w-6 h-6" />
+                <i className="fa-solid fa-folder-tree"></i>
               </div>
               <div>
                 <div style={{ fontSize: "12px", fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" }}>
@@ -461,7 +439,7 @@ export default function AdminCategoriesPage() {
                   boxShadow: "0 6px 16px rgba(37, 99, 235, 0.25)",
                 }}
               >
-                <Package className="w-6 h-6" />
+                <i className="fa-solid fa-boxes-stacked"></i>
               </div>
               <div>
                 <div style={{ fontSize: "12px", fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" }}>
@@ -503,7 +481,7 @@ export default function AdminCategoriesPage() {
                   boxShadow: "0 6px 16px rgba(234, 179, 8, 0.25)",
                 }}
               >
-                <Layers className="w-6 h-6" />
+                <i className="fa-solid fa-chart-pie"></i>
               </div>
               <div>
                 <div style={{ fontSize: "12px", fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" }}>
@@ -558,7 +536,7 @@ export default function AdminCategoriesPage() {
                     boxShadow: "0 4px 12px rgba(46, 125, 50, 0.2)",
                   }}
                 >
-                  <Plus className="w-4 h-4" /> Thêm Danh Mục Mới
+                  <i className="fa-solid fa-plus"></i> Thêm Danh Mục Mới
                 </button>
               </div>
 
@@ -596,7 +574,7 @@ export default function AdminCategoriesPage() {
                             </td>
                             <td>
                               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                <span style={{ fontSize: "16px" }}>{cat.icon || "📁"}</span>
+                                <i className="fa-solid fa-folder text-emerald-700" style={{ fontSize: "15px" }}></i>
                                 <strong style={{ fontSize: "14px", color: "#0f172a" }}>{cat.name}</strong>
                               </div>
                             </td>
@@ -616,12 +594,12 @@ export default function AdminCategoriesPage() {
                                     cursor: "pointer",
                                     display: "inline-flex",
                                     alignItems: "center",
-                                    gap: "4px",
+                                    gap: "6px",
                                     transition: "all 0.2s ease",
                                   }}
                                   title="Bấm để xem danh sách sản phẩm thuộc danh mục này"
                                 >
-                                  <Package className="w-3.5 h-3.5 text-emerald-700" />
+                                  <i className="fa-solid fa-box text-emerald-700" style={{ fontSize: "12px" }}></i>
                                   {cat.productCount} sản phẩm
                                 </button>
                               </div>
@@ -663,7 +641,7 @@ export default function AdminCategoriesPage() {
                                   }}
                                   title="Xem danh sách sản phẩm thuộc danh mục"
                                 >
-                                  <Eye className="w-3.5 h-3.5 text-emerald-700" /> Xem SP
+                                  <i className="fa-solid fa-eye text-emerald-700" style={{ fontSize: "11px" }}></i> Xem SP
                                 </button>
                                 <button
                                   type="button"
@@ -682,7 +660,7 @@ export default function AdminCategoriesPage() {
                                     gap: "4px",
                                   }}
                                 >
-                                  <Edit3 className="w-3.5 h-3.5" /> Sửa
+                                  <i className="fa-solid fa-pen-to-square" style={{ fontSize: "11px" }}></i> Sửa
                                 </button>
                                 <button
                                   type="button"
@@ -701,7 +679,7 @@ export default function AdminCategoriesPage() {
                                     gap: "4px",
                                   }}
                                 >
-                                  <Trash2 className="w-3.5 h-3.5" /> Xóa
+                                  <i className="fa-solid fa-trash-can" style={{ fontSize: "11px" }}></i> Xóa
                                 </button>
                               </div>
                             </td>
@@ -836,7 +814,7 @@ export default function AdminCategoriesPage() {
             >
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 <div style={{ width: "40px", height: "40px", borderRadius: "12px", background: "var(--primary-color, #2e7d32)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Package className="w-5 h-5" />
+                  <i className="fa-solid fa-boxes-stacked"></i>
                 </div>
                 <div>
                   <h3 style={{ fontSize: "17px", fontWeight: 900, color: "#14532d", margin: 0 }}>
@@ -874,13 +852,13 @@ export default function AdminCategoriesPage() {
                 </div>
               ) : viewProductsModal.products.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "40px 20px", color: "#94a3b8" }}>
-                  <Package className="w-12 h-12 mx-auto mb-2 text-slate-300" />
+                  <i className="fa-solid fa-box-open" style={{ fontSize: "36px", marginBottom: "8px", color: "#cbd5e1", display: "block" }}></i>
                   <p style={{ fontSize: "14px", fontWeight: 700, margin: "4px 0 0" }}>Chưa có sản phẩm nào thuộc danh mục này</p>
                   <p style={{ fontSize: "12px", color: "#94a3b8", margin: "2px 0 0" }}>Vào trang Quản Lý Sản Phẩm để gán sản phẩm vào danh mục này.</p>
                 </div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                  {viewProductsModal.products.map((p, idx) => (
+                  {viewProductsModal.products.map((p) => (
                     <div
                       key={p.id}
                       style={{
@@ -910,8 +888,8 @@ export default function AdminCategoriesPage() {
                           </div>
                           <div style={{ fontSize: "12px", color: "#64748b", marginTop: "3px" }}>
                             Tồn kho: <strong>{p.stock !== undefined ? p.stock : 50}</strong> món • Trạng thái:{" "}
-                            <span style={{ color: p.status === "Active" ? "#16a34a" : "#dc2626", fontWeight: 700 }}>
-                              {p.status === "Active" ? "Đang bán" : "Đã ẩn"}
+                            <span style={{ color: p.status === "Active" || p.status === "In stock" ? "#16a34a" : "#dc2626", fontWeight: 700 }}>
+                              {p.status === "Active" || p.status === "In stock" ? "Đang bán" : "Đã ẩn"}
                             </span>
                           </div>
                         </div>
@@ -969,7 +947,7 @@ export default function AdminCategoriesPage() {
         </div>
       )}
 
-      {/* 4. REDESIGNED MODAL THÊM / SỬA DANH MỤC */}
+      {/* 4. MODAL THÊM / SỬA DANH MỤC (BỎ Ô BIỂU TƯỢNG/EMOJI THEO YÊU CẦU) */}
       {showModal && (
         <div
           style={{
@@ -1008,7 +986,7 @@ export default function AdminCategoriesPage() {
             >
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 <div style={{ width: "40px", height: "40px", borderRadius: "12px", background: "var(--primary-color, #2e7d32)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Folder className="w-5 h-5" />
+                  <i className="fa-solid fa-folder"></i>
                 </div>
                 <div>
                   <h3 style={{ fontSize: "17px", fontWeight: 900, color: "#14532d", margin: 0 }}>
@@ -1040,7 +1018,6 @@ export default function AdminCategoriesPage() {
 
             {/* Modal Form */}
             <form onSubmit={handleFormSubmit} style={{ padding: "24px" }}>
-              {/* Group 1: Thông tin cơ bản */}
               <div style={{ marginBottom: "16px" }}>
                 <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "6px" }}>
                   Tên Danh Mục Nhóm Hàng *
@@ -1056,34 +1033,19 @@ export default function AdminCategoriesPage() {
                 />
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
-                <div>
-                  <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "6px" }}>
-                    Biểu Tượng (Emoji / Tên Icon)
-                  </label>
-                  <input
-                    type="text"
-                    className="form-control admin-setting-input"
-                    placeholder="Ví dụ: 🛋️ hoặc Sofa"
-                    value={formIcon}
-                    onChange={(e) => setFormIcon(e.target.value)}
-                    style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13.5px" }}
-                  />
-                </div>
-                <div>
-                  <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "6px" }}>
-                    Trạng Thái Hiển Thị *
-                  </label>
-                  <select
-                    className="form-control admin-setting-input"
-                    value={formStatus}
-                    onChange={(e) => setFormStatus(e.target.value as any)}
-                    style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13.5px" }}
-                  >
-                    <option value="Active">● Hoạt động (Hiển thị)</option>
-                    <option value="Hidden">○ Đã ẩn (Không hiển thị)</option>
-                  </select>
-                </div>
+              <div style={{ marginBottom: "16px" }}>
+                <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "6px" }}>
+                  Trạng Thái Hiển Thị *
+                </label>
+                <select
+                  className="form-control admin-setting-input"
+                  value={formStatus}
+                  onChange={(e) => setFormStatus(e.target.value as any)}
+                  style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13.5px" }}
+                >
+                  <option value="Active">● Hoạt động (Hiển thị cho khách hàng)</option>
+                  <option value="Hidden">○ Đã ẩn (Ẩn khỏi menu & bộ lọc)</option>
+                </select>
               </div>
 
               <div style={{ marginBottom: "20px" }}>
@@ -1180,9 +1142,10 @@ export default function AdminCategoriesPage() {
                 justifyContent: "center",
                 margin: "0 auto 18px",
                 boxShadow: "0 8px 16px rgba(239, 68, 68, 0.15)",
+                fontSize: "24px",
               }}
             >
-              <Trash2 className="w-7 h-7" />
+              <i className="fa-solid fa-triangle-exclamation"></i>
             </div>
 
             {/* Title */}
@@ -1232,7 +1195,8 @@ export default function AdminCategoriesPage() {
                       textAlign: "left",
                     }}
                   >
-                    ⚠️ <strong>Lưu ý quan trọng:</strong> Thao tác này sẽ xóa vĩnh viễn danh mục và toàn bộ sản phẩm thuộc danh mục khỏi hệ thống!
+                    <i className="fa-solid fa-triangle-exclamation" style={{ marginRight: "6px" }}></i>
+                    <strong>Lưu ý quan trọng:</strong> Thao tác này sẽ xóa vĩnh viễn danh mục và toàn bộ sản phẩm thuộc danh mục khỏi hệ thống!
                   </div>
                 </>
               ) : (

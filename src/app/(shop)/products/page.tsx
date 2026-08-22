@@ -42,15 +42,16 @@ interface CategoryFilterItem {
 const getCategoryIcon = (iconName: string, id: string): React.ReactNode => {
   const name = (iconName || "").toLowerCase();
   const catId = (id || "").toLowerCase();
-  if (catId === "all" || name.includes("package")) return <Package className="w-4 h-4" />;
-  if (name.includes("sofa") || name.includes("phong-khach") || name.includes("khách") || catId === "c0001") return <Sofa className="w-4 h-4" />;
-  if (name.includes("bed") || name.includes("phong-ngu") || name.includes("ngủ") || catId === "c0002") return <Bed className="w-4 h-4" />;
-  if (name.includes("utensil") || name.includes("bếp") || name.includes("phong-an") || name.includes("ăn") || catId === "c0003") return <Utensils className="w-4 h-4" />;
-  if (name.includes("lamp") || name.includes("đèn") || catId === "c0004") return <Lamp className="w-4 h-4" />;
-  if (name.includes("sparkle") || name.includes("decor") || name.includes("trang-tri") || name.includes("trí") || catId === "c0005") return <Sparkles className="w-4 h-4" />;
-  if (name.includes("box") || name.includes("storage") || name.includes("luu-tru") || name.includes("trữ") || catId === "c0006") return <Box className="w-4 h-4" />;
-  if (name.includes("rem") || name.includes("slider") || name.includes("curtain") || catId === "c0007") return <SlidersHorizontal className="w-4 h-4" />;
-  return <Folder className="w-4 h-4" />;
+  if (catId === "all" || name.includes("package") || name.includes("boxes")) return <i className="fa-solid fa-boxes-stacked w-4 h-4 text-center inline-block" />;
+  if (name.includes("sofa") || name.includes("phong-khach") || name.includes("khách") || catId === "c0001") return <i className="fa-solid fa-couch w-4 h-4 text-center inline-block" />;
+  if (name.includes("bed") || name.includes("phong-ngu") || name.includes("ngủ") || catId === "c0002") return <i className="fa-solid fa-bed w-4 h-4 text-center inline-block" />;
+  if (name.includes("utensil") || name.includes("bếp") || name.includes("phong-an") || name.includes("ăn") || catId === "c0003") return <i className="fa-solid fa-utensils w-4 h-4 text-center inline-block" />;
+  if (name.includes("lamp") || name.includes("đèn") || catId === "c0004") return <i className="fa-solid fa-lightbulb w-4 h-4 text-center inline-block" />;
+  if (name.includes("sparkle") || name.includes("decor") || name.includes("trang-tri") || name.includes("trí") || catId === "c0005") return <i className="fa-solid fa-wand-magic-sparkles w-4 h-4 text-center inline-block" />;
+  if (name.includes("box") || name.includes("storage") || name.includes("luu-tru") || name.includes("trữ") || catId === "c0006") return <i className="fa-solid fa-box-archive w-4 h-4 text-center inline-block" />;
+  if (name.includes("rem") || name.includes("slider") || name.includes("curtain") || catId === "c0007") return <i className="fa-solid fa-sliders w-4 h-4 text-center inline-block" />;
+  if (name.includes("lavabo") || name.includes("tam") || catId === "c0008") return <i className="fa-solid fa-sink w-4 h-4 text-center inline-block" />;
+  return <i className="fa-solid fa-folder w-4 h-4 text-center inline-block" />;
 };
 
 function ProductsContent() {
