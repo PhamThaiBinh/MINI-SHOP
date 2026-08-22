@@ -72,6 +72,7 @@ interface AuthContextType {
     pointsAmount: number,
     code?: string
   ) => void;
+  addVoucherToUser: (label: string, discount: number, code: string) => void;
   consumeVoucher: (code: string) => void;
   addPlacedOrder: (order: PlacedOrder) => void;
   completeOnboarding: () => void;
@@ -84,6 +85,7 @@ const AUTH_STORAGE_KEY = "mini_shop_auth_user";
 function getStoredUserPointsAndHistory(username: string) {
   let points = 500;
   let history: RedemptionHistory[] = [];
+  let vouchers: UserVoucher[] = [];
   if (typeof window !== "undefined") {
     const storedPts = localStorage.getItem(`minishop_user_points_${username}`);
     if (storedPts !== null) {
@@ -97,8 +99,15 @@ function getStoredUserPointsAndHistory(username: string) {
         if (Array.isArray(parsedHist)) history = parsedHist;
       } catch (e) {}
     }
+    const storedVouchers = localStorage.getItem(`minishop_user_vouchers_${username}`);
+    if (storedVouchers) {
+      try {
+        const parsedVouchers = JSON.parse(storedVouchers);
+        if (Array.isArray(parsedVouchers)) vouchers = parsedVouchers;
+      } catch (e) {}
+    }
   }
-  return { points, history };
+  return { points, history, vouchers };
 }
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -125,6 +134,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
               ...parsed,
               points: storedData.points,
               history: storedData.history.length > 0 ? storedData.history : parsed.history || [],
+              vouchers: storedData.vouchers.length > 0 ? storedData.vouchers : parsed.vouchers || [],
             });
             setLoading(false);
             return;
@@ -150,7 +160,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             role: role,
             points: storedData.points,
             history: storedData.history,
-            vouchers: [],
+            vouchers: storedData.vouchers,
           };
           setUser(profile);
           localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(profile));
@@ -695,6 +705,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const addVoucherToUser = (label: string, discount: number, code: string) => {
+    if (!user) return;
+
+    const existingIndex = (user.vouchers || []).findIndex((v) => v.code === code);
+    let updatedVouchers: UserVoucher[] = [];
+
+    if (existingIndex > -1) {
+      updatedVouchers = user.vouchers.map((v, idx) =>
+        idx === existingIndex
+          ? { ...v, quantity: (v.quantity || 1) + 1 }
+          : v
+      );
+    } else {
+      updatedVouchers = [
+        { code, label, discount, quantity: 1 },
+        ...(user.vouchers || []),
+      ];
+    }
+
+    const updatedUser: UserProfile = {
+      ...user,
+      vouchers: updatedVouchers,
+    };
+
+    setUser(updatedUser);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(`minishop_user_vouchers_${user.username}`, JSON.stringify(updatedVouchers));
+    }
+  };
+
   const consumeVoucher = (code: string) => {
     if (!user) return;
 
@@ -783,6 +823,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         logout,
         redeemGift,
         addPointsAndHistory,
+        addVoucherToUser,
         consumeVoucher,
         addPlacedOrder,
         completeOnboarding,

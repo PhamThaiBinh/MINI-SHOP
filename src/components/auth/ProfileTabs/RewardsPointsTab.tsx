@@ -8,6 +8,8 @@ interface RewardsPointsTabProps {
   user: UserProfile;
   onRedeemGift: (giftName: string, points: number, discount: number, code: string) => boolean;
   onConfirmShare: () => void;
+  onAddVoucher?: (label: string, discount: number, code: string) => void;
+  onAddPoints?: (title: string, amount: number) => void;
 }
 
 const GIFTS_CATALOG = [
@@ -21,6 +23,8 @@ export const RewardsPointsTab: React.FC<RewardsPointsTabProps> = ({
   user,
   onRedeemGift,
   onConfirmShare,
+  onAddVoucher,
+  onAddPoints,
 }) => {
   const [rewardSubTab, setRewardSubTab] = useState<"catalog" | "myvouchers" | "history" | "tasks" | "wheel">("catalog");
   const [spinDeg, setSpinDeg] = useState(0);
@@ -33,11 +37,17 @@ export const RewardsPointsTab: React.FC<RewardsPointsTabProps> = ({
   const [isClaimReady, setIsClaimReady] = useState(false);
 
   const todayStr = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
-  const userStorageKey = user ? `minishop_share_task_${user.username}_${todayStr}` : `minishop_share_task_guest_${todayStr}`;
+  const shareStorageKey = user ? `minishop_share_task_${user.username}_${todayStr}` : `minishop_share_task_guest_${todayStr}`;
+  const wheelStorageKey = user ? `minishop_wheel_task_${user.username}_${todayStr}` : `minishop_wheel_task_guest_${todayStr}`;
 
   const [hasCompletedShareToday, setHasCompletedShareToday] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
-    return localStorage.getItem(userStorageKey) === "completed";
+    return localStorage.getItem(shareStorageKey) === "completed";
+  });
+
+  const [hasSpunWheelToday, setHasSpunWheelToday] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem(wheelStorageKey) === "completed";
   });
 
   const userPoints = user.points || 0;
@@ -78,7 +88,7 @@ export const RewardsPointsTab: React.FC<RewardsPointsTabProps> = ({
   const handleClaimReward = () => {
     onConfirmShare();
     if (typeof window !== "undefined") {
-      localStorage.setItem(userStorageKey, "completed");
+      localStorage.setItem(shareStorageKey, "completed");
     }
     setHasCompletedShareToday(true);
     setIsClaimReady(false);
@@ -86,7 +96,7 @@ export const RewardsPointsTab: React.FC<RewardsPointsTabProps> = ({
   };
 
   const handleSpinWheel = () => {
-    if (isSpinning) return;
+    if (isSpinning || hasSpunWheelToday) return;
     setIsSpinning(true);
     setSpinResultMsg("");
 
@@ -98,16 +108,28 @@ export const RewardsPointsTab: React.FC<RewardsPointsTabProps> = ({
 
     setTimeout(() => {
       setIsSpinning(false);
-      const gifts = [
-        "Chúc mừng! Bạn trúng Voucher Giảm 50K (Mã: MSWHEEL50K)!",
-        "Bạn nhận được 100 Điểm Thưởng VIP vào tài khoản!",
-        "Chúc mừng! Bạn nhận Mã Miễn Phí Vận Chuyển 30K!",
-        "Chúc mừng! Bạn nhận được 50 Điểm Thưởng!",
-        "Bạn nhận Mã Độc Quyền Giảm 10% đơn hàng!",
-        "Chúc bạn may mắn lần sau!",
+      if (typeof window !== "undefined") {
+        localStorage.setItem(wheelStorageKey, "completed");
+      }
+      setHasSpunWheelToday(true);
+
+      const rewards = [
+        { type: "voucher", label: "Voucher Giảm 50.000đ", discount: 50000, code: "MSWHEEL50K", msg: "🎉 Chúc mừng! Bạn trúng Voucher Giảm 50K (Mã: MSWHEEL50K)! Đã thêm vào Kho Voucher." },
+        { type: "points", amount: 100, msg: "🎉 Bạn nhận được +100 Điểm Thưởng VIP vào tài khoản!" },
+        { type: "voucher", label: "Voucher Miễn Phí Vận Chuyển 30.000đ", discount: 30000, code: "MSFREESHIP30K", msg: "🎉 Chúc mừng! Bạn nhận Mã Miễn Phí Vận Chuyển 30K! Đã thêm vào Kho Voucher." },
+        { type: "points", amount: 50, msg: "🎉 Chúc mừng! Bạn nhận được +50 Điểm Thưởng VIP!" },
+        { type: "voucher", label: "Mã Độc Quyền Giảm 10% đơn hàng", discount: 50000, code: "MSVIP10PERCENT", msg: "🎉 Bạn nhận Mã Độc Quyền Giảm 10% đơn hàng (Mã: MSVIP10PERCENT)! Đã thêm vào Kho Voucher." },
+        { type: "none", msg: "😊 Chúc bạn may mắn lần sau!" },
       ];
-      const winMsg = gifts[Math.floor(Math.random() * gifts.length)];
-      setSpinResultMsg(winMsg);
+
+      const chosen = rewards[Math.floor(Math.random() * rewards.length)];
+      setSpinResultMsg(chosen.msg);
+
+      if (chosen.type === "voucher" && onAddVoucher) {
+        onAddVoucher(chosen.label!, chosen.discount!, chosen.code!);
+      } else if (chosen.type === "points" && onAddPoints) {
+        onAddPoints("Trúng thưởng Vòng Quay May Mắn", chosen.amount!);
+      }
     }, 3500);
   };
 
@@ -380,23 +402,23 @@ export const RewardsPointsTab: React.FC<RewardsPointsTabProps> = ({
           <button
             type="button"
             onClick={handleSpinWheel}
-            disabled={isSpinning}
+            disabled={isSpinning || hasSpunWheelToday}
             style={{
               padding: "12px 28px",
-              background: isSpinning ? "#cbd5e1" : "linear-gradient(135deg, #dc2626, #ef4444)",
+              background: (isSpinning || hasSpunWheelToday) ? "#cbd5e1" : "linear-gradient(135deg, #dc2626, #ef4444)",
               color: "#fff",
               border: "none",
               borderRadius: "30px",
               fontSize: "15px",
               fontWeight: 900,
-              cursor: isSpinning ? "not-allowed" : "pointer",
-              boxShadow: "0 6px 16px rgba(220, 38, 38, 0.3)",
+              cursor: (isSpinning || hasSpunWheelToday) ? "not-allowed" : "pointer",
+              boxShadow: (isSpinning || hasSpunWheelToday) ? "none" : "0 6px 16px rgba(220, 38, 38, 0.3)",
               display: "inline-flex",
               alignItems: "center",
               gap: "8px",
             }}
           >
-            {isSpinning ? "Đang quay may mắn..." : <><Disc className="w-5 h-5" /> QUAY VÒNG MAY MẮN</>}
+            {hasSpunWheelToday ? "Đã Quay Hôm Nay (Reset 00:00)" : isSpinning ? "Đang quay may mắn..." : <><Disc className="w-5 h-5" /> QUAY VÒNG MAY MẮN</>}
           </button>
 
           {spinResultMsg && (
@@ -416,15 +438,23 @@ export const RewardsPointsTab: React.FC<RewardsPointsTabProps> = ({
             </p>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              {userHistory.map((h: any, idx: number) => (
-                <div key={idx} style={{ padding: "10px 14px", border: "1px solid #e2e8f0", borderRadius: "8px", background: "#fff", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div>
-                    <div style={{ fontSize: "13px", fontWeight: 800, color: "#0f172a" }}>{h.giftName || h.title}</div>
-                    <div style={{ fontSize: "11px", color: "#94a3b8" }}>{h.date}</div>
+              {userHistory.map((h: any, idx: number) => {
+                const pts = h.pointsSpent !== undefined ? h.pointsSpent : h.points;
+                const isEarn = pts < 0; // Negative pointsSpent means points were added to balance
+                const displayPts = Math.abs(pts);
+
+                return (
+                  <div key={idx} style={{ padding: "12px 16px", border: "1px solid #e2e8f0", borderRadius: "12px", background: "#fff", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <div style={{ fontSize: "13.5px", fontWeight: 800, color: "#0f172a" }}>{h.giftName || h.title}</div>
+                      <div style={{ fontSize: "11.5px", color: "#94a3b8", marginTop: "2px" }}>{h.date}</div>
+                    </div>
+                    <span style={{ fontSize: "14px", fontWeight: 900, color: isEarn ? "#16a34a" : "#dc2626", background: isEarn ? "#f0fdf4" : "#fef2f2", padding: "4px 10px", borderRadius: "999px", border: `1px solid ${isEarn ? "#bbf7d0" : "#fecaca"}` }}>
+                      {isEarn ? `+${displayPts} PTS` : `-${displayPts} PTS`}
+                    </span>
                   </div>
-                  <span style={{ fontSize: "13px", fontWeight: 900, color: "#dc2626" }}>-{h.pointsSpent || h.points} PTS</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

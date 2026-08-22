@@ -31,7 +31,7 @@ import { AlertTriangle, CheckCircle2, X } from "lucide-react";
 function AuthPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, loading, signIn, signUp, loginUser, logout, redeemGift, addPointsAndHistory } = useAuth();
+  const { user, loading, signIn, signUp, loginUser, logout, redeemGift, addPointsAndHistory, addVoucherToUser } = useAuth();
 
   // Auth Guest Mode Tabs
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
@@ -376,6 +376,8 @@ function AuthPageContent() {
                   user={user}
                   onRedeemGift={redeemGift}
                   onConfirmShare={() => addPointsAndHistory("Chia sẻ Facebook/Zalo nhận điểm", 50)}
+                  onAddVoucher={addVoucherToUser}
+                  onAddPoints={addPointsAndHistory}
                 />
               )}
               {profileTab === "security" && <SecuritySettingsTab />}
