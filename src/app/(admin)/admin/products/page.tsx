@@ -102,6 +102,10 @@ export default function AdminProductsPage() {
       return;
     }
 
+    // Set immediate local preview so the user instantly sees their image (e.g. cat picture)
+    const localPreviewUrl = URL.createObjectURL(file);
+    setFormImageUrl(localPreviewUrl);
+
     try {
       setIsUploadingImage(true);
       setUploadStatusMsg("Đang tải ảnh lên Supabase Storage...");
@@ -905,9 +909,6 @@ export default function AdminProductsPage() {
                           src={fixImagePath(formImageUrl)}
                           alt="Preview"
                           style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                          onError={(e) => {
-                            (e.currentTarget as any).src = "/assets/images/products/noi-that-gia-dung/sofa-phong-khach.webp";
-                          }}
                         />
                       ) : (
                         <div style={{ textAlign: "center", padding: "16px", color: "#94a3b8" }}>

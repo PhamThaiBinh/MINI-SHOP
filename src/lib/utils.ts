@@ -9,14 +9,14 @@ export function fixImagePath(path: string): string {
     return "/assets/images/banner/banner-trang-chu-mini-shop.webp";
   }
 
-  // 1. If already a full HTTP / HTTPS URL
-  if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("//")) {
-    if (
-      path.startsWith("https://sngmpumzlhomtvfvlbdn.supabase.co/storage/v1/object/public/products/") &&
-      !path.includes("/public/products/products/")
-    ) {
-      return path.replace("/public/products/", "/public/products/products/");
-    }
+  // 1. If blob URL (local preview), base64 data URL or full HTTP/HTTPS URL, return as-is
+  if (
+    path.startsWith("blob:") ||
+    path.startsWith("data:") ||
+    path.startsWith("http://") ||
+    path.startsWith("https://") ||
+    path.startsWith("//")
+  ) {
     return path;
   }
 

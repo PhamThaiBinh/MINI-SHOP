@@ -7,12 +7,12 @@ import { createClient } from "@/utils/supabase/client";
 export async function uploadProductImage(file: File): Promise<string | null> {
   try {
     const supabase = createClient();
-    
+
     // Clean and generate a unique file name
     const fileExt = file.name.split(".").pop() || "png";
     const sanitizedExt = fileExt.toLowerCase().replace(/[^a-z0-9]/g, "");
     const fileName = `product_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${sanitizedExt}`;
-    const filePath = `images/${fileName}`;
+    const filePath = `products/${fileName}`;
 
     // Upload file to Supabase Storage bucket 'products'
     const { data, error } = await supabase.storage
