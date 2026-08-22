@@ -427,6 +427,9 @@ export const RewardsPointsTab: React.FC<RewardsPointsTabProps> = ({
               ))}
             </div>
           )}
+        </div>
+      )}
+
       {/* MODAL CHỌN NỀN TẢNG CHIA SẺ */}
       {showShareModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.6)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px", backdropFilter: "blur(4px)" }}>
