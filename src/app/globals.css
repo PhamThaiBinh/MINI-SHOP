@@ -610,9 +610,12 @@ div.driver-popover {
     border-radius: 24px !important;
     border: 1.5px solid rgba(46, 125, 50, 0.18) !important;
     box-shadow: 0 24px 50px -12px rgba(46, 125, 50, 0.22), 0 12px 24px -8px rgba(0, 0, 0, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.9) !important;
-    padding: 24px 26px 20px 26px !important;
-    max-width: 420px !important;
+    padding: 24px 22px 20px 22px !important;
+    max-width: 480px !important;
     min-width: 320px !important;
+    width: auto !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
     color: #0f172a !important;
     animation: driverFadeIn 0.35s cubic-bezier(0.32, 0.72, 0, 1) !important;
@@ -632,12 +635,13 @@ div.driver-popover {
 /* Popover Header Title */
 div.driver-popover-title {
     font-family: 'Plus Jakarta Sans', sans-serif !important;
-    font-size: 1.1rem !important;
+    font-size: 1.05rem !important;
     font-weight: 800 !important;
     letter-spacing: -0.02em !important;
     color: #0f172a !important;
     margin-bottom: 12px !important;
     padding-bottom: 10px !important;
+    padding-right: 28px !important;
     border-bottom: 2px solid #e8f5e9 !important;
     line-height: 1.4 !important;
     display: flex !important;
@@ -672,7 +676,19 @@ div.driver-popover-footer {
     margin-top: 16px !important;
     padding-top: 14px !important;
     border-top: 1px solid #f1f5f9 !important;
-    gap: 12px !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+}
+
+div.driver-popover-navigation-btns,
+.driver-popover-navigation-btns,
+.driver-popover-btn-group {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-shrink: 0 !important;
 }
 
 /* Progress Step Text (Bước 5 / 5) - Strictly Prevent 2-Line Wrapping */
@@ -682,7 +698,7 @@ span.driver-popover-progress-text {
     font-weight: 800 !important;
     color: #2e7d32 !important;
     background: #e8f5e9 !important;
-    padding: 6px 14px !important;
+    padding: 6px 12px !important;
     border-radius: 9999px !important;
     border: 1.5px solid #a7f3d0 !important;
     white-space: nowrap !important;
@@ -701,8 +717,8 @@ div.driver-popover-footer .driver-popover-navigation-btns button,
 .driver-popover-btn-group button {
     font-family: 'Plus Jakarta Sans', var(--font-sans), sans-serif !important;
     border-radius: 9999px !important;
-    padding: 8px 18px !important;
-    font-size: 14px !important;
+    padding: 7px 14px !important;
+    font-size: 13px !important;
     font-weight: 600 !important;
     white-space: nowrap !important;
     cursor: pointer !important;
@@ -713,8 +729,9 @@ div.driver-popover-footer .driver-popover-navigation-btns button,
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 6px !important;
+    gap: 5px !important;
     line-height: 1.4 !important;
+    box-sizing: border-box !important;
 }
 
 /* Previous Button (← Quay lại) */
