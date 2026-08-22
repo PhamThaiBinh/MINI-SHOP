@@ -22,14 +22,29 @@ export interface LiveChatMessage {
   created_at: string;
 }
 
-const INITIAL_SESSIONS: LiveChatSession[] = [];
-
 const STORAGE_SESSIONS_KEY = "minishop_live_chat_sessions";
 const STORAGE_MESSAGES_KEY = "minishop_live_chat_messages";
+const PURGE_FLAG_KEY = "minishop_live_chat_purged_v3";
 
 // ---------------- LOCAL STORAGE CACHE HELPERS ----------------
 export function getLocalSessions(): LiveChatSession[] {
   if (typeof window === "undefined") return [];
+
+  // One-time auto-purge legacy/stale sessions from browser memory
+  if (!localStorage.getItem(PURGE_FLAG_KEY)) {
+    localStorage.removeItem(STORAGE_SESSIONS_KEY);
+    localStorage.removeItem("minishop_live_sessions");
+    localStorage.removeItem("minishop_chat_history");
+    localStorage.removeItem("minishop_chat_user");
+    Object.keys(localStorage).forEach((k) => {
+      if (k.startsWith("minishop_live_") || k.startsWith("minishop_chat_")) {
+        localStorage.removeItem(k);
+      }
+    });
+    localStorage.setItem(PURGE_FLAG_KEY, "true");
+    return [];
+  }
+
   const data = localStorage.getItem(STORAGE_SESSIONS_KEY);
   if (!data) {
     return [];
@@ -205,9 +220,8 @@ export async function clearAllChatSessions(): Promise<boolean> {
     // 1. Clear from local storage
     if (typeof window !== "undefined") {
       localStorage.setItem(STORAGE_SESSIONS_KEY, JSON.stringify([]));
-      // Remove all message keys
       Object.keys(localStorage).forEach((key) => {
-        if (key.startsWith(STORAGE_MESSAGES_KEY) || key === "minishop_chat_history" || key === "minishop_chat_user") {
+        if (key.startsWith(STORAGE_MESSAGES_KEY) || key.startsWith("minishop_live_") || key.startsWith("minishop_chat_")) {
           localStorage.removeItem(key);
         }
       });
