@@ -36,11 +36,21 @@ export interface StockLogItem {
   productName: string;
   type: "IMPORT" | "EXPORT" | "AUDIT";
   qty: number;
+  unitPrice?: number;
+  totalAmount?: number;
   stockBefore: number;
   stockAfter: number;
   supplier: string;
   reason: string;
   createdAt: string;
+}
+
+export interface BatchRowItem {
+  productId: number;
+  qty: number;
+  unitPrice: number;
+  countedQty?: number;
+  reason?: string;
 }
 
 export default function AdminProductsPage() {
@@ -52,17 +62,26 @@ export default function AdminProductsPage() {
   const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null);
   const [showModal, setShowModal] = useState<boolean>(false);
 
-  // Stock Inventory Ledger Modal States (Nhập Xuất Tồn Kho)
+  // Stock Inventory Ledger Modal States (Nhập Xuất Tồn Kho Workspace)
   const [showInventoryModal, setShowInventoryModal] = useState<boolean>(false);
-  const [showHistoryModal, setShowHistoryModal] = useState<boolean>(false);
+  const [inventoryActiveTab, setInventoryActiveTab] = useState<"FORM" | "LEDGER">("FORM");
   const [inventoryMode, setInventoryMode] = useState<"IMPORT" | "EXPORT" | "AUDIT">("IMPORT");
+  const [isBatchMode, setIsBatchMode] = useState<boolean>(false);
+
+  // Single mode state
   const [selectedInventoryProdId, setSelectedInventoryProdId] = useState<number>(0);
   const [inventoryProdSearch, setInventoryProdSearch] = useState<string>("");
   const [isInventoryProdDropdownOpen, setIsInventoryProdDropdownOpen] = useState<boolean>(false);
   const [inventoryQty, setInventoryQty] = useState<string>("10");
+  const [inventoryUnitPrice, setInventoryUnitPrice] = useState<string>("0");
   const [inventorySupplier, setInventorySupplier] = useState<string>("");
   const [inventoryReason, setInventoryReason] = useState<string>("");
   const [discrepancyPresetReason, setDiscrepancyPresetReason] = useState<string>("Mất hàng / Thất thoát kiểm kho");
+
+  // Batch mode state
+  const [batchRows, setBatchRows] = useState<BatchRowItem[]>([]);
+
+  // Logs state
   const [stockLogs, setStockLogs] = useState<StockLogItem[]>([]);
 
   // History Log Filter States (Lọc theo Ngày, Tháng, Năm, Loại, Từ khóa)
@@ -73,7 +92,7 @@ export default function AdminProductsPage() {
   const [historyFilterYear, setHistoryFilterYear] = useState<string>("2026");
   const [historySearchQuery, setHistorySearchQuery] = useState<string>("");
 
-  // Form state
+  // Product Form state
   const [formName, setFormName] = useState("");
   const [formCategory, setFormCategory] = useState("");
   const [formPrice, setFormPrice] = useState("");
@@ -81,7 +100,6 @@ export default function AdminProductsPage() {
   const [formStatus, setFormStatus] = useState<"Active" | "Hidden">("Active");
   const [formDesc, setFormDesc] = useState("");
   const [formStock, setFormStock] = useState<string>("15");
-  const [formImportQty, setFormImportQty] = useState<string>("0");
 
   // Supabase Storage Image Upload States
   const [isUploadingImage, setIsUploadingImage] = useState<boolean>(false);
@@ -102,7 +120,7 @@ export default function AdminProductsPage() {
       return;
     }
 
-    // Set immediate local preview so the user instantly sees their image (e.g. cat picture)
+    // Set immediate local preview so the user instantly sees their selected image
     const localPreviewUrl = URL.createObjectURL(file);
     setFormImageUrl(localPreviewUrl);
 
@@ -192,7 +210,6 @@ export default function AdminProductsPage() {
     setFormStatus("Active");
     setFormDesc("");
     setFormStock("15");
-    setFormImportQty("0");
     setShowModal(true);
   };
 
@@ -205,7 +222,6 @@ export default function AdminProductsPage() {
     setFormStatus(prod.status);
     setFormDesc(prod.desc);
     setFormStock((prod.stock !== undefined ? prod.stock : 15).toString());
-    setFormImportQty("0");
     setShowModal(true);
   };
 
@@ -269,106 +285,273 @@ export default function AdminProductsPage() {
     const month = String(d.getMonth() + 1).padStart(2, "0");
     const day = String(d.getDate()).padStart(2, "0");
     const randNum = Math.floor(1000 + Math.random() * 9000);
-    const timeTag = Date.now().toString(36).toUpperCase().slice(-4);
-    return `${prefix}-${year}${month}${day}-${timeTag}${randNum}`;
+    return `${prefix}-${year}${month}${day}-${randNum}`;
   };
 
-  const handleOpenInventoryModal = (prodId?: number, mode: "IMPORT" | "EXPORT" | "AUDIT" = "IMPORT") => {
+  const handleOpenInventoryModal = (prodId?: number, mode: "IMPORT" | "EXPORT" | "AUDIT" = "IMPORT", initialTab: "FORM" | "LEDGER" = "FORM") => {
     setInventoryMode(mode);
+    setInventoryActiveTab(initialTab);
+    setIsBatchMode(false);
+
     const targetId = prodId || (products[0]?.id || 1);
     setSelectedInventoryProdId(targetId);
     const targetProd = products.find((p) => p.id === targetId);
     const currentStock = targetProd?.stock !== undefined ? targetProd.stock : 15;
+    const defaultPrice = targetProd?.price || 0;
 
     setInventoryQty(mode === "AUDIT" ? String(currentStock) : "10");
-    setInventorySupplier(mode === "IMPORT" ? "Tổng Kho Gỗ An Cường" : mode === "EXPORT" ? "Showroom Chi Nhánh 1" : "Bộ Phận Kiểm Kê Kho");
-    setInventoryReason(mode === "IMPORT" ? "Nhập bổ sung hàng khi kho cạn" : mode === "EXPORT" ? "Xuất kho phục vụ bán hàng" : "");
+    setInventoryUnitPrice(String(defaultPrice));
+    setInventorySupplier(mode === "IMPORT" ? "Tổng Kho Gỗ An Cường" : mode === "EXPORT" ? "Showroom Chi Nhánh 1" : "Ban Kiểm Kê Nội Bộ");
+    setInventoryReason(mode === "IMPORT" ? "Nhập bổ sung hàng định kỳ" : mode === "EXPORT" ? "Xuất kho bán hàng / trưng bày" : "");
     setDiscrepancyPresetReason("Mất hàng / Thất thoát kiểm kho");
+
+    // Initialize 2 default batch rows
+    if (products.length > 0) {
+      setBatchRows([
+        {
+          productId: products[0].id,
+          qty: 10,
+          unitPrice: products[0].price || 0,
+          countedQty: products[0].stock !== undefined ? products[0].stock : 15,
+          reason: "",
+        },
+        ...(products.length > 1
+          ? [
+              {
+                productId: products[1].id,
+                qty: 5,
+                unitPrice: products[1].price || 0,
+                countedQty: products[1].stock !== undefined ? products[1].stock : 15,
+                reason: "",
+              },
+            ]
+          : []),
+      ]);
+    } else {
+      setBatchRows([]);
+    }
+
     setShowInventoryModal(true);
+  };
+
+  const handleAddBatchRow = () => {
+    if (products.length === 0) return;
+    const firstProd = products[0];
+    setBatchRows((prev) => [
+      ...prev,
+      {
+        productId: firstProd.id,
+        qty: 5,
+        unitPrice: firstProd.price || 0,
+        countedQty: firstProd.stock !== undefined ? firstProd.stock : 15,
+        reason: "",
+      },
+    ]);
+  };
+
+  const handleRemoveBatchRow = (index: number) => {
+    if (batchRows.length <= 1) {
+      alert("Phiếu hàng cần tối thiểu 1 dòng sản phẩm!");
+      return;
+    }
+    setBatchRows((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleBatchRowChange = (index: number, field: keyof BatchRowItem, value: any) => {
+    setBatchRows((prev) =>
+      prev.map((row, i) => {
+        if (i !== index) return row;
+        const updated = { ...row, [field]: value };
+        if (field === "productId") {
+          const matchedP = products.find((p) => p.id === Number(value));
+          if (matchedP) {
+            updated.unitPrice = matchedP.price || 0;
+            updated.countedQty = matchedP.stock !== undefined ? matchedP.stock : 15;
+          }
+        }
+        return updated;
+      })
+    );
   };
 
   const handleSaveInventoryTransaction = async (e: React.FormEvent) => {
     e.preventDefault();
-    const qtyVal = parseInt(inventoryQty, 10);
-    if (isNaN(qtyVal) || qtyVal < 0) {
-      alert("Số lượng giao dịch phải là một số không âm (≥ 0)!");
-      return;
-    }
-
-    const targetProd = products.find((p) => p.id === selectedInventoryProdId);
-    if (!targetProd) {
-      alert("Chưa chọn sản phẩm!");
-      return;
-    }
-
-    const currentStock = targetProd.stock !== undefined ? targetProd.stock : 15;
-    let newStock = currentStock;
-    let finalReason = inventoryReason.trim();
-
-    if (inventoryMode === "IMPORT") {
-      if (qtyVal <= 0) {
-        alert("Số lượng nhập kho phải lớn hơn 0!");
-        return;
-      }
-      newStock = currentStock + qtyVal;
-      if (!finalReason) finalReason = "Nhập bổ sung hàng kho";
-    } else if (inventoryMode === "EXPORT") {
-      if (qtyVal <= 0) {
-        alert("Số lượng xuất kho phải lớn hơn 0!");
-        return;
-      }
-      if (qtyVal > currentStock) {
-        alert(`Số lượng xuất (${qtyVal}) vượt quá số tồn kho hiện tại (${currentStock})!`);
-        return;
-      }
-      newStock = currentStock - qtyVal;
-      if (!finalReason) finalReason = "Xuất kho bán hàng / điều chuyển";
-    } else if (inventoryMode === "AUDIT") {
-      newStock = qtyVal;
-      const discrepancy = newStock - currentStock;
-
-      if (discrepancy !== 0) {
-        finalReason = `[Chênh lệch kho: ${discrepancy > 0 ? `Thừa ${discrepancy}` : `Thiếu ${Math.abs(discrepancy)}`} món] ${discrepancyPresetReason} ${inventoryReason ? `- ${inventoryReason}` : ""}`;
-      } else {
-        finalReason = "Kiểm kê khớp 100% tồn kho hệ thống";
-      }
-    }
-
     setLoading(true);
 
-    const updatedProd = {
-      ...targetProd,
-      stock: newStock,
-      status: newStock === 0 ? "Hidden" : targetProd.status,
-    };
+    const codePrefix = inventoryMode === "IMPORT" ? "NK" : inventoryMode === "EXPORT" ? "XK" : "KK";
+    const uniqueTicketCode = generateUniqueTicketCode(codePrefix);
+    const nowStr = new Date().toLocaleString("vi-VN");
 
-    const success = await saveAdminProduct(updatedProd as any);
+    if (!isBatchMode) {
+      // 1. SINGLE PRODUCT MODE
+      const qtyVal = parseInt(inventoryQty, 10);
+      const unitPriceVal = parseFloat(inventoryUnitPrice) || 0;
 
-    if (success) {
-      const codePrefix = inventoryMode === "IMPORT" ? "NK" : inventoryMode === "EXPORT" ? "XK" : "KK";
-      const uniqueCode = generateUniqueTicketCode(codePrefix);
+      if (isNaN(qtyVal) || qtyVal < 0) {
+        alert("Số lượng giao dịch phải là một số không âm (≥ 0)!");
+        setLoading(false);
+        return;
+      }
 
-      const newLog: StockLogItem = {
-        id: String(Date.now()),
-        code: uniqueCode,
-        productId: targetProd.id,
-        productName: targetProd.name,
-        type: inventoryMode,
-        qty: qtyVal,
-        stockBefore: currentStock,
-        stockAfter: newStock,
-        supplier: inventorySupplier.trim() || (inventoryMode === "IMPORT" ? "Nhà Cung Cấp" : inventoryMode === "EXPORT" ? "Nơi Nhận Xuất" : "Bộ Phận Kiểm Kho"),
-        reason: finalReason,
-        createdAt: new Date().toLocaleString("vi-VN"),
+      const targetProd = products.find((p) => p.id === selectedInventoryProdId);
+      if (!targetProd) {
+        alert("Chưa chọn sản phẩm!");
+        setLoading(false);
+        return;
+      }
+
+      const currentStock = targetProd.stock !== undefined ? targetProd.stock : 15;
+      let newStock = currentStock;
+      let finalReason = inventoryReason.trim();
+
+      if (inventoryMode === "IMPORT") {
+        if (qtyVal <= 0) {
+          alert("Số lượng nhập kho phải lớn hơn 0!");
+          setLoading(false);
+          return;
+        }
+        newStock = currentStock + qtyVal;
+        if (!finalReason) finalReason = "Nhập bổ sung hàng kho";
+      } else if (inventoryMode === "EXPORT") {
+        if (qtyVal <= 0) {
+          alert("Số lượng xuất kho phải lớn hơn 0!");
+          setLoading(false);
+          return;
+        }
+        if (qtyVal > currentStock) {
+          alert(`Số lượng xuất (${qtyVal}) vượt quá số tồn kho hiện tại (${currentStock})!`);
+          setLoading(false);
+          return;
+        }
+        newStock = currentStock - qtyVal;
+        if (!finalReason) finalReason = "Xuất kho bán hàng / điều chuyển";
+      } else if (inventoryMode === "AUDIT") {
+        newStock = qtyVal;
+        const discrepancy = newStock - currentStock;
+        if (discrepancy !== 0) {
+          finalReason = `[Chênh lệch: ${discrepancy > 0 ? `Thừa +${discrepancy}` : `Thiếu -${Math.abs(discrepancy)}`} món] ${discrepancyPresetReason} ${inventoryReason ? `- ${inventoryReason}` : ""}`;
+        } else {
+          finalReason = "Kiểm kê khớp 100% tồn kho hệ thống";
+        }
+      }
+
+      const updatedProd = {
+        ...targetProd,
+        stock: newStock,
+        status: newStock === 0 ? "Hidden" : targetProd.status,
       };
 
-      setStockLogs((prev) => [newLog, ...prev]);
-      await loadData();
-      setShowInventoryModal(false);
-      alert(`✅ Cập nhật kho thành công! Mã phiếu duy nhất: ${uniqueCode}. Tồn mới: ${newStock} món.`);
+      const success = await saveAdminProduct(updatedProd as any);
+
+      if (success) {
+        const newLog: StockLogItem = {
+          id: String(Date.now()),
+          code: uniqueTicketCode,
+          productId: targetProd.id,
+          productName: targetProd.name,
+          type: inventoryMode,
+          qty: qtyVal,
+          unitPrice: unitPriceVal,
+          totalAmount: qtyVal * unitPriceVal,
+          stockBefore: currentStock,
+          stockAfter: newStock,
+          supplier: inventorySupplier.trim() || (inventoryMode === "IMPORT" ? "Nhà Cung Cấp" : inventoryMode === "EXPORT" ? "Nơi Nhận Xuất" : "Ban Kiểm Kho"),
+          reason: finalReason,
+          createdAt: nowStr,
+        };
+
+        setStockLogs((prev) => [newLog, ...prev]);
+        await loadData();
+        setShowInventoryModal(false);
+        alert(`Lập phiếu thành công!\nMã phiếu: ${uniqueTicketCode}\nSản phẩm: [P${String(targetProd.id).padStart(4, "0")}] ${targetProd.name}\nTồn mới: ${newStock} món.`);
+      } else {
+        alert("Cập nhật tồn kho thất bại! Vui lòng thử lại.");
+      }
     } else {
-      alert("Cập nhật tồn kho thất bại! Vui lòng thử lại.");
+      // 2. BATCH PRODUCTS MODE (NHIỀU SẢN PHẨM CÙNG LÚC)
+      if (batchRows.length === 0) {
+        alert("Danh sách sản phẩm trong phiếu đang trống!");
+        setLoading(false);
+        return;
+      }
+
+      const newLogs: StockLogItem[] = [];
+      let allSuccess = true;
+
+      for (let i = 0; i < batchRows.length; i++) {
+        const row = batchRows[i];
+        const targetProd = products.find((p) => p.id === row.productId);
+        if (!targetProd) continue;
+
+        const currentStock = targetProd.stock !== undefined ? targetProd.stock : 15;
+        let newStock = currentStock;
+        let lineQty = row.qty;
+        let lineReason = (row.reason || inventoryReason).trim();
+
+        if (inventoryMode === "IMPORT") {
+          if (lineQty <= 0) continue;
+          newStock = currentStock + lineQty;
+          if (!lineReason) lineReason = "Nhập kho theo phiếu hàng loạt";
+        } else if (inventoryMode === "EXPORT") {
+          if (lineQty <= 0) continue;
+          if (lineQty > currentStock) {
+            alert(`Sản phẩm [P${String(targetProd.id).padStart(4, "0")}] ${targetProd.name} xuất ${lineQty} món vượt quá tồn hiện tại (${currentStock})!`);
+            allSuccess = false;
+            break;
+          }
+          newStock = currentStock - lineQty;
+          if (!lineReason) lineReason = "Xuất kho theo phiếu hàng loạt";
+        } else if (inventoryMode === "AUDIT") {
+          const counted = row.countedQty !== undefined ? row.countedQty : currentStock;
+          newStock = counted;
+          lineQty = counted;
+          const discrepancy = counted - currentStock;
+          if (discrepancy !== 0) {
+            lineReason = `[Lệch: ${discrepancy > 0 ? `+${discrepancy}` : `-${Math.abs(discrepancy)}`} món] ${discrepancyPresetReason}`;
+          } else {
+            lineReason = "Khớp 100% hệ thống";
+          }
+        }
+
+        const updatedProd = {
+          ...targetProd,
+          stock: newStock,
+          status: newStock === 0 ? "Hidden" : targetProd.status,
+        };
+
+        const success = await saveAdminProduct(updatedProd as any);
+        if (!success) {
+          allSuccess = false;
+          break;
+        }
+
+        newLogs.push({
+          id: `${Date.now()}_${i}`,
+          code: `${uniqueTicketCode}-${i + 1}`,
+          productId: targetProd.id,
+          productName: targetProd.name,
+          type: inventoryMode,
+          qty: lineQty,
+          unitPrice: row.unitPrice,
+          totalAmount: lineQty * (row.unitPrice || 0),
+          stockBefore: currentStock,
+          stockAfter: newStock,
+          supplier: inventorySupplier.trim() || (inventoryMode === "IMPORT" ? "Nhà Cung Cấp" : inventoryMode === "EXPORT" ? "Nơi Nhận Xuất" : "Ban Kiểm Kho"),
+          reason: lineReason,
+          createdAt: nowStr,
+        });
+      }
+
+      if (allSuccess && newLogs.length > 0) {
+        setStockLogs((prev) => [...newLogs, ...prev]);
+        await loadData();
+        setShowInventoryModal(false);
+        alert(`Lập phiếu thành công!\nMã phiếu tổng: ${uniqueTicketCode}\nĐã cập nhật ${newLogs.length} mặt hàng.`);
+      } else {
+        alert("Có lỗi khi cập nhật phiếu hàng loạt. Vui lòng kiểm tra lại số liệu!");
+      }
     }
+
     setLoading(false);
   };
 
@@ -386,11 +569,11 @@ export default function AdminProductsPage() {
             setSearchQuery(q);
             setCurrentPage(1);
           }}
-          searchPlaceholder="Tìm tên sản phẩm hoặc danh mục..."
+          searchPlaceholder="Tìm sản phẩm theo tên, danh mục..."
         />
 
         <div className="dashboard-content-body">
-          {/* 1. INVENTORY MATRIX STATUS BAR */}
+          {/* 1. TOP STATS CARDS */}
           <div
             style={{
               display: "grid",
@@ -399,103 +582,146 @@ export default function AdminProductsPage() {
               marginBottom: "24px",
             }}
           >
-            {/* Matrix 1: Active Products */}
+            {/* Stat 1: Total Products */}
             <div
               style={{
                 background: "linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%)",
                 border: "1.5px solid #bbf7d0",
                 borderRadius: "20px",
-                padding: "20px",
-                boxShadow: "0 4px 20px rgba(22, 101, 52, 0.06)",
+                padding: "20px 24px",
                 display: "flex",
-                justifyContent: "space-between",
                 alignItems: "center",
+                gap: "16px",
+                boxShadow: "0 4px 20px rgba(46, 125, 50, 0.06)",
               }}
             >
-              <div>
-                <div style={{ fontSize: "12px", fontWeight: 800, color: "#166534", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>
-                  Đang Kinh Doanh
-                </div>
-                <div style={{ fontSize: "28px", fontWeight: 900, color: "#14532d", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
-                  {products.filter((p) => p.status === "Active").length} <span style={{ fontSize: "14px", fontWeight: 700 }}>mặt hàng</span>
-                </div>
-                <div style={{ fontSize: "12px", color: "#475569", fontWeight: 600, marginTop: "8px" }}>
-                  <span style={{ padding: "2px 8px", background: "#dcfce7", color: "#15803d", borderRadius: "12px", fontWeight: 800, fontSize: "11px" }}>
-                    Hiển thị công khai
-                  </span>
-                </div>
+              <div
+                style={{
+                  width: "52px",
+                  height: "52px",
+                  borderRadius: "16px",
+                  background: "var(--primary-color, #2e7d32)",
+                  color: "#ffffff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "20px",
+                  boxShadow: "0 6px 16px rgba(46, 125, 50, 0.25)",
+                }}
+              >
+                <i className="fa-solid fa-boxes-stacked"></i>
               </div>
-              <div style={{ width: "48px", height: "48px", borderRadius: "16px", background: "#166534", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 16px rgba(22, 101, 52, 0.2)" }}>
-                <Package className="w-6 h-6" />
+              <div>
+                <div style={{ fontSize: "12px", fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  Tổng Sản Phẩm
+                </div>
+                <div style={{ fontSize: "24px", fontWeight: 900, color: "#0f172a", marginTop: "2px" }}>
+                  {products.length}
+                </div>
+                <div style={{ fontSize: "11px", fontWeight: 700, color: "#166534", marginTop: "2px" }}>
+                  Đang mở bán: {products.filter((p) => p.status === "Active").length} món
+                </div>
               </div>
             </div>
 
-            {/* Matrix 2: Low Stock Warning */}
+            {/* Stat 2: Total Inventory Pieces */}
             <div
               style={{
-                background: "linear-gradient(135deg, #ffffff 0%, #fffbeb 100%)",
-                border: "1.5px solid #fde68a",
+                background: "linear-gradient(135deg, #ffffff 0%, #eff6ff 100%)",
+                border: "1.5px solid #bfdbfe",
                 borderRadius: "20px",
-                padding: "20px",
-                boxShadow: "0 4px 20px rgba(180, 83, 9, 0.06)",
+                padding: "20px 24px",
                 display: "flex",
-                justifyContent: "space-between",
                 alignItems: "center",
+                gap: "16px",
+                boxShadow: "0 4px 20px rgba(37, 99, 235, 0.06)",
               }}
             >
+              <div
+                style={{
+                  width: "52px",
+                  height: "52px",
+                  borderRadius: "16px",
+                  background: "#2563eb",
+                  color: "#ffffff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "20px",
+                  boxShadow: "0 6px 16px rgba(37, 99, 235, 0.25)",
+                }}
+              >
+                <i className="fa-solid fa-warehouse"></i>
+              </div>
               <div>
-                <div style={{ fontSize: "12px", fontWeight: 800, color: "#b45309", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>
+                <div style={{ fontSize: "12px", fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  Tổng Tồn Kho Thực Tế
+                </div>
+                <div style={{ fontSize: "24px", fontWeight: 900, color: "#0f172a", marginTop: "2px" }}>
+                  {products.reduce((sum, p) => sum + (p.stock !== undefined ? p.stock : 15), 0)} món
+                </div>
+                <div style={{ fontSize: "11px", fontWeight: 700, color: "#1d4ed8", marginTop: "2px" }}>
+                  Phân bố trên {dbCategories.length} nhóm ngành hàng
+                </div>
+              </div>
+            </div>
+
+            {/* Stat 3: Low Stock Warnings */}
+            <div
+              style={{
+                background: "linear-gradient(135deg, #ffffff 0%, #fefce8 100%)",
+                border: "1.5px solid #fde047",
+                borderRadius: "20px",
+                padding: "20px 24px",
+                display: "flex",
+                alignItems: "center",
+                gap: "16px",
+                boxShadow: "0 4px 20px rgba(234, 179, 8, 0.08)",
+              }}
+            >
+              <div
+                style={{
+                  width: "52px",
+                  height: "52px",
+                  borderRadius: "16px",
+                  background: "#eab308",
+                  color: "#ffffff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "20px",
+                  boxShadow: "0 6px 16px rgba(234, 179, 8, 0.25)",
+                }}
+              >
+                <i className="fa-solid fa-triangle-exclamation"></i>
+              </div>
+              <div>
+                <div style={{ fontSize: "12px", fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                   Cảnh Báo Tồn Thấp (&le;10)
                 </div>
-                <div style={{ fontSize: "28px", fontWeight: 900, color: "#78350f", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
-                  {products.filter((p) => (p.stock !== undefined ? p.stock : 15) <= 10).length} <span style={{ fontSize: "14px", fontWeight: 700 }}>mặt hàng</span>
+                <div style={{ fontSize: "24px", fontWeight: 900, color: "#854d0e", marginTop: "2px" }}>
+                  {products.filter((p) => (p.stock !== undefined ? p.stock : 15) <= 10).length} món
                 </div>
-                <div style={{ fontSize: "12px", color: "#475569", fontWeight: 600, marginTop: "8px" }}>
-                  <span style={{ padding: "2px 8px", background: "#fef3c7", color: "#b45309", borderRadius: "12px", fontWeight: 800, fontSize: "11px" }}>
-                    Cần nhập thêm hàng
-                  </span>
+                <div style={{ fontSize: "11px", fontWeight: 700, color: "#a16207", marginTop: "2px" }}>
+                  Cần lập phiếu nhập kho bổ sung
                 </div>
-              </div>
-              <div style={{ width: "48px", height: "48px", borderRadius: "16px", background: "#d97706", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 16px rgba(217, 119, 6, 0.2)" }}>
-                <AlertTriangle className="w-6 h-6" />
-              </div>
-            </div>
-
-            {/* Matrix 3: Hidden Products */}
-            <div
-              style={{
-                background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
-                border: "1.5px solid #cbd5e1",
-                borderRadius: "20px",
-                padding: "20px",
-                boxShadow: "0 4px 20px rgba(100, 116, 139, 0.06)",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <div>
-                <div style={{ fontSize: "12px", fontWeight: 800, color: "#475569", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>
-                  Tạm Ẩn / Hết Hàng
-                </div>
-                <div style={{ fontSize: "28px", fontWeight: 900, color: "#1e293b", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
-                  {products.filter((p) => p.status === "Hidden").length} <span style={{ fontSize: "14px", fontWeight: 700 }}>mặt hàng</span>
-                </div>
-                <div style={{ fontSize: "12px", color: "#475569", fontWeight: 600, marginTop: "8px" }}>
-                  <span style={{ padding: "2px 8px", background: "#f1f5f9", color: "#475569", borderRadius: "12px", fontWeight: 800, fontSize: "11px" }}>
-                    Tạm ngừng hiển thị
-                  </span>
-                </div>
-              </div>
-              <div style={{ width: "48px", height: "48px", borderRadius: "16px", background: "#64748b", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 16px rgba(100, 116, 139, 0.2)" }}>
-                <Package className="w-6 h-6" />
               </div>
             </div>
           </div>
 
+          {/* 2. PRODUCTS TABLE CARD */}
           <div className="admin-card-shell">
             <div className="admin-card-core">
-              <div className="card-header-row" style={{ marginBottom: "20px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "20px",
+                  flexWrap: "wrap",
+                  gap: "12px",
+                }}
+              >
                 <div>
                   <h2 className="card-header-title text-xl font-extrabold text-slate-900 tracking-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                     Danh Sách Sản Phẩm Kinh Doanh ({filteredProducts.length})
@@ -504,41 +730,38 @@ export default function AdminProductsPage() {
                     Quản lý giá bán, hình ảnh và tồn kho sản phẩm trực tuyến
                   </p>
                 </div>
-                <div style={{ display: "flex", gap: "10px" }}>
+                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
                   <button
+                    type="button"
                     onClick={() => setOnlyLowStock(!onlyLowStock)}
                     style={{
-                      padding: "8px 16px",
+                      padding: "9px 16px",
                       fontSize: "13px",
                       fontWeight: 700,
                       fontFamily: "'Plus Jakarta Sans', sans-serif",
                       border: "1px solid #fde68a",
-                      borderRadius: "999px",
+                      borderRadius: "12px",
                       background: onlyLowStock ? "#fffbeb" : "#fff",
                       color: onlyLowStock ? "#b45309" : "#64748b",
                       cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
                     }}
                   >
-                    {onlyLowStock ? (
-                      <>
-                        <i className="fa-solid fa-triangle-exclamation text-amber-500 mr-1"></i> Đang lọc: Tồn kho thấp
-                      </>
-                    ) : (
-                      <>
-                        <i className="fa-solid fa-triangle-exclamation text-amber-500 mr-1"></i> Cảnh báo tồn thấp
-                      </>
-                    )}
+                    <i className="fa-solid fa-triangle-exclamation text-amber-500"></i>
+                    {onlyLowStock ? "Đang lọc: Tồn kho thấp" : "Lọc tồn thấp"}
                   </button>
 
                   <button
                     type="button"
-                    onClick={() => handleOpenInventoryModal(undefined, "IMPORT")}
+                    onClick={() => handleOpenInventoryModal(undefined, "IMPORT", "FORM")}
                     style={{
                       display: "inline-flex",
                       alignItems: "center",
-                      gap: "6px",
-                      padding: "10px 18px",
-                      borderRadius: "999px",
+                      gap: "8px",
+                      padding: "9px 18px",
+                      borderRadius: "12px",
                       fontWeight: 800,
                       fontSize: "13px",
                       fontFamily: "'Plus Jakarta Sans', sans-serif",
@@ -549,311 +772,285 @@ export default function AdminProductsPage() {
                       boxShadow: "0 4px 12px rgba(6, 95, 70, 0.25)",
                     }}
                   >
-                    <i className="fa-solid fa-boxes-stacked"></i> Nhập Xuất Tồn Kho
+                    <i className="fa-solid fa-warehouse"></i> Nhập Xuất Tồn Kho
                   </button>
 
                   <button
                     type="button"
-                    onClick={() => setShowHistoryModal(true)}
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "6px",
-                      padding: "10px 16px",
-                      borderRadius: "999px",
-                      fontWeight: 800,
-                      fontSize: "13px",
-                      fontFamily: "'Plus Jakarta Sans', sans-serif",
-                      background: "#ffffff",
-                      color: "#0369a1",
-                      border: "1.5px solid #bae6fd",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <History className="w-4 h-4" /> Nhật Ký Kho ({stockLogs.length})
-                  </button>
-
-                  <button
-                    className="btn-add-product-green"
                     onClick={handleOpenAddModal}
                     style={{
                       display: "inline-flex",
                       alignItems: "center",
-                      gap: "6px",
-                      padding: "10px 18px",
-                      borderRadius: "999px",
+                      gap: "8px",
+                      padding: "9px 18px",
+                      borderRadius: "12px",
                       fontWeight: 800,
+                      fontSize: "13px",
                       fontFamily: "'Plus Jakarta Sans', sans-serif",
-                      boxShadow: "0 4px 12px rgba(46, 125, 50, 0.2)",
+                      background: "var(--primary-color, #2e7d32)",
+                      color: "#ffffff",
+                      border: "none",
+                      cursor: "pointer",
+                      boxShadow: "0 4px 12px rgba(46, 125, 50, 0.25)",
                     }}
                   >
-                    <Plus className="w-4 h-4" /> Thêm Sản Phẩm Mới
+                    <i className="fa-solid fa-plus"></i> Thêm Sản Phẩm Mới
                   </button>
                 </div>
               </div>
 
-            {loading ? (
-              <div style={{ padding: "30px", textAlign: "center", fontSize: "13px", color: "var(--text-muted)" }}>
-                Đang tải danh sách sản phẩm...
-              </div>
-            ) : (
-              <>
-                <table className="admin-table">
-                  <thead>
-                    <tr>
-                      <th>MÃ SỐ</th>
-                      <th>HÌNH ẢNH HD</th>
-                      <th>TÊN SẢN PHẨM</th>
-                      <th>DANH MỤC</th>
-                      <th>GIÁ BÁN</th>
-                      <th>TỔN KHO</th>
-                      <th>BẬT / TẮT BÁN</th>
-                      <th style={{ textAlign: "center" }}>THAO TÁC</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginatedProducts.length === 0 ? (
+              {loading ? (
+                <div style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>
+                  Đang tải dữ liệu sản phẩm...
+                </div>
+              ) : (
+                <>
+                  <table className="admin-table">
+                    <thead>
                       <tr>
-                        <td colSpan={8} style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)" }}>
-                          Không có sản phẩm nào khớp với tìm kiếm.
-                        </td>
+                        <th>MÃ SẢN PHẨM</th>
+                        <th>HÌNH ẢNH & TÊN SẢN PHẨM</th>
+                        <th>DANH MỤC</th>
+                        <th>GIÁ BÁN</th>
+                        <th>TỒN KHO THỰC TẾ</th>
+                        <th>TRẠNG THÁI</th>
+                        <th style={{ textAlign: "center" }}>THAO TÁC</th>
                       </tr>
-                    ) : (
-                      paginatedProducts.map((prod, index) => (
-                        <tr key={prod.id}>
-                          <td>
-                            <code style={{ padding: "3px 8px", background: "#f1f5f9", color: "#1e293b", borderRadius: "6px", fontWeight: 800, fontSize: "11px" }}>
-                              P{String(prod.id || index + 1).padStart(4, "0")}
-                            </code>
-                          </td>
-                          <td>
-                            <div style={{ overflow: "hidden", borderRadius: "12px", width: "44px", height: "44px", border: "1px solid #e2e8f0" }}>
-                              <img
-                                src={fixImagePath(prod.image)}
-                                alt={prod.name}
-                                style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.3s ease" }}
-                                onError={(e) => {
-                                  (e.currentTarget as any).src = "/assets/images/banner/banner-trang-chu-mini-shop.webp";
-                                }}
-                                onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.15)")}
-                                onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1.0)")}
-                              />
-                            </div>
-                          </td>
-                          <td><strong style={{ fontSize: "14px", color: "#0f172a" }}>{prod.name}</strong></td>
-                          <td>
-                            <span className="cat-badge cat-furniture" style={{ borderRadius: "8px", fontSize: "11px", fontWeight: 700 }}>
-                              {prod.categoryName}
-                            </span>
-                          </td>
-                          <td style={{ fontWeight: 900, color: "var(--primary-color, #2e7d32)", fontSize: "14px" }}>
-                            {formatVND(prod.price)}
-                          </td>
-                          <td>
-                            <span style={{ fontWeight: 800, fontSize: "13px", color: (prod.stock !== undefined ? prod.stock : 15) <= 10 ? "#b45309" : "#1e293b" }}>
-                              {prod.stock !== undefined ? prod.stock : 15} món
-                            </span>
-                          </td>
-                          <td>
-                            {/* Inline Switch Toggle */}
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                const newStatus = prod.status === "Active" ? "Hidden" : "Active";
-                                await saveAdminProduct({ ...prod, status: newStatus });
-                                await loadData();
-                              }}
-                              style={{
-                                padding: "4px 10px",
-                                borderRadius: "999px",
-                                border: prod.status === "Active" ? "1px solid #bbf7d0" : "1px solid #cbd5e1",
-                                background: prod.status === "Active" ? "#f0fdf4" : "#f8fafc",
-                                color: prod.status === "Active" ? "#16532d" : "#64748b",
-                                fontSize: "11px",
-                                fontWeight: 800,
-                                cursor: "pointer",
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: "4px",
-                              }}
-                            >
-                              {prod.status === "Active" ? "🟢 Đang bán" : "⚪ Đã ẩn"}
-                            </button>
-                          </td>
-                          <td style={{ textAlign: "center" }}>
-                            <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
-                              <button
-                                onClick={() => handleOpenInventoryModal(prod.id, "IMPORT")}
-                                style={{
-                                  padding: "4px 8px",
-                                  background: "#f0fdf4",
-                                  color: "#166534",
-                                  border: "1px solid #bbf7d0",
-                                  borderRadius: "6px",
-                                  cursor: "pointer",
-                                  fontSize: "12px",
-                                  fontWeight: 700,
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: "4px",
-                                }}
-                                title="Lập phiếu nhập/xuất tồn kho cho sản phẩm này"
-                              >
-                                <PackageCheck className="w-3.5 h-3.5" /> Nhập/Xuất
-                              </button>
-                              <button
-                                onClick={() => handleEditClick(prod)}
-                                style={{
-                                  padding: "4px 8px",
-                                  background: "#eff6ff",
-                                  color: "#2563eb",
-                                  border: "1px solid #bfdbfe",
-                                  borderRadius: "6px",
-                                  cursor: "pointer",
-                                  fontSize: "12px",
-                                  fontWeight: 700,
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: "4px",
-                                }}
-                              >
-                                <Edit className="w-3.5 h-3.5" /> Sửa
-                              </button>
-                              <button
-                                onClick={() => handleDeleteProduct(prod.id)}
-                                style={{
-                                  padding: "4px 8px",
-                                  background: "#fef2f2",
-                                  color: "#dc2626",
-                                  border: "1px solid #fca5a5",
-                                  borderRadius: "6px",
-                                  cursor: "pointer",
-                                  fontSize: "12px",
-                                  fontWeight: 700,
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: "4px",
-                                }}
-                              >
-                                <Trash2 className="w-3.5 h-3.5" /> Xóa
-                              </button>
-                            </div>
+                    </thead>
+                    <tbody>
+                      {paginatedProducts.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)" }}>
+                            Không tìm thấy sản phẩm nào khớp với tìm kiếm.
                           </td>
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+                      ) : (
+                        paginatedProducts.map((p, index) => (
+                          <tr key={p.id}>
+                            <td>
+                              <code style={{ padding: "3px 8px", background: "#f1f5f9", color: "#1e293b", borderRadius: "6px", fontWeight: 900, fontSize: "11.5px" }}>
+                                P{String(p.id).padStart(4, "0")}
+                              </code>
+                            </td>
+                            <td>
+                              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                <img
+                                  src={fixImagePath(p.image)}
+                                  alt={p.name}
+                                  style={{
+                                    width: "44px",
+                                    height: "44px",
+                                    borderRadius: "10px",
+                                    objectFit: "cover",
+                                    border: "1px solid #e2e8f0",
+                                  }}
+                                />
+                                <div>
+                                  <strong style={{ fontSize: "13.5px", color: "#0f172a", display: "block" }}>{p.name}</strong>
+                                  <span style={{ fontSize: "11px", color: "#64748b" }}>ID CSDL: #{p.id}</span>
+                                </div>
+                              </div>
+                            </td>
+                            <td>
+                              <span style={{ padding: "3px 10px", borderRadius: "6px", background: "#f8fafc", color: "#475569", fontSize: "12px", fontWeight: 700, border: "1px solid #e2e8f0" }}>
+                                {p.categoryName || p.category}
+                              </span>
+                            </td>
+                            <td>
+                              <strong style={{ color: "var(--primary-color, #2e7d32)", fontSize: "14px" }}>
+                                {formatVND(p.price)}
+                              </strong>
+                            </td>
+                            <td>
+                              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                <span
+                                  style={{
+                                    padding: "3px 8px",
+                                    borderRadius: "6px",
+                                    fontSize: "12px",
+                                    fontWeight: 900,
+                                    background: (p.stock !== undefined ? p.stock : 15) <= 5 ? "#fee2e2" : (p.stock !== undefined ? p.stock : 15) <= 10 ? "#fef3c7" : "#dcfce7",
+                                    color: (p.stock !== undefined ? p.stock : 15) <= 5 ? "#dc2626" : (p.stock !== undefined ? p.stock : 15) <= 10 ? "#d97706" : "#166534",
+                                  }}
+                                >
+                                  {p.stock !== undefined ? p.stock : 15} món
+                                </span>
+                              </div>
+                            </td>
+                            <td>
+                              <span
+                                style={{
+                                  padding: "3px 10px",
+                                  borderRadius: "999px",
+                                  fontSize: "11px",
+                                  fontWeight: 800,
+                                  background: p.status === "Active" ? "#dcfce7" : "#f1f5f9",
+                                  color: p.status === "Active" ? "#166534" : "#64748b",
+                                }}
+                              >
+                                {p.status === "Active" ? "● Đang bán" : "○ Đã ẩn"}
+                              </span>
+                            </td>
+                            <td style={{ textAlign: "center" }}>
+                              <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenInventoryModal(p.id, "IMPORT", "FORM")}
+                                  style={{
+                                    padding: "5px 10px",
+                                    background: "#f0fdf4",
+                                    color: "#166534",
+                                    border: "1px solid #bbf7d0",
+                                    borderRadius: "8px",
+                                    cursor: "pointer",
+                                    fontSize: "11.5px",
+                                    fontWeight: 800,
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                  }}
+                                  title="Lập phiếu kho cho sản phẩm này"
+                                >
+                                  <i className="fa-solid fa-arrow-down-up-across-line"></i> Kho
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleEditClick(p)}
+                                  style={{
+                                    padding: "5px 10px",
+                                    background: "#eff6ff",
+                                    color: "#2563eb",
+                                    border: "1px solid #bfdbfe",
+                                    borderRadius: "8px",
+                                    cursor: "pointer",
+                                    fontSize: "11.5px",
+                                    fontWeight: 800,
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                  }}
+                                >
+                                  <i className="fa-solid fa-pen-to-square"></i> Sửa
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteProduct(p.id)}
+                                  style={{
+                                    padding: "5px 10px",
+                                    background: "#fef2f2",
+                                    color: "#dc2626",
+                                    border: "1px solid #fca5a5",
+                                    borderRadius: "8px",
+                                    cursor: "pointer",
+                                    fontSize: "11.5px",
+                                    fontWeight: 800,
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                  }}
+                                >
+                                  <i className="fa-solid fa-trash-can"></i> Xóa
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
 
-                {/* Standardized Pagination Bar */}
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "16px 0 4px 0",
-                    borderTop: "1px solid var(--border-color)",
-                    marginTop: "16px",
-                    flexWrap: "wrap",
-                    gap: "12px",
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "var(--text-muted)" }}>
-                    <select
-                      value={pageSize}
-                      onChange={(e) => {
-                        setPageSize(Number(e.target.value));
-                        setCurrentPage(1);
-                      }}
-                      style={{
-                        padding: "4px 8px",
-                        borderRadius: "6px",
-                        border: "1px solid var(--border-color)",
-                        fontSize: "13px",
-                        fontWeight: 700,
-                        cursor: "pointer",
-                      }}
-                    >
-                      <option value={10}>10 sản phẩm</option>
-                      <option value={25}>25 sản phẩm</option>
-                      <option value={50}>50 sản phẩm</option>
-                    </select>
-                    <span style={{ fontWeight: 700, color: "#0f172a" }}>
-                      Hiển thị {paginatedProducts.length}/{filteredProducts.length} sản phẩm
-                    </span>
-                  </div>
-
-                  <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                    <button
-                      disabled={safeCurrentPage === 1}
-                      onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                      style={{
-                        padding: "6px 12px",
-                        borderRadius: "6px",
-                        border: "1px solid var(--border-color)",
-                        background: "#fff",
-                        fontSize: "12px",
-                        fontWeight: 700,
-                        cursor: safeCurrentPage === 1 ? "not-allowed" : "pointer",
-                        opacity: safeCurrentPage === 1 ? 0.5 : 1,
-                      }}
-                    >
-                      &laquo; Trang trước
-                    </button>
-
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                      <button
-                        key={p}
-                        onClick={() => setCurrentPage(p)}
+                  {/* Pagination */}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "16px 0 4px 0",
+                      flexWrap: "wrap",
+                      gap: "12px",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", color: "#64748b", fontWeight: 600 }}>
+                      <span>Hiển thị</span>
+                      <select
+                        value={pageSize}
+                        onChange={(e) => {
+                          setPageSize(Number(e.target.value));
+                          setCurrentPage(1);
+                        }}
                         style={{
-                          padding: "6px 12px",
+                          padding: "4px 8px",
                           borderRadius: "6px",
-                          border: "1px solid var(--border-color)",
-                          background: p === safeCurrentPage ? "var(--primary-color)" : "#fff",
-                          color: p === safeCurrentPage ? "#fff" : "var(--text-main)",
-                          fontSize: "12px",
+                          border: "1px solid #cbd5e1",
+                          background: "#fff",
+                          fontSize: "12.5px",
                           fontWeight: 700,
                           cursor: "pointer",
                         }}
                       >
-                        {p}
-                      </button>
-                    ))}
+                        <option value={5}>5 dòng</option>
+                        <option value={10}>10 dòng</option>
+                        <option value={20}>20 dòng</option>
+                      </select>
+                      <span>trên tổng số {filteredProducts.length} sản phẩm</span>
+                    </div>
 
-                    <button
-                      disabled={safeCurrentPage === totalPages}
-                      onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                      style={{
-                        padding: "6px 12px",
-                        borderRadius: "6px",
-                        border: "1px solid var(--border-color)",
-                        background: "#fff",
-                        fontSize: "12px",
-                        fontWeight: 700,
-                        cursor: safeCurrentPage === totalPages ? "not-allowed" : "pointer",
-                        opacity: safeCurrentPage === totalPages ? 0.5 : 1,
-                      }}
-                    >
-                      Trang sau &raquo;
-                    </button>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <button
+                        type="button"
+                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                        disabled={safeCurrentPage <= 1}
+                        style={{
+                          padding: "6px 12px",
+                          borderRadius: "8px",
+                          border: "1px solid #cbd5e1",
+                          background: safeCurrentPage <= 1 ? "#f8fafc" : "#fff",
+                          color: safeCurrentPage <= 1 ? "#94a3b8" : "#334155",
+                          fontSize: "12px",
+                          fontWeight: 700,
+                          cursor: safeCurrentPage <= 1 ? "not-allowed" : "pointer",
+                        }}
+                      >
+                        Trang trước
+                      </button>
+                      <span style={{ fontSize: "12.5px", fontWeight: 800, color: "#0f172a", padding: "0 6px" }}>
+                        Trang {safeCurrentPage} / {totalPages}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                        disabled={safeCurrentPage >= totalPages}
+                        style={{
+                          padding: "6px 12px",
+                          borderRadius: "8px",
+                          border: "1px solid #cbd5e1",
+                          background: safeCurrentPage >= totalPages ? "#f8fafc" : "#fff",
+                          color: safeCurrentPage >= totalPages ? "#94a3b8" : "#334155",
+                          fontSize: "12px",
+                          fontWeight: 700,
+                          cursor: safeCurrentPage >= totalPages ? "not-allowed" : "pointer",
+                        }}
+                      >
+                        Trang sau
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </>
-            )}
+                </>
+              )}
             </div>
           </div>
         </div>
       </main>
 
-      {/* 2-COLUMN HIGH-END FORM MODAL SẢN PHẨM MỚI / CHỈNH SỬA */}
+      {/* 3. MODAL THÊM / CHỈNH SỬA SẢN PHẨM */}
       {showModal && (
         <div
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(15, 23, 42, 0.65)",
-            backdropFilter: "blur(10px)",
-            zIndex: 3000,
+            background: "rgba(15, 23, 42, 0.6)",
+            backdropFilter: "blur(4px)",
+            zIndex: 9999,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -861,794 +1058,277 @@ export default function AdminProductsPage() {
           }}
         >
           <div
-            className="admin-card-shell"
-            style={{
-              width: "100%",
-              maxWidth: "760px",
-              borderRadius: "24px",
-            }}
-          >
-            <div className="admin-card-core" style={{ padding: "28px", borderRadius: "calc(24px - 6px)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-                <h3 style={{ fontSize: "20px", fontWeight: 900, color: "#0f172a", margin: 0, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                  {editingProduct ? "Chỉnh Sửa Sản Phẩm" : "Form Thêm Sản Phẩm Mới"}
-                </h3>
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  style={{ background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: "50%", width: "32px", height: "32px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
-                >
-                  <X className="w-4 h-4 text-slate-500" />
-                </button>
-              </div>
-
-              <form onSubmit={handleFormSubmit}>
-                <div style={{ display: "grid", gridTemplateColumns: "240px 1fr", gap: "24px", marginBottom: "24px" }}>
-                  {/* Left Column: Image Live Preview & Supabase Storage Upload Box */}
-                  <div>
-                    <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "6px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                      Hình Ảnh Sản Phẩm *
-                    </label>
-                    <div
-                      style={{
-                        width: "100%",
-                        height: "200px",
-                        borderRadius: "16px",
-                        border: "2px dashed #cbd5e1",
-                        background: "#f8fafc",
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        overflow: "hidden",
-                        position: "relative",
-                      }}
-                    >
-                      {formImageUrl ? (
-                        <img
-                          src={fixImagePath(formImageUrl)}
-                          alt="Preview"
-                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                        />
-                      ) : (
-                        <div style={{ textAlign: "center", padding: "16px", color: "#94a3b8" }}>
-                          <Package className="w-10 h-10 stroke-1 mb-2 text-slate-400" />
-                          <span style={{ fontSize: "12px", fontWeight: 600 }}>Chưa chọn ảnh sản phẩm</span>
-                        </div>
-                      )}
-
-                      {isUploadingImage && (
-                        <div
-                          style={{
-                            position: "absolute",
-                            inset: 0,
-                            background: "rgba(15, 23, 42, 0.7)",
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            color: "#ffffff",
-                            fontSize: "12px",
-                            fontWeight: 800,
-                            gap: "8px",
-                            backdropFilter: "blur(4px)",
-                          }}
-                        >
-                          <i className="fa-solid fa-spinner fa-spin text-emerald-400 text-xl"></i>
-                          <span>Đang tải ảnh lên Cloud...</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Supabase Storage Upload Button */}
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      accept="image/*"
-                      onChange={handleImageFileChange}
-                      style={{ display: "none" }}
-                    />
-
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={isUploadingImage}
-                      style={{
-                        width: "100%",
-                        marginTop: "10px",
-                        padding: "10px 14px",
-                        borderRadius: "12px",
-                        background: "linear-gradient(135deg, #065f46 0%, #047857 100%)",
-                        color: "#ffffff",
-                        border: "none",
-                        fontSize: "12.5px",
-                        fontWeight: 800,
-                        cursor: isUploadingImage ? "not-allowed" : "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "6px",
-                        boxShadow: "0 4px 12px rgba(6, 95, 70, 0.25)",
-                        transition: "all 0.2s ease",
-                      }}
-                    >
-                      <i className="fa-solid fa-cloud-arrow-up text-emerald-300"></i>
-                      <span>{isUploadingImage ? "Đang Tải Ảnh..." : "Tải Ảnh Từ Máy Tính"}</span>
-                    </button>
-
-                    {uploadStatusMsg && (
-                      <p
-                        style={{
-                          fontSize: "11px",
-                          fontWeight: 700,
-                          color: uploadStatusMsg.includes("thành công") ? "#15803d" : "#b45309",
-                          marginTop: "6px",
-                          marginBottom: 0,
-                          textAlign: "center",
-                        }}
-                      >
-                        {uploadStatusMsg}
-                      </p>
-                    )}
-
-                    <div style={{ marginTop: "10px" }}>
-                      <label style={{ fontSize: "11.5px", fontWeight: 700, color: "#64748b", display: "block", marginBottom: "4px" }}>
-                        Đường Dẫn URL (Tự Động Tạo Hoặc Nhập Thô):
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control admin-setting-input"
-                        placeholder="https://... hoặc /assets/images/..."
-                        value={formImageUrl}
-                        onChange={(e) => setFormImageUrl(e.target.value)}
-                        style={{ fontSize: "11.5px", borderRadius: "10px", padding: "6px 10px", background: "#f8fafc" }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Right Column: Product Metadata Fields */}
-                  <div>
-                    <div style={{ marginBottom: "14px" }}>
-                      <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "4px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Tên Sản Phẩm *</label>
-                      <input
-                        type="text"
-                        className="form-control admin-setting-input"
-                        placeholder="Ví dụ: Bàn Ăn Gỗ Sồi Tự Nhiên"
-                        value={formName}
-                        onChange={(e) => setFormName(e.target.value)}
-                        required
-                        style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "14px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-                      />
-                    </div>
-
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "14px" }}>
-                      <div>
-                        <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "4px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Danh Mục *</label>
-                        <select
-                          className="form-control admin-setting-input"
-                          value={formCategory}
-                          onChange={(e) => setFormCategory(e.target.value)}
-                          required
-                          style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13.5px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-                        >
-                          {dbCategories.map((c) => (
-                            <option key={c.id} value={(c as any).code || c.name}>
-                              {c.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "4px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Giá Bán (VNĐ) *</label>
-                        <input
-                          type="number"
-                          className="form-control admin-setting-input"
-                          placeholder="Ví dụ: 3500000"
-                          value={formPrice}
-                          onChange={(e) => setFormPrice(e.target.value)}
-                          required
-                          style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13.5px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-                        />
-                      </div>
-                    </div>
-
-                    <div style={{ marginBottom: "14px" }}>
-                      {editingProduct ? (
-                        <div>
-                          <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "4px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                            Số Lượng Tồn Kho Hiện Tại (Khóa Chỉnh Sửa)
-                          </label>
-                          <input
-                            type="number"
-                            className="form-control admin-setting-input"
-                            disabled
-                            readOnly
-                            value={formStock}
-                            style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13.5px", background: "#f8fafc", color: "#64748b", cursor: "not-allowed", border: "1px solid #cbd5e1" }}
-                          />
-                          <p style={{ fontSize: "11.5px", color: "#64748b", marginTop: "4px", margin: "4px 0 0" }}>
-                            🔒 <em>Số lượng tồn kho được cập nhật tự động & chính xác qua sổ <strong>Nhập/Xuất Tồn Kho</strong>.</em>
-                          </p>
-                        </div>
-                      ) : (
-                        <div>
-                          <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "4px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                            Số Lượng Tồn Kho Ban Đầu *
-                          </label>
-                          <input
-                            type="number"
-                            className="form-control admin-setting-input"
-                            placeholder="10"
-                            value={formStock}
-                            onChange={(e) => setFormStock(e.target.value)}
-                            required
-                            style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13.5px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-                          />
-                        </div>
-                      )}
-                    </div>
-
-                    <div style={{ marginBottom: "14px" }}>
-                      <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "4px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Trạng Thái Hiển Thị</label>
-                      <select
-                        className="form-control admin-setting-input"
-                        value={formStatus}
-                        onChange={(e) => setFormStatus(e.target.value as any)}
-                        style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13.5px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-                      >
-                        <option value="Active">Đang bán (Hiển thị công khai)</option>
-                        <option value="Hidden">Đã ẩn (Không hiển thị)</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "4px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Mô Tả Sản Phẩm</label>
-                      <textarea
-                        rows={3}
-                        className="form-control admin-setting-input"
-                        placeholder="Nhập mô tả chi tiết chất liệu, kích thước..."
-                        value={formDesc}
-                        onChange={(e) => setFormDesc(e.target.value)}
-                        style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
-                  <button
-                    type="button"
-                    onClick={() => setShowModal(false)}
-                    style={{
-                      padding: "10px 20px",
-                      borderRadius: "999px",
-                      border: "1px solid #cbd5e1",
-                      background: "#fff",
-                      fontWeight: 800,
-                      fontSize: "13px",
-                      fontFamily: "'Plus Jakarta Sans', sans-serif",
-                      cursor: "pointer",
-                      color: "#475569",
-                    }}
-                  >
-                    Hủy Bỏ
-                  </button>
-                  <button
-                    type="submit"
-                    style={{
-                      padding: "10px 24px",
-                      borderRadius: "999px",
-                      border: "none",
-                      background: "var(--primary-color, #2e7d32)",
-                      color: "#fff",
-                      fontWeight: 900,
-                      fontSize: "13px",
-                      fontFamily: "'Plus Jakarta Sans', sans-serif",
-                      cursor: "pointer",
-                      boxShadow: "0 4px 14px rgba(46, 125, 50, 0.25)",
-                    }}
-                  >
-                    {editingProduct ? "Lưu Cập Nhật" : "Tạo Sản Phẩm Mới"}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 4. FORM NHẬP XUẤT TỒN KHO MODAL (INVENTORY LEDGER FORM) */}
-      {showInventoryModal && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(15, 23, 42, 0.65)",
-            backdropFilter: "blur(8px)",
-            zIndex: 9999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "24px 16px",
-          }}
-        >
-          <div
             style={{
               background: "#ffffff",
-              borderRadius: "24px",
               width: "100%",
               maxWidth: "680px",
-              maxHeight: "85vh",
-              overflowY: "auto",
+              maxHeight: "90vh",
+              borderRadius: "24px",
               boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-              border: "1.5px solid #e2e8f0",
-              animation: "fadeIn 0.25s ease-out",
+              overflowY: "auto",
+              border: "1px solid #e2e8f0",
             }}
           >
-            {/* Modal Header (Bright Theme) */}
+            {/* Modal Header */}
             <div
               style={{
                 padding: "20px 24px",
-                background: inventoryMode === "IMPORT"
-                  ? "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)"
-                  : inventoryMode === "EXPORT"
-                  ? "linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%)"
-                  : "linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)",
-                borderBottom: inventoryMode === "IMPORT"
-                  ? "1.5px solid #bbf7d0"
-                  : inventoryMode === "EXPORT"
-                  ? "1.5px solid #fecdd3"
-                  : "1.5px solid #fde68a",
+                background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
+                borderBottom: "1.5px solid #bbf7d0",
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
               }}
             >
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-                  <PackageCheck
-                    className={`w-6 h-6 ${
-                      inventoryMode === "IMPORT" ? "text-emerald-700" : inventoryMode === "EXPORT" ? "text-red-700" : "text-amber-700"
-                    }`}
-                  />
-                  <h3
-                    style={{
-                      fontSize: "18px",
-                      fontWeight: 900,
-                      margin: 0,
-                      fontFamily: "'Plus Jakarta Sans', sans-serif",
-                      color: inventoryMode === "IMPORT" ? "#14532d" : inventoryMode === "EXPORT" ? "#7f1d1d" : "#78350f",
-                    }}
-                  >
-                    {inventoryMode === "IMPORT" ? (
-                      <>
-                        <i className="fa-solid fa-box-archive mr-2"></i> Lập Phiếu Nhập Kho Hàng
-                      </>
-                    ) : inventoryMode === "EXPORT" ? (
-                      <>
-                        <i className="fa-solid fa-truck-ramp-box mr-2"></i> Lập Phiếu Xuất Kho Hàng
-                      </>
-                    ) : (
-                      <>
-                        <i className="fa-solid fa-clipboard-check mr-2"></i> Phiếu Kiểm Kê & Cân Bằng Kho
-                      </>
-                    )}
-                  </h3>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <div style={{ width: "40px", height: "40px", borderRadius: "12px", background: "var(--primary-color, #2e7d32)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <i className="fa-solid fa-box"></i>
                 </div>
-                <p
-                  style={{
-                    fontSize: "12.5px",
-                    margin: 0,
-                    fontWeight: 700,
-                    color: inventoryMode === "IMPORT" ? "#166534" : inventoryMode === "EXPORT" ? "#991b1b" : "#b45309",
-                  }}
-                >
-                  Mã Phiếu Duy Nhất: <span style={{ background: "#ffffff", padding: "2px 8px", borderRadius: "6px", fontWeight: 900, border: "1px solid rgba(0,0,0,0.1)", letterSpacing: "0.03em" }}>
-                    {inventoryMode === "IMPORT" ? "NK" : inventoryMode === "EXPORT" ? "XK" : "KK"}-{new Date().getFullYear()}{String(new Date().getMonth() + 1).padStart(2, "0")}{String(new Date().getDate()).padStart(2, "0")}-AUTO
-                  </span>
-                </p>
+                <div>
+                  <h3 style={{ fontSize: "17px", fontWeight: 900, color: "#14532d", margin: 0 }}>
+                    {editingProduct ? "Chỉnh Sửa Sản Phẩm" : "Thêm Sản Phẩm Mới"}
+                  </h3>
+                  <p style={{ fontSize: "12px", color: "#166534", margin: "2px 0 0", fontWeight: 700 }}>
+                    {editingProduct ? `Cập nhật thông tin mã P${String(editingProduct.id).padStart(4, "0")}` : "Tạo mới sản phẩm vào hệ thống bán hàng"}
+                  </p>
+                </div>
               </div>
               <button
-                onClick={() => setShowInventoryModal(false)}
+                type="button"
+                onClick={() => setShowModal(false)}
                 style={{
                   background: "#ffffff",
                   border: "1px solid #cbd5e1",
                   borderRadius: "50%",
-                  width: "36px",
-                  height: "36px",
-                  color: "#334155",
+                  width: "34px",
+                  height: "34px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   cursor: "pointer",
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.06)",
                 }}
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4 text-slate-600" />
               </button>
             </div>
 
-            {/* Modal Body */}
-            <form onSubmit={handleSaveInventoryTransaction} style={{ padding: "24px" }}>
-              {/* SELECTOR: LOẠI THAO TÁC KHO (DẠNG DROPDOWN) */}
-              <div style={{ marginBottom: "20px" }}>
-                <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "8px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                  <i className="fa-solid fa-layer-group" style={{ marginRight: "6px", color: "var(--primary-color, #2e7d32)" }}></i>
-                  Chọn Loại Thao Tác Nghiệp Vụ Kho *
-                </label>
-                <select
-                  value={inventoryMode}
-                  onChange={(e) => {
-                    const mode = e.target.value as "IMPORT" | "EXPORT" | "AUDIT";
-                    setInventoryMode(mode);
-                    if (mode === "AUDIT") {
-                      const targetProd = products.find((p) => p.id === selectedInventoryProdId);
-                      if (targetProd) setInventoryQty(String(targetProd.stock !== undefined ? targetProd.stock : 15));
-                    }
-                  }}
-                  style={{
-                    width: "100%",
-                    padding: "12px 16px",
-                    borderRadius: "14px",
-                    border: "2px solid #cbd5e1",
-                    fontSize: "14px",
-                    fontWeight: 800,
-                    fontFamily: "'Plus Jakarta Sans', sans-serif",
-                    background: inventoryMode === "IMPORT" ? "#f0fdf4" : inventoryMode === "EXPORT" ? "#fef2f2" : "#fffbeb",
-                    color: inventoryMode === "IMPORT" ? "#166534" : inventoryMode === "EXPORT" ? "#991b1b" : "#b45309",
-                    cursor: "pointer",
-                    outline: "none",
-                  }}
-                >
-                  <option value="IMPORT">📥 Phiếu Nhập Kho (Tăng số lượng tồn kho từ nhà cung cấp / xưởng)</option>
-                  <option value="EXPORT">📤 Phiếu Xuất Kho (Giảm tồn kho xuất bán lẻ, showroom, điều chuyển)</option>
-                  <option value="AUDIT">📋 Phiếu Kiểm Kê & Cân Bằng Kho (Khớp số lượng thực tế đếm được)</option>
-                </select>
-              </div>
-
-              {/* DEDICATED HEADER BANNER PER SELECTED MODE */}
-              <div
-                style={{
-                  padding: "12px 16px",
-                  borderRadius: "12px",
-                  marginBottom: "16px",
-                  background: inventoryMode === "IMPORT" ? "#dcfce7" : inventoryMode === "EXPORT" ? "#fee2e2" : "#fef3c7",
-                  border: inventoryMode === "IMPORT" ? "1px solid #bbf7d0" : inventoryMode === "EXPORT" ? "1px solid #fecaca" : "1px solid #fde68a",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "10px",
-                }}
-              >
-                <i
-                  className={
-                    inventoryMode === "IMPORT"
-                      ? "fa-solid fa-arrow-down text-emerald-700"
-                      : inventoryMode === "EXPORT"
-                      ? "fa-solid fa-arrow-up text-rose-700"
-                      : "fa-solid fa-clipboard-check text-amber-700"
-                  }
-                  style={{ fontSize: "18px" }}
-                ></i>
+            {/* Modal Form */}
+            <form onSubmit={handleFormSubmit} style={{ padding: "24px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "220px 1fr", gap: "20px", marginBottom: "20px" }}>
+                {/* Left: Image Upload & Live Preview */}
                 <div>
-                  <strong
-                    style={{
-                      fontSize: "13.5px",
-                      color: inventoryMode === "IMPORT" ? "#14532d" : inventoryMode === "EXPORT" ? "#7f1d1d" : "#78350f",
-                      display: "block",
-                    }}
-                  >
-                    {inventoryMode === "IMPORT"
-                      ? "Giao Diện Nhập Kho Hàng Hóa"
-                      : inventoryMode === "EXPORT"
-                      ? "Giao Diện Xuất Kho Hàng Hóa"
-                      : "Giao Diện Kiểm Kê & Cân Bằng Kho"}
-                  </strong>
-                  <span
-                    style={{
-                      fontSize: "12px",
-                      color: inventoryMode === "IMPORT" ? "#166534" : inventoryMode === "EXPORT" ? "#991b1b" : "#92400e",
-                    }}
-                  >
-                    {inventoryMode === "IMPORT"
-                      ? "Ghi nhận sản phẩm nhập thêm từ xưởng sản xuất hoặc đối tác cung cấp."
-                      : inventoryMode === "EXPORT"
-                      ? "Ghi nhận hàng xuất cho showroom trưng bày, bán sỉ hoặc điều chuyển kho."
-                      : "Đối soát thực tế và ghi nhận lý do chênh lệch tồn kho so với hệ thống."}
-                  </span>
-                </div>
-              </div>
-
-              {/* Product Selection with Searchable Dropdown and [P000X] Prefix */}
-              <div style={{ marginBottom: "16px", position: "relative" }}>
-                <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "6px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                  Sản Phẩm Cần {inventoryMode === "IMPORT" ? "Nhập Kho" : inventoryMode === "EXPORT" ? "Xuất Kho" : "Kiểm Kê"} *
-                </label>
-
-                {/* Trigger Button */}
-                <div
-                  onClick={() => setIsInventoryProdDropdownOpen(!isInventoryProdDropdownOpen)}
-                  style={{
-                    border: "1.5px solid #cbd5e1",
-                    borderRadius: "12px",
-                    padding: "10px 14px",
-                    background: "#ffffff",
-                    cursor: "pointer",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    minHeight: "44px",
-                  }}
-                >
-                  {(() => {
-                    const sel = products.find((p) => p.id === selectedInventoryProdId);
-                    if (!sel) return <span style={{ color: "#94a3b8", fontSize: "13.5px" }}>Chọn sản phẩm cần lập phiếu...</span>;
-                    return (
-                      <span style={{ fontSize: "13.5px", fontWeight: 700, color: "#0f172a" }}>
-                        <code style={{ background: "#f1f5f9", padding: "2px 6px", borderRadius: "4px", marginRight: "6px", color: "#1e293b", fontSize: "12px" }}>
-                          [P{String(sel.id).padStart(4, "0")}]
-                        </code>
-                        {sel.name} — <span style={{ color: "#166534", fontWeight: 800 }}>Tồn kho: {sel.stock !== undefined ? sel.stock : 15} món</span>
-                      </span>
-                    );
-                  })()}
-                  <span style={{ fontSize: "11px", color: "#64748b" }}>{isInventoryProdDropdownOpen ? "▲" : "▼"}</span>
-                </div>
-
-                {/* Dropdown Menu Popup */}
-                {isInventoryProdDropdownOpen && (
+                  <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "6px" }}>
+                    Hình Ảnh Sản Phẩm *
+                  </label>
                   <div
                     style={{
-                      position: "absolute",
-                      top: "100%",
-                      left: 0,
-                      right: 0,
-                      marginTop: "6px",
-                      background: "#ffffff",
-                      border: "1.5px solid #cbd5e1",
-                      borderRadius: "14px",
-                      boxShadow: "0 12px 28px rgba(0,0,0,0.15)",
-                      zIndex: 10000,
-                      maxHeight: "260px",
-                      overflowY: "auto",
-                      padding: "8px",
+                      width: "100%",
+                      height: "180px",
+                      borderRadius: "16px",
+                      border: "2px dashed #cbd5e1",
+                      background: "#f8fafc",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      overflow: "hidden",
+                      position: "relative",
                     }}
                   >
-                    <input
-                      type="text"
-                      placeholder="Tìm nhanh theo mã [P000X] hoặc tên sản phẩm..."
-                      value={inventoryProdSearch}
-                      onChange={(e) => setInventoryProdSearch(e.target.value)}
-                      onClick={(e) => e.stopPropagation()}
-                      autoFocus
-                      style={{
-                        width: "100%",
-                        padding: "8px 12px",
-                        borderRadius: "8px",
-                        border: "1px solid #cbd5e1",
-                        fontSize: "12.5px",
-                        marginBottom: "6px",
-                        boxSizing: "border-box",
-                        outline: "none",
-                        fontFamily: "'Plus Jakarta Sans', sans-serif",
-                      }}
-                    />
+                    {formImageUrl ? (
+                      <img
+                        src={fixImagePath(formImageUrl)}
+                        alt="Preview"
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      />
+                    ) : (
+                      <div style={{ textAlign: "center", padding: "16px", color: "#94a3b8" }}>
+                        <Package className="w-10 h-10 stroke-1 mb-2 text-slate-400 mx-auto" />
+                        <span style={{ fontSize: "12px", fontWeight: 600 }}>Chưa chọn ảnh</span>
+                      </div>
+                    )}
 
-                    <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                      {products
-                        .filter((p) => {
-                          const q = inventoryProdSearch.toLowerCase().trim();
-                          if (!q) return true;
-                          const code = `p${String(p.id).padStart(4, "0")}`;
-                          return p.name.toLowerCase().includes(q) || code.includes(q);
-                        })
-                        .map((p) => {
-                          const isSelected = p.id === selectedInventoryProdId;
-                          return (
-                            <div
-                              key={p.id}
-                              onClick={() => {
-                                setSelectedInventoryProdId(p.id);
-                                if (inventoryMode === "AUDIT") {
-                                  setInventoryQty(String(p.stock !== undefined ? p.stock : 15));
-                                }
-                                setIsInventoryProdDropdownOpen(false);
-                                setInventoryProdSearch("");
-                              }}
-                              style={{
-                                padding: "8px 10px",
-                                borderRadius: "8px",
-                                background: isSelected ? "#f0fdf4" : "transparent",
-                                cursor: "pointer",
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                                transition: "background 0.15s ease",
-                              }}
-                              onMouseEnter={(e) => (e.currentTarget.style.background = isSelected ? "#dcfce7" : "#f8fafc")}
-                              onMouseLeave={(e) => (e.currentTarget.style.background = isSelected ? "#f0fdf4" : "transparent")}
-                            >
-                              <span style={{ fontSize: "13px", fontWeight: isSelected ? 800 : 600, color: isSelected ? "#166534" : "#1e293b" }}>
-                                <code style={{ background: "#f1f5f9", padding: "2px 6px", borderRadius: "4px", marginRight: "6px", fontSize: "11.5px" }}>
-                                  [P{String(p.id).padStart(4, "0")}]
-                                </code>
-                                {p.name}
-                              </span>
-                              <span style={{ fontSize: "12px", color: "#64748b", fontWeight: 700 }}>
-                                Tồn: <strong>{p.stock !== undefined ? p.stock : 15}</strong> món
-                              </span>
-                            </div>
-                          );
-                        })}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Quantity Inputs & Quick Pills */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1.2fr", gap: "16px", marginBottom: "16px" }}>
-                <div>
-                  <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "6px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                    {inventoryMode === "IMPORT" ? "Số Lượng Nhập (Món)" : inventoryMode === "EXPORT" ? "Số Lượng Xuất (Món)" : "Số Lượng Thực Tế Đếm Được (Món)"} *
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    className="form-control admin-setting-input"
-                    value={inventoryQty}
-                    onChange={(e) => setInventoryQty(e.target.value)}
-                    required
-                    style={{ borderRadius: "12px", padding: "12px 14px", fontSize: "16px", fontWeight: 900, color: "#0f172a", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-                  />
-                  {/* Quick Pills */}
-                  <div style={{ display: "flex", gap: "6px", marginTop: "8px" }}>
-                    {["5", "10", "20", "50", "100"].map((num) => (
-                      <button
-                        key={num}
-                        type="button"
-                        onClick={() => setInventoryQty(num)}
+                    {isUploadingImage && (
+                      <div
                         style={{
-                          padding: "3px 10px",
-                          borderRadius: "8px",
-                          border: "1px solid #cbd5e1",
-                          background: inventoryQty === num ? "#047857" : "#f8fafc",
-                          color: inventoryQty === num ? "#ffffff" : "#475569",
-                          fontSize: "11px",
+                          position: "absolute",
+                          inset: 0,
+                          background: "rgba(15, 23, 42, 0.7)",
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          color: "#ffffff",
+                          fontSize: "12px",
                           fontWeight: 800,
-                          cursor: "pointer",
+                          gap: "8px",
+                          backdropFilter: "blur(4px)",
                         }}
                       >
-                        {num}
-                      </button>
-                    ))}
+                        <i className="fa-solid fa-spinner fa-spin text-emerald-400 text-xl"></i>
+                        <span>Đang tải ảnh lên Cloud...</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    accept="image/*"
+                    onChange={handleImageFileChange}
+                    style={{ display: "none" }}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploadingImage}
+                    style={{
+                      width: "100%",
+                      marginTop: "8px",
+                      padding: "8px",
+                      borderRadius: "10px",
+                      background: "linear-gradient(135deg, #065f46 0%, #047857 100%)",
+                      color: "#ffffff",
+                      border: "none",
+                      fontWeight: 800,
+                      fontSize: "12px",
+                      cursor: isUploadingImage ? "not-allowed" : "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "6px",
+                    }}
+                  >
+                    <i className="fa-solid fa-cloud-arrow-up"></i> Tải Ảnh Từ Máy Tính
+                  </button>
+                  {uploadStatusMsg && (
+                    <p style={{ fontSize: "11px", fontWeight: 700, color: uploadStatusMsg.includes("thành công") ? "#15803d" : "#b45309", marginTop: "4px", textAlign: "center" }}>
+                      {uploadStatusMsg}
+                    </p>
+                  )}
+                </div>
+
+                {/* Right: Product Metadata */}
+                <div>
+                  <div style={{ marginBottom: "14px" }}>
+                    <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "4px" }}>
+                      Tên Sản Phẩm *
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control admin-setting-input"
+                      placeholder="Ví dụ: Bàn Ăn Gỗ Sồi Tự Nhiên"
+                      value={formName}
+                      onChange={(e) => setFormName(e.target.value)}
+                      required
+                      style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13.5px" }}
+                    />
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "14px" }}>
+                    <div>
+                      <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "4px" }}>
+                        Danh Mục *
+                      </label>
+                      <select
+                        className="form-control admin-setting-input"
+                        value={formCategory}
+                        onChange={(e) => setFormCategory(e.target.value)}
+                        required
+                        style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13px" }}
+                      >
+                        {dbCategories.map((c) => (
+                          <option key={c.id} value={(c as any).code || c.name}>
+                            {c.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "4px" }}>
+                        Giá Bán (VNĐ) *
+                      </label>
+                      <input
+                        type="number"
+                        className="form-control admin-setting-input"
+                        placeholder="Ví dụ: 3500000"
+                        value={formPrice}
+                        onChange={(e) => setFormPrice(e.target.value)}
+                        required
+                        style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13px" }}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "14px" }}>
+                    <div>
+                      <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "4px" }}>
+                        {editingProduct ? "Số Lượng Tồn Hiện Tại (Khóa)" : "Số Lượng Tồn Kho Ban Đầu *"}
+                      </label>
+                      <input
+                        type="number"
+                        className="form-control admin-setting-input"
+                        value={formStock}
+                        onChange={(e) => setFormStock(e.target.value)}
+                        readOnly={!!editingProduct}
+                        style={{
+                          borderRadius: "12px",
+                          padding: "10px 14px",
+                          fontSize: "13px",
+                          background: editingProduct ? "#f1f5f9" : "#ffffff",
+                          color: editingProduct ? "#64748b" : "#0f172a",
+                          fontWeight: 800,
+                        }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "4px" }}>
+                        Trạng Thái Hiển Thị *
+                      </label>
+                      <select
+                        className="form-control admin-setting-input"
+                        value={formStatus}
+                        onChange={(e) => setFormStatus(e.target.value as any)}
+                        style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13px" }}
+                      >
+                        <option value="Active">● Đang bán (Hiển thị công khai)</option>
+                        <option value="Hidden">○ Đã ẩn (Tạm ngừng kinh doanh)</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
-
-                {/* Stock Math & Audit Discrepancy Preview */}
-                {(() => {
-                  const targetP = products.find((p) => p.id === selectedInventoryProdId);
-                  const currentS = targetP?.stock !== undefined ? targetP.stock : 15;
-                  const qtyVal = parseInt(inventoryQty, 10) || 0;
-                  let calcNewS = currentS;
-                  let discrepancy = 0;
-
-                  if (inventoryMode === "IMPORT") calcNewS = currentS + qtyVal;
-                  else if (inventoryMode === "EXPORT") calcNewS = Math.max(0, currentS - qtyVal);
-                  else if (inventoryMode === "AUDIT") {
-                    calcNewS = qtyVal;
-                    discrepancy = qtyVal - currentS;
-                  }
-
-                  return (
-                    <div
-                      style={{
-                        background: inventoryMode === "AUDIT" && discrepancy !== 0 ? "#fffbeb" : "#f8fafc",
-                        border: inventoryMode === "AUDIT" && discrepancy !== 0 ? "1.5px solid #fde68a" : "1.5px solid #e2e8f0",
-                        borderRadius: "14px",
-                        padding: "12px 16px",
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <div style={{ fontSize: "11px", fontWeight: 800, color: "#64748b", textTransform: "uppercase", marginBottom: "4px" }}>
-                        {inventoryMode === "AUDIT" ? "Đối Soát Kiểm Kê Hệ Thống" : "Tồn Kho Sau Giao Dịch"}
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <span style={{ fontSize: "15px", fontWeight: 700, color: "#64748b" }}>HT: {currentS}</span>
-                        <span style={{ fontSize: "14px", color: "#94a3b8" }}>➔</span>
-                        <span style={{ fontSize: "20px", fontWeight: 900, color: calcNewS <= 5 ? "#b45309" : "#047857" }}>
-                          {calcNewS} <span style={{ fontSize: "12px", fontWeight: 700 }}>món</span>
-                        </span>
-                      </div>
-
-                      {inventoryMode === "AUDIT" ? (
-                        <div style={{ fontSize: "11.5px", fontWeight: 800, color: discrepancy === 0 ? "#047857" : discrepancy < 0 ? "#b91c1c" : "#b45309", marginTop: "4px" }}>
-                          {discrepancy === 0
-                            ? "✓ Đếm thực tế khớp 100% hệ thống"
-                            : discrepancy < 0
-                            ? `! Thất thoát / Thiếu ${Math.abs(discrepancy)} món so với sổ sách`
-                            : `! Thừa ${discrepancy} món so với sổ sách`}
-                        </div>
-                      ) : (
-                        <div style={{ fontSize: "11.5px", fontWeight: 800, color: inventoryMode === "IMPORT" ? "#047857" : "#b91c1c", marginTop: "4px" }}>
-                          {inventoryMode === "IMPORT" ? `Bổ sung kho: +${qtyVal} món` : `Xuất bán / chuyển: -${qtyVal} món`}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
               </div>
 
-              {/* AUDIT DISCREPANCY REASON SELECTOR */}
-              {inventoryMode === "AUDIT" && (
-                <div style={{ marginBottom: "16px", background: "#fefce8", padding: "14px", borderRadius: "14px", border: "1px solid #fef08a" }}>
-                  <label style={{ fontSize: "12.5px", fontWeight: 800, color: "#854d0e", display: "block", marginBottom: "8px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                    Lý Do Lệch Kho / Thất Thoát Hàng Thực Tế *
-                  </label>
-                  <select
-                    className="form-control admin-setting-input"
-                    value={discrepancyPresetReason}
-                    onChange={(e) => setDiscrepancyPresetReason(e.target.value)}
-                    style={{ borderRadius: "10px", padding: "10px 12px", fontSize: "13px", fontWeight: 700, fontFamily: "'Plus Jakarta Sans', sans-serif", marginBottom: "8px" }}
-                  >
-                    <option value="Mất hàng / Thất thoát kiểm kho">Mất hàng / Thất thoát chưa rõ nguyên nhân</option>
-                    <option value="Hư hỏng / Lỗi vận chuyển / Trầy xước">Hư hỏng / Lỗi vận chuyển / Trầy xước gỗ</option>
-                    <option value="Sai lệch do đếm sót đợt kiểm trước">Sai lệch đếm sót đợt kiểm kê trước</option>
-                    <option value="Xuất hàng dùng thử / Quà tặng mẫu">Xuất hàng dùng thử / Quà tặng trưng bày</option>
-                    <option value="Hàng trả về chưa kịp ghi nhận">Hàng khách trả về chưa kịp nhập sổ</option>
-                    <option value="Khác (Ghi rõ ở bên dưới)">Lý do khác (Nhập ghi chú chi tiết bên dưới)</option>
-                  </select>
-                </div>
-              )}
-
-              {/* Supplier / Destination */}
-              <div style={{ marginBottom: "16px" }}>
-                <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "6px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                  {inventoryMode === "IMPORT" ? "Nhà Cung Cấp / Xưởng Sản Xuất" : inventoryMode === "EXPORT" ? "Nơi Nhận / Showroom Xuất Đến" : "Đơn Vị / Cá Nhân Thực Hiện Kiểm Kho"}
-                </label>
-                <input
-                  type="text"
-                  className="form-control admin-setting-input"
-                  placeholder={inventoryMode === "IMPORT" ? "Tổng Kho Gỗ An Cường / Xưởng Đồng Nai" : inventoryMode === "EXPORT" ? "Showroom Quận 1 / Kho Hàng Trưng Bày" : "Ban Kiểm Kê Nội Bộ Kho"}
-                  value={inventorySupplier}
-                  onChange={(e) => setInventorySupplier(e.target.value)}
-                  style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13.5px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-                />
-              </div>
-
-              {/* Reason & Notes */}
               <div style={{ marginBottom: "20px" }}>
-                <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "6px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                  Ghi Chú Bổ Sung & Diễn Giải Chi Tiết
+                <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "4px" }}>
+                  Mô Tả Sản Phẩm
                 </label>
                 <textarea
-                  rows={2}
+                  rows={3}
                   className="form-control admin-setting-input"
-                  placeholder="Ghi chú chi tiết lý do lập phiếu nhập/xuất/kiểm kê..."
-                  value={inventoryReason}
-                  onChange={(e) => setInventoryReason(e.target.value)}
-                  style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                  placeholder="Nhập mô tả chi tiết chất liệu, kích thước..."
+                  value={formDesc}
+                  onChange={(e) => setFormDesc(e.target.value)}
+                  style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13px" }}
                 />
               </div>
 
-              {/* Footer Buttons */}
               <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
                 <button
                   type="button"
-                  onClick={() => setShowInventoryModal(false)}
+                  onClick={() => setShowModal(false)}
                   style={{
-                    padding: "12px 24px",
-                    borderRadius: "999px",
+                    padding: "10px 20px",
+                    borderRadius: "12px",
                     border: "1px solid #cbd5e1",
                     background: "#ffffff",
                     fontWeight: 800,
                     fontSize: "13px",
-                    fontFamily: "'Plus Jakarta Sans', sans-serif",
-                    cursor: "pointer",
                     color: "#475569",
+                    cursor: "pointer",
                   }}
                 >
                   Hủy Bỏ
@@ -1656,39 +1336,18 @@ export default function AdminProductsPage() {
                 <button
                   type="submit"
                   style={{
-                    padding: "12px 28px",
-                    borderRadius: "999px",
+                    padding: "10px 24px",
+                    borderRadius: "12px",
                     border: "none",
-                    background: inventoryMode === "IMPORT"
-                      ? "linear-gradient(135deg, #065f46 0%, #047857 100%)"
-                      : inventoryMode === "EXPORT"
-                      ? "linear-gradient(135deg, #991b1b 0%, #dc2626 100%)"
-                      : "linear-gradient(135deg, #78350f 0%, #d97706 100%)",
+                    background: "var(--primary-color, #2e7d32)",
                     color: "#ffffff",
                     fontWeight: 900,
-                    fontSize: "14px",
-                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                    fontSize: "13px",
                     cursor: "pointer",
-                    boxShadow: "0 4px 14px rgba(6, 95, 70, 0.3)",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "8px",
+                    boxShadow: "0 4px 12px rgba(46, 125, 50, 0.25)",
                   }}
                 >
-                  <i
-                    className={
-                      inventoryMode === "IMPORT"
-                        ? "fa-solid fa-arrow-down"
-                        : inventoryMode === "EXPORT"
-                        ? "fa-solid fa-arrow-up"
-                        : "fa-solid fa-clipboard-check"
-                    }
-                  ></i>
-                  {inventoryMode === "IMPORT"
-                    ? "Xác Nhận Nhập Kho Hàng"
-                    : inventoryMode === "EXPORT"
-                    ? "Xác Nhận Xuất Kho Hàng"
-                    : "Xác Nhận Cân Bằng Tồn Kho"}
+                  {editingProduct ? "Lưu Thay Đổi" : "Tạo Sản Phẩm Mới"}
                 </button>
               </div>
             </form>
@@ -1696,22 +1355,19 @@ export default function AdminProductsPage() {
         </div>
       )}
 
-      {/* 5. HISTORICAL STOCK LEDGER LOGS MODAL (BỘ LỌC NGÀY, THÁNG, NĂM & TÌM KIẾM DỮ LIỆU) */}
-      {showHistoryModal && (
+      {/* 4. WORKSPACE MODAL: QUẢN LÝ NGHIỆP VỤ NHẬP XUẤT TỒN KHO & NHẬT KÝ (REDESIGNED) */}
+      {showInventoryModal && (
         <div
           style={{
             position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
+            inset: 0,
             background: "rgba(15, 23, 42, 0.65)",
-            backdropFilter: "blur(8px)",
+            backdropFilter: "blur(6px)",
             zIndex: 9999,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            padding: "24px 16px",
+            padding: "20px",
           }}
         >
           <div
@@ -1719,8 +1375,8 @@ export default function AdminProductsPage() {
               background: "#ffffff",
               borderRadius: "24px",
               width: "100%",
-              maxWidth: "920px",
-              maxHeight: "88vh",
+              maxWidth: "1040px",
+              maxHeight: "90vh",
               display: "flex",
               flexDirection: "column",
               boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
@@ -1728,284 +1384,1008 @@ export default function AdminProductsPage() {
               border: "1.5px solid #e2e8f0",
             }}
           >
-            {/* Bright Header */}
+            {/* Modal Header with View Tabs */}
             <div
               style={{
-                padding: "20px 24px",
-                background: "linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%)",
-                borderBottom: "1.5px solid #bae6fd",
+                padding: "18px 24px",
+                background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
+                borderBottom: "1.5px solid #e2e8f0",
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
+                flexWrap: "wrap",
+                gap: "12px",
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <History className="w-6 h-6 text-sky-600" />
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div
+                  style={{
+                    width: "44px",
+                    height: "44px",
+                    borderRadius: "14px",
+                    background: "var(--primary-color, #2e7d32)",
+                    color: "#ffffff",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "18px",
+                    boxShadow: "0 4px 12px rgba(46, 125, 50, 0.25)",
+                  }}
+                >
+                  <i className="fa-solid fa-warehouse"></i>
+                </div>
                 <div>
-                  <h3 style={{ fontSize: "18px", fontWeight: 900, margin: 0, color: "#0369a1", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                    <i className="fa-solid fa-book-bookmark" style={{ marginRight: "8px" }}></i>
-                    Nhật Ký Lịch Sử Giao Dịch Nhập Xuất Tồn Kho
+                  <h3 style={{ fontSize: "17.5px", fontWeight: 900, color: "#0f172a", margin: 0 }}>
+                    Quản Lý Nghiệp Vụ Nhập Xuất Tồn Kho
                   </h3>
-                  <p style={{ fontSize: "12px", color: "#0284c7", margin: 0, fontWeight: 700 }}>Theo dõi biến động kho hàng tự động theo thời gian thực</p>
+                  <p style={{ fontSize: "12px", color: "#64748b", margin: "2px 0 0", fontWeight: 600 }}>
+                    Lập phiếu điều chuyển hàng hóa, đối soát kiểm kê & tra cứu sổ nhật ký kho
+                  </p>
                 </div>
               </div>
-              <button
-                onClick={() => setShowHistoryModal(false)}
-                style={{
-                  background: "#ffffff",
-                  border: "1px solid #cbd5e1",
-                  borderRadius: "50%",
-                  width: "36px",
-                  height: "36px",
-                  color: "#334155",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  cursor: "pointer",
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.06)",
-                }}
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
 
-            {/* FILTER BAR FOR HISTORY LOGS */}
-            <div style={{ padding: "14px 24px", background: "#f8fafc", borderBottom: "1px solid #e2e8f0", display: "flex", flexDirection: "column", gap: "12px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-                {/* Search Bar */}
-                <input
-                  type="text"
-                  placeholder="Tìm mã phiếu, tên SP, nhà cung cấp, lý do..."
-                  value={historySearchQuery}
-                  onChange={(e) => setHistorySearchQuery(e.target.value)}
-                  style={{
-                    padding: "8px 14px",
-                    borderRadius: "10px",
-                    border: "1px solid #cbd5e1",
-                    fontSize: "12.5px",
-                    minWidth: "240px",
-                    flex: 1,
-                    fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  }}
-                />
-
-                {/* Filter Type Selector */}
-                <select
-                  value={historyTypeFilter}
-                  onChange={(e) => setHistoryTypeFilter(e.target.value)}
-                  style={{
-                    padding: "8px 12px",
-                    borderRadius: "10px",
-                    border: "1px solid #cbd5e1",
-                    fontSize: "12.5px",
-                    fontWeight: 700,
-                    fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  }}
-                >
-                  <option value="ALL">Tất cả loại giao dịch</option>
-                  <option value="IMPORT">Nhập Kho (Tăng tồn)</option>
-                  <option value="EXPORT">Xuất Kho (Giảm tồn)</option>
-                  <option value="AUDIT">Kiểm Kê & Cân Bằng</option>
-                </select>
-
-                {/* Filter Time Mode Selector */}
-                <select
-                  value={historyTimeFilterMode}
-                  onChange={(e) => setHistoryTimeFilterMode(e.target.value as any)}
-                  style={{
-                    padding: "8px 12px",
-                    borderRadius: "10px",
-                    border: "1px solid #cbd5e1",
-                    fontSize: "12.5px",
-                    fontWeight: 700,
-                    fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  }}
-                >
-                  <option value="ALL">Tất cả thời gian</option>
-                  <option value="DAY">Lọc theo Ngày</option>
-                  <option value="MONTH">Lọc theo Tháng</option>
-                  <option value="YEAR">Lọc theo Năm</option>
-                </select>
-
-                {/* Dynamic Date/Month/Year Picker Input */}
-                {historyTimeFilterMode === "DAY" && (
-                  <input
-                    type="date"
-                    value={historyFilterDate}
-                    onChange={(e) => setHistoryFilterDate(e.target.value)}
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                {/* Switcher Tab Buttons */}
+                <div style={{ display: "flex", background: "#e2e8f0", padding: "4px", borderRadius: "12px", gap: "4px" }}>
+                  <button
+                    type="button"
+                    onClick={() => setInventoryActiveTab("FORM")}
                     style={{
-                      padding: "7px 12px",
-                      borderRadius: "10px",
-                      border: "1.5px solid #0284c7",
+                      padding: "7px 14px",
+                      borderRadius: "9px",
+                      border: "none",
+                      background: inventoryActiveTab === "FORM" ? "#ffffff" : "transparent",
+                      color: inventoryActiveTab === "FORM" ? "#0f172a" : "#64748b",
+                      fontWeight: 800,
                       fontSize: "12.5px",
-                      fontFamily: "'Plus Jakarta Sans', sans-serif",
-                    }}
-                  />
-                )}
-
-                {historyTimeFilterMode === "MONTH" && (
-                  <input
-                    type="month"
-                    value={historyFilterMonth}
-                    onChange={(e) => setHistoryFilterMonth(e.target.value)}
-                    style={{
-                      padding: "7px 12px",
-                      borderRadius: "10px",
-                      border: "1.5px solid #0284c7",
-                      fontSize: "12.5px",
-                      fontFamily: "'Plus Jakarta Sans', sans-serif",
-                    }}
-                  />
-                )}
-
-                {historyTimeFilterMode === "YEAR" && (
-                  <select
-                    value={historyFilterYear}
-                    onChange={(e) => setHistoryFilterYear(e.target.value)}
-                    style={{
-                      padding: "8px 12px",
-                      borderRadius: "10px",
-                      border: "1.5px solid #0284c7",
-                      fontSize: "12.5px",
-                      fontWeight: 700,
-                      fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      boxShadow: inventoryActiveTab === "FORM" ? "0 2px 6px rgba(0,0,0,0.06)" : "none",
                     }}
                   >
-                    <option value="2026">Năm 2026</option>
-                    <option value="2025">Năm 2025</option>
-                    <option value="2024">Năm 2024</option>
-                  </select>
-                )}
+                    <i className="fa-solid fa-file-circle-plus"></i> Lập Phiếu Kho Mới
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setInventoryActiveTab("LEDGER")}
+                    style={{
+                      padding: "7px 14px",
+                      borderRadius: "9px",
+                      border: "none",
+                      background: inventoryActiveTab === "LEDGER" ? "#ffffff" : "transparent",
+                      color: inventoryActiveTab === "LEDGER" ? "#0f172a" : "#64748b",
+                      fontWeight: 800,
+                      fontSize: "12.5px",
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      boxShadow: inventoryActiveTab === "LEDGER" ? "0 2px 6px rgba(0,0,0,0.06)" : "none",
+                    }}
+                  >
+                    <i className="fa-solid fa-book-bookmark"></i> Sổ Nhật Ký Giao Dịch ({stockLogs.length})
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowInventoryModal(false)}
+                  style={{
+                    background: "#ffffff",
+                    border: "1px solid #cbd5e1",
+                    borderRadius: "50%",
+                    width: "34px",
+                    height: "34px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                  }}
+                >
+                  <X className="w-4 h-4 text-slate-600" />
+                </button>
               </div>
             </div>
 
-            {/* Content Table */}
-            {(() => {
-              const filteredLogs = stockLogs.filter((log) => {
-                // Type Filter
-                if (historyTypeFilter !== "ALL" && log.type !== historyTypeFilter) return false;
-
-                // Search Query Filter
-                if (historySearchQuery.trim()) {
-                  const q = historySearchQuery.toLowerCase();
-                  const matchCode = log.code.toLowerCase().includes(q);
-                  const matchName = log.productName.toLowerCase().includes(q);
-                  const matchSupplier = log.supplier.toLowerCase().includes(q);
-                  const matchReason = log.reason.toLowerCase().includes(q);
-                  if (!matchCode && !matchName && !matchSupplier && !matchReason) return false;
-                }
-
-                // Time Filter Mode
-                if (historyTimeFilterMode === "DAY" && historyFilterDate) {
-                  const parts = historyFilterDate.split("-");
-                  if (parts.length === 3) {
-                    const formattedMatch = `${parts[2]}/${parts[1]}/${parts[0]}`;
-                    if (!log.createdAt.includes(formattedMatch)) return false;
-                  }
-                } else if (historyTimeFilterMode === "MONTH" && historyFilterMonth) {
-                  const parts = historyFilterMonth.split("-");
-                  if (parts.length === 2) {
-                    const formattedMatch = `/${parts[1]}/${parts[0]}`;
-                    if (!log.createdAt.includes(formattedMatch)) return false;
-                  }
-                } else if (historyTimeFilterMode === "YEAR" && historyFilterYear) {
-                  if (!log.createdAt.includes(historyFilterYear)) return false;
-                }
-
-                return true;
-              });
-
-              return (
-                <div style={{ padding: "20px", overflowY: "auto", flex: 1 }}>
-                  {filteredLogs.length === 0 ? (
-                    <div style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>
-                      <Package className="w-12 h-12 stroke-1 text-slate-300 mx-auto mb-2" />
-                      <p style={{ fontSize: "14px", fontWeight: 700, margin: "8px 0 4px" }}>Không tìm thấy phiếu kho nào khớp bộ lọc</p>
-                      <p style={{ fontSize: "12px", color: "#94a3b8" }}>Thử thay đổi từ khóa hoặc bộ lọc thời gian.</p>
+            {/* Modal Body Container */}
+            <div style={{ flex: 1, overflowY: "auto", padding: "24px" }}>
+              {inventoryActiveTab === "FORM" ? (
+                /* TAB 1: FORM LẬP PHIẾU KHO */
+                <form onSubmit={handleSaveInventoryTransaction}>
+                  {/* Top Bar: Dropdown Loại Thao Tác Kho & Chế Độ Batch */}
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr auto",
+                      gap: "16px",
+                      marginBottom: "20px",
+                      alignItems: "end",
+                    }}
+                  >
+                    {/* Dropdown Operation Selector */}
+                    <div>
+                      <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "6px" }}>
+                        <i className="fa-solid fa-layer-group" style={{ marginRight: "6px", color: "var(--primary-color, #2e7d32)" }}></i>
+                        Loại Thao Tác Nghiệp Vụ Kho *
+                      </label>
+                      <select
+                        value={inventoryMode}
+                        onChange={(e) => {
+                          const mode = e.target.value as "IMPORT" | "EXPORT" | "AUDIT";
+                          setInventoryMode(mode);
+                          if (mode === "AUDIT") {
+                            const targetProd = products.find((p) => p.id === selectedInventoryProdId);
+                            if (targetProd) setInventoryQty(String(targetProd.stock !== undefined ? targetProd.stock : 15));
+                          }
+                        }}
+                        style={{
+                          width: "100%",
+                          padding: "11px 16px",
+                          borderRadius: "12px",
+                          border: "2px solid #cbd5e1",
+                          fontSize: "13.5px",
+                          fontWeight: 800,
+                          background: inventoryMode === "IMPORT" ? "#f0fdf4" : inventoryMode === "EXPORT" ? "#fef2f2" : "#fffbeb",
+                          color: inventoryMode === "IMPORT" ? "#166534" : inventoryMode === "EXPORT" ? "#991b1b" : "#b45309",
+                          cursor: "pointer",
+                          outline: "none",
+                        }}
+                      >
+                        <option value="IMPORT">📥 Phiếu Nhập Kho (Mã NK... - Bổ sung tồn kho từ xưởng / nhà cung cấp)</option>
+                        <option value="EXPORT">📤 Phiếu Xuất Kho (Mã XK... - Xuất giao showroom, bán lẻ, điều chuyển)</option>
+                        <option value="AUDIT">📋 Phiếu Kiểm Kê Kho (Mã KK... - Đối soát đếm thực tế vs Sổ sách hệ thống)</option>
+                      </select>
                     </div>
-                  ) : (
-                    <table className="admin-table">
-                      <thead>
-                        <tr>
-                          <th>Mã Phiếu Duy Nhất</th>
-                          <th>Sản Phẩm</th>
-                          <th>Loại Giao Dịch</th>
-                          <th>Số Lượng (Món)</th>
-                          <th>Tồn Sau GD</th>
-                          <th>Nhà Cung Cấp / Lý Do</th>
-                          <th>Thời Gian</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredLogs.map((log) => (
-                          <tr key={log.id}>
-                            <td>
-                              <code style={{ background: "#f1f5f9", padding: "4px 8px", borderRadius: "6px", fontWeight: 900, fontSize: "11.5px", color: "#0f172a" }}>
-                                {log.code}
-                              </code>
-                            </td>
-                            <td><strong style={{ fontSize: "13px", color: "#0f172a" }}>{log.productName}</strong></td>
-                            <td>
-                              <span
+
+                    {/* Batch Mode Checkbox Switch */}
+                    <div
+                      style={{
+                        padding: "10px 16px",
+                        borderRadius: "12px",
+                        background: isBatchMode ? "#e0f2fe" : "#f8fafc",
+                        border: isBatchMode ? "1.5px solid #7dd3fc" : "1.5px solid #e2e8f0",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        cursor: "pointer",
+                        userSelect: "none",
+                      }}
+                      onClick={() => setIsBatchMode(!isBatchMode)}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isBatchMode}
+                        onChange={(e) => setIsBatchMode(e.target.checked)}
+                        style={{ width: "16px", height: "16px", cursor: "pointer" }}
+                      />
+                      <label style={{ fontSize: "13px", fontWeight: 800, color: isBatchMode ? "#0369a1" : "#475569", cursor: "pointer", margin: 0 }}>
+                        Lập phiếu cho nhiều sản phẩm (Hàng loạt)
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Mode Banner Indicator */}
+                  <div
+                    style={{
+                      padding: "12px 16px",
+                      borderRadius: "12px",
+                      marginBottom: "20px",
+                      background: inventoryMode === "IMPORT" ? "#dcfce7" : inventoryMode === "EXPORT" ? "#fee2e2" : "#fef3c7",
+                      border: inventoryMode === "IMPORT" ? "1px solid #bbf7d0" : inventoryMode === "EXPORT" ? "1px solid #fecaca" : "1px solid #fde68a",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <i
+                        className={
+                          inventoryMode === "IMPORT"
+                            ? "fa-solid fa-arrow-down text-emerald-700"
+                            : inventoryMode === "EXPORT"
+                            ? "fa-solid fa-arrow-up text-rose-700"
+                            : "fa-solid fa-clipboard-check text-amber-700"
+                        }
+                        style={{ fontSize: "16px" }}
+                      ></i>
+                      <strong
+                        style={{
+                          fontSize: "13px",
+                          color: inventoryMode === "IMPORT" ? "#14532d" : inventoryMode === "EXPORT" ? "#7f1d1d" : "#78350f",
+                        }}
+                      >
+                        {inventoryMode === "IMPORT"
+                          ? "Quy trình Nhập Kho Hàng Hóa (Tăng tồn thực tế)"
+                          : inventoryMode === "EXPORT"
+                          ? "Quy trình Xuất Kho Hàng Hóa (Giảm tồn thực tế)"
+                          : "Quy trình Kiểm Kê & Cân Bằng Kho (Khớp số lượng thực tế đếm được)"}
+                      </strong>
+                    </div>
+                    <code style={{ background: "#ffffff", padding: "3px 8px", borderRadius: "6px", fontSize: "11.5px", fontWeight: 800, color: "#1e293b" }}>
+                      Mã phiếu tự sinh: {inventoryMode === "IMPORT" ? "NK" : inventoryMode === "EXPORT" ? "XK" : "KK"}-{new Date().getFullYear()}{String(new Date().getMonth() + 1).padStart(2, "0")}{String(new Date().getDate()).padStart(2, "0")}-AUTO
+                    </code>
+                  </div>
+
+                  {/* FORM CONTENT: SINGLE MODE vs BATCH MODE */}
+                  {!isBatchMode ? (
+                    /* 1. SINGLE PRODUCT VIEW */
+                    <div>
+                      {/* Product Selector */}
+                      <div style={{ marginBottom: "16px", position: "relative" }}>
+                        <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "6px" }}>
+                          Sản Phẩm Cần {inventoryMode === "IMPORT" ? "Nhập Kho" : inventoryMode === "EXPORT" ? "Xuất Kho" : "Kiểm Kê"} *
+                        </label>
+
+                        <div
+                          onClick={() => setIsInventoryProdDropdownOpen(!isInventoryProdDropdownOpen)}
+                          style={{
+                            border: "1.5px solid #cbd5e1",
+                            borderRadius: "12px",
+                            padding: "10px 14px",
+                            background: "#ffffff",
+                            cursor: "pointer",
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            minHeight: "44px",
+                          }}
+                        >
+                          {(() => {
+                            const sel = products.find((p) => p.id === selectedInventoryProdId);
+                            if (!sel) return <span style={{ color: "#94a3b8", fontSize: "13px" }}>Chọn sản phẩm...</span>;
+                            return (
+                              <span style={{ fontSize: "13.5px", fontWeight: 700, color: "#0f172a" }}>
+                                <code style={{ background: "#f1f5f9", padding: "2px 6px", borderRadius: "4px", marginRight: "6px", color: "#1e293b", fontSize: "11.5px" }}>
+                                  [P{String(sel.id).padStart(4, "0")}]
+                                </code>
+                                {sel.name} — <span style={{ color: "#166534", fontWeight: 800 }}>Tồn kho: {sel.stock !== undefined ? sel.stock : 15} món</span>
+                              </span>
+                            );
+                          })()}
+                          <span style={{ fontSize: "11px", color: "#64748b" }}>{isInventoryProdDropdownOpen ? "▲" : "▼"}</span>
+                        </div>
+
+                        {/* Searchable Dropdown Popup */}
+                        {isInventoryProdDropdownOpen && (
+                          <div
+                            style={{
+                              position: "absolute",
+                              top: "100%",
+                              left: 0,
+                              right: 0,
+                              marginTop: "6px",
+                              background: "#ffffff",
+                              border: "1.5px solid #cbd5e1",
+                              borderRadius: "14px",
+                              boxShadow: "0 12px 28px rgba(0,0,0,0.15)",
+                              zIndex: 10000,
+                              maxHeight: "240px",
+                              overflowY: "auto",
+                              padding: "8px",
+                            }}
+                          >
+                            <input
+                              type="text"
+                              placeholder="Tìm nhanh theo mã [P000X] hoặc tên sản phẩm..."
+                              value={inventoryProdSearch}
+                              onChange={(e) => setInventoryProdSearch(e.target.value)}
+                              onClick={(e) => e.stopPropagation()}
+                              autoFocus
+                              style={{
+                                width: "100%",
+                                padding: "8px 12px",
+                                borderRadius: "8px",
+                                border: "1px solid #cbd5e1",
+                                fontSize: "12.5px",
+                                marginBottom: "6px",
+                                boxSizing: "border-box",
+                                outline: "none",
+                              }}
+                            />
+
+                            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                              {products
+                                .filter((p) => {
+                                  const q = inventoryProdSearch.toLowerCase().trim();
+                                  if (!q) return true;
+                                  const code = `p${String(p.id).padStart(4, "0")}`;
+                                  return p.name.toLowerCase().includes(q) || code.includes(q);
+                                })
+                                .map((p) => {
+                                  const isSelected = p.id === selectedInventoryProdId;
+                                  return (
+                                    <div
+                                      key={p.id}
+                                      onClick={() => {
+                                        setSelectedInventoryProdId(p.id);
+                                        setInventoryUnitPrice(String(p.price || 0));
+                                        if (inventoryMode === "AUDIT") {
+                                          setInventoryQty(String(p.stock !== undefined ? p.stock : 15));
+                                        }
+                                        setIsInventoryProdDropdownOpen(false);
+                                        setInventoryProdSearch("");
+                                      }}
+                                      style={{
+                                        padding: "8px 10px",
+                                        borderRadius: "8px",
+                                        background: isSelected ? "#f0fdf4" : "transparent",
+                                        cursor: "pointer",
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        alignItems: "center",
+                                      }}
+                                    >
+                                      <span style={{ fontSize: "13px", fontWeight: isSelected ? 800 : 600, color: isSelected ? "#166534" : "#1e293b" }}>
+                                        <code style={{ background: "#f1f5f9", padding: "2px 6px", borderRadius: "4px", marginRight: "6px", fontSize: "11.5px" }}>
+                                          [P{String(p.id).padStart(4, "0")}]
+                                        </code>
+                                        {p.name}
+                                      </span>
+                                      <span style={{ fontSize: "12px", color: "#64748b", fontWeight: 700 }}>
+                                        Tồn: <strong>{p.stock !== undefined ? p.stock : 15}</strong> món
+                                      </span>
+                                    </div>
+                                  );
+                                })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Quantity & Unit Price & Total Grid */}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1.2fr", gap: "16px", marginBottom: "16px" }}>
+                        {/* Quantity Input */}
+                        <div>
+                          <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "6px" }}>
+                            {inventoryMode === "IMPORT" ? "Số Lượng Nhập (Món)" : inventoryMode === "EXPORT" ? "Số Lượng Xuất (Món)" : "Số Lượng Đếm Thực Tế (Món)"} *
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            className="form-control admin-setting-input"
+                            value={inventoryQty}
+                            onChange={(e) => setInventoryQty(e.target.value)}
+                            required
+                            style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "15px", fontWeight: 900 }}
+                          />
+                          {/* Quick Pills */}
+                          <div style={{ display: "flex", gap: "6px", marginTop: "6px" }}>
+                            {["5", "10", "20", "50", "100"].map((num) => (
+                              <button
+                                key={num}
+                                type="button"
+                                onClick={() => setInventoryQty(num)}
                                 style={{
-                                  padding: "4px 10px",
-                                  borderRadius: "999px",
-                                  fontSize: "11.5px",
+                                  padding: "3px 8px",
+                                  borderRadius: "6px",
+                                  border: "1px solid #cbd5e1",
+                                  background: inventoryQty === num ? "#047857" : "#f8fafc",
+                                  color: inventoryQty === num ? "#ffffff" : "#475569",
+                                  fontSize: "11px",
                                   fontWeight: 800,
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: "6px",
-                                  background: log.type === "IMPORT" ? "#dcfce7" : log.type === "EXPORT" ? "#fee2e2" : "#fef3c7",
-                                  color: log.type === "IMPORT" ? "#15803d" : log.type === "EXPORT" ? "#b91c1c" : "#b45309",
+                                  cursor: "pointer",
                                 }}
                               >
-                                <i
-                                  className={
-                                    log.type === "IMPORT"
-                                      ? "fa-solid fa-arrow-down"
-                                      : log.type === "EXPORT"
-                                      ? "fa-solid fa-arrow-up"
-                                      : "fa-solid fa-clipboard-check"
-                                  }
-                                ></i>
-                                {log.type === "IMPORT" ? "Nhập Kho" : log.type === "EXPORT" ? "Xuất Kho" : "Kiểm Kê"}
-                              </span>
-                            </td>
-                            <td style={{ fontWeight: 900, color: log.type === "IMPORT" ? "#15803d" : log.type === "EXPORT" ? "#b91c1c" : "#b45309" }}>
-                              {log.qty} món
-                            </td>
-                            <td style={{ fontWeight: 800, color: "#1e293b" }}>{log.stockAfter} món</td>
-                            <td style={{ fontSize: "12px", color: "#475569" }}>
-                              <div style={{ fontWeight: 700, color: "#0f172a" }}>{log.supplier}</div>
-                              <div style={{ fontSize: "11px", color: "#64748b" }}>{log.reason}</div>
-                            </td>
-                            <td style={{ fontSize: "11.5px", color: "#64748b", fontWeight: 600 }}>{log.createdAt}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
-              );
-            })()}
+                                {num}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
 
-            {/* Footer */}
-            <div style={{ padding: "16px 24px", background: "#f8fafc", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "flex-end" }}>
-              <button
-                onClick={() => setShowHistoryModal(false)}
-                style={{
-                  padding: "8px 20px",
-                  borderRadius: "999px",
-                  border: "1px solid #cbd5e1",
-                  background: "#ffffff",
-                  fontWeight: 800,
-                  fontSize: "13px",
-                  cursor: "pointer",
-                  color: "#475569",
-                }}
-              >
-                Đóng Nhật Ký
-              </button>
+                        {/* Unit Price Input */}
+                        <div>
+                          <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "6px" }}>
+                            {inventoryMode === "IMPORT" ? "Đơn Giá Nhập (VNĐ)" : inventoryMode === "EXPORT" ? "Đơn Giá Xuất (VNĐ)" : "Giá Trị Định Mức (VNĐ)"}
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            className="form-control admin-setting-input"
+                            value={inventoryUnitPrice}
+                            onChange={(e) => setInventoryUnitPrice(e.target.value)}
+                            style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "14px", fontWeight: 800 }}
+                          />
+                          <span style={{ fontSize: "11px", color: "#64748b", marginTop: "4px", display: "block" }}>
+                            = {formatVND(Number(inventoryUnitPrice) || 0)}
+                          </span>
+                        </div>
+
+                        {/* Total Forecast Box */}
+                        {(() => {
+                          const targetP = products.find((p) => p.id === selectedInventoryProdId);
+                          const currentS = targetP?.stock !== undefined ? targetP.stock : 15;
+                          const qtyVal = parseInt(inventoryQty, 10) || 0;
+                          const uPrice = parseFloat(inventoryUnitPrice) || 0;
+                          const totalVal = qtyVal * uPrice;
+                          let calcNewS = currentS;
+                          let discrepancy = 0;
+
+                          if (inventoryMode === "IMPORT") calcNewS = currentS + qtyVal;
+                          else if (inventoryMode === "EXPORT") calcNewS = Math.max(0, currentS - qtyVal);
+                          else if (inventoryMode === "AUDIT") {
+                            calcNewS = qtyVal;
+                            discrepancy = qtyVal - currentS;
+                          }
+
+                          return (
+                            <div
+                              style={{
+                                background: inventoryMode === "AUDIT" && discrepancy !== 0 ? "#fffbeb" : "#f8fafc",
+                                border: inventoryMode === "AUDIT" && discrepancy !== 0 ? "1.5px solid #fde68a" : "1.5px solid #e2e8f0",
+                                borderRadius: "14px",
+                                padding: "10px 14px",
+                                display: "flex",
+                                flexDirection: "column",
+                                justifyContent: "center",
+                              }}
+                            >
+                              <div style={{ fontSize: "11px", fontWeight: 800, color: "#64748b", textTransform: "uppercase" }}>
+                                {inventoryMode === "AUDIT" ? "Đối Soát Kiểm Kê Hệ Thống" : "Tổng Giá Trị & Tồn Mới"}
+                              </div>
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "2px" }}>
+                                <span style={{ fontSize: "13.5px", fontWeight: 700, color: "#64748b" }}>HT: {currentS}</span>
+                                <span style={{ fontSize: "13px", color: "#94a3b8" }}>➔</span>
+                                <span style={{ fontSize: "16px", fontWeight: 900, color: calcNewS <= 5 ? "#b45309" : "#047857" }}>
+                                  {calcNewS} món
+                                </span>
+                              </div>
+                              <div style={{ fontSize: "12px", fontWeight: 900, color: "var(--primary-color, #2e7d32)", marginTop: "2px" }}>
+                                {inventoryMode === "AUDIT"
+                                  ? discrepancy === 0
+                                    ? "✓ Khớp 100% sổ sách"
+                                    : discrepancy < 0
+                                    ? `! Lệch thiếu: -${Math.abs(discrepancy)} món`
+                                    : `! Lệch thừa: +${discrepancy} món`
+                                  : `Tổng tiền: ${formatVND(totalVal)}`}
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+
+                      {/* Audit Discrepancy Reason Selector */}
+                      {inventoryMode === "AUDIT" && (
+                        <div style={{ marginBottom: "16px", background: "#fefce8", padding: "12px 14px", borderRadius: "12px", border: "1px solid #fef08a" }}>
+                          <label style={{ fontSize: "12.5px", fontWeight: 800, color: "#854d0e", display: "block", marginBottom: "6px" }}>
+                            Lý Do Lệch Kho / Thất Thoát Hàng Thực Tế *
+                          </label>
+                          <select
+                            className="form-control admin-setting-input"
+                            value={discrepancyPresetReason}
+                            onChange={(e) => setDiscrepancyPresetReason(e.target.value)}
+                            style={{ borderRadius: "10px", padding: "8px 12px", fontSize: "13px", fontWeight: 700 }}
+                          >
+                            <option value="Mất hàng / Thất thoát kiểm kho">Mất hàng / Thất thoát chưa rõ nguyên nhân</option>
+                            <option value="Hư hỏng / Lỗi vận chuyển / Trầy xước">Hư hỏng / Lỗi vận chuyển / Trầy xước gỗ</option>
+                            <option value="Sai lệch do đếm sót đợt kiểm trước">Sai lệch đếm sót đợt kiểm kê trước</option>
+                            <option value="Xuất hàng dùng thử / Quà tặng mẫu">Xuất hàng dùng thử / Quà tặng trưng bày</option>
+                            <option value="Hàng trả về chưa kịp ghi nhận">Hàng khách trả về chưa kịp nhập sổ</option>
+                            <option value="Khác (Ghi rõ ở bên dưới)">Lý do khác (Nhập ghi chú chi tiết)</option>
+                          </select>
+                        </div>
+                      )}
+
+                      {/* Partner & Reason */}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1.2fr", gap: "16px", marginBottom: "20px" }}>
+                        <div>
+                          <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "4px" }}>
+                            {inventoryMode === "IMPORT" ? "Nhà Cung Cấp / Xưởng" : inventoryMode === "EXPORT" ? "Nơi Nhận / Showroom Xuất Đến" : "Đơn Vị / Người Kiểm Kho"}
+                          </label>
+                          <input
+                            type="text"
+                            className="form-control admin-setting-input"
+                            placeholder={inventoryMode === "IMPORT" ? "Tổng Kho Gỗ An Cường" : inventoryMode === "EXPORT" ? "Showroom Chi Nhánh 1" : "Ban Kiểm Kê Nội Bộ"}
+                            value={inventorySupplier}
+                            onChange={(e) => setInventorySupplier(e.target.value)}
+                            style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13px" }}
+                          />
+                        </div>
+
+                        <div>
+                          <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "4px" }}>
+                            Ghi Chú Diễn Giải Chi Tiết
+                          </label>
+                          <input
+                            type="text"
+                            className="form-control admin-setting-input"
+                            placeholder="Ghi chú lý do lập phiếu nhập/xuất/kiểm kê..."
+                            value={inventoryReason}
+                            onChange={(e) => setInventoryReason(e.target.value)}
+                            style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13px" }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    /* 2. BATCH MODE (NHIỀU SẢN PHẨM CÙNG LÚC TRONG 1 PHIẾU) */
+                    <div>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                        <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b" }}>
+                          Danh Sách Các Mặt Hàng Trong Phiếu ({batchRows.length} mặt hàng)
+                        </label>
+                        <button
+                          type="button"
+                          onClick={handleAddBatchRow}
+                          style={{
+                            padding: "6px 14px",
+                            borderRadius: "8px",
+                            border: "none",
+                            background: "var(--primary-color, #2e7d32)",
+                            color: "#ffffff",
+                            fontSize: "12px",
+                            fontWeight: 800,
+                            cursor: "pointer",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px",
+                          }}
+                        >
+                          <i className="fa-solid fa-plus"></i> Thêm Dòng Sản Phẩm
+                        </button>
+                      </div>
+
+                      {/* Batch Rows Table */}
+                      <div style={{ maxHeight: "260px", overflowY: "auto", border: "1px solid #e2e8f0", borderRadius: "14px", marginBottom: "16px" }}>
+                        <table className="admin-table" style={{ margin: 0 }}>
+                          <thead>
+                            <tr>
+                              <th style={{ width: "40px" }}>STT</th>
+                              <th>Sản Phẩm</th>
+                              <th>Tồn Hiện Tại</th>
+                              <th style={{ width: "120px" }}>
+                                {inventoryMode === "IMPORT" ? "SL Nhập" : inventoryMode === "EXPORT" ? "SL Xuất" : "SL Đếm Thực"}
+                              </th>
+                              <th style={{ width: "140px" }}>Đơn Giá (VNĐ)</th>
+                              <th>Thành Tiền / Chênh Lệch</th>
+                              <th style={{ width: "50px", textAlign: "center" }}>Xóa</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {batchRows.map((row, idx) => {
+                              const targetP = products.find((p) => p.id === row.productId);
+                              const curStock = targetP?.stock !== undefined ? targetP.stock : 15;
+                              const lineTotal = (row.qty || 0) * (row.unitPrice || 0);
+                              const discrepancy = (row.countedQty || 0) - curStock;
+
+                              return (
+                                <tr key={idx}>
+                                  <td><strong>{idx + 1}</strong></td>
+                                  <td>
+                                    <select
+                                      value={row.productId}
+                                      onChange={(e) => handleBatchRowChange(idx, "productId", Number(e.target.value))}
+                                      style={{
+                                        padding: "6px 10px",
+                                        borderRadius: "8px",
+                                        border: "1px solid #cbd5e1",
+                                        fontSize: "12.5px",
+                                        fontWeight: 700,
+                                        width: "100%",
+                                        maxWidth: "240px",
+                                      }}
+                                    >
+                                      {products.map((p) => (
+                                        <option key={p.id} value={p.id}>
+                                          [P{String(p.id).padStart(4, "0")}] {p.name}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </td>
+                                  <td>
+                                    <span style={{ fontWeight: 800, color: "#64748b" }}>{curStock} món</span>
+                                  </td>
+                                  <td>
+                                    {inventoryMode === "AUDIT" ? (
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        value={row.countedQty !== undefined ? row.countedQty : curStock}
+                                        onChange={(e) => handleBatchRowChange(idx, "countedQty", Number(e.target.value))}
+                                        style={{ padding: "6px 8px", borderRadius: "8px", border: "1px solid #cbd5e1", width: "90px", fontWeight: 800 }}
+                                      />
+                                    ) : (
+                                      <input
+                                        type="number"
+                                        min="1"
+                                        value={row.qty}
+                                        onChange={(e) => handleBatchRowChange(idx, "qty", Number(e.target.value))}
+                                        style={{ padding: "6px 8px", borderRadius: "8px", border: "1px solid #cbd5e1", width: "90px", fontWeight: 800 }}
+                                      />
+                                    )}
+                                  </td>
+                                  <td>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      value={row.unitPrice}
+                                      onChange={(e) => handleBatchRowChange(idx, "unitPrice", Number(e.target.value))}
+                                      style={{ padding: "6px 8px", borderRadius: "8px", border: "1px solid #cbd5e1", width: "120px", fontWeight: 800 }}
+                                    />
+                                  </td>
+                                  <td>
+                                    {inventoryMode === "AUDIT" ? (
+                                      <span style={{ fontSize: "12px", fontWeight: 800, color: discrepancy === 0 ? "#166534" : discrepancy < 0 ? "#dc2626" : "#d97706" }}>
+                                        {discrepancy === 0 ? "Khớp" : discrepancy < 0 ? `Thiếu -${Math.abs(discrepancy)}` : `Thừa +${discrepancy}`}
+                                      </span>
+                                    ) : (
+                                      <span style={{ fontSize: "13px", fontWeight: 900, color: "var(--primary-color, #2e7d32)" }}>
+                                        {formatVND(lineTotal)}
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td style={{ textAlign: "center" }}>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveBatchRow(idx)}
+                                      style={{
+                                        padding: "4px 8px",
+                                        borderRadius: "6px",
+                                        border: "none",
+                                        background: "#fee2e2",
+                                        color: "#dc2626",
+                                        cursor: "pointer",
+                                      }}
+                                    >
+                                      <i className="fa-solid fa-trash-can"></i>
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Batch Summary Bar */}
+                      <div
+                        style={{
+                          padding: "12px 16px",
+                          borderRadius: "12px",
+                          background: "#f8fafc",
+                          border: "1px solid #e2e8f0",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          marginBottom: "16px",
+                        }}
+                      >
+                        <div style={{ fontSize: "13px", color: "#64748b", fontWeight: 700 }}>
+                          Tổng số mặt hàng: <strong style={{ color: "#0f172a" }}>{batchRows.length}</strong> • Tổng số lượng:{" "}
+                          <strong style={{ color: "#0f172a" }}>
+                            {batchRows.reduce((sum, r) => sum + (inventoryMode === "AUDIT" ? (r.countedQty || 0) : (r.qty || 0)), 0)} món
+                          </strong>
+                        </div>
+                        {inventoryMode !== "AUDIT" && (
+                          <div style={{ fontSize: "14px", fontWeight: 900, color: "var(--primary-color, #2e7d32)" }}>
+                            Tổng giá trị phiếu: {formatVND(batchRows.reduce((sum, r) => sum + (r.qty || 0) * (r.unitPrice || 0), 0))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Partner & Notes for Batch */}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1.2fr", gap: "16px", marginBottom: "20px" }}>
+                        <div>
+                          <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "4px" }}>
+                            {inventoryMode === "IMPORT" ? "Nhà Cung Cấp / Xưởng" : inventoryMode === "EXPORT" ? "Nơi Nhận / Showroom Xuất Đến" : "Đơn Vị / Người Kiểm Kho"}
+                          </label>
+                          <input
+                            type="text"
+                            className="form-control admin-setting-input"
+                            placeholder={inventoryMode === "IMPORT" ? "Tổng Kho Gỗ An Cường" : inventoryMode === "EXPORT" ? "Showroom Chi Nhánh 1" : "Ban Kiểm Kê Nội Bộ"}
+                            value={inventorySupplier}
+                            onChange={(e) => setInventorySupplier(e.target.value)}
+                            style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13px" }}
+                          />
+                        </div>
+
+                        <div>
+                          <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "4px" }}>
+                            Ghi Chú Chung Cho Toàn Phiếu
+                          </label>
+                          <input
+                            type="text"
+                            className="form-control admin-setting-input"
+                            placeholder="Ghi chú tổng hợp cho lô hàng..."
+                            value={inventoryReason}
+                            onChange={(e) => setInventoryReason(e.target.value)}
+                            style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13px" }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Form Action Buttons */}
+                  <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
+                    <button
+                      type="button"
+                      onClick={() => setShowInventoryModal(false)}
+                      style={{
+                        padding: "11px 22px",
+                        borderRadius: "12px",
+                        border: "1px solid #cbd5e1",
+                        background: "#ffffff",
+                        fontWeight: 800,
+                        fontSize: "13px",
+                        cursor: "pointer",
+                        color: "#475569",
+                      }}
+                    >
+                      Hủy Bỏ
+                    </button>
+                    <button
+                      type="submit"
+                      style={{
+                        padding: "11px 28px",
+                        borderRadius: "12px",
+                        border: "none",
+                        background:
+                          inventoryMode === "IMPORT"
+                            ? "linear-gradient(135deg, #065f46 0%, #047857 100%)"
+                            : inventoryMode === "EXPORT"
+                            ? "linear-gradient(135deg, #991b1b 0%, #dc2626 100%)"
+                            : "linear-gradient(135deg, #78350f 0%, #d97706 100%)",
+                        color: "#ffffff",
+                        fontWeight: 900,
+                        fontSize: "13.5px",
+                        cursor: "pointer",
+                        boxShadow: "0 4px 14px rgba(6, 95, 70, 0.25)",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "8px",
+                      }}
+                    >
+                      <i
+                        className={
+                          inventoryMode === "IMPORT"
+                            ? "fa-solid fa-arrow-down"
+                            : inventoryMode === "EXPORT"
+                            ? "fa-solid fa-arrow-up"
+                            : "fa-solid fa-clipboard-check"
+                        }
+                      ></i>
+                      {inventoryMode === "IMPORT"
+                        ? "Xác Nhận Lập Phiếu Nhập Kho"
+                        : inventoryMode === "EXPORT"
+                        ? "Xác Nhận Lập Phiếu Xuất Kho"
+                        : "Xác Nhận Cân Bằng Tồn Kho"}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                /* TAB 2: SỔ NHẬT KÝ GIAO DỊCH KHO (STOCK LEDGER) */
+                <div>
+                  {/* Ledger Filters */}
+                  <div
+                    style={{
+                      padding: "14px 16px",
+                      background: "#f8fafc",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: "14px",
+                      marginBottom: "16px",
+                      display: "flex",
+                      gap: "12px",
+                      flexWrap: "wrap",
+                      alignItems: "center",
+                    }}
+                  >
+                    <input
+                      type="text"
+                      placeholder="Tìm mã phiếu, tên SP, nhà cung cấp, lý do..."
+                      value={historySearchQuery}
+                      onChange={(e) => setHistorySearchQuery(e.target.value)}
+                      style={{
+                        padding: "8px 14px",
+                        borderRadius: "10px",
+                        border: "1px solid #cbd5e1",
+                        fontSize: "12.5px",
+                        minWidth: "240px",
+                        flex: 1,
+                      }}
+                    />
+
+                    <select
+                      value={historyTypeFilter}
+                      onChange={(e) => setHistoryTypeFilter(e.target.value)}
+                      style={{
+                        padding: "8px 12px",
+                        borderRadius: "10px",
+                        border: "1px solid #cbd5e1",
+                        fontSize: "12.5px",
+                        fontWeight: 700,
+                      }}
+                    >
+                      <option value="ALL">Tất cả loại giao dịch</option>
+                      <option value="IMPORT">Nhập Kho (Tăng tồn)</option>
+                      <option value="EXPORT">Xuất Kho (Giảm tồn)</option>
+                      <option value="AUDIT">Kiểm Kê & Cân Bằng</option>
+                    </select>
+
+                    <select
+                      value={historyTimeFilterMode}
+                      onChange={(e) => setHistoryTimeFilterMode(e.target.value as any)}
+                      style={{
+                        padding: "8px 12px",
+                        borderRadius: "10px",
+                        border: "1px solid #cbd5e1",
+                        fontSize: "12.5px",
+                        fontWeight: 700,
+                      }}
+                    >
+                      <option value="ALL">Tất cả thời gian</option>
+                      <option value="DAY">Lọc theo Ngày</option>
+                      <option value="MONTH">Lọc theo Tháng</option>
+                      <option value="YEAR">Lọc theo Năm</option>
+                    </select>
+
+                    {historyTimeFilterMode === "DAY" && (
+                      <input
+                        type="date"
+                        value={historyFilterDate}
+                        onChange={(e) => setHistoryFilterDate(e.target.value)}
+                        style={{
+                          padding: "7px 12px",
+                          borderRadius: "10px",
+                          border: "1.5px solid #0284c7",
+                          fontSize: "12.5px",
+                        }}
+                      />
+                    )}
+
+                    {historyTimeFilterMode === "MONTH" && (
+                      <input
+                        type="month"
+                        value={historyFilterMonth}
+                        onChange={(e) => setHistoryFilterMonth(e.target.value)}
+                        style={{
+                          padding: "7px 12px",
+                          borderRadius: "10px",
+                          border: "1.5px solid #0284c7",
+                          fontSize: "12.5px",
+                        }}
+                      />
+                    )}
+
+                    {historyTimeFilterMode === "YEAR" && (
+                      <select
+                        value={historyFilterYear}
+                        onChange={(e) => setHistoryFilterYear(e.target.value)}
+                        style={{
+                          padding: "8px 12px",
+                          borderRadius: "10px",
+                          border: "1.5px solid #0284c7",
+                          fontSize: "12.5px",
+                          fontWeight: 700,
+                        }}
+                      >
+                        <option value="2026">Năm 2026</option>
+                        <option value="2025">Năm 2025</option>
+                        <option value="2024">Năm 2024</option>
+                      </select>
+                    )}
+                  </div>
+
+                  {/* Ledger Table */}
+                  {(() => {
+                    const filteredLogs = stockLogs.filter((log) => {
+                      if (historyTypeFilter !== "ALL" && log.type !== historyTypeFilter) return false;
+                      if (historySearchQuery.trim()) {
+                        const q = historySearchQuery.toLowerCase();
+                        const matchCode = log.code.toLowerCase().includes(q);
+                        const matchName = log.productName.toLowerCase().includes(q);
+                        const matchSupplier = log.supplier.toLowerCase().includes(q);
+                        const matchReason = log.reason.toLowerCase().includes(q);
+                        if (!matchCode && !matchName && !matchSupplier && !matchReason) return false;
+                      }
+                      if (historyTimeFilterMode === "DAY" && historyFilterDate) {
+                        const parts = historyFilterDate.split("-");
+                        if (parts.length === 3) {
+                          const formattedMatch = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                          if (!log.createdAt.includes(formattedMatch)) return false;
+                        }
+                      } else if (historyTimeFilterMode === "MONTH" && historyFilterMonth) {
+                        const parts = historyFilterMonth.split("-");
+                        if (parts.length === 2) {
+                          const formattedMatch = `/${parts[1]}/${parts[0]}`;
+                          if (!log.createdAt.includes(formattedMatch)) return false;
+                        }
+                      } else if (historyTimeFilterMode === "YEAR" && historyFilterYear) {
+                        if (!log.createdAt.includes(historyFilterYear)) return false;
+                      }
+                      return true;
+                    });
+
+                    return (
+                      <div style={{ maxHeight: "360px", overflowY: "auto", border: "1px solid #e2e8f0", borderRadius: "14px" }}>
+                        {filteredLogs.length === 0 ? (
+                          <div style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>
+                            <Package className="w-12 h-12 stroke-1 text-slate-300 mx-auto mb-2" />
+                            <p style={{ fontSize: "14px", fontWeight: 700, margin: "8px 0 4px" }}>Chưa có bản ghi giao dịch kho nào khớp bộ lọc</p>
+                            <p style={{ fontSize: "12px", color: "#94a3b8" }}>Các giao dịch Nhập, Xuất, Kiểm kê kho sẽ tự động lưu lại vào sổ này.</p>
+                          </div>
+                        ) : (
+                          <table className="admin-table" style={{ margin: 0 }}>
+                            <thead>
+                              <tr>
+                                <th>Mã Phiếu Duy Nhất</th>
+                                <th>Sản Phẩm</th>
+                                <th>Loại Giao Dịch</th>
+                                <th>Số Lượng</th>
+                                <th>Đơn Giá & Thành Tiền</th>
+                                <th>Tồn Sau GD</th>
+                                <th>Đối Tác / Lý Do</th>
+                                <th>Thời Gian</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {filteredLogs.map((log) => (
+                                <tr key={log.id}>
+                                  <td>
+                                    <code style={{ background: "#f1f5f9", padding: "4px 8px", borderRadius: "6px", fontWeight: 900, fontSize: "11.5px", color: "#0f172a" }}>
+                                      {log.code}
+                                    </code>
+                                  </td>
+                                  <td>
+                                    <strong style={{ fontSize: "13px", color: "#0f172a" }}>{log.productName}</strong>
+                                  </td>
+                                  <td>
+                                    <span
+                                      style={{
+                                        padding: "4px 10px",
+                                        borderRadius: "999px",
+                                        fontSize: "11.5px",
+                                        fontWeight: 800,
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        gap: "6px",
+                                        background: log.type === "IMPORT" ? "#dcfce7" : log.type === "EXPORT" ? "#fee2e2" : "#fef3c7",
+                                        color: log.type === "IMPORT" ? "#15803d" : log.type === "EXPORT" ? "#b91c1c" : "#b45309",
+                                      }}
+                                    >
+                                      <i
+                                        className={
+                                          log.type === "IMPORT"
+                                            ? "fa-solid fa-arrow-down"
+                                            : log.type === "EXPORT"
+                                            ? "fa-solid fa-arrow-up"
+                                            : "fa-solid fa-clipboard-check"
+                                        }
+                                      ></i>
+                                      {log.type === "IMPORT" ? "Nhập Kho" : log.type === "EXPORT" ? "Xuất Kho" : "Kiểm Kê"}
+                                    </span>
+                                  </td>
+                                  <td style={{ fontWeight: 900, color: log.type === "IMPORT" ? "#15803d" : log.type === "EXPORT" ? "#b91c1c" : "#b45309" }}>
+                                    {log.qty} món
+                                  </td>
+                                  <td>
+                                    {log.totalAmount ? (
+                                      <div>
+                                        <strong style={{ fontSize: "12.5px", color: "var(--primary-color, #2e7d32)" }}>{formatVND(log.totalAmount)}</strong>
+                                        <span style={{ fontSize: "11px", color: "#64748b", display: "block" }}>({formatVND(log.unitPrice || 0)}/món)</span>
+                                      </div>
+                                    ) : (
+                                      <span style={{ color: "#94a3b8", fontSize: "12px" }}>-</span>
+                                    )}
+                                  </td>
+                                  <td style={{ fontWeight: 800, color: "#1e293b" }}>{log.stockAfter} món</td>
+                                  <td style={{ fontSize: "12px", color: "#475569" }}>
+                                    <div style={{ fontWeight: 700, color: "#0f172a" }}>{log.supplier}</div>
+                                    <div style={{ fontSize: "11px", color: "#64748b" }}>{log.reason}</div>
+                                  </td>
+                                  <td style={{ fontSize: "11.5px", color: "#64748b", fontWeight: 600 }}>{log.createdAt}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
             </div>
           </div>
         </div>
