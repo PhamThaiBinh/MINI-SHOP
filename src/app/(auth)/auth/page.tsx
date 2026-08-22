@@ -227,14 +227,30 @@ function AuthPageContent() {
   };
 
   // Order Cancel
-  const handleConfirmCancelOrder = (e: React.FormEvent) => {
+  const handleConfirmCancelOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!cancelTargetOrder) return;
     const finalReason = cancelReasonPreset.includes("Lý do khác")
       ? cancelReasonCustom || "Khách hàng không nêu rõ lý do"
       : cancelReasonPreset;
 
+    // 1. Update local storage
     cancelOrderWithReason(cancelTargetOrder.id, finalReason);
+
+    // 2. Update Supabase Orders Table so Admin Interface syncs immediately
+    try {
+      const supabase = createClient();
+      await supabase
+        .from("orders")
+        .update({
+          status: "cancelled",
+          status_text: "Đã hủy đơn",
+          cancel_reason: finalReason,
+        })
+        .eq("id", cancelTargetOrder.id.replace("#", ""));
+    } catch (err) {
+      console.error("Error syncing cancelled status to Supabase:", err);
+    }
 
     setLiveOrders((prev) =>
       prev.map((o) =>

@@ -276,7 +276,7 @@ export const fetchAdminOrders = async (): Promise<UnifiedOrder[]> => {
 
     const { data: itemRows } = await supabase.from("order_items").select("*");
 
-    return orderRows.map((o: any) => {
+    const dbOrders: UnifiedOrder[] = orderRows.map((o: any) => {
       // 1. Read items from JSONB column if present
       let items: any[] = Array.isArray(o.items) ? o.items : [];
 
@@ -321,6 +321,29 @@ export const fetchAdminOrders = async (): Promise<UnifiedOrder[]> => {
         cancelReason: o.cancel_reason ? String(o.cancel_reason) : undefined,
       };
     });
+
+    // Merge status updates from localStorage if available
+    if (typeof window !== "undefined") {
+      const { getAllOrders } = await import("@/utils/orderStorage");
+      const localOrders = getAllOrders();
+      const localMap = new Map(localOrders.map((lo) => [lo.id.toUpperCase().replace("#", ""), lo]));
+
+      return dbOrders.map((dbo) => {
+        const cleanId = dbo.id.toUpperCase().replace("#", "");
+        const matchedLocal = localMap.get(cleanId);
+        if (matchedLocal && matchedLocal.status === "cancelled" && dbo.status !== "cancelled") {
+          return {
+            ...dbo,
+            status: "cancelled",
+            statusText: matchedLocal.statusText || "Đã hủy đơn",
+            cancelReason: matchedLocal.cancelReason || dbo.cancelReason,
+          };
+        }
+        return dbo;
+      });
+    }
+
+    return dbOrders;
   } catch (err) {
     console.error("Error fetching admin orders:", err);
     return [];
