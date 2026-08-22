@@ -10,31 +10,57 @@ export interface UserAddressItem {
   isDefault: boolean;
 }
 
-const DEFAULT_ADDRESS: UserAddressItem = {
-  id: 101,
-  name: "Bình Nguyễn",
-  phone: "0988123456",
-  province: "Thành phố Hồ Chí Minh",
-  ward: "Phường Bến Thành",
-  detail: "123 Đường Nguyễn Trãi",
-  isDefault: true,
+const findUserRow = async (supabase: any, identifier: string) => {
+  if (!identifier) return null;
+  const clean = identifier.trim().toLowerCase().replace(/^@/, "");
+  const { data: users, error } = await supabase
+    .from("users")
+    .select("id, name, phone, email, username, addresses");
+
+  if (error || !users || users.length === 0) return null;
+
+  return users.find((u: any) => {
+    const uEmail = String(u.email || "").toLowerCase().trim();
+    const uUser = String(u.username || "").toLowerCase().replace(/^@/, "").trim();
+    return (
+      (uEmail && uEmail === clean) ||
+      (uUser && uUser === clean) ||
+      (uEmail && clean.includes(uEmail)) ||
+      (clean && uEmail.includes(clean))
+    );
+  }) || null;
 };
 
 export const fetchUserAddressesFromSupabase = async (
-  username: string
+  identifier: string
 ): Promise<UserAddressItem[]> => {
   try {
     const supabase = createClient();
-    const cleanUser = username.trim().replace(/^@/, "");
+    const matched = await findUserRow(supabase, identifier);
 
-    const { data, error } = await supabase
-      .from("users")
-      .select("addresses")
-      .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${cleanUser}`)
-      .limit(1);
+    if (matched) {
+      if (Array.isArray(matched.addresses) && matched.addresses.length > 0) {
+        return matched.addresses;
+      }
 
-    if (!error && data && data.length > 0 && Array.isArray(data[0].addresses)) {
-      return data[0].addresses;
+      // If user has no address in Supabase yet, create and persist a default initial address
+      const defaultInitialAddr: UserAddressItem = {
+        id: 1,
+        name: matched.name || "Phạm Thái Bình",
+        phone: matched.phone || "0123456789",
+        province: "Thành phố Hồ Chí Minh",
+        ward: "Phường Bến Thành",
+        detail: "123 Đường Nguyễn Trãi",
+        isDefault: true,
+      };
+
+      const initialAddresses = [defaultInitialAddr];
+      await supabase
+        .from("users")
+        .update({ addresses: initialAddresses })
+        .eq("id", matched.id);
+
+      return initialAddresses;
     }
   } catch (err) {
     console.warn("Supabase address fetch warning:", err);
@@ -45,30 +71,35 @@ export const fetchUserAddressesFromSupabase = async (
 
 export const addUserAddressToSupabase = async (
   addr: Omit<UserAddressItem, "id">,
-  username: string
+  identifier: string
 ): Promise<boolean> => {
   try {
-    const currentAddresses = await fetchUserAddressesFromSupabase(username);
-    let updatedAddresses = [...currentAddresses];
+    const supabase = createClient();
+    const matched = await findUserRow(supabase, identifier);
+    if (!matched) return false;
 
-    if (addr.isDefault) {
+    const currentAddresses: UserAddressItem[] = Array.isArray(matched.addresses)
+      ? matched.addresses
+      : [];
+
+    let updatedAddresses = [...currentAddresses];
+    if (addr.isDefault || updatedAddresses.length === 0) {
       updatedAddresses = updatedAddresses.map((a) => ({ ...a, isDefault: false }));
     }
 
     const newAddressItem: UserAddressItem = {
       id: Date.now(),
       ...addr,
+      isDefault: addr.isDefault || updatedAddresses.length === 0,
     };
     updatedAddresses.push(newAddressItem);
 
-    const supabase = createClient();
-    const cleanUser = username.trim().replace(/^@/, "");
-    await supabase
+    const { error } = await supabase
       .from("users")
       .update({ addresses: updatedAddresses })
-      .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${cleanUser}`);
+      .eq("id", matched.id);
 
-    return true;
+    return !error;
   } catch (err) {
     console.error("Error adding address:", err);
     return false;
@@ -77,23 +108,28 @@ export const addUserAddressToSupabase = async (
 
 export const setDefaultUserAddressInSupabase = async (
   id: number,
-  username: string
+  identifier: string
 ): Promise<boolean> => {
   try {
-    const currentAddresses = await fetchUserAddressesFromSupabase(username);
+    const supabase = createClient();
+    const matched = await findUserRow(supabase, identifier);
+    if (!matched) return false;
+
+    const currentAddresses: UserAddressItem[] = Array.isArray(matched.addresses)
+      ? matched.addresses
+      : [];
+
     const updatedAddresses = currentAddresses.map((a) => ({
       ...a,
       isDefault: a.id === id,
     }));
 
-    const supabase = createClient();
-    const cleanUser = username.trim().replace(/^@/, "");
-    await supabase
+    const { error } = await supabase
       .from("users")
       .update({ addresses: updatedAddresses })
-      .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${cleanUser}`);
+      .eq("id", matched.id);
 
-    return true;
+    return !error;
   } catch (err) {
     console.error("Error setting default address:", err);
     return false;
@@ -102,10 +138,17 @@ export const setDefaultUserAddressInSupabase = async (
 
 export const updateUserAddressInSupabase = async (
   updatedAddr: UserAddressItem,
-  username: string
+  identifier: string
 ): Promise<boolean> => {
   try {
-    const currentAddresses = await fetchUserAddressesFromSupabase(username);
+    const supabase = createClient();
+    const matched = await findUserRow(supabase, identifier);
+    if (!matched) return false;
+
+    const currentAddresses: UserAddressItem[] = Array.isArray(matched.addresses)
+      ? matched.addresses
+      : [];
+
     let updatedAddresses = currentAddresses.map((a) => {
       if (a.id === updatedAddr.id) {
         return updatedAddr;
@@ -116,14 +159,12 @@ export const updateUserAddressInSupabase = async (
       return a;
     });
 
-    const supabase = createClient();
-    const cleanUser = username.trim().replace(/^@/, "");
-    await supabase
+    const { error } = await supabase
       .from("users")
       .update({ addresses: updatedAddresses })
-      .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${cleanUser}`);
+      .eq("id", matched.id);
 
-    return true;
+    return !error;
   } catch (err) {
     console.error("Error updating address:", err);
     return false;
@@ -132,24 +173,29 @@ export const updateUserAddressInSupabase = async (
 
 export const deleteUserAddressFromSupabase = async (
   id: number,
-  username: string = "binh"
+  identifier: string
 ): Promise<boolean> => {
   try {
-    const currentAddresses = await fetchUserAddressesFromSupabase(username);
+    const supabase = createClient();
+    const matched = await findUserRow(supabase, identifier);
+    if (!matched) return false;
+
+    const currentAddresses: UserAddressItem[] = Array.isArray(matched.addresses)
+      ? matched.addresses
+      : [];
+
     let updatedAddresses = currentAddresses.filter((a) => a.id !== id);
 
     if (updatedAddresses.length > 0 && !updatedAddresses.some((a) => a.isDefault)) {
       updatedAddresses[0].isDefault = true;
     }
 
-    const supabase = createClient();
-    const cleanUser = username.trim().replace(/^@/, "");
-    await supabase
+    const { error } = await supabase
       .from("users")
       .update({ addresses: updatedAddresses })
-      .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${cleanUser}`);
+      .eq("id", matched.id);
 
-    return true;
+    return !error;
   } catch (err) {
     console.error("Error deleting address:", err);
     return false;

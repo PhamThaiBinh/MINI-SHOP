@@ -34,6 +34,8 @@ export default function CheckoutPage() {
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
 
+  const [savedUserAddresses, setSavedUserAddresses] = useState<any[]>([]);
+
   // Auto-sync user information & default address from Supabase when user loads
   React.useEffect(() => {
     if (user) {
@@ -41,16 +43,23 @@ export default function CheckoutPage() {
       if (user.email) setEmail(user.email);
       if (user.phone) setPhone(user.phone);
 
-      fetchUserAddressesFromSupabase(user.username || user.email).then((addrs) => {
-        if (addrs && addrs.length > 0) {
-          const defaultAddr = addrs.find((a) => a.isDefault) || addrs[0];
-          if (defaultAddr) {
-            setAddress(`${defaultAddr.detail}, ${defaultAddr.ward}, ${defaultAddr.province}`);
-            if (defaultAddr.name && !user.name) setFullname(defaultAddr.name);
-            if (defaultAddr.phone && !user.phone) setPhone(defaultAddr.phone);
+      const ident = user.email || user.username || "";
+      if (ident) {
+        fetchUserAddressesFromSupabase(ident).then((addrs) => {
+          if (addrs && addrs.length > 0) {
+            setSavedUserAddresses(addrs);
+            const defaultAddr = addrs.find((a) => a.isDefault) || addrs[0];
+            if (defaultAddr) {
+              const fullAddr = [defaultAddr.detail, defaultAddr.ward, defaultAddr.province]
+                .filter(Boolean)
+                .join(", ");
+              setAddress(fullAddr);
+              if (defaultAddr.name) setFullname(defaultAddr.name);
+              if (defaultAddr.phone) setPhone(defaultAddr.phone);
+            }
           }
-        }
-      });
+        });
+      }
     }
   }, [user]);
 
@@ -508,9 +517,44 @@ export default function CheckoutPage() {
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="address">
-                      Địa chỉ nhận hàng chi tiết <span className="required">*</span>
-                    </label>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                      <label htmlFor="address" style={{ margin: 0 }}>
+                        Địa chỉ nhận hàng chi tiết <span className="required">*</span>
+                      </label>
+                      {savedUserAddresses.length > 1 && (
+                        <select
+                          style={{
+                            fontSize: "12px",
+                            padding: "4px 8px",
+                            borderRadius: "6px",
+                            border: "1px solid #cbd5e1",
+                            background: "#f8fafc",
+                            color: "#1e293b",
+                            cursor: "pointer",
+                            fontWeight: 700,
+                          }}
+                          onChange={(e) => {
+                            const selectedId = Number(e.target.value);
+                            const addrObj = savedUserAddresses.find((a) => a.id === selectedId);
+                            if (addrObj) {
+                              const fullAddr = [addrObj.detail, addrObj.ward, addrObj.province]
+                                .filter(Boolean)
+                                .join(", ");
+                              setAddress(fullAddr);
+                              if (addrObj.name) setFullname(addrObj.name);
+                              if (addrObj.phone) setPhone(addrObj.phone);
+                            }
+                          }}
+                        >
+                          <option value="">-- Đổi từ Sổ địa chỉ ({savedUserAddresses.length}) --</option>
+                          {savedUserAddresses.map((a) => (
+                            <option key={a.id} value={a.id}>
+                              {a.isDefault ? "★ [Mặc định] " : ""}{a.detail}, {a.ward}, {a.province}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
                     <input
                       type="text"
                       id="address"
