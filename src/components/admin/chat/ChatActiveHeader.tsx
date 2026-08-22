@@ -6,12 +6,20 @@ import { LiveChatSession } from "@/lib/liveChatService";
 interface ChatActiveHeaderProps {
   selectedSession: LiveChatSession;
   onToggleMode: () => void;
+  onDeleteSession?: (id: string) => void;
 }
 
 export const ChatActiveHeader: React.FC<ChatActiveHeaderProps> = ({
   selectedSession,
   onToggleMode,
+  onDeleteSession,
 }) => {
+  const handleDelete = () => {
+    if (confirm(`Bạn có chắc chắn muốn xóa toàn bộ cuộc trò chuyện của "${selectedSession.customer_name}"?`)) {
+      onDeleteSession?.(selectedSession.id);
+    }
+  };
+
   return (
     <div
       style={{
@@ -55,54 +63,64 @@ export const ChatActiveHeader: React.FC<ChatActiveHeaderProps> = ({
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={onToggleMode}
-        style={{
-          padding: "8px 16px",
-          borderRadius: "999px",
-          border: "none",
-          background: selectedSession.mode === "human" ? "#d97706" : "#2e7d32",
-          color: "#ffffff",
-          fontSize: "12.5px",
-          fontWeight: 800,
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          gap: "10px",
-          boxShadow: "0 4px 14px rgba(46, 125, 50, 0.25)",
-          transition: "all 0.2s ease",
-        }}
-      >
-        <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-          {selectedSession.mode === "human" ? (
-            <>
-              <i className="fa-solid fa-user-tie"></i> Đang Admin Tiếp Quản (Bấm để trả về AI)
-            </>
-          ) : (
-            <>
-              <i className="fa-solid fa-robot"></i> AI Chatbot Tự Động (Bấm để Tiếp Quản Chat)
-            </>
-          )}
-        </span>
-        <div
+      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        {/* Toggle Mode Button */}
+        <button
+          type="button"
+          onClick={onToggleMode}
           style={{
-            width: "26px",
-            height: "26px",
-            borderRadius: "50%",
-            background: "rgba(255, 255, 255, 0.2)",
+            padding: "8px 16px",
+            borderRadius: "999px",
+            border: "none",
+            background: selectedSession.mode === "human" ? "#d97706" : "#2e7d32",
+            color: "#ffffff",
+            fontSize: "12.5px",
+            fontWeight: 800,
+            cursor: "pointer",
             display: "flex",
             alignItems: "center",
-            justifyContent: "center",
+            gap: "10px",
+            boxShadow: "0 4px 14px rgba(46, 125, 50, 0.25)",
+            transition: "all 0.2s ease",
           }}
         >
-          {selectedSession.mode === "human" ? (
-            <i className="fa-solid fa-user-gear" style={{ fontSize: "12px" }}></i>
-          ) : (
-            <i className="fa-solid fa-robot" style={{ fontSize: "12px" }}></i>
-          )}
-        </div>
-      </button>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+            {selectedSession.mode === "human" ? (
+              <>
+                <i className="fa-solid fa-user-tie"></i> Đang Admin Trực (Bấm để chuyển Bot)
+              </>
+            ) : (
+              <>
+                <i className="fa-solid fa-robot"></i> Bot Tự Động (Bấm để Tiếp Quản)
+              </>
+            )}
+          </span>
+        </button>
+
+        {/* Delete Single Session Button */}
+        {onDeleteSession && (
+          <button
+            type="button"
+            onClick={handleDelete}
+            title="Xóa cuộc trò chuyện này"
+            style={{
+              width: "38px",
+              height: "38px",
+              borderRadius: "50%",
+              border: "1px solid #fecaca",
+              background: "#fff1f2",
+              color: "#ef4444",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              transition: "all 0.2s ease",
+            }}
+          >
+            <i className="fa-solid fa-trash-can" style={{ fontSize: "14px" }}></i>
+          </button>
+        )}
+      </div>
     </div>
   );
 };

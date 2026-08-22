@@ -22,36 +22,22 @@ export interface LiveChatMessage {
   created_at: string;
 }
 
-const INITIAL_SESSIONS: LiveChatSession[] = [
-  {
-    id: "session-binh",
-    customer_name: "Phạm Thái Bình",
-    customer_email: "binhpham.1512202@gmail.com",
-    customer_phone: "0988123456",
-    mode: "human",
-    unread_count: 0,
-    last_message: "Xin chào shop!",
-    last_message_at: "Vừa xong",
-    avatar_bg: "#2e7d32",
-    avatar_text: "TB",
-  },
-];
+const INITIAL_SESSIONS: LiveChatSession[] = [];
 
 const STORAGE_SESSIONS_KEY = "minishop_live_chat_sessions";
 const STORAGE_MESSAGES_KEY = "minishop_live_chat_messages";
 
 // ---------------- LOCAL STORAGE CACHE HELPERS ----------------
 export function getLocalSessions(): LiveChatSession[] {
-  if (typeof window === "undefined") return INITIAL_SESSIONS;
+  if (typeof window === "undefined") return [];
   const data = localStorage.getItem(STORAGE_SESSIONS_KEY);
   if (!data) {
-    localStorage.setItem(STORAGE_SESSIONS_KEY, JSON.stringify(INITIAL_SESSIONS));
-    return INITIAL_SESSIONS;
+    return [];
   }
   try {
     return JSON.parse(data);
   } catch {
-    return INITIAL_SESSIONS;
+    return [];
   }
 }
 
@@ -87,7 +73,7 @@ export async function fetchSupabaseSessions(): Promise<LiveChatSession[]> {
       .select("*")
       .order("updated_at", { ascending: false });
 
-    if (error || !data || data.length === 0) {
+    if (error || !data) {
       return getLocalSessions();
     }
 
@@ -121,7 +107,7 @@ export async function fetchSupabaseMessages(sessionId: string): Promise<LiveChat
       .eq("session_id", sessionId)
       .order("timestamp", { ascending: true });
 
-    if (error || !data || data.length === 0) {
+    if (error || !data) {
       return getLocalMessages(sessionId);
     }
 
@@ -189,5 +175,51 @@ export async function syncUpdateSessionModeInSupabase(sessionId: string, newMode
       .eq("id", sessionId);
   } catch (err) {
     console.warn("Supabase update session mode notice:", err);
+  }
+}
+
+// ---------------- DELETE & CLEAR OPERATIONS ----------------
+export async function deleteChatSession(sessionId: string): Promise<boolean> {
+  try {
+    // 1. Delete from local storage
+    if (typeof window !== "undefined") {
+      const current = getLocalSessions();
+      const updated = current.filter((s) => s.id !== sessionId);
+      localStorage.setItem(STORAGE_SESSIONS_KEY, JSON.stringify(updated));
+      localStorage.removeItem(`${STORAGE_MESSAGES_KEY}_${sessionId}`);
+    }
+
+    // 2. Delete from Supabase Database
+    const supabase = createClient();
+    await supabase.from("live_chat_messages").delete().eq("session_id", sessionId);
+    await supabase.from("live_chat_sessions").delete().eq("id", sessionId);
+    return true;
+  } catch (err) {
+    console.error("Error deleting chat session:", err);
+    return false;
+  }
+}
+
+export async function clearAllChatSessions(): Promise<boolean> {
+  try {
+    // 1. Clear from local storage
+    if (typeof window !== "undefined") {
+      localStorage.setItem(STORAGE_SESSIONS_KEY, JSON.stringify([]));
+      // Remove all message keys
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith(STORAGE_MESSAGES_KEY) || key === "minishop_chat_history" || key === "minishop_chat_user") {
+          localStorage.removeItem(key);
+        }
+      });
+    }
+
+    // 2. Clear from Supabase Database
+    const supabase = createClient();
+    await supabase.from("live_chat_messages").delete().neq("id", "");
+    await supabase.from("live_chat_sessions").delete().neq("id", "");
+    return true;
+  } catch (err) {
+    console.error("Error clearing all chat sessions:", err);
+    return false;
   }
 }

@@ -12,6 +12,8 @@ import {
   fetchSupabaseMessages,
   syncInsertMessageToSupabase,
   syncUpdateSessionModeInSupabase,
+  deleteChatSession,
+  clearAllChatSessions,
 } from "@/lib/liveChatService";
 import { ChatSessionList } from "@/components/admin/chat/ChatSessionList";
 import { ChatActiveHeader } from "@/components/admin/chat/ChatActiveHeader";
@@ -22,7 +24,7 @@ import { ChatEmptyState } from "@/components/admin/chat/ChatEmptyState";
 export default function AdminLiveChatPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sessions, setSessions] = useState<LiveChatSession[]>([]);
-  const [selectedSessionId, setSelectedSessionId] = useState<string>("session-binh");
+  const [selectedSessionId, setSelectedSessionId] = useState<string>("");
   const [messages, setMessages] = useState<LiveChatMessage[]>([]);
   const [inputText, setInputText] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -55,6 +57,11 @@ export default function AdminLiveChatPage() {
       const latestSessions = await fetchSupabaseSessions();
       setSessions(latestSessions);
 
+      // If no session selected and sessions exist, default to first session
+      if (!selectedSessionId && latestSessions.length > 0) {
+        setSelectedSessionId(latestSessions[0].id);
+      }
+
       if (selectedSessionId) {
         const latestMsgs = await fetchSupabaseMessages(selectedSessionId);
         setMessages(latestMsgs);
@@ -66,7 +73,7 @@ export default function AdminLiveChatPage() {
     const interval = setInterval(syncData, 800);
 
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "minishop_live_sessions" || e.key?.startsWith("minishop_live_msg_")) {
+      if (e.key === "minishop_live_chat_sessions" || e.key?.startsWith("minishop_live_chat_messages_")) {
         syncData();
       }
     };
@@ -80,7 +87,10 @@ export default function AdminLiveChatPage() {
 
   // Load messages & clear unread when selected session changes
   useEffect(() => {
-    if (!selectedSessionId) return;
+    if (!selectedSessionId) {
+      setMessages([]);
+      return;
+    }
     userHasScrolledUpRef.current = false;
     fetchSupabaseMessages(selectedSessionId).then((msgs) => {
       setMessages(msgs);
@@ -119,9 +129,9 @@ export default function AdminLiveChatPage() {
 
     await syncInsertMessageToSupabase(newMsg, {
       id: selectedSessionId,
-      customer_name: selectedSession?.customer_name || "Phạm Thái Bình",
-      customer_email: selectedSession?.customer_email || "binhpham.1512202@gmail.com",
-      customer_phone: selectedSession?.customer_phone || "0988123456",
+      customer_name: selectedSession?.customer_name || "Khách Hàng",
+      customer_email: selectedSession?.customer_email || "khach@minishop.vn",
+      customer_phone: selectedSession?.customer_phone || "",
       mode: selectedSession?.mode || "human",
       last_message: `Admin: ${text}`,
       last_message_at: currentTime,
@@ -141,6 +151,25 @@ export default function AdminLiveChatPage() {
     );
     setSessions(updatedSessions);
     saveLocalSessions(updatedSessions);
+  };
+
+  const handleDeleteSession = async (sessionId: string) => {
+    await deleteChatSession(sessionId);
+    const updated = sessions.filter((s) => s.id !== sessionId);
+    setSessions(updated);
+    if (selectedSessionId === sessionId) {
+      setSelectedSessionId(updated.length > 0 ? updated[0].id : "");
+      setMessages([]);
+    }
+  };
+
+  const handleClearAllSessions = async () => {
+    if (confirm("Bạn có chắc chắn muốn xóa TOÀN BỘ lịch sử tất cả các cuộc trò chuyện tư vấn không?")) {
+      await clearAllChatSessions();
+      setSessions([]);
+      setSelectedSessionId("");
+      setMessages([]);
+    }
   };
 
   const filteredSessions = sessions.filter((s) => {
@@ -197,6 +226,8 @@ export default function AdminLiveChatPage() {
               onSearchChange={setSearchQuery}
               onFilterChange={setFilterMode}
               onSelectSession={setSelectedSessionId}
+              onDeleteSession={handleDeleteSession}
+              onClearAll={handleClearAllSessions}
             />
 
             {/* Right Active Chat Card Panel */}
@@ -215,6 +246,7 @@ export default function AdminLiveChatPage() {
                 <ChatActiveHeader
                   selectedSession={selectedSession}
                   onToggleMode={handleToggleMode}
+                  onDeleteSession={handleDeleteSession}
                 />
 
                 <ChatMessageStream

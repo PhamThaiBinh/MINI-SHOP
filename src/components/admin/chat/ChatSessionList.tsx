@@ -13,6 +13,8 @@ interface ChatSessionListProps {
   onSearchChange: (q: string) => void;
   onFilterChange: (mode: "all" | "human" | "bot") => void;
   onSelectSession: (id: string) => void;
+  onDeleteSession?: (id: string) => void;
+  onClearAll?: () => void;
 }
 
 export const ChatSessionList: React.FC<ChatSessionListProps> = ({
@@ -24,6 +26,8 @@ export const ChatSessionList: React.FC<ChatSessionListProps> = ({
   onSearchChange,
   onFilterChange,
   onSelectSession,
+  onDeleteSession,
+  onClearAll,
 }) => {
   return (
     <div
@@ -37,22 +41,48 @@ export const ChatSessionList: React.FC<ChatSessionListProps> = ({
         overflow: "hidden",
       }}
     >
-      <div className="card-header-row" style={{ marginBottom: "14px" }}>
-        <h3 className="card-header-title" style={{ fontSize: "16px", display: "flex", alignItems: "center", gap: "6px" }}>
+      <div className="card-header-row" style={{ marginBottom: "14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h3 className="card-header-title" style={{ fontSize: "16px", display: "flex", alignItems: "center", gap: "6px", margin: 0 }}>
           <i className="fa-solid fa-list-check" style={{ color: "#2e7d32" }}></i> Danh Sách Hội Thoại
         </h3>
-        <span
-          style={{
-            fontSize: "11.5px",
-            fontWeight: 800,
-            background: "#e8f5e9",
-            color: "#2e7d32",
-            padding: "3px 10px",
-            borderRadius: "999px",
-          }}
-        >
-          {sessions.length}
-        </span>
+        
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <span
+            style={{
+              fontSize: "11.5px",
+              fontWeight: 800,
+              background: "#e8f5e9",
+              color: "#2e7d32",
+              padding: "3px 10px",
+              borderRadius: "999px",
+            }}
+          >
+            {sessions.length}
+          </span>
+
+          {sessions.length > 0 && onClearAll && (
+            <button
+              type="button"
+              onClick={onClearAll}
+              title="Xóa toàn bộ cuộc trò chuyện"
+              style={{
+                fontSize: "11px",
+                fontWeight: 800,
+                color: "#ef4444",
+                background: "#fef2f2",
+                border: "1px solid #fecaca",
+                padding: "3px 8px",
+                borderRadius: "8px",
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "4px",
+              }}
+            >
+              <i className="fa-solid fa-trash-can"></i> Xóa hết
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Search Box */}
@@ -132,7 +162,8 @@ export const ChatSessionList: React.FC<ChatSessionListProps> = ({
       <div style={{ flex: 1, overflowY: "auto", paddingRight: "4px" }}>
         {filteredSessions.length === 0 ? (
           <div style={{ padding: "40px 16px", textAlign: "center", color: "#94a3b8", fontSize: "13px" }}>
-            Không có cuộc trò chuyện phù hợp
+            <i className="fa-solid fa-inbox" style={{ fontSize: "28px", display: "block", marginBottom: "8px", color: "#cbd5e1" }}></i>
+            Chưa có cuộc trò chuyện nào
           </div>
         ) : (
           filteredSessions.map((s) => {
@@ -150,6 +181,7 @@ export const ChatSessionList: React.FC<ChatSessionListProps> = ({
                   border: isSelected ? "1.5px solid #a7f3d0" : "1px solid #e2e8f0",
                   boxShadow: isSelected ? "0 4px 14px rgba(46, 125, 50, 0.08)" : "none",
                   transition: "all 0.2s ease",
+                  position: "relative",
                 }}
               >
                 <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
@@ -213,7 +245,7 @@ export const ChatSessionList: React.FC<ChatSessionListProps> = ({
                           whiteSpace: "nowrap",
                           overflow: "hidden",
                           textOverflow: "ellipsis",
-                          maxWidth: "160px",
+                          maxWidth: "140px",
                         }}
                       >
                         {s.last_message}
@@ -234,7 +266,7 @@ export const ChatSessionList: React.FC<ChatSessionListProps> = ({
                       )}
                     </div>
 
-                    <div style={{ marginTop: "4px" }}>
+                    <div style={{ marginTop: "4px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <span
                         style={{
                           fontSize: "10px",
@@ -255,6 +287,32 @@ export const ChatSessionList: React.FC<ChatSessionListProps> = ({
                           </>
                         )}
                       </span>
+
+                      {/* Quick Delete Single Item */}
+                      {onDeleteSession && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (confirm(`Xóa cuộc trò chuyện của "${s.customer_name}"?`)) {
+                              onDeleteSession(s.id);
+                            }
+                          }}
+                          title="Xóa cuộc trò chuyện này"
+                          style={{
+                            background: "none",
+                            border: "none",
+                            color: "#94a3b8",
+                            cursor: "pointer",
+                            padding: "2px 4px",
+                            fontSize: "11px",
+                          }}
+                          onMouseEnter={(e) => (e.currentTarget.style.color = "#ef4444")}
+                          onMouseLeave={(e) => (e.currentTarget.style.color = "#94a3b8")}
+                        >
+                          <i className="fa-solid fa-trash-can"></i>
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

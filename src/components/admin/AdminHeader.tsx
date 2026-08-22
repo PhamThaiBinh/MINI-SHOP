@@ -59,7 +59,12 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
     syncChatNotifs();
     const interval = setInterval(syncChatNotifs, 800);
     const handleStorage = (e: StorageEvent) => {
-      if (e.key === "minishop_live_sessions" || e.key?.startsWith("minishop_live_msg_")) {
+      if (
+        e.key === "minishop_live_chat_sessions" ||
+        e.key === "minishop_live_sessions" ||
+        e.key?.startsWith("minishop_live_chat_messages_") ||
+        e.key?.startsWith("minishop_live_msg_")
+      ) {
         syncChatNotifs();
       }
     };
