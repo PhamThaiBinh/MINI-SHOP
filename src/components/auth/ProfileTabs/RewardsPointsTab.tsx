@@ -26,7 +26,19 @@ export const RewardsPointsTab: React.FC<RewardsPointsTabProps> = ({
   const [spinDeg, setSpinDeg] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
   const [spinResultMsg, setSpinResultMsg] = useState("");
+
+  // Share Task Flow States
   const [showShareModal, setShowShareModal] = useState(false);
+  const [isVerifyingShare, setIsVerifyingShare] = useState(false);
+  const [isClaimReady, setIsClaimReady] = useState(false);
+
+  const todayStr = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+  const userStorageKey = user ? `minishop_share_task_${user.username}_${todayStr}` : `minishop_share_task_guest_${todayStr}`;
+
+  const [hasCompletedShareToday, setHasCompletedShareToday] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem(userStorageKey) === "completed";
+  });
 
   const userPoints = user.points || 0;
   const userHistory = user.history || [];
@@ -41,6 +53,36 @@ export const RewardsPointsTab: React.FC<RewardsPointsTabProps> = ({
     if (success) {
       alert(`Chúc mừng bạn đã đổi thành công "${giftName}"! Mã voucher [${code}] đã được thêm vào Kho Voucher của bạn.`);
     }
+  };
+
+  const handleExecuteShare = (platform: "facebook" | "zalo") => {
+    const shareUrl = encodeURIComponent("https://mini-shop.vercel.app");
+    const shareTitle = encodeURIComponent("Khám phá Nội Thất Sang Trọng MINI SHOP - Ưu Đãi Độc Quyền!");
+
+    if (platform === "facebook") {
+      window.open(`https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`, "_blank", "width=600,height=500");
+    } else {
+      window.open(`https://sp.zalo.me/share_inline?link=${shareUrl}&title=${shareTitle}`, "_blank", "width=600,height=500");
+    }
+
+    setShowShareModal(false);
+    setIsVerifyingShare(true);
+
+    // Chờ 3 giây để mô phỏng theo dõi từng bước chia sẻ của khách hàng
+    setTimeout(() => {
+      setIsVerifyingShare(false);
+      setIsClaimReady(true);
+    }, 3000);
+  };
+
+  const handleClaimReward = () => {
+    onConfirmShare();
+    if (typeof window !== "undefined") {
+      localStorage.setItem(userStorageKey, "completed");
+    }
+    setHasCompletedShareToday(true);
+    setIsClaimReady(false);
+    alert("🎉 Chúc mừng bạn đã hoàn thành nhiệm vụ và nhận thành công +50 Điểm Thưởng VIP!");
   };
 
   const handleSpinWheel = () => {
@@ -216,27 +258,74 @@ export const RewardsPointsTab: React.FC<RewardsPointsTabProps> = ({
 
       {/* SUBTAB 3: NHIỆM VỤ NHẬN ĐIỂM */}
       {rewardSubTab === "tasks" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-          <div style={{ border: "1px solid #e2e8f0", borderRadius: "12px", padding: "14px", background: "#fff", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <div style={{ border: "1px solid #e2e8f0", borderRadius: "14px", padding: "16px", background: "#fff", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
-              <h4 style={{ margin: "0 0 2px 0", fontSize: "14px", fontWeight: 800 }}>Đăng nhập hàng ngày</h4>
-              <p style={{ margin: 0, fontSize: "12px", color: "#64748b" }}>+10 điểm thưởng mỗi ngày đăng nhập ghé thăm trang web</p>
+              <h4 style={{ margin: "0 0 4px 0", fontSize: "14px", fontWeight: 800, color: "#0f172a" }}>Đăng nhập hàng ngày</h4>
+              <p style={{ margin: 0, fontSize: "12px", color: "#64748b" }}>+10 điểm thưởng mỗi ngày đăng nhập ghé thăm trang web (1 lần/ngày)</p>
             </div>
-            <span style={{ fontSize: "12px", fontWeight: 800, color: "#166534", background: "#dcfce7", padding: "4px 10px", borderRadius: "999px" }}>Đã nhận</span>
+            <span style={{ fontSize: "12px", fontWeight: 800, color: "#166534", background: "#dcfce7", padding: "6px 14px", borderRadius: "999px", border: "1px solid #bbf7d0" }}>
+              ✓ Đã nhận
+            </span>
           </div>
 
-          <div style={{ border: "1px solid #e2e8f0", borderRadius: "12px", padding: "14px", background: "#fff", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ border: "1px solid #e2e8f0", borderRadius: "14px", padding: "16px", background: "#fff", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
-              <h4 style={{ margin: "0 0 2px 0", fontSize: "14px", fontWeight: 800 }}>Chia sẻ lên Facebook/Zalo</h4>
-              <p style={{ margin: 0, fontSize: "12px", color: "#64748b" }}>+50 điểm thưởng khi chia sẻ đường dẫn Mini Shop</p>
+              <h4 style={{ margin: "0 0 4px 0", fontSize: "14px", fontWeight: 800, color: "#0f172a" }}>Chia sẻ lên Facebook / Zalo</h4>
+              <p style={{ margin: 0, fontSize: "12px", color: "#64748b" }}>+50 điểm thưởng khi chia sẻ trang web (1 lần/ngày, reset 00:00)</p>
             </div>
-            <button
-              type="button"
-              onClick={onConfirmShare}
-              style={{ padding: "6px 14px", borderRadius: "8px", background: "var(--primary-color, #2e7d32)", color: "#fff", border: "none", fontSize: "12px", fontWeight: 800, cursor: "pointer" }}
-            >
-              Thực hiện
-            </button>
+            <div>
+              {hasCompletedShareToday ? (
+                <span style={{ fontSize: "12px", fontWeight: 800, color: "#166534", background: "#dcfce7", padding: "6px 14px", borderRadius: "999px", border: "1px solid #bbf7d0" }}>
+                  ✓ Đã nhận hôm nay
+                </span>
+              ) : isClaimReady ? (
+                <button
+                  type="button"
+                  onClick={handleClaimReward}
+                  style={{
+                    padding: "8px 18px",
+                    borderRadius: "999px",
+                    background: "linear-gradient(135deg, #16a34a 0%, #15803d 100%)",
+                    color: "#fff",
+                    border: "none",
+                    fontSize: "13px",
+                    fontWeight: 800,
+                    cursor: "pointer",
+                    boxShadow: "0 4px 12px rgba(22, 163, 74, 0.35)",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    animation: "pulse 2s infinite"
+                  }}
+                >
+                  <Sparkles className="w-4 h-4" /> Nhận +50 Điểm Thưởng
+                </button>
+              ) : isVerifyingShare ? (
+                <span style={{ fontSize: "12px", fontWeight: 700, color: "#d97706", background: "#fef3c7", padding: "6px 14px", borderRadius: "999px", border: "1px solid #fde68a" }}>
+                  ⏳ Đang xác minh chia sẻ...
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowShareModal(true)}
+                  style={{
+                    padding: "8px 18px",
+                    borderRadius: "999px",
+                    background: "#2e7d32",
+                    color: "#fff",
+                    border: "none",
+                    fontSize: "13px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                    boxShadow: "0 2px 8px rgba(46, 125, 50, 0.2)"
+                  }}
+                >
+                  Thực hiện
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -338,6 +427,72 @@ export const RewardsPointsTab: React.FC<RewardsPointsTabProps> = ({
               ))}
             </div>
           )}
+      {/* MODAL CHỌN NỀN TẢNG CHIA SẺ */}
+      {showShareModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.6)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px", backdropFilter: "blur(4px)" }}>
+          <div style={{ background: "#ffffff", borderRadius: "20px", width: "100%", maxWidth: "440px", padding: "24px", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)", position: "relative" }}>
+            <button
+              type="button"
+              onClick={() => setShowShareModal(false)}
+              style={{ position: "absolute", top: "16px", right: "16px", background: "#f1f5f9", border: "none", width: "32px", height: "32px", borderRadius: "50%", cursor: "pointer", fontSize: "16px", color: "#64748b" }}
+            >
+              ✕
+            </button>
+            <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", margin: "0 0 8px 0" }}>
+              Nhiệm Vụ: Chia Sẻ Nhận Điểm
+            </h3>
+            <p style={{ fontSize: "13px", color: "#64748b", margin: "0 0 20px 0", lineHeight: 1.5 }}>
+              Chọn nền tảng bạn muốn chia sẻ bài viết Mini Shop. Sau khi hoàn thành đăng bài, hệ thống sẽ mở nút nhận <strong>+50 Điểm Thưởng VIP</strong>!
+            </p>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              <button
+                type="button"
+                onClick={() => handleExecuteShare("facebook")}
+                style={{
+                  padding: "12px 18px",
+                  borderRadius: "12px",
+                  background: "#1877f2",
+                  color: "#ffffff",
+                  border: "none",
+                  fontSize: "14px",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "10px",
+                  boxShadow: "0 4px 12px rgba(24, 119, 242, 0.25)"
+                }}
+              >
+                <i className="fa-brands fa-facebook-f" style={{ fontSize: "16px" }}></i>
+                Chia sẻ lên Facebook
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleExecuteShare("zalo")}
+                style={{
+                  padding: "12px 18px",
+                  borderRadius: "12px",
+                  background: "#0068ff",
+                  color: "#ffffff",
+                  border: "none",
+                  fontSize: "14px",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "10px",
+                  boxShadow: "0 4px 12px rgba(0, 104, 255, 0.25)"
+                }}
+              >
+                <i className="fa-solid fa-comment-dots" style={{ fontSize: "16px" }}></i>
+                Chia sẻ qua Zalo
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
