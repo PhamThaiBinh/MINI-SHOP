@@ -34,14 +34,40 @@ export const fetchAdminVouchers = async (): Promise<SystemVoucher[]> => {
 export const saveAdminVoucher = async (voucher: SystemVoucher): Promise<boolean> => {
   try {
     const supabase = createClient();
-    const { error } = await supabase.from("vouchers").upsert({
+
+    // Check if voucher already exists to retain voucher_id & id
+    const { data: existing } = await supabase
+      .from("vouchers")
+      .select("id, voucher_id")
+      .eq("code", voucher.code)
+      .maybeSingle();
+
+    let voucherId = existing?.voucher_id;
+    if (!voucherId) {
+      const { data: maxRows } = await supabase
+        .from("vouchers")
+        .select("id")
+        .order("id", { ascending: false })
+        .limit(1);
+      const nextId = (maxRows && maxRows.length > 0 ? Number(maxRows[0].id) : 4) + 1;
+      voucherId = `V${String(nextId).padStart(4, "0")}`;
+    }
+
+    const payload: any = {
       code: voucher.code,
       desc: voucher.desc,
       percent: voucher.percent || null,
       fixed_discount: voucher.fixedDiscount || null,
       min_order: voucher.minOrder || 0,
       is_active: voucher.isActive,
-    }, { onConflict: "code" });
+      voucher_id: voucherId,
+    };
+
+    if (existing?.id) {
+      payload.id = existing.id;
+    }
+
+    const { error } = await supabase.from("vouchers").upsert(payload, { onConflict: "code" });
 
     if (error) {
       console.error("Error saving voucher:", error.message);

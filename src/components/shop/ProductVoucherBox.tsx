@@ -1,16 +1,35 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Ticket, Check, Copy } from "lucide-react";
+import { fetchAdminVouchers } from "@/lib/supabaseAdmin";
 
 export const ProductVoucherBox: React.FC = () => {
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [vouchers, setVouchers] = useState<Array<{ code: string; desc: string; tag: string }>>([
+    { code: "DISCOUNT30", desc: "Giảm 30% cho đơn từ 2.000.000đ", tag: "GIẢM 30%" },
+    { code: "DISCOUNT10", desc: "Giảm 10% cho tất cả đơn hàng", tag: "GIẢM 10%" },
+    { code: "MINISHOP20", desc: "Giảm 20% cho đơn hàng đầu tiên", tag: "GIẢM 20%" },
+  ]);
 
-  const vouchers = [
-    { code: "MINI100K", desc: "Giảm 100k cho đơn từ 2.000k", tag: "GIẢM 100K" },
-    { code: "FREESHIP0D", desc: "Miễn phí vận chuyển toàn quốc", tag: "FREESHIP" },
-    { code: "DECOR50K", desc: "Giảm 50k cho SP Trang trí", tag: "GIẢM 50K" },
-  ];
+  useEffect(() => {
+    fetchAdminVouchers().then((dbVouchers) => {
+      const active = dbVouchers.filter((v) => v.isActive);
+      if (active.length > 0) {
+        setVouchers(
+          active.slice(0, 4).map((v) => ({
+            code: v.code,
+            desc: v.desc,
+            tag: v.percent
+              ? `GIẢM ${v.percent}%`
+              : v.fixedDiscount
+              ? `GIẢM ${(v.fixedDiscount / 1000).toFixed(0)}K`
+              : "ƯU ĐÃI",
+          }))
+        );
+      }
+    });
+  }, []);
 
   const handleCopy = (code: string) => {
     if (typeof window !== "undefined") {

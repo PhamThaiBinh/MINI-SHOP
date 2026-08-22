@@ -10,6 +10,13 @@ export interface SystemVoucher {
 
 export const INITIAL_SYSTEM_VOUCHERS: SystemVoucher[] = [
   {
+    code: "DISCOUNT30",
+    desc: "Giảm 30% cho đơn tối thiểu từ 2000000",
+    percent: 30,
+    minOrder: 2000000,
+    isActive: true,
+  },
+  {
     code: "DISCOUNT10",
     desc: "Giảm 10% cho tất cả đơn hàng",
     percent: 10,
