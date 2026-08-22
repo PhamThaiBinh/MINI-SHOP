@@ -6,6 +6,7 @@ import "@/styles/admin.css";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { fetchAdminUsers, saveAdminUser, toggleAdminUserStatus, AdminUserItem as UserItem } from "@/lib/supabaseAdmin";
+import { validateVNPhoneNumber } from "@/lib/utils";
 import { Lock, Unlock, X, Users, UserCheck, ShieldCheck, UserX, Search, Plus, Filter, CheckCircle2 } from "lucide-react";
 
 export default function AdminUsersPage() {
@@ -110,6 +111,12 @@ export default function AdminUsersPage() {
     e.preventDefault();
     if (!staffName.trim() || !staffEmail.trim() || !staffPhone.trim()) return;
 
+    const phoneCheck = validateVNPhoneNumber(staffPhone);
+    if (!phoneCheck.isValid) {
+      alert(phoneCheck.message || "Số điện thoại không đúng đầu số nhà mạng tại Việt Nam!");
+      return;
+    }
+
     const newUser: UserItem = {
       id: Date.now(),
       avatarText: staffName.charAt(0).toUpperCase() || "S",
@@ -117,7 +124,7 @@ export default function AdminUsersPage() {
       name: staffName,
       username: `@${staffEmail.split("@")[0]}`,
       email: staffEmail,
-      phone: staffPhone,
+      phone: phoneCheck.cleanPhone,
       role: staffRole,
       roleType: "admin",
       registeredDate: new Date().toLocaleDateString("vi-VN"),
@@ -127,7 +134,7 @@ export default function AdminUsersPage() {
     setUsers((prev) => [newUser, ...prev]);
     await saveAdminUser(newUser);
     setShowAddModal(false);
-    setToastMsg(`🎉 Đã thêm quản trị viên "${staffName}" thành công!`);
+    setToastMsg(`🎉 Đã thêm quản trị viên "${staffName}" thành công! (${phoneCheck.carrier})`);
     setTimeout(() => setToastMsg(""), 3500);
 
     setStaffName("");

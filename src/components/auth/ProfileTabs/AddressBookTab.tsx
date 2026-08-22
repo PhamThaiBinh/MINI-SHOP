@@ -3,7 +3,8 @@
 import React, { useState } from "react";
 import { AddressItem } from "../types";
 import { SearchableDropdown } from "../Shared/SearchableDropdown";
-import { MapPin, Trash2, Plus, Save, X, Edit3 } from "lucide-react";
+import { MapPin, Trash2, Plus, Save, X, Edit3, CheckCircle2, AlertCircle } from "lucide-react";
+import { validateVNPhoneNumber } from "@/lib/utils";
 
 interface AddressBookTabProps {
   addresses: AddressItem[];
@@ -68,6 +69,17 @@ export const AddressBookTab: React.FC<AddressBookTabProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!addrName.trim()) {
+      alert("Vui lòng nhập họ và tên người nhận!");
+      return;
+    }
+
+    const phoneCheck = validateVNPhoneNumber(addrPhone);
+    if (!phoneCheck.isValid) {
+      alert(phoneCheck.message || "Số điện thoại không đúng đầu số nhà mạng tại Việt Nam!");
+      return;
+    }
+
     if (!addrProvince || !addrWard) {
       alert("Vui lòng chọn Tỉnh/Thành phố và Xã/Phường!");
       return;
@@ -77,16 +89,16 @@ export const AddressBookTab: React.FC<AddressBookTabProps> = ({
       if (onUpdateAddress) {
         onUpdateAddress({
           ...editingAddress,
-          name: addrName,
-          phone: addrPhone,
+          name: addrName.trim(),
+          phone: phoneCheck.cleanPhone,
           province: addrProvince,
           ward: addrWard,
-          detail: addrDetail,
+          detail: addrDetail.trim(),
           isDefault: addrSetDefault,
         });
       }
     } else {
-      onAddAddress(addrName, addrPhone, addrProvince, addrWard, addrDetail, addrSetDefault);
+      onAddAddress(addrName.trim(), phoneCheck.cleanPhone, addrProvince, addrWard, addrDetail.trim(), addrSetDefault);
     }
 
     setShowModal(false);

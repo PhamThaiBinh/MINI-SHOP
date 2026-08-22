@@ -6,7 +6,7 @@ import "@/styles/checkout.css";
 import "@/styles/cart.css";
 import { useCart } from "@/context/CartContext";
 import { useAuth, PlacedOrder } from "@/context/AuthContext";
-import { formatVND, fixImagePath } from "@/lib/utils";
+import { formatVND, fixImagePath, validateVNPhoneNumber } from "@/lib/utils";
 import { fetchAdminVouchers } from "@/lib/supabaseAdmin";
 import { fetchUserAddressesFromSupabase } from "@/lib/supabaseAddress";
 import { formatFullTimestamp, UnifiedOrder } from "@/utils/orderStorage";
@@ -343,15 +343,11 @@ export default function CheckoutPage() {
     clearCart();
   };
 
-  const isValidVnPhone = (p: string) => {
-    const cleanPhone = p.replace(/\s+/g, "").replace(/\./g, "");
-    return /^(03|05|07|08|09)\d{8}$/.test(cleanPhone);
-  };
-
   const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isValidVnPhone(phone)) {
-      alert("Số điện thoại không hợp lệ! Vui lòng nhập số điện thoại Việt Nam chuẩn 10 chữ số (đầu 03, 05, 07, 08, 09).");
+    const phoneCheck = validateVNPhoneNumber(phone);
+    if (!phoneCheck.isValid) {
+      alert(phoneCheck.message || "Số điện thoại không đúng đầu số các nhà mạng tại Việt Nam!");
       return;
     }
 
@@ -489,17 +485,39 @@ export default function CheckoutPage() {
                       />
                     </div>
                     <div className="form-group">
-                      <label htmlFor="phone">
-                        Số điện thoại <span className="required">*</span>
-                      </label>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                        <label htmlFor="phone" style={{ margin: 0 }}>
+                          Số điện thoại <span className="required">*</span>
+                        </label>
+                        {phone && (
+                          <span
+                            style={{
+                              fontSize: "11px",
+                              fontWeight: 700,
+                              color: validateVNPhoneNumber(phone).isValid ? "#15803d" : "#b91c1c",
+                            }}
+                          >
+                            {validateVNPhoneNumber(phone).isValid
+                              ? `🟢 ${validateVNPhoneNumber(phone).carrier}`
+                              : "🔴 Đầu số chưa hợp lệ"}
+                          </span>
+                        )}
+                      </div>
                       <input
                         type="tel"
                         id="phone"
                         className="form-control"
-                        placeholder="Ví dụ: 0987654321"
+                        placeholder="Ví dụ: 0987654321 (10 chữ số)"
                         required
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
+                        style={{
+                          borderColor: phone
+                            ? validateVNPhoneNumber(phone).isValid
+                              ? "#22c55e"
+                              : "#ef4444"
+                            : undefined,
+                        }}
                       />
                     </div>
                   </div>

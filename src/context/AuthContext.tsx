@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { generateCleanUsername } from "@/lib/userUtils";
+import { validateVNPhoneNumber } from "@/lib/utils";
 
 export interface RedemptionHistory {
   id: string;
@@ -596,7 +597,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   ): Promise<{ success: boolean; error?: string }> => {
     if (!user) return { success: false, error: "Chưa đăng nhập!" };
     const cleanName = name.trim();
-    const cleanPhone = phone.trim();
+    const rawPhone = phone.trim();
+    let cleanPhone = "";
+
+    if (rawPhone) {
+      const phoneCheck = validateVNPhoneNumber(rawPhone);
+      if (!phoneCheck.isValid) {
+        return { success: false, error: phoneCheck.message || "Số điện thoại không đúng đầu số nhà mạng tại Việt Nam!" };
+      }
+      cleanPhone = phoneCheck.cleanPhone;
+    }
+
     const cleanUsername = generateCleanUsername(cleanName).replace(/^@/, "");
 
     try {

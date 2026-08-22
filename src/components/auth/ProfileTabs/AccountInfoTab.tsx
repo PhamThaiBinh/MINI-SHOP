@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { UserProfile, useAuth } from "@/context/AuthContext";
-import { Save, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Save, AlertCircle, CheckCircle2, PhoneCall } from "lucide-react";
+import { validateVNPhoneNumber } from "@/lib/utils";
 
 interface AccountInfoTabProps {
   user: UserProfile;
@@ -20,21 +21,37 @@ export const AccountInfoTab: React.FC<AccountInfoTabProps> = ({ user }) => {
     setProfilePhone(user.phone || "");
   }, [user]);
 
+  const phoneValidation = validateVNPhoneNumber(profilePhone);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profileName.trim()) {
-      alert("Vui lòng nhập họ và tên!");
+      setStatusMsg({ type: "error", text: "Vui lòng nhập họ và tên!" });
+      return;
+    }
+
+    if (!profilePhone.trim()) {
+      setStatusMsg({ type: "error", text: "Vui lòng nhập số điện thoại!" });
+      return;
+    }
+
+    const phoneCheck = validateVNPhoneNumber(profilePhone);
+    if (!phoneCheck.isValid) {
+      setStatusMsg({ type: "error", text: phoneCheck.message || "Số điện thoại không hợp lệ!" });
       return;
     }
 
     setIsSaving(true);
     setStatusMsg(null);
 
-    const res = await updateUserProfile(profileName, profilePhone);
+    const res = await updateUserProfile(profileName, phoneCheck.cleanPhone);
     setIsSaving(false);
 
     if (res.success) {
-      setStatusMsg({ type: "success", text: "Đã lưu cập nhật thông tin tài khoản thành công!" });
+      setStatusMsg({
+        type: "success",
+        text: `Đã lưu cập nhật thông tin thành công! (Số điện thoại ${phoneCheck.carrier})`,
+      });
       setTimeout(() => setStatusMsg(null), 4000);
     } else {
       setStatusMsg({ type: "error", text: res.error || "Không thể cập nhật thông tin!" });
@@ -131,16 +148,54 @@ export const AccountInfoTab: React.FC<AccountInfoTabProps> = ({ user }) => {
         </div>
 
         <div id="tour-phone-field">
-          <label className="auth-label">Số điện thoại *</label>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <label className="auth-label" style={{ margin: 0 }}>Số điện thoại *</label>
+            {profilePhone && (
+              <span
+                style={{
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  color: phoneValidation.isValid ? "#15803d" : "#b91c1c",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px",
+                }}
+              >
+                {phoneValidation.isValid ? (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Nhà mạng: {phoneValidation.carrier}</span>
+                  </>
+                ) : (
+                  <>
+                    <AlertCircle className="w-3.5 h-3.5 text-red-500" />
+                    <span>Đầu số không hợp lệ</span>
+                  </>
+                )}
+              </span>
+            )}
+          </div>
           <input
             type="tel"
             className="form-control auth-input"
             value={profilePhone}
             onChange={(e) => setProfilePhone(e.target.value)}
-            placeholder="Ví dụ: 0912345678"
+            placeholder="Ví dụ: 0912345678 (10 chữ số)"
             required
-            style={{ borderRadius: "10px", height: "44px" }}
+            style={{
+              borderRadius: "10px",
+              height: "44px",
+              marginTop: "6px",
+              borderColor: profilePhone
+                ? phoneValidation.isValid
+                  ? "#22c55e"
+                  : "#ef4444"
+                : undefined,
+            }}
           />
+          <span style={{ fontSize: "11.5px", color: "#64748b", display: "block", marginTop: "4px" }}>
+            Hỗ trợ tất cả đầu số các nhà mạng Việt Nam: Viettel, VinaPhone, MobiFone, Vietnamobile, Gmobile, Wintel, I-Telecom.
+          </span>
         </div>
 
         <button
