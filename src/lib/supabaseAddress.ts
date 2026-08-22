@@ -33,14 +33,14 @@ export const fetchUserAddressesFromSupabase = async (
       .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${cleanUser}`)
       .limit(1);
 
-    if (!error && data && data.length > 0 && Array.isArray(data[0].addresses) && data[0].addresses.length > 0) {
+    if (!error && data && data.length > 0 && Array.isArray(data[0].addresses)) {
       return data[0].addresses;
     }
   } catch (err) {
-    console.warn("Supabase address fetch warning, using default:", err);
+    console.warn("Supabase address fetch warning:", err);
   }
 
-  return [DEFAULT_ADDRESS];
+  return [];
 };
 
 export const addUserAddressToSupabase = async (

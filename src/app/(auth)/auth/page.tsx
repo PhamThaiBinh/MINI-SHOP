@@ -455,6 +455,8 @@ function AuthPageContent() {
                   addresses={addresses}
                   provincesList={provincesList}
                   wardsList={wardsList}
+                  defaultName={user?.name || ""}
+                  defaultPhone={user?.phone || ""}
                   onSelectProvince={handleSelectProvince}
                   onAddAddress={handleAddAddress}
                   onUpdateAddress={handleUpdateAddress}

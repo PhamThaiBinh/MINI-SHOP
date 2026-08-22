@@ -9,6 +9,8 @@ interface AddressBookTabProps {
   addresses: AddressItem[];
   provincesList: string[];
   wardsList: string[];
+  defaultName?: string;
+  defaultPhone?: string;
   onSelectProvince: (prov: string) => void;
   onAddAddress: (name: string, phone: string, province: string, ward: string, detail: string, isDefault: boolean) => void;
   onUpdateAddress?: (addr: AddressItem) => void;
@@ -20,6 +22,8 @@ export const AddressBookTab: React.FC<AddressBookTabProps> = ({
   addresses,
   provincesList,
   wardsList,
+  defaultName = "",
+  defaultPhone = "",
   onSelectProvince,
   onAddAddress,
   onUpdateAddress,
@@ -41,8 +45,8 @@ export const AddressBookTab: React.FC<AddressBookTabProps> = ({
 
   const handleOpenAddModal = () => {
     setEditingAddress(null);
-    setAddrName("");
-    setAddrPhone("");
+    setAddrName(defaultName);
+    setAddrPhone(defaultPhone);
     setAddrProvince("");
     setAddrWard("");
     setAddrDetail("");
@@ -118,8 +122,61 @@ export const AddressBookTab: React.FC<AddressBookTabProps> = ({
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-        {sortedAddresses.map((a) => {
-          const isCannotDelete = a.isDefault || addresses.length <= 1;
+        {sortedAddresses.length === 0 ? (
+          <div
+            style={{
+              padding: "40px 20px",
+              textAlign: "center",
+              background: "#ffffff",
+              border: "1.5px dashed #cbd5e1",
+              borderRadius: "16px",
+              color: "#64748b",
+            }}
+          >
+            <div
+              style={{
+                width: "48px",
+                height: "48px",
+                borderRadius: "50%",
+                background: "#f1f5f9",
+                color: "#94a3b8",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto 12px",
+              }}
+            >
+              <MapPin className="w-6 h-6" />
+            </div>
+            <p style={{ fontSize: "14.5px", fontWeight: 800, color: "#1e293b", margin: "0 0 4px" }}>
+              Chưa Có Địa Chỉ Nhận Hàng Nào
+            </p>
+            <p style={{ fontSize: "13px", color: "#64748b", margin: "0 0 16px" }}>
+              Bấm nút &quot;<strong>+ Thêm Địa Chỉ Mới</strong>&quot; ở trên để tạo địa chỉ nhận hàng đầu tiên của bạn.
+            </p>
+            <button
+              type="button"
+              onClick={handleOpenAddModal}
+              style={{
+                padding: "8px 20px",
+                background: "var(--primary-color, #2e7d32)",
+                color: "#ffffff",
+                border: "none",
+                borderRadius: "10px",
+                fontSize: "13px",
+                fontWeight: 800,
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+              }}
+            >
+              <Plus className="w-4 h-4" /> Thêm Địa Chỉ Đầu Tiên
+            </button>
+          </div>
+        ) : (
+          sortedAddresses.map((a) => {
+            const isCannotDelete = a.isDefault || addresses.length <= 1;
 
           return (
             <div
@@ -234,7 +291,7 @@ export const AddressBookTab: React.FC<AddressBookTabProps> = ({
               </div>
             </div>
           );
-        })}
+        }))}
       </div>
 
       {/* Modal Add / Edit Address */}
