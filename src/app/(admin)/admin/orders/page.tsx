@@ -8,7 +8,7 @@ import "@/styles/admin.css";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { fixImagePath } from "@/lib/utils";
-import { getAllOrders, updateOrderStatus, UnifiedOrder } from "@/utils/orderStorage";
+import { type UnifiedOrder } from "@/utils/orderStorage";
 import { fetchAdminOrders, updateAdminOrderStatus } from "@/lib/supabaseAdmin";
 import { createClient } from "@/utils/supabase/client";
 import { Check, Truck, CheckCircle2, XCircle, Clock, Printer, Eye, X, Zap, AlertTriangle, Package } from "lucide-react";

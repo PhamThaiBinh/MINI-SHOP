@@ -20,25 +20,9 @@ const DEFAULT_ADDRESS: UserAddressItem = {
   isDefault: true,
 };
 
-const getLocalKey = (username: string) => `minishop_user_addresses_${username.trim().replace(/^@/, "")}`;
-
 export const fetchUserAddressesFromSupabase = async (
   username: string
 ): Promise<UserAddressItem[]> => {
-  const localKey = getLocalKey(username);
-  
-  if (typeof window !== "undefined") {
-    const saved = localStorage.getItem(localKey);
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
-        }
-      } catch (e) {}
-    }
-  }
-
   try {
     const supabase = createClient();
     const cleanUser = username.trim().replace(/^@/, "");
@@ -50,20 +34,13 @@ export const fetchUserAddressesFromSupabase = async (
       .limit(1);
 
     if (!error && data && data.length > 0 && Array.isArray(data[0].addresses) && data[0].addresses.length > 0) {
-      if (typeof window !== "undefined") {
-        localStorage.setItem(localKey, JSON.stringify(data[0].addresses));
-      }
       return data[0].addresses;
     }
   } catch (err) {
-    console.warn("Supabase address fetch warning, using local default:", err);
+    console.warn("Supabase address fetch warning, using default:", err);
   }
 
-  const initialList = [DEFAULT_ADDRESS];
-  if (typeof window !== "undefined") {
-    localStorage.setItem(localKey, JSON.stringify(initialList));
-  }
-  return initialList;
+  return [DEFAULT_ADDRESS];
 };
 
 export const addUserAddressToSupabase = async (
@@ -84,21 +61,12 @@ export const addUserAddressToSupabase = async (
     };
     updatedAddresses.push(newAddressItem);
 
-    const localKey = getLocalKey(username);
-    if (typeof window !== "undefined") {
-      localStorage.setItem(localKey, JSON.stringify(updatedAddresses));
-    }
-
-    try {
-      const supabase = createClient();
-      const cleanUser = username.trim().replace(/^@/, "");
-      await supabase
-        .from("users")
-        .update({ addresses: updatedAddresses })
-        .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${cleanUser}`);
-    } catch (sbErr) {
-      console.warn("Supabase address sync warning:", sbErr);
-    }
+    const supabase = createClient();
+    const cleanUser = username.trim().replace(/^@/, "");
+    await supabase
+      .from("users")
+      .update({ addresses: updatedAddresses })
+      .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${cleanUser}`);
 
     return true;
   } catch (err) {
@@ -118,21 +86,12 @@ export const setDefaultUserAddressInSupabase = async (
       isDefault: a.id === id,
     }));
 
-    const localKey = getLocalKey(username);
-    if (typeof window !== "undefined") {
-      localStorage.setItem(localKey, JSON.stringify(updatedAddresses));
-    }
-
-    try {
-      const supabase = createClient();
-      const cleanUser = username.trim().replace(/^@/, "");
-      await supabase
-        .from("users")
-        .update({ addresses: updatedAddresses })
-        .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${cleanUser}`);
-    } catch (sbErr) {
-      console.warn("Supabase address sync warning:", sbErr);
-    }
+    const supabase = createClient();
+    const cleanUser = username.trim().replace(/^@/, "");
+    await supabase
+      .from("users")
+      .update({ addresses: updatedAddresses })
+      .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${cleanUser}`);
 
     return true;
   } catch (err) {
@@ -153,21 +112,12 @@ export const deleteUserAddressFromSupabase = async (
       updatedAddresses[0].isDefault = true;
     }
 
-    const localKey = getLocalKey(username);
-    if (typeof window !== "undefined") {
-      localStorage.setItem(localKey, JSON.stringify(updatedAddresses));
-    }
-
-    try {
-      const supabase = createClient();
-      const cleanUser = username.trim().replace(/^@/, "");
-      await supabase
-        .from("users")
-        .update({ addresses: updatedAddresses })
-        .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${cleanUser}`);
-    } catch (sbErr) {
-      console.warn("Supabase address sync warning:", sbErr);
-    }
+    const supabase = createClient();
+    const cleanUser = username.trim().replace(/^@/, "");
+    await supabase
+      .from("users")
+      .update({ addresses: updatedAddresses })
+      .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${cleanUser}`);
 
     return true;
   } catch (err) {

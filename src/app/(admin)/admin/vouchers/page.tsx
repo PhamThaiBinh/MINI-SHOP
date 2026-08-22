@@ -5,7 +5,7 @@ import Link from "next/link";
 import "@/styles/admin.css";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
-import { SystemVoucher, getSystemVouchers, saveSystemVouchers } from "@/utils/voucherStorage";
+import { SystemVoucher } from "@/utils/voucherStorage";
 import { fetchAdminVouchers, saveAdminVoucher, deleteAdminVoucher } from "@/lib/supabaseAdmin";
 import { Ticket, Edit3, Trash2, X } from "lucide-react";
 
@@ -70,7 +70,6 @@ export default function AdminVouchersPage() {
     const updatedV = { ...target, isActive: !target.isActive };
     const updated = vouchers.map((v) => (v.code === targetCode ? updatedV : v));
     setVouchers(updated);
-    saveSystemVouchers(updated);
     await saveAdminVoucher(updatedV);
   };
 
@@ -78,7 +77,6 @@ export default function AdminVouchersPage() {
     if (confirm(`Bạn có chắc muốn xóa mã voucher ${targetCode}?`)) {
       const updated = vouchers.filter((v) => v.code !== targetCode);
       setVouchers(updated);
-      saveSystemVouchers(updated);
       await deleteAdminVoucher(targetCode);
     }
   };
@@ -92,7 +90,7 @@ export default function AdminVouchersPage() {
     const minOrderNum = Number(formMinOrder) || 0;
 
     if (minOrderNum < 0 || valNum < 0) {
-      alert("Số tiền giảm giá và giá trị đơn tối thiểu phải lớn hơn hoặc bằng 0!");
+      alert("Số tiền giảm giá và giá trị đơn tối thiểu phải lớn hoặc bằng 0!");
       return;
     }
 
@@ -115,7 +113,6 @@ export default function AdminVouchersPage() {
     }
 
     setVouchers(updated);
-    saveSystemVouchers(updated);
     await saveAdminVoucher(newVoucherItem);
     setShowModal(false);
   };

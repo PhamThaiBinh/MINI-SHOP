@@ -76,8 +76,8 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
   useEffect(() => {
     const syncOrderNotifs = async () => {
       try {
-        const { getAllOrders } = await import("@/utils/orderStorage");
-        const orders = getAllOrders();
+        const { fetchAdminOrders } = await import("@/lib/supabaseAdmin");
+        const orders = await fetchAdminOrders();
         const latest = orders.slice(0, 3).map((o, idx) => ({
           id: `ord-${o.id}-${idx}`,
           icon: <ShoppingCart className="w-4 h-4 text-emerald-600" />,

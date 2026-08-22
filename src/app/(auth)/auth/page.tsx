@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import "@/styles/auth.css";
 import { useAuth } from "@/context/AuthContext";
 import { fetchProvincesApi, fetchWardsForProvinceApi } from "@/lib/locationApi";
-import { getOrdersForUser, cancelOrderWithReason } from "@/utils/orderStorage";
+import { fetchUserOrdersFromSupabase } from "@/lib/supabaseOrders";
 import {
   fetchUserAddressesFromSupabase,
   addUserAddressToSupabase,
@@ -75,8 +75,9 @@ function AuthPageContent() {
   // Sync Orders & Addresses on login
   useEffect(() => {
     if (user) {
-      const userOrders = getOrdersForUser(user.username || user.name);
-      setLiveOrders(userOrders as CustomerOrder[]);
+      fetchUserOrdersFromSupabase(user.phone, user.email, user.username).then((dbOrders) => {
+        setLiveOrders(dbOrders as CustomerOrder[]);
+      });
 
       fetchUserAddressesFromSupabase(user.email || user.username || "user").then((savedAddrs) => {
         if (savedAddrs.length > 0) {
@@ -235,10 +236,7 @@ function AuthPageContent() {
       ? cancelReasonCustom || "Khách hàng không nêu rõ lý do"
       : cancelReasonPreset;
 
-    // 1. Update local storage
-    cancelOrderWithReason(cancelTargetOrder.id, finalReason);
-
-    // 2. Update Supabase Orders Table so Admin Interface syncs immediately
+    // Update Supabase Orders Table so Admin Interface & Customer Order syncs immediately
     try {
       const supabase = createClient();
       await supabase

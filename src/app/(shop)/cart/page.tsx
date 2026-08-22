@@ -6,7 +6,7 @@ import "@/styles/cart.css";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { formatVND, fixImagePath } from "@/lib/utils";
-import { getSystemVouchers } from "@/utils/voucherStorage";
+import { fetchAdminVouchers } from "@/lib/supabaseAdmin";
 import {
   Truck,
   ShieldCheck,
@@ -75,16 +75,18 @@ export default function CartPage() {
   const [systemCoupons, setSystemCoupons] = useState<Coupon[]>([]);
 
   useEffect(() => {
-    const sys = getSystemVouchers()
-      .filter((v) => v.isActive)
-      .map((v) => ({
-        code: v.code,
-        percent: v.percent,
-        fixedDiscount: v.fixedDiscount,
-        desc: v.desc,
-        minOrder: v.minOrder,
-      }));
-    setSystemCoupons(sys);
+    fetchAdminVouchers().then((vouchers) => {
+      const sys = vouchers
+        .filter((v) => v.isActive)
+        .map((v) => ({
+          code: v.code,
+          percent: v.percent,
+          fixedDiscount: v.fixedDiscount,
+          desc: v.desc,
+          minOrder: v.minOrder,
+        }));
+      setSystemCoupons(sys);
+    });
   }, []);
 
   const activeSystemCoupons = systemCoupons.filter(

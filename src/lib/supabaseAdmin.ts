@@ -109,37 +109,6 @@ export const fetchAdminUsers = async (): Promise<AdminUserItem[]> => {
     console.error("Error fetching admin users from Supabase:", err);
   }
 
-  // Merge with local registered users storage
-  if (typeof window !== "undefined") {
-    try {
-      const stored = localStorage.getItem("minishop_registered_users");
-      if (stored) {
-        const localList = JSON.parse(stored);
-        if (Array.isArray(localList)) {
-          localList.forEach((localUser: any) => {
-            if (!dbUsers.some((u) => u.email.toLowerCase() === localUser.email.toLowerCase())) {
-              dbUsers.push({
-                id: Number(localUser.id || Date.now()),
-                avatarText: String(localUser.avatar_text || localUser.name?.charAt(0).toUpperCase() || "U"),
-                avatarBg: String(localUser.avatar_bg || "#2e7d32"),
-                name: String(localUser.name),
-                username: String(localUser.username),
-                email: String(localUser.email || ""),
-                phone: String(localUser.phone || ""),
-                role: String(localUser.role || "Khách hàng"),
-                roleType: (localUser.role_type === "admin" ? "admin" : "customer") as any,
-                registeredDate: String(localUser.registered_date || new Date().toLocaleDateString("vi-VN")),
-                status: (localUser.status === "Blocked" ? "Blocked" : "Active") as any,
-              });
-            }
-          });
-        }
-      }
-    } catch (err) {
-      console.warn("Local registered users parse notice:", err);
-    }
-  }
-
   return dbUsers;
 };
 

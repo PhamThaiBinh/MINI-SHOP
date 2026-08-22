@@ -672,7 +672,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     if (typeof window !== "undefined") {
       localStorage.setItem(`minishop_user_points_${user.username}`, String(newPoints));
       localStorage.setItem(`minishop_user_history_${user.username}`, JSON.stringify(updatedUser.history));
+      localStorage.setItem(`minishop_user_vouchers_${user.username}`, JSON.stringify(updatedVouchers));
     }
+
+    try {
+      const supabase = createClient();
+      const cleanUser = user.username.replace(/^@/, "");
+      supabase
+        .from("users")
+        .update({
+          rewards: { points: newPoints, history: updatedUser.history },
+          vouchers: updatedVouchers,
+        })
+        .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${user.email}`)
+        .then();
+    } catch (err) {
+      console.warn("Supabase user rewards sync notice:", err);
+    }
+
     return true;
   };
 
@@ -703,6 +720,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       localStorage.setItem(`minishop_user_points_${user.username}`, String(newPoints));
       localStorage.setItem(`minishop_user_history_${user.username}`, JSON.stringify(updatedUser.history));
     }
+
+    try {
+      const supabase = createClient();
+      const cleanUser = user.username.replace(/^@/, "");
+      supabase
+        .from("users")
+        .update({
+          rewards: { points: newPoints, history: updatedUser.history },
+        })
+        .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${user.email}`)
+        .then();
+    } catch (err) {
+      console.warn("Supabase user points sync notice:", err);
+    }
   };
 
   const addVoucherToUser = (label: string, discount: number, code: string) => {
@@ -732,6 +763,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setUser(updatedUser);
     if (typeof window !== "undefined") {
       localStorage.setItem(`minishop_user_vouchers_${user.username}`, JSON.stringify(updatedVouchers));
+    }
+
+    try {
+      const supabase = createClient();
+      const cleanUser = user.username.replace(/^@/, "");
+      supabase
+        .from("users")
+        .update({
+          vouchers: updatedVouchers,
+        })
+        .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${user.email}`)
+        .then();
+    } catch (err) {
+      console.warn("Supabase user voucher sync notice:", err);
     }
   };
 

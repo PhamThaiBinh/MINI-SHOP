@@ -186,12 +186,6 @@ function ProductDetailPageContent({
     const updatedList = [newRev, ...reviewsList];
     setReviewsList(updatedList);
 
-    if (typeof window !== "undefined") {
-      try {
-        localStorage.setItem(`minishop_reviews_product_${productId}`, JSON.stringify(updatedList));
-      } catch (err) {}
-    }
-
     try {
       const supabase = createClient();
       await supabase.from("product_reviews").insert({

@@ -256,11 +256,6 @@ export default function AdminSettingsPage() {
         : r
     );
     setShippingRates(updatedRates);
-    try {
-      localStorage.setItem("mini_shop_shipping_rates", JSON.stringify(updatedRates));
-    } catch (err) {
-      console.error(err);
-    }
     setEditingRateId(null);
     triggerNotify("Đã lưu cấu hình phí vận chuyển vùng thành công!");
   };
