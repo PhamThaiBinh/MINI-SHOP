@@ -460,22 +460,61 @@ export default function AdminVouchersPage() {
         >
           <div
             style={{
-              background: "#fff",
+              background: "#ffffff",
               width: "100%",
-              maxWidth: "500px",
-              borderRadius: "var(--radius-lg)",
-              boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
-              overflow: "hidden"
+              maxWidth: "520px",
+              borderRadius: "24px",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+              overflow: "hidden",
+              border: "1px solid #e2e8f0",
             }}
           >
-            <div style={{ padding: "16px 20px", background: "#f8fafc", borderBottom: "1px solid var(--border-color)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h3 style={{ fontSize: "16px", fontWeight: 800, color: "#0f172a", margin: 0, display: "flex", alignItems: "center", gap: "6px" }}>
-                {editingVoucher ? <><Edit3 className="w-4 h-4 text-emerald-700" /> Chỉnh Sửa Mã Voucher</> : <><Ticket className="w-4 h-4 text-emerald-700" /> Form Mã Voucher Mới</>}
-              </h3>
-              <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", cursor: "pointer" }}><X className="w-5 h-5 text-slate-400 hover:text-slate-600" /></button>
+            {/* Modal Header Banner */}
+            <div
+              style={{
+                padding: "20px 24px",
+                background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
+                borderBottom: "1.5px solid #bbf7d0",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <div style={{ width: "40px", height: "40px", borderRadius: "12px", background: "var(--primary-color, #2e7d32)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Ticket className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: "17px", fontWeight: 900, color: "#14532d", margin: 0, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                    {editingVoucher ? "Chỉnh Sửa Mã Voucher" : "Tạo Mã Voucher Mới"}
+                  </h3>
+                  <p style={{ fontSize: "12px", color: "#166534", margin: "2px 0 0", fontWeight: 700 }}>
+                    {editingVoucher ? `Cập nhật điều kiện áp dụng cho mã ${formCode}` : "Thiết lập mã khuyến mãi kích cầu mua sắm"}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                style={{
+                  background: "#ffffff",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "50%",
+                  width: "34px",
+                  height: "34px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                }}
+              >
+                <X className="w-4 h-4 text-slate-600" />
+              </button>
             </div>
 
+            {/* Modal Form */}
             <form onSubmit={handleFormSubmit} style={{ padding: "24px" }}>
+              {/* Group 1: Thông tin mã */}
               <div style={{ marginBottom: "16px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
                   <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", margin: 0, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
@@ -495,13 +534,16 @@ export default function AdminVouchersPage() {
                         color: "#0369a1",
                         border: "none",
                         borderRadius: "8px",
-                        padding: "2px 8px",
+                        padding: "3px 10px",
                         fontSize: "11px",
                         fontWeight: 800,
                         cursor: "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "4px",
                       }}
                     >
-                      <i className="fa-solid fa-wand-magic-sparkles" style={{ marginRight: "4px" }}></i> Tạo Mã Ngẫu Nhiên
+                      <span>✨ Random Mã Nhanh</span>
                     </button>
                   )}
                 </div>
@@ -513,12 +555,14 @@ export default function AdminVouchersPage() {
                   onChange={(e) => setFormCode(e.target.value.toUpperCase())}
                   disabled={Boolean(editingVoucher)}
                   required
-                  style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "14px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                  style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "14px", fontWeight: 800, letterSpacing: "0.05em", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
                 />
               </div>
 
-              <div style={{ marginBottom: "12px" }}>
-                <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "4px" }}>Mô Tả Chương Trình *</label>
+              <div style={{ marginBottom: "16px" }}>
+                <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "6px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                  Mô Tả Chương Trình Khuyến Mãi *
+                </label>
                 <input
                   type="text"
                   className="form-control admin-setting-input"
@@ -526,23 +570,28 @@ export default function AdminVouchersPage() {
                   value={formDesc}
                   onChange={(e) => setFormDesc(e.target.value)}
                   required
+                  style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13.5px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
                 />
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+              {/* Group 2: Cấu hình giảm giá */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
                 <div>
-                  <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "4px" }}>Loại Giảm Giá *</label>
+                  <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "6px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                    Loại Giảm Giá *
+                  </label>
                   <select
                     className="form-control admin-setting-input"
                     value={formDiscountType}
                     onChange={(e) => setFormDiscountType(e.target.value as any)}
+                    style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13.5px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
                   >
                     <option value="fixed">Số tiền cố định (đ)</option>
                     <option value="percent">Phần trăm (%)</option>
                   </select>
                 </div>
                 <div>
-                  <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "4px" }}>
+                  <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "6px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                     {formDiscountType === "fixed" ? "Giá Trị Giảm (VNĐ) *" : "Mức Giảm (%) *"}
                   </label>
                   <input
@@ -552,45 +601,56 @@ export default function AdminVouchersPage() {
                     value={formDiscountValue}
                     onChange={(e) => setFormDiscountValue(e.target.value)}
                     required
+                    style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13.5px", fontWeight: 800, fontFamily: "'Plus Jakarta Sans', sans-serif" }}
                   />
                 </div>
               </div>
 
-              <div style={{ marginBottom: "12px" }}>
-                <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "4px" }}>Giá Trị Đơn Tối Thiểu (VNĐ)</label>
-                <input
-                  type="number"
-                  className="form-control admin-setting-input"
-                  placeholder="0"
-                  value={formMinOrder}
-                  onChange={(e) => setFormMinOrder(e.target.value)}
-                />
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "20px" }}>
+                <div>
+                  <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "6px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                    Đơn Tối Thiểu (VNĐ)
+                  </label>
+                  <input
+                    type="number"
+                    className="form-control admin-setting-input"
+                    placeholder="0"
+                    value={formMinOrder}
+                    onChange={(e) => setFormMinOrder(e.target.value)}
+                    style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13.5px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "6px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                    Trạng Thái Áp Dụng *
+                  </label>
+                  <select
+                    className="form-control admin-setting-input"
+                    value={formIsActive ? "active" : "inactive"}
+                    onChange={(e) => setFormIsActive(e.target.value === "active")}
+                    style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13.5px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                  >
+                    <option value="active">● Kích hoạt (Cho phép dùng)</option>
+                    <option value="inactive">○ Tạm tắt (Không khả dụng)</option>
+                  </select>
+                </div>
               </div>
 
-              <div style={{ marginBottom: "20px" }}>
-                <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "4px" }}>Trạng Thái Sử Dụng</label>
-                <select
-                  className="form-control admin-setting-input"
-                  value={formIsActive ? "active" : "inactive"}
-                  onChange={(e) => setFormIsActive(e.target.value === "active")}
-                >
-                  <option value="active">● Kích hoạt (Cho phép nhập)</option>
-                  <option value="inactive">○ Tạm tắt (Không khả dụng)</option>
-                </select>
-              </div>
-
-              <div style={{ display: "flex", gap: "10px" }}>
+              {/* Action Buttons */}
+              <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
                   style={{
-                    flex: 1,
-                    padding: "10px",
-                    background: "#f1f5f9",
-                    border: "none",
-                    borderRadius: "var(--radius-md)",
-                    fontWeight: 700,
+                    padding: "10px 20px",
+                    borderRadius: "12px",
+                    border: "1px solid #cbd5e1",
+                    background: "#ffffff",
+                    fontWeight: 800,
+                    fontSize: "13px",
+                    color: "#475569",
                     cursor: "pointer",
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
                   }}
                 >
                   Hủy Bỏ
@@ -598,17 +658,19 @@ export default function AdminVouchersPage() {
                 <button
                   type="submit"
                   style={{
-                    flex: 1,
-                    padding: "10px",
-                    background: "var(--primary-color)",
-                    color: "#fff",
+                    padding: "10px 24px",
+                    borderRadius: "12px",
                     border: "none",
-                    borderRadius: "var(--radius-md)",
-                    fontWeight: 700,
+                    background: "var(--primary-color, #2e7d32)",
+                    color: "#ffffff",
+                    fontWeight: 900,
+                    fontSize: "13px",
                     cursor: "pointer",
+                    boxShadow: "0 4px 12px rgba(46, 125, 50, 0.25)",
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
                   }}
                 >
-                  {editingVoucher ? "Lưu Cập Nhật" : "Tạo Voucher Mới"}
+                  {editingVoucher ? "Lưu Thay Đổi" : "Tạo Mã Voucher Mới"}
                 </button>
               </div>
             </form>

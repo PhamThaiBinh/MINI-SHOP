@@ -576,41 +576,61 @@ export default function AdminUsersPage() {
             padding: "20px",
           }}
         >
-          <div className="admin-card-shell" style={{ maxWidth: "540px", width: "100%", borderRadius: "24px" }}>
-            <div className="admin-card-core" style={{ padding: "28px", borderRadius: "calc(24px - 6px)" }}>
-              {/* Modal Header */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                  <div style={{ width: "44px", height: "44px", borderRadius: "14px", background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#166534", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <ShieldCheck className="w-6 h-6 text-emerald-700" />
-                  </div>
-                  <div>
-                    <h3 style={{ fontSize: "18px", fontWeight: 900, color: "#0f172a", margin: 0, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                      Thêm Quản Trị Viên Mới
-                    </h3>
-                    <p style={{ fontSize: "12px", color: "#64748b", margin: "2px 0 0", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                      Cấp tài khoản có quyền truy cập trang Admin Suite
-                    </p>
-                  </div>
+          <div
+            style={{
+              background: "#ffffff",
+              width: "100%",
+              maxWidth: "520px",
+              borderRadius: "24px",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+              overflow: "hidden",
+              border: "1px solid #e2e8f0",
+            }}
+          >
+            {/* Modal Header Banner */}
+            <div
+              style={{
+                padding: "20px 24px",
+                background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
+                borderBottom: "1.5px solid #bbf7d0",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <div style={{ width: "40px", height: "40px", borderRadius: "12px", background: "var(--primary-color, #2e7d32)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <ShieldCheck className="w-5 h-5" />
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  style={{
-                    background: "#f1f5f9",
-                    border: "1px solid #e2e8f0",
-                    borderRadius: "50%",
-                    width: "32px",
-                    height: "32px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    cursor: "pointer",
-                  }}
-                >
-                  <X className="w-4 h-4 text-slate-500" />
-                </button>
+                <div>
+                  <h3 style={{ fontSize: "17px", fontWeight: 900, color: "#14532d", margin: 0, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                    Thêm Quản Trị Viên Mới
+                  </h3>
+                  <p style={{ fontSize: "12px", color: "#166534", margin: "2px 0 0", fontWeight: 700 }}>
+                    Cấp tài khoản có quyền truy cập trang Admin Suite
+                  </p>
+                </div>
               </div>
+              <button
+                type="button"
+                onClick={() => setShowAddModal(false)}
+                style={{
+                  background: "#ffffff",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "50%",
+                  width: "34px",
+                  height: "34px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                }}
+              >
+                <X className="w-4 h-4 text-slate-600" />
+              </button>
+            </div>
+
+            <div style={{ padding: "24px" }}>
 
               {/* Modal Form Body */}
               <form onSubmit={handleSaveNewAdmin}>

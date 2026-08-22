@@ -186,7 +186,7 @@ export const fetchAdminCategories = async (): Promise<AdminCategoryItem[]> => {
         name: String(c.name),
         slug: String(c.slug || c.category_id),
         productCount: pCount,
-        status: "Active",
+        status: c.status === "Hidden" ? "Hidden" : "Active",
         desc: String(c.description || ""),
       };
     });
@@ -203,8 +203,9 @@ export const saveAdminCategory = async (cat: Partial<AdminCategoryItem>): Promis
       ...(cat.id ? { id: cat.id } : {}),
       category_id: cat.code || cat.slug || `C${Date.now().toString().slice(-4)}`,
       name: cat.name,
-      slug: cat.slug,
+      slug: cat.slug || cat.code,
       icon: cat.icon,
+      status: cat.status || "Active",
       description: cat.desc,
     });
     return !error;

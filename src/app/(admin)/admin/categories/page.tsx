@@ -8,9 +8,9 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { fetchAdminCategories, saveAdminCategory, deleteAdminCategory, fetchAdminOrders } from "@/lib/supabaseAdmin";
 import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
-import { formatVND } from "@/lib/utils";
+import { formatVND, fixImagePath } from "@/lib/utils";
 import { createClient } from "@/utils/supabase/client";
-import { Edit3, Trash2, Folder, Plus, X } from "lucide-react";
+import { Edit3, Trash2, Folder, Plus, X, Eye, Package, Layers, ExternalLink, ShieldCheck } from "lucide-react";
 
 interface Category {
   id: number;
@@ -22,6 +22,16 @@ interface Category {
   desc?: string;
 }
 
+interface ProductDetail {
+  id: number;
+  name: string;
+  category: string;
+  price: number;
+  image: string;
+  stock?: number;
+  status: string;
+}
+
 export default function AdminCategoriesPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -29,6 +39,19 @@ export default function AdminCategoriesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showModal, setShowModal] = useState<boolean>(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+
+  // View Category Products Modal State
+  const [viewProductsModal, setViewProductsModal] = useState<{
+    isOpen: boolean;
+    category: Category | null;
+    products: ProductDetail[];
+    loading: boolean;
+  }>({
+    isOpen: false,
+    category: null,
+    products: [],
+    loading: false,
+  });
 
   // Custom Delete Confirm Modal State
   const [deleteModalState, setDeleteModalState] = useState<{
@@ -65,7 +88,6 @@ export default function AdminCategoriesPage() {
     if (cleanData.length > 0) {
       setCategories(cleanData);
     } else {
-      // Fallback clean default categories
       setCategories([
         { id: 1, icon: "Bed", name: "Nội Thất Phòng Ngủ", slug: "phong-ngu", productCount: 4, status: "Active", desc: "Giường ngủ, tủ quần áo, bàn trang điểm" },
         { id: 2, icon: "Sofa", name: "Nội Thất Phòng Khách", slug: "phong-khach", productCount: 5, status: "Active", desc: "Sofa, bàn trà, kệ TV" },
@@ -100,43 +122,95 @@ export default function AdminCategoriesPage() {
         catRevenueMap[c.name] = 0;
       });
 
-      completedOrders.forEach((ord) => {
-        (ord.items || []).forEach((it) => {
-          const matchedProd = prods.find((p) => p.name.trim().toLowerCase() === it.name.trim().toLowerCase());
+      completedOrders.forEach((order) => {
+        (order.items || []).forEach((item: any) => {
+          const matchedProd = prods.find((p) => p.name.trim().toLowerCase() === item.name.trim().toLowerCase());
           if (matchedProd) {
             const catName = matchedProd.categoryName || matchedProd.category;
             const matchedCat = categories.find(
-              (c) => c.name.toLowerCase() === (catName || "").toLowerCase() || c.slug === catName
+              (c) => c.name.toLowerCase() === catName.toLowerCase() || c.slug.toLowerCase() === catName.toLowerCase()
             );
-            const key = matchedCat ? matchedCat.name : catName;
-            if (key) {
-              catRevenueMap[key] = (catRevenueMap[key] || 0) + ((it.price || 0) * (it.qty || 1));
+            if (matchedCat) {
+              catRevenueMap[matchedCat.name] = (catRevenueMap[matchedCat.name] || 0) + item.price * item.qty;
             }
           }
         });
       });
 
-      let maxCat = "Chưa có doanh thu";
-      let maxRev = 0;
-      Object.entries(catRevenueMap).forEach(([cName, rev]) => {
-        if (rev > maxRev) {
-          maxRev = rev;
-          maxCat = cName;
+      let highestName = "Chưa có doanh thu";
+      let highestRevenue = 0;
+      Object.entries(catRevenueMap).forEach(([name, rev]) => {
+        if (rev > highestRevenue) {
+          highestRevenue = rev;
+          highestName = name;
         }
       });
 
-      setTopCatInfo({ name: maxCat, revenue: maxRev });
+      setTopCatInfo({ name: highestName, revenue: highestRevenue });
     }
 
     calcTopCategory();
   }, [categories]);
 
-  const filteredCategories = categories.filter(
-    (c) =>
-      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.slug.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (c.desc && c.desc.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  // View Category Products Handler
+  const handleViewCategoryProducts = async (cat: Category) => {
+    setViewProductsModal({
+      isOpen: true,
+      category: cat,
+      products: [],
+      loading: true,
+    });
+
+    try {
+      const supabase = createClient();
+      const catCode = `C${String(cat.id).padStart(4, "0")}`;
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .or(`category.eq.${cat.slug},category.eq.${catCode},category.eq.${cat.name},category_name.eq.${cat.name}`)
+        .order("id", { ascending: true });
+
+      if (error || !data) {
+        const fallbackProds = await fetchProductsFromSupabase();
+        const matched = fallbackProds.filter(
+          (p) => p.category === cat.slug || p.category === catCode || p.category === cat.name || p.categoryName === cat.name
+        );
+        setViewProductsModal({
+          isOpen: true,
+          category: cat,
+          products: matched as any,
+          loading: false,
+        });
+      } else {
+        setViewProductsModal({
+          isOpen: true,
+          category: cat,
+          products: data.map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            category: p.category_name || p.category,
+            price: Number(p.price),
+            image: p.image,
+            stock: p.stock !== undefined ? Number(p.stock) : 50,
+            status: p.status || "Active",
+          })),
+          loading: false,
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      setViewProductsModal((prev) => ({ ...prev, loading: false }));
+    }
+  };
+
+  const filteredCategories = categories.filter((c) => {
+    const q = searchQuery.toLowerCase();
+    return (
+      c.name.toLowerCase().includes(q) ||
+      (c.desc && c.desc.toLowerCase().includes(q)) ||
+      `c${String(c.id).padStart(4, "0")}`.includes(q)
+    );
+  });
 
   const totalPages = Math.max(1, Math.ceil(filteredCategories.length / pageSize));
   const safeCurrentPage = Math.min(currentPage, totalPages);
@@ -144,6 +218,11 @@ export default function AdminCategoriesPage() {
     (safeCurrentPage - 1) * pageSize,
     safeCurrentPage * pageSize
   );
+
+  const totalCategoriesCount = categories.length;
+  const activeCategoriesCount = categories.filter((c) => c.status === "Active").length;
+  const hiddenCategoriesCount = categories.filter((c) => c.status === "Hidden").length;
+  const totalProductsCount = categories.reduce((sum, c) => sum + (c.productCount || 0), 0);
 
   const handleOpenAddModal = () => {
     setEditingCategory(null);
@@ -159,84 +238,73 @@ export default function AdminCategoriesPage() {
     setEditingCategory(cat);
     setFormName(cat.name);
     setFormSlug(cat.slug);
-    setFormIcon(cat.icon);
+    setFormIcon(cat.icon || "");
     setFormStatus(cat.status);
     setFormDesc(cat.desc || "");
     setShowModal(true);
   };
 
   const handleDeleteClick = async (cat: Category) => {
-    const supabase = createClient();
-    const categoryCode = (cat as any).code || cat.slug || `C${String(cat.id).padStart(4, "0")}`;
+    try {
+      const supabase = createClient();
+      const catCode = `C${String(cat.id).padStart(4, "0")}`;
+      const { data, error } = await supabase
+        .from("products")
+        .select("id")
+        .or(`category.eq.${cat.slug},category.eq.${catCode},category.eq.${cat.name}`);
 
-    // Query related products in Supabase
-    const { data: relatedProds } = await supabase
-      .from("products")
-      .select("id, name")
-      .or(`category.eq.${categoryCode},category.eq.${cat.slug},category.eq.${cat.name},category_name.eq.${cat.name}`);
+      const relatedCount = data && !error ? data.length : cat.productCount || 0;
 
-    const realCount = relatedProds && relatedProds.length > 0 ? relatedProds.length : cat.productCount || 0;
-
-    setDeleteModalState({
-      isOpen: true,
-      category: cat,
-      relatedCount: realCount,
-      deleting: false,
-    });
+      setDeleteModalState({
+        isOpen: true,
+        category: cat,
+        relatedCount: relatedCount,
+        deleting: false,
+      });
+    } catch (err) {
+      setDeleteModalState({
+        isOpen: true,
+        category: cat,
+        relatedCount: cat.productCount || 0,
+        deleting: false,
+      });
+    }
   };
 
   const handleConfirmDeleteCategory = async () => {
-    const { category: cat, relatedCount } = deleteModalState;
-    if (!cat) return;
-
+    if (!deleteModalState.category) return;
+    const cat = deleteModalState.category;
     setDeleteModalState((prev) => ({ ...prev, deleting: true }));
 
-    const supabase = createClient();
-    const categoryCode = (cat as any).code || cat.slug || `C${String(cat.id).padStart(4, "0")}`;
-
-    if (relatedCount > 0) {
-      // Delete all related products from products table
-      const { error: prodDelErr } = await supabase
+    try {
+      const supabase = createClient();
+      const catCode = `C${String(cat.id).padStart(4, "0")}`;
+      await supabase
         .from("products")
         .delete()
-        .or(`category.eq.${categoryCode},category.eq.${cat.slug},category.eq.${cat.name},category_name.eq.${cat.name}`);
+        .or(`category.eq.${cat.slug},category.eq.${catCode},category.eq.${cat.name}`);
 
-      if (prodDelErr) {
-        console.error("Error deleting related products:", prodDelErr.message);
-      }
+      await deleteAdminCategory(cat.id);
+
+      setCategories((prev) => prev.filter((c) => c.id !== cat.id));
+      setDeleteModalState({
+        isOpen: false,
+        category: null,
+        relatedCount: 0,
+        deleting: false,
+      });
+    } catch (err) {
+      console.error(err);
+      alert("Đã xảy ra lỗi khi xóa danh mục.");
+      setDeleteModalState((prev) => ({ ...prev, deleting: false }));
     }
-
-    // Delete category row from categories table
-    const { error: catDelErr } = await supabase.from("categories").delete().eq("id", cat.id);
-
-    if (catDelErr) {
-      alert("Xóa danh mục thất bại: " + catDelErr.message);
-      setDeleteModalState({ isOpen: false, category: null, relatedCount: 0, deleting: false });
-      return;
-    }
-
-    setCategories((prev) => prev.filter((c) => c.id !== cat.id));
-    setDeleteModalState({ isOpen: false, category: null, relatedCount: 0, deleting: false });
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (formName.trim() === "Tất cả") {
-      alert("Không thể đặt tên danh mục là 'Tất cả'!");
-      return;
-    }
+    if (!formName.trim()) return;
 
-    const isDuplicate = categories.some(
-      (c) =>
-        c.name.trim().toLowerCase() === formName.trim().toLowerCase() &&
-        (!editingCategory || c.id !== editingCategory.id)
-    );
-    if (isDuplicate) {
-      alert(`Danh mục tên "${formName.trim()}" đã tồn tại trong hệ thống! Vui lòng chọn tên khác.`);
-      return;
-    }
-
-    const cleanSlug = formSlug || formName.toLowerCase().replace(/\s+/g, "-");
+    const cleanSlug = formSlug.trim() || formName.trim().toLowerCase().replace(/\s+/g, "-");
     const cleanIcon = formIcon || "";
 
     const supabase = createClient();
@@ -247,6 +315,7 @@ export default function AdminCategoriesPage() {
           name: formName.trim(),
           slug: cleanSlug,
           icon: cleanIcon,
+          status: formStatus,
           description: formDesc.trim(),
         })
         .eq("id", editingCategory.id);
@@ -274,6 +343,7 @@ export default function AdminCategoriesPage() {
           name: formName.trim(),
           slug: cleanSlug,
           icon: cleanIcon,
+          status: formStatus,
           description: formDesc.trim(),
         })
         .select();
@@ -328,116 +398,163 @@ export default function AdminCategoriesPage() {
                 background: "linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%)",
                 border: "1.5px solid #bbf7d0",
                 borderRadius: "20px",
-                padding: "20px",
-                boxShadow: "0 4px 20px rgba(22, 101, 52, 0.06)",
+                padding: "20px 24px",
                 display: "flex",
-                justifyContent: "space-between",
                 alignItems: "center",
+                gap: "16px",
+                boxShadow: "0 4px 20px rgba(46, 125, 50, 0.06)",
               }}
             >
-              <div>
-                <div style={{ fontSize: "12px", fontWeight: 800, color: "#166534", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>
-                  Tổng Nhóm Hàng
-                </div>
-                <div style={{ fontSize: "28px", fontWeight: 900, color: "#14532d", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
-                  {categories.length} <span style={{ fontSize: "14px", fontWeight: 700 }}>danh mục</span>
-                </div>
-                <div style={{ fontSize: "12px", color: "#475569", fontWeight: 600, marginTop: "8px" }}>
-                  <span style={{ padding: "2px 8px", background: "#dcfce7", color: "#15803d", borderRadius: "12px", fontWeight: 800, fontSize: "11px" }}>
-                    {categories.filter((c) => c.status === "Active").length} đang hoạt động
-                  </span>
-                </div>
-              </div>
-              <div style={{ width: "48px", height: "48px", borderRadius: "16px", background: "#166534", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 16px rgba(22, 101, 52, 0.2)" }}>
+              <div
+                style={{
+                  width: "52px",
+                  height: "52px",
+                  borderRadius: "16px",
+                  background: "#2e7d32",
+                  color: "#ffffff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "20px",
+                  boxShadow: "0 6px 16px rgba(46, 125, 50, 0.25)",
+                }}
+              >
                 <Folder className="w-6 h-6" />
               </div>
+              <div>
+                <div style={{ fontSize: "12px", fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  Tổng Số Danh Mục
+                </div>
+                <div style={{ fontSize: "24px", fontWeight: 900, color: "#0f172a", marginTop: "2px" }}>
+                  {totalCategoriesCount}
+                </div>
+                <div style={{ fontSize: "11px", fontWeight: 700, color: "#166534", marginTop: "2px" }}>
+                  Đang hoạt động: {activeCategoriesCount} / Đã ẩn: {hiddenCategoriesCount}
+                </div>
+              </div>
             </div>
 
-            {/* KPI 2: Top Revenue Category */}
+            {/* KPI 2: Total Products */}
             <div
               style={{
-                background: "linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%)",
-                border: "1.5px solid #bae6fd",
+                background: "linear-gradient(135deg, #ffffff 0%, #eff6ff 100%)",
+                border: "1.5px solid #bfdbfe",
                 borderRadius: "20px",
-                padding: "20px",
-                boxShadow: "0 4px 20px rgba(3, 105, 161, 0.06)",
+                padding: "20px 24px",
                 display: "flex",
-                justifyContent: "space-between",
                 alignItems: "center",
+                gap: "16px",
+                boxShadow: "0 4px 20px rgba(37, 99, 235, 0.06)",
               }}
             >
+              <div
+                style={{
+                  width: "52px",
+                  height: "52px",
+                  borderRadius: "16px",
+                  background: "#2563eb",
+                  color: "#ffffff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "20px",
+                  boxShadow: "0 6px 16px rgba(37, 99, 235, 0.25)",
+                }}
+              >
+                <Package className="w-6 h-6" />
+              </div>
               <div>
-                <div style={{ fontSize: "12px", fontWeight: 800, color: "#0369a1", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>
-                  Nhóm Bán Chạy Nhất
+                <div style={{ fontSize: "12px", fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  Sản Phẩm Đã Phân Loại
                 </div>
-                <div style={{ fontSize: "20px", fontWeight: 900, color: "#0c4a6e", letterSpacing: "-0.02em", lineHeight: 1.2 }}>
+                <div style={{ fontSize: "24px", fontWeight: 900, color: "#0f172a", marginTop: "2px" }}>
+                  {totalProductsCount}
+                </div>
+                <div style={{ fontSize: "11px", fontWeight: 700, color: "#1d4ed8", marginTop: "2px" }}>
+                  Phân bố trên {activeCategoriesCount} nhóm hàng
+                </div>
+              </div>
+            </div>
+
+            {/* KPI 3: Top Revenue Category */}
+            <div
+              style={{
+                background: "linear-gradient(135deg, #ffffff 0%, #fefce8 100%)",
+                border: "1.5px solid #fde047",
+                borderRadius: "20px",
+                padding: "20px 24px",
+                display: "flex",
+                alignItems: "center",
+                gap: "16px",
+                boxShadow: "0 4px 20px rgba(234, 179, 8, 0.08)",
+              }}
+            >
+              <div
+                style={{
+                  width: "52px",
+                  height: "52px",
+                  borderRadius: "16px",
+                  background: "#eab308",
+                  color: "#ffffff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "20px",
+                  boxShadow: "0 6px 16px rgba(234, 179, 8, 0.25)",
+                }}
+              >
+                <Layers className="w-6 h-6" />
+              </div>
+              <div>
+                <div style={{ fontSize: "12px", fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  Danh Mục Doanh Thu Cao Nhất
+                </div>
+                <div style={{ fontSize: "16px", fontWeight: 900, color: "#854d0e", marginTop: "2px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "180px" }}>
                   {topCatInfo.name}
                 </div>
-                <div style={{ fontSize: "12px", color: "#475569", fontWeight: 600, marginTop: "8px" }}>
-                  <span style={{ padding: "2px 8px", background: "#e0f2fe", color: "#0369a1", borderRadius: "12px", fontWeight: 800, fontSize: "11px" }}>
-                    {topCatInfo.revenue > 0 ? `Doanh thu: ${formatVND(topCatInfo.revenue)}` : "Chưa có doanh thu từ đơn hàng"}
-                  </span>
+                <div style={{ fontSize: "11.5px", fontWeight: 800, color: "#a16207", marginTop: "2px" }}>
+                  {topCatInfo.revenue > 0 ? formatVND(topCatInfo.revenue) : "Đang cập nhật"}
                 </div>
-              </div>
-              <div style={{ width: "48px", height: "48px", borderRadius: "16px", background: "#0284c7", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 16px rgba(2, 132, 199, 0.2)" }}>
-                <Edit3 className="w-6 h-6" />
-              </div>
-            </div>
-
-            {/* KPI 3: Empty Categories */}
-            <div
-              style={{
-                background: "linear-gradient(135deg, #ffffff 0%, #fffbeb 100%)",
-                border: "1.5px solid #fde68a",
-                borderRadius: "20px",
-                padding: "20px",
-                boxShadow: "0 4px 20px rgba(180, 83, 9, 0.06)",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <div>
-                <div style={{ fontSize: "12px", fontWeight: 800, color: "#b45309", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>
-                  Chưa Có Sản Phẩm
-                </div>
-                <div style={{ fontSize: "28px", fontWeight: 900, color: "#78350f", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
-                  {categories.filter((c) => c.productCount === 0).length} <span style={{ fontSize: "14px", fontWeight: 700 }}>nhóm</span>
-                </div>
-                <div style={{ fontSize: "12px", color: "#475569", fontWeight: 600, marginTop: "8px" }}>
-                  <span style={{ padding: "2px 8px", background: "#fef3c7", color: "#b45309", borderRadius: "12px", fontWeight: 800, fontSize: "11px" }}>
-                    Cần bổ sung hàng
-                  </span>
-                </div>
-              </div>
-              <div style={{ width: "48px", height: "48px", borderRadius: "16px", background: "#d97706", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 8px 16px rgba(217, 119, 6, 0.2)" }}>
-                <Plus className="w-6 h-6" />
               </div>
             </div>
           </div>
 
+          {/* 2. CATEGORIES TABLE CARD */}
           <div className="admin-card-shell">
             <div className="admin-card-core">
-              <div className="card-header-row" style={{ marginBottom: "20px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "20px",
+                  flexWrap: "wrap",
+                  gap: "12px",
+                }}
+              >
                 <div>
-                  <h2 className="card-header-title text-xl font-extrabold text-slate-900 tracking-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                    Danh Sách Danh Mục ({filteredCategories.length})
+                  <h2 style={{ fontSize: "18px", fontWeight: 900, color: "#0f172a", margin: 0 }}>
+                    Danh Sách Danh Mục Nhóm Hàng ({filteredCategories.length})
                   </h2>
-                  <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: "4px 0 0", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                    Quản lý hiển thị các nhóm sản phẩm kinh doanh trên website
+                  <p style={{ fontSize: "12px", color: "#64748b", margin: "2px 0 0" }}>
+                    Quản lý danh mục, kiểm tra số lượng và xem chi tiết sản phẩm thuộc danh mục
                   </p>
                 </div>
                 <button
-                  className="btn-add-product-green"
+                  type="button"
                   onClick={handleOpenAddModal}
                   style={{
+                    padding: "9px 18px",
+                    background: "var(--primary-color, #2e7d32)",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "12px",
+                    fontSize: "13px",
+                    fontWeight: 800,
+                    cursor: "pointer",
                     display: "inline-flex",
                     alignItems: "center",
                     gap: "6px",
-                    padding: "10px 18px",
-                    borderRadius: "999px",
-                    fontWeight: 800,
-                    fontFamily: "'Plus Jakarta Sans', sans-serif",
                     boxShadow: "0 4px 12px rgba(46, 125, 50, 0.2)",
                   }}
                 >
@@ -445,220 +562,247 @@ export default function AdminCategoriesPage() {
                 </button>
               </div>
 
-            {loading ? (
-              <div style={{ padding: "30px", textAlign: "center", fontSize: "13px", color: "var(--text-muted)" }}>
-                Đang tải dữ liệu danh mục...
-              </div>
-            ) : (
-              <>
-                <table className="admin-table">
-                  <thead>
-                    <tr>
-                      <th>MÃ SỐ</th>
-                      <th>TÊN DANH MỤC</th>
-                      <th>SLUG</th>
-                      <th>SỐ SẢN PHẨM & TỶ TRỌNG</th>
-                      <th>MÔ TẢ</th>
-                      <th>TRẠNG THÁI</th>
-                      <th style={{ textAlign: "center" }}>THAO TÁC</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginatedCategories.length === 0 ? (
+              {loading ? (
+                <div style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>
+                  Đang tải dữ liệu danh mục...
+                </div>
+              ) : (
+                <>
+                  <table className="admin-table">
+                    <thead>
                       <tr>
-                        <td colSpan={7} style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)" }}>
-                          Không có danh mục nào khớp với tìm kiếm.
-                        </td>
+                        <th>MÃ DANH MỤC</th>
+                        <th>TÊN DANH MỤC</th>
+                        <th>SẢN PHẨM TRỰC THUỘC</th>
+                        <th>MÔ TẢ</th>
+                        <th>TRẠNG THÁI</th>
+                        <th style={{ textAlign: "center" }}>THAO TÁC</th>
                       </tr>
-                    ) : (
-                      paginatedCategories.map((cat, index) => (
-                        <tr key={cat.id}>
-                          <td>
-                            <code style={{ padding: "3px 8px", background: "#f1f5f9", color: "#1e293b", borderRadius: "6px", fontWeight: 800, fontSize: "11px" }}>
-                              C{String(cat.id || index + 1).padStart(4, "0")}
-                            </code>
-                          </td>
-                          <td><strong style={{ fontSize: "14px", color: "#0f172a" }}>{cat.name}</strong></td>
-                          <td><code style={{ background: "#f1f5f9", padding: "2px 8px", borderRadius: "6px", fontSize: "12px", color: "#475569" }}>{cat.slug}</code></td>
-                          <td>
-                            <div style={{ display: "flex", flexDirection: "column", gap: "4px", minWidth: "140px" }}>
-                              <span style={{ fontSize: "12px", fontWeight: 800, color: "#0f172a" }}>
-                                {cat.productCount} sản phẩm ({cat.productCount > 0 ? Math.min(100, cat.productCount * 10) : 0}%)
-                              </span>
-                              <div style={{ background: "#f1f5f9", height: "6px", borderRadius: "3px", overflow: "hidden" }}>
-                                <div style={{ background: "var(--primary-color, #2e7d32)", height: "100%", width: `${Math.min(100, cat.productCount * 10)}%` }} />
-                              </div>
-                            </div>
-                          </td>
-                          <td style={{ fontSize: "12px", color: "var(--text-muted)" }}>{cat.desc || "Chưa có mô tả"}</td>
-                          <td>
-                            <span
-                              style={{
-                                padding: "4px 8px",
-                                borderRadius: "6px",
-                                fontSize: "11px",
-                                fontWeight: 700,
-                                background: cat.status === "Active" ? "#dcfce7" : "#f1f5f9",
-                                color: cat.status === "Active" ? "#166534" : "#64748b",
-                              }}
-                            >
-                              {cat.status === "Active" ? "● Hoạt động" : "○ Đã ẩn"}
-                            </span>
-                          </td>
-                          <td style={{ textAlign: "center" }}>
-                            <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
-                              <button
-                                onClick={() => handleEditClick(cat)}
-                                style={{
-                                  padding: "4px 8px",
-                                  background: "#eff6ff",
-                                  color: "#2563eb",
-                                  border: "1px solid #bfdbfe",
-                                  borderRadius: "6px",
-                                  cursor: "pointer",
-                                  fontSize: "12px",
-                                  fontWeight: 700,
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: "4px",
-                                }}
-                              >
-                                <Edit3 className="w-3.5 h-3.5" /> Sửa
-                              </button>
-                              <button
-                                onClick={() => handleDeleteClick(cat)}
-                                style={{
-                                  padding: "4px 8px",
-                                  background: "#fef2f2",
-                                  color: "#dc2626",
-                                  border: "1px solid #fca5a5",
-                                  borderRadius: "6px",
-                                  cursor: "pointer",
-                                  fontSize: "12px",
-                                  fontWeight: 700,
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: "4px",
-                                }}
-                              >
-                                <Trash2 className="w-3.5 h-3.5" /> Xóa
-                              </button>
-                            </div>
+                    </thead>
+                    <tbody>
+                      {paginatedCategories.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)" }}>
+                            Không có danh mục nào khớp với tìm kiếm.
                           </td>
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+                      ) : (
+                        paginatedCategories.map((cat, index) => (
+                          <tr key={cat.id}>
+                            <td>
+                              <code style={{ padding: "3px 8px", background: "#f1f5f9", color: "#1e293b", borderRadius: "6px", fontWeight: 800, fontSize: "11px" }}>
+                                C{String(cat.id || index + 1).padStart(4, "0")}
+                              </code>
+                            </td>
+                            <td>
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <span style={{ fontSize: "16px" }}>{cat.icon || "📁"}</span>
+                                <strong style={{ fontSize: "14px", color: "#0f172a" }}>{cat.name}</strong>
+                              </div>
+                            </td>
+                            <td>
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <button
+                                  type="button"
+                                  onClick={() => handleViewCategoryProducts(cat)}
+                                  style={{
+                                    padding: "4px 10px",
+                                    borderRadius: "8px",
+                                    border: "1px solid #bbf7d0",
+                                    background: "#f0fdf4",
+                                    color: "#166534",
+                                    fontSize: "12px",
+                                    fontWeight: 800,
+                                    cursor: "pointer",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                    transition: "all 0.2s ease",
+                                  }}
+                                  title="Bấm để xem danh sách sản phẩm thuộc danh mục này"
+                                >
+                                  <Package className="w-3.5 h-3.5 text-emerald-700" />
+                                  {cat.productCount} sản phẩm
+                                </button>
+                              </div>
+                            </td>
+                            <td style={{ fontSize: "12.5px", color: "#64748b", maxWidth: "240px" }}>
+                              {cat.desc || "Chưa có mô tả chi tiết"}
+                            </td>
+                            <td>
+                              <span
+                                style={{
+                                  padding: "4px 10px",
+                                  borderRadius: "999px",
+                                  fontSize: "11.5px",
+                                  fontWeight: 800,
+                                  background: cat.status === "Active" ? "#dcfce7" : "#f1f5f9",
+                                  color: cat.status === "Active" ? "#166534" : "#64748b",
+                                }}
+                              >
+                                {cat.status === "Active" ? "● Hoạt động" : "○ Đã ẩn"}
+                              </span>
+                            </td>
+                            <td style={{ textAlign: "center" }}>
+                              <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
+                                <button
+                                  type="button"
+                                  onClick={() => handleViewCategoryProducts(cat)}
+                                  style={{
+                                    padding: "5px 10px",
+                                    background: "#f0fdf4",
+                                    color: "#166534",
+                                    border: "1px solid #bbf7d0",
+                                    borderRadius: "8px",
+                                    cursor: "pointer",
+                                    fontSize: "12px",
+                                    fontWeight: 800,
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                  }}
+                                  title="Xem danh sách sản phẩm thuộc danh mục"
+                                >
+                                  <Eye className="w-3.5 h-3.5 text-emerald-700" /> Xem SP
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleEditClick(cat)}
+                                  style={{
+                                    padding: "5px 10px",
+                                    background: "#eff6ff",
+                                    color: "#2563eb",
+                                    border: "1px solid #bfdbfe",
+                                    borderRadius: "8px",
+                                    cursor: "pointer",
+                                    fontSize: "12px",
+                                    fontWeight: 800,
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                  }}
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" /> Sửa
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteClick(cat)}
+                                  style={{
+                                    padding: "5px 10px",
+                                    background: "#fef2f2",
+                                    color: "#dc2626",
+                                    border: "1px solid #fca5a5",
+                                    borderRadius: "8px",
+                                    cursor: "pointer",
+                                    fontSize: "12px",
+                                    fontWeight: 800,
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "4px",
+                                  }}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" /> Xóa
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
 
-                {/* Standardized Pagination Bar */}
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "16px 0 4px 0",
-                    borderTop: "1px solid var(--border-color)",
-                    marginTop: "16px",
-                    flexWrap: "wrap",
-                    gap: "12px",
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "var(--text-muted)" }}>
-                    <select
-                      value={pageSize}
-                      onChange={(e) => {
-                        setPageSize(Number(e.target.value));
-                        setCurrentPage(1);
-                      }}
-                      style={{
-                        padding: "4px 8px",
-                        borderRadius: "6px",
-                        border: "1px solid var(--border-color)",
-                        fontSize: "13px",
-                        fontWeight: 700,
-                        cursor: "pointer",
-                      }}
-                    >
-                      <option value={10}>10 danh mục</option>
-                      <option value={25}>25 danh mục</option>
-                      <option value={50}>50 danh mục</option>
-                    </select>
-                    <span style={{ fontWeight: 700, color: "#0f172a" }}>
-                      Hiển thị {paginatedCategories.length}/{filteredCategories.length} danh mục
-                    </span>
-                  </div>
-
-                  <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                    <button
-                      disabled={safeCurrentPage === 1}
-                      onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                      style={{
-                        padding: "6px 12px",
-                        borderRadius: "6px",
-                        border: "1px solid var(--border-color)",
-                        background: "#fff",
-                        fontSize: "12px",
-                        fontWeight: 700,
-                        cursor: safeCurrentPage === 1 ? "not-allowed" : "pointer",
-                        opacity: safeCurrentPage === 1 ? 0.5 : 1,
-                      }}
-                    >
-                      &laquo; Trang trước
-                    </button>
-
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                      <button
-                        key={p}
-                        onClick={() => setCurrentPage(p)}
+                  {/* Pagination */}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "16px 0 4px 0",
+                      flexWrap: "wrap",
+                      gap: "12px",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12.5px", color: "#64748b", fontWeight: 600 }}>
+                      <span>Hiển thị</span>
+                      <select
+                        value={pageSize}
+                        onChange={(e) => {
+                          setPageSize(Number(e.target.value));
+                          setCurrentPage(1);
+                        }}
                         style={{
-                          padding: "6px 12px",
+                          padding: "4px 8px",
                           borderRadius: "6px",
-                          border: "1px solid var(--border-color)",
-                          background: p === safeCurrentPage ? "var(--primary-color)" : "#fff",
-                          color: p === safeCurrentPage ? "#fff" : "var(--text-main)",
-                          fontSize: "12px",
+                          border: "1px solid #cbd5e1",
+                          background: "#fff",
+                          fontSize: "12.5px",
                           fontWeight: 700,
                           cursor: "pointer",
                         }}
                       >
-                        {p}
-                      </button>
-                    ))}
+                        <option value={5}>5 dòng</option>
+                        <option value={10}>10 dòng</option>
+                        <option value={20}>20 dòng</option>
+                      </select>
+                      <span>trên tổng số {filteredCategories.length} danh mục</span>
+                    </div>
 
-                    <button
-                      disabled={safeCurrentPage === totalPages}
-                      onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                      style={{
-                        padding: "6px 12px",
-                        borderRadius: "6px",
-                        border: "1px solid var(--border-color)",
-                        background: "#fff",
-                        fontSize: "12px",
-                        fontWeight: 700,
-                        cursor: safeCurrentPage === totalPages ? "not-allowed" : "pointer",
-                        opacity: safeCurrentPage === totalPages ? 0.5 : 1,
-                      }}
-                    >
-                      Trang sau &raquo;
-                    </button>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <button
+                        type="button"
+                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                        disabled={safeCurrentPage <= 1}
+                        style={{
+                          padding: "6px 12px",
+                          borderRadius: "8px",
+                          border: "1px solid #cbd5e1",
+                          background: safeCurrentPage <= 1 ? "#f8fafc" : "#fff",
+                          color: safeCurrentPage <= 1 ? "#94a3b8" : "#334155",
+                          fontSize: "12px",
+                          fontWeight: 700,
+                          cursor: safeCurrentPage <= 1 ? "not-allowed" : "pointer",
+                        }}
+                      >
+                        Trang trước
+                      </button>
+                      <span style={{ fontSize: "12.5px", fontWeight: 800, color: "#0f172a", padding: "0 6px" }}>
+                        Trang {safeCurrentPage} / {totalPages}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                        disabled={safeCurrentPage >= totalPages}
+                        style={{
+                          padding: "6px 12px",
+                          borderRadius: "8px",
+                          border: "1px solid #cbd5e1",
+                          background: safeCurrentPage >= totalPages ? "#f8fafc" : "#fff",
+                          color: safeCurrentPage >= totalPages ? "#94a3b8" : "#334155",
+                          fontSize: "12px",
+                          fontWeight: 700,
+                          cursor: safeCurrentPage >= totalPages ? "not-allowed" : "pointer",
+                        }}
+                      >
+                        Trang sau
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </>
-            )}
+                </>
+              )}
             </div>
           </div>
         </div>
       </main>
 
-      {/* FORM MODAL DANH MỤC MỚI / CHỈNH SỬA */}
-      {showModal && (
+      {/* 3. MODAL XEM SẢN PHẨM THUỘC DANH MỤC */}
+      {viewProductsModal.isOpen && viewProductsModal.category && (
         <div
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(0,0,0,0.5)",
-            zIndex: 3000,
+            background: "rgba(15, 23, 42, 0.6)",
+            backdropFilter: "blur(4px)",
+            zIndex: 9999,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -667,79 +811,307 @@ export default function AdminCategoriesPage() {
         >
           <div
             style={{
-              background: "#fff",
+              background: "#ffffff",
               width: "100%",
-              maxWidth: "500px",
-              borderRadius: "var(--radius-lg)",
-              padding: "24px",
-              boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
+              maxWidth: "800px",
+              maxHeight: "85vh",
+              borderRadius: "24px",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+              border: "1px solid #e2e8f0",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-              <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", margin: 0, display: "flex", alignItems: "center", gap: "6px" }}>
-                {editingCategory ? <><Edit3 className="w-4 h-4 text-blue-600" /> Chỉnh Sửa Danh Mục</> : <><Plus className="w-4 h-4 text-emerald-700" /> Form Danh Mục Mới</>}
-              </h3>
-              <button onClick={() => setShowModal(false)} style={{ background: "none", border: "none", cursor: "pointer" }}><X className="w-5 h-5 text-slate-400 hover:text-slate-600" /></button>
+            {/* Modal Header */}
+            <div
+              style={{
+                padding: "20px 24px",
+                background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
+                borderBottom: "1.5px solid #bbf7d0",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <div style={{ width: "40px", height: "40px", borderRadius: "12px", background: "var(--primary-color, #2e7d32)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Package className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: "17px", fontWeight: 900, color: "#14532d", margin: 0 }}>
+                    Sản Phẩm Thuộc Danh Mục: {viewProductsModal.category.name}
+                  </h3>
+                  <p style={{ fontSize: "12px", color: "#166534", margin: "2px 0 0", fontWeight: 700 }}>
+                    Mã danh mục: C{String(viewProductsModal.category.id).padStart(4, "0")} • Tổng cộng: {viewProductsModal.products.length} sản phẩm
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setViewProductsModal({ isOpen: false, category: null, products: [], loading: false })}
+                style={{
+                  background: "#ffffff",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "50%",
+                  width: "34px",
+                  height: "34px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                }}
+              >
+                <X className="w-4 h-4 text-slate-600" />
+              </button>
             </div>
 
-            <form onSubmit={handleFormSubmit}>
-              <div style={{ marginBottom: "12px" }}>
-                <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "4px" }}>Tên Danh Mục *</label>
+            {/* Modal Content */}
+            <div style={{ padding: "20px 24px", overflowY: "auto", flex: 1 }}>
+              {viewProductsModal.loading ? (
+                <div style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>
+                  Đang tải danh sách sản phẩm...
+                </div>
+              ) : viewProductsModal.products.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "40px 20px", color: "#94a3b8" }}>
+                  <Package className="w-12 h-12 mx-auto mb-2 text-slate-300" />
+                  <p style={{ fontSize: "14px", fontWeight: 700, margin: "4px 0 0" }}>Chưa có sản phẩm nào thuộc danh mục này</p>
+                  <p style={{ fontSize: "12px", color: "#94a3b8", margin: "2px 0 0" }}>Vào trang Quản Lý Sản Phẩm để gán sản phẩm vào danh mục này.</p>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  {viewProductsModal.products.map((p, idx) => (
+                    <div
+                      key={p.id}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "12px 16px",
+                        borderRadius: "14px",
+                        border: "1px solid #e2e8f0",
+                        background: "#ffffff",
+                        gap: "12px",
+                        boxShadow: "0 2px 6px rgba(0,0,0,0.02)",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <img
+                          src={fixImagePath(p.image)}
+                          alt={p.name}
+                          style={{ width: "48px", height: "48px", borderRadius: "10px", objectFit: "cover", border: "1px solid #e2e8f0" }}
+                        />
+                        <div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                            <code style={{ fontSize: "11px", fontWeight: 800, padding: "2px 6px", background: "#f1f5f9", borderRadius: "4px" }}>
+                              P{String(p.id).padStart(4, "0")}
+                            </code>
+                            <strong style={{ fontSize: "13.5px", color: "#0f172a" }}>{p.name}</strong>
+                          </div>
+                          <div style={{ fontSize: "12px", color: "#64748b", marginTop: "3px" }}>
+                            Tồn kho: <strong>{p.stock !== undefined ? p.stock : 50}</strong> món • Trạng thái:{" "}
+                            <span style={{ color: p.status === "Active" ? "#16a34a" : "#dc2626", fontWeight: 700 }}>
+                              {p.status === "Active" ? "Đang bán" : "Đã ẩn"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{ textAlign: "right", display: "flex", alignItems: "center", gap: "12px" }}>
+                        <span style={{ fontSize: "14px", fontWeight: 900, color: "var(--primary-color, #2e7d32)" }}>
+                          {formatVND(p.price)}
+                        </span>
+                        <Link
+                          href={`/products/${p.id}`}
+                          target="_blank"
+                          style={{
+                            padding: "6px 10px",
+                            borderRadius: "8px",
+                            background: "#f1f5f9",
+                            color: "#475569",
+                            fontSize: "12px",
+                            fontWeight: 700,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px",
+                            textDecoration: "none",
+                          }}
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" /> Xem
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div style={{ padding: "14px 24px", background: "#f8fafc", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "flex-end" }}>
+              <button
+                type="button"
+                onClick={() => setViewProductsModal({ isOpen: false, category: null, products: [], loading: false })}
+                style={{
+                  padding: "8px 20px",
+                  borderRadius: "10px",
+                  background: "#e2e8f0",
+                  color: "#334155",
+                  border: "none",
+                  fontWeight: 800,
+                  fontSize: "13px",
+                  cursor: "pointer",
+                }}
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 4. REDESIGNED MODAL THÊM / SỬA DANH MỤC */}
+      {showModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(15, 23, 42, 0.6)",
+            backdropFilter: "blur(4px)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
+          }}
+        >
+          <div
+            style={{
+              background: "#ffffff",
+              width: "100%",
+              maxWidth: "520px",
+              borderRadius: "24px",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+              overflow: "hidden",
+              border: "1px solid #e2e8f0",
+            }}
+          >
+            {/* Modal Header */}
+            <div
+              style={{
+                padding: "20px 24px",
+                background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
+                borderBottom: "1.5px solid #bbf7d0",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <div style={{ width: "40px", height: "40px", borderRadius: "12px", background: "var(--primary-color, #2e7d32)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Folder className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: "17px", fontWeight: 900, color: "#14532d", margin: 0 }}>
+                    {editingCategory ? "Chỉnh Sửa Danh Mục" : "Thêm Danh Mục Mới"}
+                  </h3>
+                  <p style={{ fontSize: "12px", color: "#166534", margin: "2px 0 0", fontWeight: 700 }}>
+                    {editingCategory ? `Cập nhật thông tin danh mục C${String(editingCategory.id).padStart(4, "0")}` : "Tạo mới nhóm sản phẩm kinh doanh"}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                style={{
+                  background: "#ffffff",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "50%",
+                  width: "34px",
+                  height: "34px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                }}
+              >
+                <X className="w-4 h-4 text-slate-600" />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleFormSubmit} style={{ padding: "24px" }}>
+              {/* Group 1: Thông tin cơ bản */}
+              <div style={{ marginBottom: "16px" }}>
+                <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "6px" }}>
+                  Tên Danh Mục Nhóm Hàng *
+                </label>
                 <input
                   type="text"
                   className="form-control admin-setting-input"
-                  placeholder="Ví dụ: Nội Thất Phòng Khách"
+                  placeholder="Ví dụ: Nội Thất Phòng Khách, Rèm Cửa..."
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
                   required
+                  style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "14px" }}
                 />
               </div>
 
-              <div style={{ marginBottom: "12px" }}>
-                <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "4px" }}>Mã Đường Dẫn (Slug)</label>
-                <input
-                  type="text"
-                  className="form-control admin-setting-input"
-                  placeholder="Ví dụ: phong-khach"
-                  value={formSlug}
-                  onChange={(e) => setFormSlug(e.target.value)}
-                />
-              </div>
-
-              <div style={{ marginBottom: "12px" }}>
-                <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "4px" }}>Trạng Thái Hiển Thị *</label>
-                <select
-                  className="form-control admin-setting-input"
-                  value={formStatus}
-                  onChange={(e) => setFormStatus(e.target.value as any)}
-                >
-                  <option value="Active">● Hoạt động (Cho phép chọn)</option>
-                  <option value="Hidden">○ Đã ẩn (Ẩn khỏi menu)</option>
-                </select>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+                <div>
+                  <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "6px" }}>
+                    Biểu Tượng (Emoji / Tên Icon)
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control admin-setting-input"
+                    placeholder="Ví dụ: 🛋️ hoặc Sofa"
+                    value={formIcon}
+                    onChange={(e) => setFormIcon(e.target.value)}
+                    style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13.5px" }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "6px" }}>
+                    Trạng Thái Hiển Thị *
+                  </label>
+                  <select
+                    className="form-control admin-setting-input"
+                    value={formStatus}
+                    onChange={(e) => setFormStatus(e.target.value as any)}
+                    style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13.5px" }}
+                  >
+                    <option value="Active">● Hoạt động (Hiển thị)</option>
+                    <option value="Hidden">○ Đã ẩn (Không hiển thị)</option>
+                  </select>
+                </div>
               </div>
 
               <div style={{ marginBottom: "20px" }}>
-                <label style={{ fontSize: "13px", fontWeight: 700, display: "block", marginBottom: "4px" }}>Mô Tả Danh Mục</label>
+                <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "6px" }}>
+                  Mô Tả Danh Mục
+                </label>
                 <textarea
                   rows={3}
                   className="form-control admin-setting-input"
-                  placeholder="Mô tả ngắn nhóm sản phẩm..."
+                  placeholder="Mô tả nhóm sản phẩm phục vụ cho không gian nào..."
                   value={formDesc}
                   onChange={(e) => setFormDesc(e.target.value)}
+                  style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13px" }}
                 />
               </div>
 
-              <div style={{ display: "flex", gap: "10px" }}>
+              <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
                   style={{
-                    flex: 1,
-                    padding: "10px",
-                    background: "#f1f5f9",
-                    border: "none",
-                    borderRadius: "var(--radius-md)",
-                    fontWeight: 700,
+                    padding: "10px 20px",
+                    borderRadius: "12px",
+                    border: "1px solid #cbd5e1",
+                    background: "#ffffff",
+                    fontWeight: 800,
+                    fontSize: "13px",
+                    color: "#475569",
                     cursor: "pointer",
                   }}
                 >
@@ -748,17 +1120,18 @@ export default function AdminCategoriesPage() {
                 <button
                   type="submit"
                   style={{
-                    flex: 1,
-                    padding: "10px",
-                    background: "var(--primary-color)",
-                    color: "#fff",
+                    padding: "10px 24px",
+                    borderRadius: "12px",
                     border: "none",
-                    borderRadius: "var(--radius-md)",
-                    fontWeight: 700,
+                    background: "var(--primary-color, #2e7d32)",
+                    color: "#ffffff",
+                    fontWeight: 900,
+                    fontSize: "13px",
                     cursor: "pointer",
+                    boxShadow: "0 4px 12px rgba(46, 125, 50, 0.25)",
                   }}
                 >
-                  {editingCategory ? "Lưu Cập Nhật" : "Tạo Danh Mục Mới"}
+                  {editingCategory ? "Lưu Thay Đổi" : "Tạo Danh Mục Mới"}
                 </button>
               </div>
             </form>
@@ -766,7 +1139,7 @@ export default function AdminCategoriesPage() {
         </div>
       )}
 
-      {/* THẺ DIV THÔNG BÁO XÁC NHẬN XÓA GIỮA MÀN HÌNH */}
+      {/* 5. THẺ DIV THÔNG BÁO XÁC NHẬN XÓA GIỮA MÀN HÌNH */}
       {deleteModalState.isOpen && deleteModalState.category && (
         <div
           style={{

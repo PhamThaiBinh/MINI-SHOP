@@ -11,49 +11,72 @@ export interface SupabaseCategory {
 export const fetchProductsFromSupabase = async (): Promise<Product[]> => {
   try {
     const supabase = createClient();
+
+    // Fetch hidden categories to also exclude products under hidden categories
+    const { data: hiddenCats } = await supabase
+      .from("categories")
+      .select("category_id, name, slug")
+      .eq("status", "Hidden");
+
+    const hiddenCatKeys = new Set<string>();
+    if (hiddenCats) {
+      hiddenCats.forEach((c: any) => {
+        if (c.category_id) hiddenCatKeys.add(c.category_id.toLowerCase());
+        if (c.name) hiddenCatKeys.add(c.name.toLowerCase());
+        if (c.slug) hiddenCatKeys.add(c.slug.toLowerCase());
+      });
+    }
+
     const { data, error } = await supabase
       .from("products")
       .select("*")
+      .neq("status", "Hidden")
       .order("id", { ascending: true });
 
     if (error || !data || data.length === 0) {
       console.warn("Supabase fetch error or empty, using fallback data:", error?.message);
-      return PRODUCTS_DATA;
+      return PRODUCTS_DATA.filter((p) => p.status !== "Hidden");
     }
 
-    return data.map((row: any) => ({
-      id: Number(row.id),
-      name: String(row.name),
-      category: String(row.category),
-      categoryName: String(row.category_name || row.category),
-      price: Number(row.price),
-      oldPrice: row.old_price ? Number(row.old_price) : undefined,
-      stock: row.stock !== undefined && row.stock !== null ? Number(row.stock) : 50,
-      status: Number(row.stock) === 0 ? "Out of stock" : String(row.status || "In stock"),
-      badge: row.badge ? String(row.badge) : null,
-      badgeType: row.badge_type ? String(row.badge_type) : null,
-      image: String(row.image),
-      description: String(row.description || ""),
-      fullDesc: String(row.full_desc || row.description || ""),
-      specs: typeof row.specs === "object" && row.specs ? row.specs : {},
-    }));
+    return data
+      .filter((row: any) => {
+        const cat = (row.category || "").toLowerCase();
+        const catName = (row.category_name || "").toLowerCase();
+        return !hiddenCatKeys.has(cat) && !hiddenCatKeys.has(catName);
+      })
+      .map((row: any) => ({
+        id: Number(row.id),
+        name: String(row.name),
+        category: String(row.category),
+        categoryName: String(row.category_name || row.category),
+        price: Number(row.price),
+        oldPrice: row.old_price ? Number(row.old_price) : undefined,
+        stock: row.stock !== undefined && row.stock !== null ? Number(row.stock) : 50,
+        status: Number(row.stock) === 0 ? "Out of stock" : String(row.status || "In stock"),
+        badge: row.badge ? String(row.badge) : null,
+        badgeType: row.badge_type ? String(row.badge_type) : null,
+        image: String(row.image),
+        description: String(row.description || ""),
+        fullDesc: String(row.full_desc || row.description || ""),
+        specs: typeof row.specs === "object" && row.specs ? row.specs : {},
+      }));
   } catch (err) {
     console.error("Error fetching products from Supabase:", err);
-    return PRODUCTS_DATA;
+    return PRODUCTS_DATA.filter((p) => p.status !== "Hidden");
   }
 };
 
 export const fetchCategoriesFromSupabase = async (): Promise<SupabaseCategory[]> => {
   const defaultCategories: SupabaseCategory[] = [
-    { id: "All", label: "Tất cả", icon: "Package" },
-    { id: "Living Room", label: "Phòng khách", icon: "Sofa" },
-    { id: "Bedroom", label: "Phòng ngủ", icon: "Bed" },
-    { id: "Kitchen", label: "Nhà bếp", icon: "Utensils" },
-    { id: "Curtains", label: "Rèm cửa", icon: "Sliders" },
-    { id: "Lavabo", label: "Tủ lavabo", icon: "Droplets" },
-    { id: "Lighting", label: "Đèn", icon: "Lamp" },
-    { id: "Decor", label: "Trang trí", icon: "Sparkles" },
-    { id: "Storage", label: "Lưu trữ", icon: "Box" },
+    { id: "All", label: "Tất cả sản phẩm", icon: "Package" },
+    { id: "C0001", label: "Phòng khách", icon: "Sofa" },
+    { id: "C0002", label: "Phòng ngủ", icon: "Bed" },
+    { id: "C0003", label: "Nhà bếp", icon: "Utensils" },
+    { id: "C0004", label: "Đèn chiếu sáng", icon: "Lamp" },
+    { id: "C0005", label: "Trang trí", icon: "Sparkles" },
+    { id: "C0006", label: "Lưu trữ", icon: "Box" },
+    { id: "C0007", label: "Rèm cửa", icon: "Sliders" },
+    { id: "C0008", label: "Tủ lavabo", icon: "Droplets" },
   ];
 
   try {
@@ -61,17 +84,23 @@ export const fetchCategoriesFromSupabase = async (): Promise<SupabaseCategory[]>
     const { data, error } = await supabase
       .from("categories")
       .select("*")
+      .neq("status", "Hidden")
       .order("id", { ascending: true });
 
     if (error || !data || data.length === 0) {
       return defaultCategories;
     }
 
-    return data.map((row: any) => ({
-      id: String(row.category_id),
-      label: String(row.name),
-      icon: String(row.icon || "Folder"),
-    }));
+    const dynamicCats: SupabaseCategory[] = [
+      { id: "All", label: "Tất cả sản phẩm", icon: "Package" },
+      ...data.map((row: any) => ({
+        id: String(row.category_id || `C${String(row.id).padStart(4, "0")}`),
+        label: String(row.name),
+        icon: String(row.icon || "Folder"),
+      })),
+    ];
+
+    return dynamicCats;
   } catch (err) {
     console.error("Error fetching categories from Supabase:", err);
     return defaultCategories;

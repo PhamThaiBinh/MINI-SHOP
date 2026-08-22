@@ -57,6 +57,8 @@ export default function AdminProductsPage() {
   const [showHistoryModal, setShowHistoryModal] = useState<boolean>(false);
   const [inventoryMode, setInventoryMode] = useState<"IMPORT" | "EXPORT" | "AUDIT">("IMPORT");
   const [selectedInventoryProdId, setSelectedInventoryProdId] = useState<number>(0);
+  const [inventoryProdSearch, setInventoryProdSearch] = useState<string>("");
+  const [isInventoryProdDropdownOpen, setIsInventoryProdDropdownOpen] = useState<boolean>(false);
   const [inventoryQty, setInventoryQty] = useState<string>("10");
   const [inventorySupplier, setInventorySupplier] = useState<string>("");
   const [inventoryReason, setInventoryReason] = useState<string>("");
@@ -1049,33 +1051,37 @@ export default function AdminProductsPage() {
                       </div>
                     </div>
 
-                    <div style={{ display: "grid", gridTemplateColumns: editingProduct ? "1fr 1fr" : "1fr", gap: "12px", marginBottom: "14px" }}>
-                      <div>
-                        <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "4px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                          {editingProduct ? "Số Lượng Tồn Kho Hiện Tại" : "Số Lượng Tồn Kho Ban Đầu *"}
-                        </label>
-                        <input
-                          type="number"
-                          className="form-control admin-setting-input"
-                          placeholder="10"
-                          value={formStock}
-                          onChange={(e) => setFormStock(e.target.value)}
-                          required
-                          style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13.5px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-                        />
-                      </div>
-                      {editingProduct && (
+                    <div style={{ marginBottom: "14px" }}>
+                      {editingProduct ? (
                         <div>
-                          <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "flex", alignItems: "center", gap: "4px", marginBottom: "4px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                            <i className="fa-solid fa-box text-emerald-600"></i> Nhập Thêm Hàng (+Số lượng)
+                          <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "4px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                            Số Lượng Tồn Kho Hiện Tại (Khóa Chỉnh Sửa)
                           </label>
                           <input
                             type="number"
                             className="form-control admin-setting-input"
-                            placeholder="0"
-                            value={formImportQty}
-                            onChange={(e) => setFormImportQty(e.target.value)}
-                            style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13.5px", fontFamily: "'Plus Jakarta Sans', sans-serif", borderColor: "#86efac", background: "#f0fdf4" }}
+                            disabled
+                            readOnly
+                            value={formStock}
+                            style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13.5px", background: "#f8fafc", color: "#64748b", cursor: "not-allowed", border: "1px solid #cbd5e1" }}
+                          />
+                          <p style={{ fontSize: "11.5px", color: "#64748b", marginTop: "4px", margin: "4px 0 0" }}>
+                            🔒 <em>Số lượng tồn kho được cập nhật tự động & chính xác qua sổ <strong>Nhập/Xuất Tồn Kho</strong>.</em>
+                          </p>
+                        </div>
+                      ) : (
+                        <div>
+                          <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "4px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                            Số Lượng Tồn Kho Ban Đầu *
+                          </label>
+                          <input
+                            type="number"
+                            className="form-control admin-setting-input"
+                            placeholder="10"
+                            value={formStock}
+                            onChange={(e) => setFormStock(e.target.value)}
+                            required
+                            style={{ borderRadius: "12px", padding: "10px 14px", fontSize: "13.5px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
                           />
                         </div>
                       )}
@@ -1347,31 +1353,130 @@ export default function AdminProductsPage() {
                 </div>
               </div>
 
-              {/* Product Selection */}
-              <div style={{ marginBottom: "16px" }}>
+              {/* Product Selection with Searchable Dropdown and [P000X] Prefix */}
+              <div style={{ marginBottom: "16px", position: "relative" }}>
                 <label style={{ fontSize: "13px", fontWeight: 800, color: "#1e293b", display: "block", marginBottom: "6px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                   Sản Phẩm Cần {inventoryMode === "IMPORT" ? "Nhập Kho" : inventoryMode === "EXPORT" ? "Xuất Kho" : "Kiểm Kê"} *
                 </label>
-                <select
-                  className="form-control admin-setting-input"
-                  value={selectedInventoryProdId}
-                  onChange={(e) => {
-                    const newProdId = Number(e.target.value);
-                    setSelectedInventoryProdId(newProdId);
-                    if (inventoryMode === "AUDIT") {
-                      const p = products.find((prod) => prod.id === newProdId);
-                      if (p) setInventoryQty(String(p.stock !== undefined ? p.stock : 15));
-                    }
+
+                {/* Trigger Button */}
+                <div
+                  onClick={() => setIsInventoryProdDropdownOpen(!isInventoryProdDropdownOpen)}
+                  style={{
+                    border: "1.5px solid #cbd5e1",
+                    borderRadius: "12px",
+                    padding: "10px 14px",
+                    background: "#ffffff",
+                    cursor: "pointer",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    minHeight: "44px",
                   }}
-                  required
-                  style={{ borderRadius: "12px", padding: "12px 14px", fontSize: "14px", fontWeight: 700, fontFamily: "'Plus Jakarta Sans', sans-serif" }}
                 >
-                  {products.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} (P{String(p.id).padStart(4, "0")}) — 📦 Tồn kho hệ thống: {p.stock !== undefined ? p.stock : 15} món
-                    </option>
-                  ))}
-                </select>
+                  {(() => {
+                    const sel = products.find((p) => p.id === selectedInventoryProdId);
+                    if (!sel) return <span style={{ color: "#94a3b8", fontSize: "13.5px" }}>Chọn sản phẩm cần lập phiếu...</span>;
+                    return (
+                      <span style={{ fontSize: "13.5px", fontWeight: 700, color: "#0f172a" }}>
+                        <code style={{ background: "#f1f5f9", padding: "2px 6px", borderRadius: "4px", marginRight: "6px", color: "#1e293b", fontSize: "12px" }}>
+                          [P{String(sel.id).padStart(4, "0")}]
+                        </code>
+                        {sel.name} — <span style={{ color: "#166534", fontWeight: 800 }}>📦 Tồn kho: {sel.stock !== undefined ? sel.stock : 15} món</span>
+                      </span>
+                    );
+                  })()}
+                  <span style={{ fontSize: "11px", color: "#64748b" }}>{isInventoryProdDropdownOpen ? "▲" : "▼"}</span>
+                </div>
+
+                {/* Dropdown Menu Popup */}
+                {isInventoryProdDropdownOpen && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "100%",
+                      left: 0,
+                      right: 0,
+                      marginTop: "6px",
+                      background: "#ffffff",
+                      border: "1.5px solid #cbd5e1",
+                      borderRadius: "14px",
+                      boxShadow: "0 12px 28px rgba(0,0,0,0.15)",
+                      zIndex: 10000,
+                      maxHeight: "260px",
+                      overflowY: "auto",
+                      padding: "8px",
+                    }}
+                  >
+                    <input
+                      type="text"
+                      placeholder="🔍 Tìm nhanh theo mã [P000X] hoặc tên sản phẩm..."
+                      value={inventoryProdSearch}
+                      onChange={(e) => setInventoryProdSearch(e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                      autoFocus
+                      style={{
+                        width: "100%",
+                        padding: "8px 12px",
+                        borderRadius: "8px",
+                        border: "1px solid #cbd5e1",
+                        fontSize: "12.5px",
+                        marginBottom: "6px",
+                        boxSizing: "border-box",
+                        outline: "none",
+                        fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      }}
+                    />
+
+                    <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                      {products
+                        .filter((p) => {
+                          const q = inventoryProdSearch.toLowerCase().trim();
+                          if (!q) return true;
+                          const code = `p${String(p.id).padStart(4, "0")}`;
+                          return p.name.toLowerCase().includes(q) || code.includes(q);
+                        })
+                        .map((p) => {
+                          const isSelected = p.id === selectedInventoryProdId;
+                          return (
+                            <div
+                              key={p.id}
+                              onClick={() => {
+                                setSelectedInventoryProdId(p.id);
+                                if (inventoryMode === "AUDIT") {
+                                  setInventoryQty(String(p.stock !== undefined ? p.stock : 15));
+                                }
+                                setIsInventoryProdDropdownOpen(false);
+                                setInventoryProdSearch("");
+                              }}
+                              style={{
+                                padding: "8px 10px",
+                                borderRadius: "8px",
+                                background: isSelected ? "#f0fdf4" : "transparent",
+                                cursor: "pointer",
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                transition: "background 0.15s ease",
+                              }}
+                              onMouseEnter={(e) => (e.currentTarget.style.background = isSelected ? "#dcfce7" : "#f8fafc")}
+                              onMouseLeave={(e) => (e.currentTarget.style.background = isSelected ? "#f0fdf4" : "transparent")}
+                            >
+                              <span style={{ fontSize: "13px", fontWeight: isSelected ? 800 : 600, color: isSelected ? "#166534" : "#1e293b" }}>
+                                <code style={{ background: "#f1f5f9", padding: "2px 6px", borderRadius: "4px", marginRight: "6px", fontSize: "11.5px" }}>
+                                  [P{String(p.id).padStart(4, "0")}]
+                                </code>
+                                {p.name}
+                              </span>
+                              <span style={{ fontSize: "12px", color: "#64748b", fontWeight: 700 }}>
+                                Tồn: <strong>{p.stock !== undefined ? p.stock : 15}</strong> món
+                              </span>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Quantity Inputs & Quick Pills (Clean Numbers without + or -) */}

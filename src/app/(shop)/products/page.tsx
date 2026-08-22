@@ -7,7 +7,7 @@ import { formatVND, fixImagePath } from "@/lib/utils";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { Product } from "@/types/product";
-import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
+import { fetchProductsFromSupabase, fetchCategoriesFromSupabase } from "@/lib/supabaseProducts";
 import { useSearchParams } from "next/navigation";
 import {
   Package,
@@ -30,7 +30,28 @@ import {
   SlidersHorizontal,
   RotateCcw,
   Zap,
+  Folder,
 } from "lucide-react";
+
+interface CategoryFilterItem {
+  id: string;
+  label: string;
+  icon: React.ReactNode;
+}
+
+const getCategoryIcon = (iconName: string, id: string): React.ReactNode => {
+  const name = (iconName || "").toLowerCase();
+  const catId = (id || "").toLowerCase();
+  if (catId === "all" || name.includes("package")) return <Package className="w-4 h-4" />;
+  if (name.includes("sofa") || name.includes("phong-khach") || name.includes("khách") || catId === "c0001") return <Sofa className="w-4 h-4" />;
+  if (name.includes("bed") || name.includes("phong-ngu") || name.includes("ngủ") || catId === "c0002") return <Bed className="w-4 h-4" />;
+  if (name.includes("utensil") || name.includes("bếp") || name.includes("phong-an") || name.includes("ăn") || catId === "c0003") return <Utensils className="w-4 h-4" />;
+  if (name.includes("lamp") || name.includes("đèn") || catId === "c0004") return <Lamp className="w-4 h-4" />;
+  if (name.includes("sparkle") || name.includes("decor") || name.includes("trang-tri") || name.includes("trí") || catId === "c0005") return <Sparkles className="w-4 h-4" />;
+  if (name.includes("box") || name.includes("storage") || name.includes("luu-tru") || name.includes("trữ") || catId === "c0006") return <Box className="w-4 h-4" />;
+  if (name.includes("rem") || name.includes("slider") || name.includes("curtain") || catId === "c0007") return <SlidersHorizontal className="w-4 h-4" />;
+  return <Folder className="w-4 h-4" />;
+};
 
 function ProductsContent() {
   const { addToCart } = useCart();
@@ -38,6 +59,9 @@ function ProductsContent() {
   const searchParams = useSearchParams();
 
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<CategoryFilterItem[]>([
+    { id: "All", label: "Tất cả sản phẩm", icon: <Package className="w-4 h-4" /> },
+  ]);
   const [loading, setLoading] = useState<boolean>(true);
   const [addedId, setAddedId] = useState<number | null>(null);
 
@@ -80,29 +104,30 @@ function ProductsContent() {
   useEffect(() => {
     async function loadData() {
       setLoading(true);
-      const data = await fetchProductsFromSupabase();
-      setProducts(data);
+      const [prods, cats] = await Promise.all([
+        fetchProductsFromSupabase(),
+        fetchCategoriesFromSupabase(),
+      ]);
+      setProducts(prods);
+      setCategories(
+        cats.map((c) => ({
+          id: c.id,
+          label: c.label,
+          icon: getCategoryIcon(c.icon, c.id),
+        }))
+      );
       setLoading(false);
     }
     loadData();
   }, []);
-
-  const categories = [
-    { id: "All", label: "Tất cả sản phẩm", icon: <Package className="w-4 h-4" /> },
-    { id: "C0001", label: "Phòng khách", icon: <Sofa className="w-4 h-4" /> },
-    { id: "C0002", label: "Phòng ngủ", icon: <Bed className="w-4 h-4" /> },
-    { id: "C0003", label: "Nhà bếp", icon: <Utensils className="w-4 h-4" /> },
-    { id: "C0004", label: "Đèn chiếu sáng", icon: <Lamp className="w-4 h-4" /> },
-    { id: "C0005", label: "Trang trí", icon: <Sparkles className="w-4 h-4" /> },
-    { id: "C0006", label: "Lưu trữ", icon: <Box className="w-4 h-4" /> },
-  ];
 
   const priceRanges = [
     { id: "all", label: "Tất cả mức giá" },
     { id: "under-500k", label: "Dưới 500.000đ" },
     { id: "500k-1m", label: "500.000đ - 1.000.000đ" },
     { id: "1m-3m", label: "1.000.000đ - 3.000.000đ" },
-    { id: "over-3m", label: "Trên 3.000.000đ" },
+    { id: "3m-5m", label: "3.000.000đ - 5.000.000đ" },
+    { id: "over-5m", label: "Trên 5.000.000đ" },
   ];
 
   const materials = [
@@ -117,7 +142,8 @@ function ProductsContent() {
     if (range === "under-500k") return price < 500000;
     if (range === "500k-1m") return price >= 500000 && price <= 1000000;
     if (range === "1m-3m") return price > 1000000 && price <= 3000000;
-    if (range === "over-3m") return price > 3000000;
+    if (range === "3m-5m") return price > 3000000 && price <= 5000000;
+    if (range === "over-5m" || range === "above-5m" || range === "over-3m") return price > 5000000;
     return true;
   };
 
@@ -129,6 +155,25 @@ function ProductsContent() {
 
     if (prodCat === target || prodName === target) return true;
 
+    // Dynamic match against loaded category options
+    const matchedCategoryObj = categories.find(
+      (c) => c.id.toLowerCase() === target || c.label.toLowerCase() === target
+    );
+    if (matchedCategoryObj) {
+      const catId = matchedCategoryObj.id.toLowerCase();
+      const catLabel = matchedCategoryObj.label.toLowerCase();
+      if (
+        prodCat === catId ||
+        prodCat === catLabel ||
+        prodName === catId ||
+        prodName === catLabel ||
+        prodCat.includes(catLabel) ||
+        prodName.includes(catLabel)
+      ) {
+        return true;
+      }
+    }
+
     const synonymMap: Record<string, string[]> = {
       "c0001": ["c0001", "living room", "phòng khách", "phong khach", "phong-khach"],
       "c0002": ["c0002", "bedroom", "phòng ngủ", "phong ngu", "phong-ngu"],
@@ -136,6 +181,8 @@ function ProductsContent() {
       "c0004": ["c0004", "lighting", "đèn chiếu sáng", "den chieu sang", "den-chieu-sang", "đèn"],
       "c0005": ["c0005", "decor", "trang trí", "trang tri", "trang-tri"],
       "c0006": ["c0006", "storage", "lưu trữ", "luu tru", "luu-tru"],
+      "c0007": ["c0007", "curtains", "rèm cửa", "rem cua", "rem-cua"],
+      "c0008": ["c0008", "lavabo", "tủ lavabo", "tu lavabo", "tu-lavabo"],
     };
 
     const synonyms = synonymMap[target];
