@@ -8,8 +8,10 @@ import { PRODUCTS_DATA } from "@/data/products";
 import { formatVND, fixImagePath } from "@/lib/utils";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
+import { useAuth } from "@/context/AuthContext";
 import { Product } from "@/types/product";
 import { fetchProductByIdFromSupabase, fetchProductsFromSupabase } from "@/lib/supabaseProducts";
+import { fetchUserAddressesFromSupabase, UserAddressItem } from "@/lib/supabaseAddress";
 import { createClient } from "@/utils/supabase/client";
 import {
   ShoppingCart,
@@ -28,6 +30,8 @@ import {
   Ruler,
   Send,
   MessageSquare,
+  MapPin,
+  AlertTriangle,
 } from "lucide-react";
 
 import { ProductComboOffer } from "@/components/shop/ProductComboOffer";
@@ -129,14 +133,39 @@ function ProductDetailPageContent({
     loadData();
   }, [productId]);
 
-  const { addToCart } = useCart();
+  const { cart, addToCart } = useCart();
   const { isWishlisted, toggleWishlist } = useWishlist();
+  const { user } = useAuth();
+  const [defaultAddress, setDefaultAddress] = useState<UserAddressItem | null>(null);
 
   const [quantity, setQuantity] = useState(1);
   const [copied, setCopied] = useState(false);
   const [isSizeChartOpen, setIsSizeChartOpen] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
   const [toastMsg, setToastMsg] = useState("");
+
+  // Load user default address from Sổ địa chỉ nhận hàng
+  useEffect(() => {
+    const loadDefaultAddress = async () => {
+      if (!user) {
+        setDefaultAddress(null);
+        return;
+      }
+      const ident = user.email || user.username || "";
+      if (ident) {
+        const addrs = await fetchUserAddressesFromSupabase(ident);
+        if (addrs && addrs.length > 0) {
+          const def = addrs.find((a) => a.isDefault) || addrs[0];
+          setDefaultAddress(def || null);
+        }
+      }
+    };
+
+    loadDefaultAddress();
+    const handleAddressUpdate = () => loadDefaultAddress();
+    window.addEventListener("userAddressUpdated", handleAddressUpdate);
+    return () => window.removeEventListener("userAddressUpdated", handleAddressUpdate);
+  }, [user]);
 
   // Variant Controls State
   const [selectedColor, setSelectedColor] = useState<"soi" | "occho" | "trangkem">("soi");
@@ -297,6 +326,29 @@ function ProductDetailPageContent({
   // Dynamic Price Multiplier based on Size
   const sizeMultiplier = selectedSize === "S" ? 0.9 : selectedSize === "L" ? 1.2 : 1.0;
   const finalDisplayPrice = Math.round(effectivePrice * sizeMultiplier);
+
+  const productStock = typeof currentProduct.stock === "number" ? Math.max(0, currentProduct.stock) : 50;
+  const isOutOfStock = productStock === 0 || currentProduct.status === "Out of stock";
+
+  useEffect(() => {
+    if (productStock > 0 && quantity > productStock) {
+      setQuantity(productStock);
+    }
+  }, [productStock]);
+
+  const handleDecreaseQuantity = () => {
+    setQuantity((q) => Math.max(1, q - 1));
+  };
+
+  const handleIncreaseQuantity = () => {
+    if (isOutOfStock) return;
+    if (quantity >= productStock) {
+      setToastMsg(`⚠️ Số lượng mua không thể vượt quá số lượng tồn kho (${productStock} sản phẩm)!`);
+      setTimeout(() => setToastMsg(""), 3500);
+      return;
+    }
+    setQuantity((q) => Math.min(productStock, q + 1));
+  };
 
   const galleryImages = [
     currentProduct.image,
@@ -554,38 +606,97 @@ function ProductDetailPageContent({
                 </div>
 
                 {/* Quantity Controls */}
-                <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "24px" }}>
-                  <span style={{ fontSize: "13px", fontWeight: 800, color: "#334155" }}>Số lượng:</span>
-                  <div style={{ display: "inline-flex", alignItems: "center", border: "1px solid #cbd5e1", borderRadius: "999px", overflow: "hidden", background: "#f8fafc" }}>
-                    <button
-                      type="button"
-                      onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                      style={{ width: "36px", height: "36px", border: "none", background: "none", fontSize: "16px", fontWeight: 800, cursor: "pointer" }}
+                <div style={{ marginBottom: "20px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
+                    <span style={{ fontSize: "13px", fontWeight: 800, color: "#334155" }}>Số lượng:</span>
+                    <div style={{ display: "inline-flex", alignItems: "center", border: "1px solid #cbd5e1", borderRadius: "999px", overflow: "hidden", background: "#f8fafc" }}>
+                      <button
+                        type="button"
+                        disabled={quantity <= 1 || isOutOfStock}
+                        onClick={handleDecreaseQuantity}
+                        style={{
+                          width: "36px",
+                          height: "36px",
+                          border: "none",
+                          background: "none",
+                          fontSize: "16px",
+                          fontWeight: 800,
+                          cursor: quantity <= 1 || isOutOfStock ? "not-allowed" : "pointer",
+                          opacity: quantity <= 1 || isOutOfStock ? 0.4 : 1,
+                        }}
+                      >
+                        -
+                      </button>
+                      <input
+                        type="text"
+                        value={isOutOfStock ? 0 : quantity}
+                        readOnly
+                        style={{ width: "44px", textAlign: "center", border: "none", background: "none", fontSize: "14px", fontWeight: 800, color: "#0f172a" }}
+                      />
+                      <button
+                        type="button"
+                        disabled={quantity >= productStock || isOutOfStock}
+                        onClick={handleIncreaseQuantity}
+                        style={{
+                          width: "36px",
+                          height: "36px",
+                          border: "none",
+                          background: "none",
+                          fontSize: "16px",
+                          fontWeight: 800,
+                          cursor: quantity >= productStock || isOutOfStock ? "not-allowed" : "pointer",
+                          opacity: quantity >= productStock || isOutOfStock ? 0.4 : 1,
+                        }}
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    <span
+                      style={{
+                        fontSize: "12.5px",
+                        fontWeight: 700,
+                        color: isOutOfStock ? "#ef4444" : "#166534",
+                        background: isOutOfStock ? "#fef2f2" : "#f0fdf4",
+                        padding: "4px 12px",
+                        borderRadius: "999px",
+                        border: `1px solid ${isOutOfStock ? "#fecaca" : "#bbf7d0"}`,
+                      }}
                     >
-                      -
-                    </button>
-                    <input
-                      type="text"
-                      value={quantity}
-                      readOnly
-                      style={{ width: "40px", textAlign: "center", border: "none", background: "none", fontSize: "14px", fontWeight: 800, color: "#0f172a" }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setQuantity((q) => q + 1)}
-                      style={{ width: "36px", height: "36px", border: "none", background: "none", fontSize: "16px", fontWeight: 800, cursor: "pointer" }}
-                    >
-                      +
-                    </button>
+                      {isOutOfStock ? "🔴 Tạm hết hàng" : `🟢 Còn ${productStock} sản phẩm`}
+                    </span>
                   </div>
+
+                  {quantity >= productStock && productStock > 0 && (
+                    <div style={{ fontSize: "12px", color: "#b45309", fontWeight: 700, marginTop: "6px", display: "flex", alignItems: "center", gap: "4px" }}>
+                      <AlertTriangle className="w-3.5 h-3.5" />
+                      <span>Đã đạt số lượng tồn kho tối đa ({productStock} sản phẩm)</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Button-in-Button (Nested CTA) Action Suite */}
-                <div style={{ display: "flex", gap: "12px", marginBottom: "20px" }}>
+                <div style={{ display: "flex", gap: "12px", marginBottom: "16px" }}>
                   <button
                     type="button"
+                    disabled={isOutOfStock}
                     className="btn-nested-primary"
                     onClick={() => {
+                      if (isOutOfStock) {
+                        alert("Sản phẩm hiện đang tạm hết hàng!");
+                        return;
+                      }
+                      const existingCartItem = cart.find((it) => it.product.id === currentProduct.id);
+                      const inCartQty = existingCartItem ? existingCartItem.quantity : 0;
+                      if (inCartQty + quantity > productStock) {
+                        const canAdd = Math.max(0, productStock - inCartQty);
+                        if (canAdd === 0) {
+                          alert(`Bạn đã có ${inCartQty} sản phẩm trong giỏ hàng (đã đạt giới hạn tồn kho ${productStock} món)!`);
+                        } else {
+                          alert(`Bạn chỉ có thể thêm tối đa ${canAdd} sản phẩm nữa vào giỏ hàng (Tồn kho: ${productStock})!`);
+                        }
+                        return;
+                      }
                       addToCart({ ...currentProduct, price: finalDisplayPrice }, quantity);
                       setAddedToCart(true);
                       setToastMsg(`Đã thêm ${quantity} sản phẩm "${currentProduct.name}" vào giỏ hàng thành công!`);
@@ -595,11 +706,12 @@ function ProductDetailPageContent({
                       }, 2500);
                     }}
                     style={{
-                      background: addedToCart ? "#166534" : "var(--primary-color, #2e7d32)",
+                      background: isOutOfStock ? "#94a3b8" : addedToCart ? "#166534" : "var(--primary-color, #2e7d32)",
+                      cursor: isOutOfStock ? "not-allowed" : "pointer",
                       transition: "all 0.2s ease",
                     }}
                   >
-                    <span>{addedToCart ? `✓ Đã Thêm Giỏ Hàng (${quantity})!` : "+ Thêm Giỏ Hàng"}</span>
+                    <span>{isOutOfStock ? "Hết Hàng" : addedToCart ? `✓ Đã Thêm Giỏ Hàng (${quantity})!` : "+ Thêm Giỏ Hàng"}</span>
                     <div className="btn-nested-icon-capsule">
                       <ShoppingCart className="w-4 h-4 text-white" />
                     </div>
@@ -607,10 +719,19 @@ function ProductDetailPageContent({
 
                   <button
                     type="button"
+                    disabled={isOutOfStock}
                     className="btn-nested-secondary"
                     onClick={() => {
+                      if (isOutOfStock) {
+                        alert("Sản phẩm hiện đang tạm hết hàng!");
+                        return;
+                      }
                       addToCart({ ...currentProduct, price: finalDisplayPrice }, quantity);
                       router.push("/checkout");
+                    }}
+                    style={{
+                      cursor: isOutOfStock ? "not-allowed" : "pointer",
+                      opacity: isOutOfStock ? 0.6 : 1,
                     }}
                   >
                     <span>Mua Ngay Nhanh</span>
@@ -650,6 +771,61 @@ function ProductDetailPageContent({
                       }}
                     />
                   </button>
+                </div>
+
+                {/* Sourced Delivery Address from Sổ Địa Chỉ Nhận Hàng */}
+                <div
+                  style={{
+                    padding: "12px 16px",
+                    background: "#f8fafc",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "14px",
+                    marginBottom: "20px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    flexWrap: "wrap",
+                    gap: "10px",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                    <MapPin className="w-4 h-4 text-emerald-700 flex-shrink-0" style={{ marginTop: "3px" }} />
+                    <div>
+                      <div style={{ fontSize: "12px", fontWeight: 700, color: "#15803d", textTransform: "uppercase", letterSpacing: "0.03em" }}>
+                        Giao đến địa chỉ nhận hàng:
+                      </div>
+                      <div style={{ fontSize: "13px", fontWeight: 800, color: "#0f172a", marginTop: "2px" }}>
+                        {defaultAddress ? (
+                          <>
+                            <span>{defaultAddress.name} ({defaultAddress.phone})</span>
+                            <div style={{ fontSize: "12.5px", fontWeight: 600, color: "#475569", marginTop: "2px" }}>
+                              {defaultAddress.detail}, {defaultAddress.ward}, {defaultAddress.province}
+                            </div>
+                          </>
+                        ) : user ? (
+                          <span style={{ fontSize: "12.5px", color: "#475569", fontWeight: 600 }}>
+                            {user.name} ({user.phone || "Chưa cập nhật SĐT"}) - Giao toàn quốc
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: "12.5px", color: "#475569", fontWeight: 600 }}>
+                            Giao hàng nhanh toàn quốc (1-2 ngày)
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <Link
+                    href="/auth"
+                    style={{
+                      fontSize: "12px",
+                      fontWeight: 800,
+                      color: "var(--primary-color, #2e7d32)",
+                      textDecoration: "underline",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {defaultAddress ? "Đổi địa chỉ" : "Thêm địa chỉ"}
+                  </Link>
                 </div>
 
                 {/* Refined Triple Trust Hardware Grid */}

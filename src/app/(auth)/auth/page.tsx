@@ -81,23 +81,36 @@ function AuthPageContent() {
         setLiveOrders(dbOrders as CustomerOrder[]);
       });
 
-      fetchUserAddressesFromSupabase(user.email || user.username || "user").then((savedAddrs) => {
-        if (savedAddrs.length > 0) {
-          setAddresses(savedAddrs);
-        } else {
-          setAddresses([
-            {
-              id: 1,
-              name: user.name,
-              phone: user.phone || "0988.123.456",
-              province: "Thành phố Hồ Chí Minh",
-              ward: "Phường Bến Thành",
-              detail: "123 Đường Nguyễn Trãi",
-              isDefault: true,
-            },
-          ]);
-        }
-      });
+      const loadAddresses = () => {
+        fetchUserAddressesFromSupabase(user.email || user.username || "user").then((savedAddrs) => {
+          if (savedAddrs.length > 0) {
+            setAddresses(savedAddrs);
+          } else {
+            setAddresses([
+              {
+                id: 1,
+                name: user.name,
+                phone: user.phone || "0988.123.456",
+                province: "Thành phố Hồ Chí Minh",
+                ward: "Phường Bến Thành",
+                detail: "123 Đường Nguyễn Trãi",
+                isDefault: true,
+              },
+            ]);
+          }
+        });
+      };
+
+      loadAddresses();
+
+      const handleAddressUpdateEvent = () => {
+        loadAddresses();
+      };
+
+      window.addEventListener("userAddressUpdated", handleAddressUpdateEvent);
+      return () => {
+        window.removeEventListener("userAddressUpdated", handleAddressUpdateEvent);
+      };
     }
   }, [user]);
 

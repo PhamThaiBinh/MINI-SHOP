@@ -615,14 +615,60 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const cleanUser = user.username?.trim().replace(/^@/, "") || "";
       const userEmail = user.email?.trim() || "";
 
-      await supabase
+      // 1. Fetch user's current addresses to update default address with new name and phone
+      const { data: matchedUsers } = await supabase
         .from("users")
-        .update({
-          name: cleanName,
-          phone: cleanPhone,
-          username: `@${cleanUsername}`,
-        })
+        .select("id, addresses")
         .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${userEmail}`);
+
+      let updatedAddresses: any[] = [];
+      if (matchedUsers && matchedUsers.length > 0) {
+        const targetUser = matchedUsers[0];
+        const currentAddrs = Array.isArray(targetUser.addresses) ? targetUser.addresses : [];
+        if (currentAddrs.length > 0) {
+          updatedAddresses = currentAddrs.map((a: any, idx: number) => {
+            if (a.isDefault || (idx === 0 && !currentAddrs.some((x: any) => x.isDefault))) {
+              return {
+                ...a,
+                name: cleanName,
+                phone: cleanPhone || a.phone,
+              };
+            }
+            return a;
+          });
+        } else {
+          updatedAddresses = [
+            {
+              id: 1,
+              name: cleanName,
+              phone: cleanPhone || "0988123456",
+              province: "Thành phố Hồ Chí Minh",
+              ward: "Phường Bến Thành",
+              detail: "123 Đường Nguyễn Trãi",
+              isDefault: true,
+            },
+          ];
+        }
+
+        await supabase
+          .from("users")
+          .update({
+            name: cleanName,
+            phone: cleanPhone,
+            username: `@${cleanUsername}`,
+            addresses: updatedAddresses,
+          })
+          .eq("id", targetUser.id);
+      } else {
+        await supabase
+          .from("users")
+          .update({
+            name: cleanName,
+            phone: cleanPhone,
+            username: `@${cleanUsername}`,
+          })
+          .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${userEmail}`);
+      }
 
       const updatedUser: UserProfile = {
         ...user,
@@ -634,6 +680,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setUser(updatedUser);
       if (typeof window !== "undefined") {
         localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updatedUser));
+        window.dispatchEvent(new Event("userAddressUpdated"));
       }
       return { success: true };
     } catch (err: any) {
