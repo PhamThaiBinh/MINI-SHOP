@@ -41,14 +41,25 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
     notFound();
   }
 
-  const featuredProduct = allProducts[0] || {
-    id: 18,
-    name: "Bộ Bình Gốm Mộc Mỹ Nghệ",
-    price: 520000,
-    image: "assets/images/products/do-my-nghe/bo-binh-gom-minimal.webp",
-    category: "C0005",
-    categoryName: "Trang trí",
-  };
+  // Match product by category or keyword in article title
+  const cleanTitle = (article.title + " " + (article.category || "")).toLowerCase();
+  const featuredProduct =
+    allProducts.find((p) => {
+      const pName = p.name.toLowerCase();
+      if ((cleanTitle.includes("tre") || cleanTitle.includes("mây") || cleanTitle.includes("thủ công") || cleanTitle.includes("sơn mài")) && (pName.includes("tre") || pName.includes("mây") || pName.includes("sơn mài") || p.category === "C0006")) return true;
+      if (cleanTitle.includes("sofa") && pName.includes("sofa")) return true;
+      if (cleanTitle.includes("gỗ") && (pName.includes("gỗ") || pName.includes("bàn"))) return true;
+      if (cleanTitle.includes("gốm") && pName.includes("gốm")) return true;
+      return false;
+    }) ||
+    allProducts[0] || {
+      id: 18,
+      name: "Bộ Bình Gốm Mộc Mỹ Nghệ",
+      price: 520000,
+      image: "assets/images/products/do-my-nghe/bo-binh-gom-minimal.webp",
+      category: "C0005",
+      categoryName: "Trang trí",
+    };
 
   const relatedArticles = allArticles
     .filter((a) => a.id !== article.id)
@@ -59,6 +70,8 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
     "/assets/images/products/noi-that-gia-dung/sofa-phong-khach.webp",
     "/assets/images/products/do-thu-cong/gio-may-dan.webp",
   ];
+
+  const hasHeadings = article.content.includes("<h2") || article.content.includes("##");
 
   return (
     <main style={{ backgroundColor: "var(--bg-main, #fcfbf9)", minHeight: "100dvh", fontFamily: "'Plus Jakarta Sans', sans-serif", paddingBottom: "60px" }}>
@@ -116,9 +129,9 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
         </div>
 
         {/* 2-Column Split: Dynamic Sticky ToC Sidebar + Main Article Body */}
-        <div style={{ display: "grid", gridTemplateColumns: "260px 1fr", gap: "36px", alignItems: "start" }}>
+        <div className={`blog-detail-layout ${!hasHeadings ? "no-toc" : ""}`}>
           {/* Left Column: Dynamic Interactive ToC */}
-          <ArticleToC content={article.content} />
+          {hasHeadings && <ArticleToC content={article.content} />}
 
           {/* Right Column: Main Article Body */}
           <div className="doppelrand-outer">
@@ -134,7 +147,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
               {/* Showroom Lookbook Photo Gallery */}
               <div style={{ marginTop: "36px", paddingTop: "24px", borderTop: "1px solid #f1f5f9" }}>
                 <h3 style={{ fontSize: "18px", fontWeight: 900, color: "#0f172a", marginBottom: "16px", display: "flex", alignItems: "center", gap: "6px" }}>
-                  <Sparkles className="w-5 h-5 text-amber-500" /> BỘ SỰU TẬP ẢNH PHỐI CẢNH SHOWROOM
+                  <Sparkles className="w-5 h-5 text-amber-500" /> BỘ SƯU TẬP ẢNH PHỐI CẢNH SHOWROOM
                 </h3>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px" }}>
                   {lookbookImages.map((imgSrc, idx) => (
