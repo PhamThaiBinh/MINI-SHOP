@@ -374,3 +374,60 @@ textarea.form-control {
         grid-template-columns: 1fr;
     }
 }
+
+/* ==========================================================================
+   OFFICIAL PRINT RECEIPT STYLES
+   ========================================================================== */
+#print-receipt-section {
+    display: none;
+}
+
+@media print {
+    body {
+        background: #ffffff !important;
+        color: #0f172a !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    /* Hide everything on page except print receipt */
+    body * {
+        visibility: hidden !important;
+    }
+
+    #print-receipt-section,
+    #print-receipt-section * {
+        visibility: visible !important;
+    }
+
+    #print-receipt-section {
+        display: block !important;
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 20px 24px !important;
+        background: #ffffff !important;
+        box-shadow: none !important;
+        border: none !important;
+        box-sizing: border-box !important;
+    }
+
+    .no-print,
+    .modal-overlay,
+    header,
+    footer,
+    nav {
+        display: none !important;
+        visibility: hidden !important;
+    }
+
+    @page {
+        size: A4 portrait;
+        margin: 10mm 12mm;
+    }
+}

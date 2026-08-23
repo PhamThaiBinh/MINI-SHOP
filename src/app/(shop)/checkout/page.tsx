@@ -85,6 +85,7 @@ export default function CheckoutPage() {
   const [qrCountdown, setQrCountdown] = useState(10);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [orderCode, setOrderCode] = useState("");
+  const [lastCompletedOrder, setLastCompletedOrder] = useState<PlacedOrder | null>(null);
 
   const [systemCoupons, setSystemCoupons] = useState<Coupon[]>([]);
 
@@ -329,6 +330,7 @@ export default function CheckoutPage() {
     };
 
     addPlacedOrder(placedOrderRecord);
+    setLastCompletedOrder(placedOrderRecord);
     
     // Save order synchronously to Supabase
     try {
@@ -956,6 +958,35 @@ export default function CheckoutPage() {
             </p>
             <div>Mã đơn hàng của bạn:</div>
             <div className="order-code-badge">{orderCode}</div>
+
+            {/* Quick Order Summary in Modal */}
+            {lastCompletedOrder && (
+              <div
+                style={{
+                  background: "#f8fafc",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "12px",
+                  padding: "12px 16px",
+                  marginBottom: "20px",
+                  textAlign: "left",
+                  fontSize: "13px",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                  <span style={{ color: "#64748b" }}>Số lượng sản phẩm:</span>
+                  <strong style={{ color: "#0f172a" }}>
+                    {lastCompletedOrder.items.reduce((s, it) => s + it.qty, 0)} món ({lastCompletedOrder.items.length} loại SP)
+                  </strong>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ color: "#64748b" }}>Tổng thanh toán:</span>
+                  <strong style={{ color: "var(--primary-color, #2e7d32)", fontSize: "14.5px" }}>
+                    {formatVND(lastCompletedOrder.total)}
+                  </strong>
+                </div>
+              </div>
+            )}
+
             <div style={{ display: "flex", justifyContent: "center", gap: "10px", flexWrap: "wrap" }}>
               <Link
                 href="/"
@@ -990,6 +1021,273 @@ export default function CheckoutPage() {
                 <Printer className="w-4 h-4" /> In / Lưu Biên Nhận
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          OFFICIAL PRINT RECEIPT (GIAO DIỆN IN BIÊN NHẬN BÁN HÀNG CHUẨN A4)
+          ========================================================================= */}
+      {lastCompletedOrder && (
+        <div id="print-receipt-section">
+          {/* Top Shop Info & Invoice Header */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-start",
+              borderBottom: "2.5px solid #2e7d32",
+              paddingBottom: "16px",
+              marginBottom: "20px",
+            }}
+          >
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
+                <div
+                  style={{
+                    backgroundColor: "#2e7d32",
+                    color: "#ffffff",
+                    fontWeight: 900,
+                    fontSize: "20px",
+                    padding: "4px 12px",
+                    borderRadius: "6px",
+                    letterSpacing: "0.5px",
+                  }}
+                >
+                  MINI SHOP
+                </div>
+                <span style={{ fontSize: "12.5px", color: "#64748b", fontWeight: 700 }}>
+                  Sống đẹp mỗi ngày | Đồ dùng & Trang trí nhà cửa
+                </span>
+              </div>
+              <div style={{ fontSize: "12px", color: "#334155", lineHeight: "1.6" }}>
+                <strong>Showroom:</strong> 237 Nguyễn Văn Cừ, P. Nguyễn Cư Trinh, Q.1, TP. Hồ Chí Minh<br />
+                <strong>Hotline CSKH:</strong> 0988.123.456 | <strong>Email:</strong> hotro@minishop.vn<br />
+                <strong>Website:</strong> minishop-rose.vercel.app
+              </div>
+            </div>
+
+            <div style={{ textAlign: "right" }}>
+              <h2
+                style={{
+                  fontSize: "19px",
+                  fontWeight: 900,
+                  color: "#0f172a",
+                  margin: "0 0 6px 0",
+                  textTransform: "uppercase",
+                  letterSpacing: "-0.01em",
+                }}
+              >
+                BIÊN NHẬN BÁN HÀNG
+              </h2>
+              <div
+                style={{
+                  display: "inline-block",
+                  background: "#dcfce7",
+                  border: "1.5px solid #86efac",
+                  color: "#15803d",
+                  fontSize: "12px",
+                  fontWeight: 900,
+                  padding: "4px 12px",
+                  borderRadius: "6px",
+                  marginBottom: "6px",
+                }}
+              >
+                ✓ ĐẶT HÀNG THÀNH CÔNG
+              </div>
+              <div style={{ fontSize: "12.5px", color: "#1e293b", marginTop: "2px" }}>
+                Mã đơn hàng: <strong style={{ color: "#2e7d32", fontSize: "14px" }}>{lastCompletedOrder.id}</strong>
+              </div>
+              <div style={{ fontSize: "11.5px", color: "#64748b", marginTop: "2px" }}>
+                Thời gian đặt: {lastCompletedOrder.date}
+              </div>
+            </div>
+          </div>
+
+          {/* Customer & Order Metadata */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "18px",
+              background: "#f8fafc",
+              border: "1px solid #e2e8f0",
+              borderRadius: "10px",
+              padding: "14px 18px",
+              marginBottom: "20px",
+              fontSize: "12.5px",
+            }}
+          >
+            <div>
+              <div style={{ fontSize: "11px", fontWeight: 900, color: "#64748b", textTransform: "uppercase", marginBottom: "6px", letterSpacing: "0.05em" }}>
+                THÔNG TIN NGƯỜI NHẬN
+              </div>
+              <div style={{ color: "#0f172a", fontWeight: 800, fontSize: "13.5px", marginBottom: "4px" }}>
+                {lastCompletedOrder.recipientName}
+              </div>
+              <div style={{ color: "#334155", marginBottom: "4px" }}>
+                Số điện thoại: <strong>{lastCompletedOrder.recipientPhone}</strong>
+              </div>
+              <div style={{ color: "#475569", lineHeight: "1.45" }}>
+                Địa chỉ giao hàng: {lastCompletedOrder.address}
+              </div>
+            </div>
+
+            <div>
+              <div style={{ fontSize: "11px", fontWeight: 900, color: "#64748b", textTransform: "uppercase", marginBottom: "6px", letterSpacing: "0.05em" }}>
+                THÔNG TIN GIAO DỊCH
+              </div>
+              <div style={{ color: "#334155", marginBottom: "4px" }}>
+                Hình thức thanh toán: <strong>{lastCompletedOrder.paymentMethod}</strong>
+              </div>
+              <div style={{ color: "#334155", marginBottom: "4px" }}>
+                Trạng thái đơn hàng: <strong style={{ color: "#16a34a" }}>Đang xử lý & chuẩn bị giao hàng</strong>
+              </div>
+              <div style={{ color: "#475569" }}>
+                Dự kiến nhận hàng: <strong>2 - 3 ngày làm việc</strong>
+              </div>
+            </div>
+          </div>
+
+          {/* Product Items Table */}
+          <div style={{ marginBottom: "18px" }}>
+            <table
+              style={{
+                width: "100%",
+                borderCollapse: "collapse",
+                fontSize: "12.5px",
+                textAlign: "left",
+              }}
+            >
+              <thead>
+                <tr style={{ background: "#2e7d32", color: "#ffffff" }}>
+                  <th style={{ padding: "9px 10px", width: "45px", textAlign: "center", borderRadius: "6px 0 0 0" }}>STT</th>
+                  <th style={{ padding: "9px 12px" }}>Tên Sản Phẩm / Quy Cách</th>
+                  <th style={{ padding: "9px 12px", textAlign: "right", width: "120px" }}>Đơn Giá</th>
+                  <th style={{ padding: "9px 10px", textAlign: "center", width: "70px" }}>Số Lượng</th>
+                  <th style={{ padding: "9px 12px", textAlign: "right", width: "130px", borderRadius: "0 6px 0 0" }}>Thành Tiền</th>
+                </tr>
+              </thead>
+              <tbody>
+                {lastCompletedOrder.items.map((it, idx) => (
+                  <tr
+                    key={idx}
+                    style={{
+                      borderBottom: "1px solid #e2e8f0",
+                      background: idx % 2 === 0 ? "#ffffff" : "#fcfbf9",
+                    }}
+                  >
+                    <td style={{ padding: "10px 10px", textAlign: "center", color: "#64748b", fontWeight: 700 }}>
+                      {idx + 1}
+                    </td>
+                    <td style={{ padding: "10px 12px", fontWeight: 800, color: "#0f172a" }}>
+                      {it.name}
+                    </td>
+                    <td style={{ padding: "10px 12px", textAlign: "right", color: "#334155" }}>
+                      {formatVND(it.price)}
+                    </td>
+                    <td style={{ padding: "10px 10px", textAlign: "center", fontWeight: 800, color: "#0f172a" }}>
+                      {it.qty}
+                    </td>
+                    <td style={{ padding: "10px 12px", textAlign: "right", fontWeight: 900, color: "#0f172a" }}>
+                      {formatVND(it.price * it.qty)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pricing Summary Breakdown */}
+          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "28px" }}>
+            <div style={{ width: "320px", fontSize: "12.5px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", color: "#475569" }}>
+                <span>Tạm tính tiền hàng:</span>
+                <strong style={{ color: "#0f172a" }}>{formatVND(lastCompletedOrder.subtotal ?? 0)}</strong>
+              </div>
+              {(lastCompletedOrder.discount ?? 0) > 0 && (
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", color: "#dc2626" }}>
+                  <span>Giảm giá khuyến mãi:</span>
+                  <strong>-{formatVND(lastCompletedOrder.discount ?? 0)}</strong>
+                </div>
+              )}
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", color: "#475569" }}>
+                <span>Phí vận chuyển giao hàng:</span>
+                <strong>
+                  {lastCompletedOrder.total - ((lastCompletedOrder.subtotal ?? 0) - (lastCompletedOrder.discount ?? 0)) <= 0
+                    ? "Miễn phí (0đ)"
+                    : formatVND(lastCompletedOrder.total - ((lastCompletedOrder.subtotal ?? 0) - (lastCompletedOrder.discount ?? 0)))}
+                </strong>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  padding: "9px 0 0 0",
+                  marginTop: "6px",
+                  borderTop: "2px solid #2e7d32",
+                  fontSize: "15px",
+                  fontWeight: 900,
+                  color: "#2e7d32",
+                }}
+              >
+                <span>TỔNG THANH TOÁN:</span>
+                <span>{formatVND(lastCompletedOrder.total)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Signatures & Thank you */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              textAlign: "center",
+              fontSize: "12.5px",
+              paddingTop: "14px",
+              borderTop: "1px dashed #cbd5e1",
+            }}
+          >
+            <div>
+              <div style={{ fontWeight: 800, color: "#0f172a", marginBottom: "4px" }}>
+                NGƯỜI MUA HÀNG
+              </div>
+              <div style={{ fontSize: "11px", color: "#64748b", fontStyle: "italic", marginBottom: "44px" }}>
+                (Ký & ghi rõ họ tên)
+              </div>
+              <div style={{ fontWeight: 800, color: "#334155" }}>
+                {lastCompletedOrder.recipientName}
+              </div>
+            </div>
+
+            <div>
+              <div style={{ fontWeight: 800, color: "#0f172a", marginBottom: "4px" }}>
+                ĐẠI DIỆN MINI SHOP
+              </div>
+              <div style={{ fontSize: "11px", color: "#64748b", fontStyle: "italic", marginBottom: "44px" }}>
+                (Ký, đóng dấu xác nhận)
+              </div>
+              <div style={{ fontWeight: 800, color: "#2e7d32" }}>
+                BAN QUẢN TRỊ MINI SHOP
+              </div>
+            </div>
+          </div>
+
+          <div
+            style={{
+              marginTop: "20px",
+              padding: "10px 14px",
+              background: "#f0fdf4",
+              border: "1px solid #bbf7d0",
+              borderRadius: "8px",
+              textAlign: "center",
+              fontSize: "11px",
+              color: "#166534",
+              lineHeight: "1.5",
+            }}
+          >
+            ✦ Cảm ơn Quý khách <strong>{lastCompletedOrder.recipientName}</strong> đã tin tưởng lựa chọn mua sắm tại Mini Shop!<br />
+            Quý khách vui lòng lưu giữ biên nhận này để kiểm tra khi nhận bưu kiện hoặc liên hệ hotline <strong>0988.123.456</strong> khi cần hỗ trợ bảo hành đổi trả trong 30 ngày.
           </div>
         </div>
       )}
