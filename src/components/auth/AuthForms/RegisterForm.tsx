@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 interface RegisterFormProps {
   onRegisterSubmit: (name: string, email: string, pass: string, confirmPass: string) => void;
+  isLoading?: boolean;
 }
 
-export const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSubmit }) => {
+export const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSubmit, isLoading = false }) => {
   const [regName, setRegName] = useState("");
   const [regEmail, setRegEmail] = useState("");
   const [regPassword, setRegPassword] = useState("");
@@ -17,6 +18,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSubmit }) 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLoading) return;
     onRegisterSubmit(regName, regEmail, regPassword, regConfirmPassword);
   };
 
@@ -33,6 +35,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSubmit }) 
           style={{ borderRadius: "12px", height: "42px" }}
           placeholder="Nhập họ và tên..."
           required
+          disabled={isLoading}
           value={regName}
           onChange={(e) => setRegName(e.target.value)}
         />
@@ -49,6 +52,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSubmit }) 
           style={{ borderRadius: "12px", height: "42px" }}
           placeholder="email@example.com"
           required
+          disabled={isLoading}
           value={regEmail}
           onChange={(e) => setRegEmail(e.target.value)}
         />
@@ -66,6 +70,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSubmit }) 
             style={{ paddingRight: "40px", borderRadius: "12px", height: "42px" }}
             placeholder="••••••••"
             required
+            disabled={isLoading}
             value={regPassword}
             onChange={(e) => setRegPassword(e.target.value)}
           />
@@ -103,6 +108,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSubmit }) 
             style={{ paddingRight: "40px", borderRadius: "12px", height: "42px" }}
             placeholder="••••••••"
             required
+            disabled={isLoading}
             value={regConfirmPassword}
             onChange={(e) => setRegConfirmPassword(e.target.value)}
           />
@@ -130,21 +136,34 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSubmit }) 
 
       <button
         type="submit"
+        disabled={isLoading}
         style={{
           width: "100%",
           height: "46px",
           borderRadius: "12px",
-          background: "var(--primary-color, #2e7d32)",
+          background: isLoading ? "#166534" : "var(--primary-color, #2e7d32)",
           color: "#ffffff",
           fontSize: "15px",
           fontWeight: 800,
           border: "none",
-          cursor: "pointer",
+          cursor: isLoading ? "not-allowed" : "pointer",
           boxShadow: "0 4px 14px rgba(46, 125, 50, 0.25)",
           marginTop: "6px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "8px",
+          opacity: isLoading ? 0.8 : 1,
         }}
       >
-        Đăng Ký Tài Khoản
+        {isLoading ? (
+          <>
+            <Loader2 className="w-5 h-5 animate-spin" />
+            <span>Đang kiểm tra & gửi mã OTP...</span>
+          </>
+        ) : (
+          "Đăng Ký Tài Khoản"
+        )}
       </button>
     </form>
   );

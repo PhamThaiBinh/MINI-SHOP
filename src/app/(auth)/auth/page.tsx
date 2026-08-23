@@ -43,6 +43,7 @@ function AuthPageContent() {
 
   // OTP Modal State
   const [showOtpModal, setShowOtpModal] = useState<boolean>(false);
+  const [isSubmittingReg, setIsSubmittingReg] = useState<boolean>(false);
   const [sentOtpToken, setSentOtpToken] = useState<string>("");
   const [regName, setRegName] = useState<string>("");
   const [regEmail, setRegEmail] = useState<string>("");
@@ -144,33 +145,94 @@ function AuthPageContent() {
     }
   };
 
-  // Register Submit & OTP Trigger
+  // Register Submit & OTP Trigger with Strict Pre-check
   const handleRegisterSubmit = async (name: string, email: string, pass: string, confirmPass: string) => {
     setAuthError("");
     setAuthSuccess("");
 
-    if (pass !== confirmPass) {
+    const cleanName = name.trim();
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPass = pass.trim();
+
+    // 1. Password check
+    if (cleanPass.length < 6) {
+      setAuthError("Mật khẩu phải có ít nhất 6 ký tự!");
+      return;
+    }
+
+    if (cleanPass !== confirmPass.trim()) {
       setAuthError("Mật khẩu và xác nhận mật khẩu không trùng khớp!");
       return;
     }
 
-    setRegName(name);
-    setRegEmail(email);
-    setRegPassword(pass);
+    // 2. Email format check
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail)) {
+      setAuthError("Định dạng địa chỉ email không hợp lệ!");
+      return;
+    }
+
+    setIsSubmittingReg(true);
+
+    // 3. PRE-CHECK IN DATABASE: Does this user/email already exist?
+    try {
+      const supabase = createClient();
+      const { data: existingUsers, error: checkErr } = await supabase
+        .from("users")
+        .select("id, email, username")
+        .eq("email", cleanEmail);
+
+      if (existingUsers && existingUsers.length > 0) {
+        setAuthError(`Email "${cleanEmail}" đã được đăng ký trên hệ thống! Vui lòng chuyển sang tab Đăng Nhập hoặc sử dụng email khác.`);
+        setIsSubmittingReg(false);
+        return;
+      }
+
+      // Check local registered users list fallback
+      if (typeof window !== "undefined") {
+        try {
+          const stored = localStorage.getItem("minishop_registered_users");
+          const list = stored ? JSON.parse(stored) : [];
+          if (list.some((u: any) => u.email?.toLowerCase() === cleanEmail)) {
+            setAuthError(`Email "${cleanEmail}" đã được đăng ký trên hệ thống! Vui lòng chuyển sang tab Đăng Nhập hoặc sử dụng email khác.`);
+            setIsSubmittingReg(false);
+            return;
+          }
+        } catch (e) {}
+      }
+    } catch (checkErr) {
+      console.warn("Pre-check user error:", checkErr);
+    }
+
+    // 4. Generate OTP & Send Email
+    setRegName(cleanName);
+    setRegEmail(cleanEmail);
+    setRegPassword(cleanPass);
 
     const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
     setSentOtpToken(generatedOtp);
 
     try {
-      await fetch("/api/send-otp", {
+      const res = await fetch("/api/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp: generatedOtp, name }),
+        body: JSON.stringify({ email: cleanEmail, otp: generatedOtp, name: cleanName }),
       });
-    } catch (e) {
-      console.warn("Error sending OTP email:", e);
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setAuthError(data.error || "Gửi mã xác thực qua email thất bại. Vui lòng kiểm tra lại địa chỉ email hoặc thử lại sau!");
+        setIsSubmittingReg(false);
+        return;
+      }
+    } catch (e: any) {
+      console.error("Error sending OTP email:", e);
+      setAuthError("Lỗi kết nối máy chủ gửi mã xác thực. Vui lòng thử lại sau!");
+      setIsSubmittingReg(false);
+      return;
     }
 
+    setIsSubmittingReg(false);
     setShowOtpModal(true);
   };
 
@@ -192,11 +254,15 @@ function AuthPageContent() {
   const handleResendOtp = async () => {
     const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
     setSentOtpToken(newOtp);
-    await fetch("/api/send-otp", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: regEmail, otp: newOtp, name: regName }),
-    });
+    try {
+      await fetch("/api/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: regEmail, otp: newOtp, name: regName }),
+      });
+    } catch (e) {
+      console.error("Error resending OTP:", e);
+    }
   };
 
   // Address CRUD
@@ -428,7 +494,7 @@ function AuthPageContent() {
               {activeTab === "login" ? (
                 <LoginForm onLoginSubmit={handleLoginSubmit} />
               ) : (
-                <RegisterForm onRegisterSubmit={handleRegisterSubmit} />
+                <RegisterForm onRegisterSubmit={handleRegisterSubmit} isLoading={isSubmittingReg} />
               )}
             </div>
           </div>

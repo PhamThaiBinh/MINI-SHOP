@@ -9,6 +9,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "Thiếu email hoặc mã OTP" }, { status: 400 });
     }
 
+    const targetEmail = String(email).trim().toLowerCase();
     const smtpUser = process.env.SMTP_USER || "binhpham.1512202@gmail.com";
     const smtpPass = process.env.SMTP_PASS || "xdpjjxuaajocvplc";
 
@@ -34,7 +35,7 @@ export async function POST(request: Request) {
         </h2>
         
         <p style="color: #475569; font-size: 14.5px; line-height: 1.6; margin-bottom: 20px;">
-          Xin chào <strong>${name || email}</strong>,<br>
+          Xin chào <strong>${name || targetEmail}</strong>,<br>
           Cảm ơn bạn đã lựa chọn mua sắm tại <strong>MINI SHOP</strong>. Dưới đây là mã xác thực 6 chữ số để hoàn tất quá trình đăng ký tài khoản của bạn:
         </p>
         
@@ -59,14 +60,14 @@ export async function POST(request: Request) {
     // Dispatch real email via Gmail SMTP
     const info = await transporter.sendMail({
       from: `"MINI SHOP" <${smtpUser}>`,
-      to: email,
+      to: targetEmail,
       subject: `[MINI SHOP] Mã Xác Thực Đăng Ký Tài Khoản: ${otp}`,
       html: htmlContent,
     });
 
-    console.log(`[MINI SHOP OTP] Email dispatched successfully to ${email} (MessageId: ${info.messageId})`);
+    console.log(`[MINI SHOP OTP] Email dispatched successfully to ${targetEmail} (MessageId: ${info.messageId})`);
 
-    return NextResponse.json({ success: true, message: `Mã OTP đã được gửi thành công tới ${email}` });
+    return NextResponse.json({ success: true, message: `Mã OTP đã được gửi thành công tới ${targetEmail}` });
   } catch (error: any) {
     console.error("API send-otp error:", error);
     return NextResponse.json({ success: false, error: error?.message || "Lỗi gửi mail" }, { status: 500 });
