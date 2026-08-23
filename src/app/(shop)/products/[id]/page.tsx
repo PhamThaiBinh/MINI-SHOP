@@ -167,6 +167,16 @@ function ProductDetailPageContent({
     return () => window.removeEventListener("userAddressUpdated", handleAddressUpdate);
   }, [user]);
 
+  // Clamp quantity if product stock is lower than current quantity
+  useEffect(() => {
+    if (product) {
+      const st = typeof product.stock === "number" ? Math.max(0, product.stock) : 50;
+      if (st > 0 && quantity > st) {
+        setQuantity(st);
+      }
+    }
+  }, [product, quantity]);
+
   // Variant Controls State
   const [selectedColor, setSelectedColor] = useState<"soi" | "occho" | "trangkem">("soi");
   const [selectedSize, setSelectedSize] = useState<"S" | "M" | "L">("M");
@@ -329,12 +339,6 @@ function ProductDetailPageContent({
 
   const productStock = typeof currentProduct.stock === "number" ? Math.max(0, currentProduct.stock) : 50;
   const isOutOfStock = productStock === 0 || currentProduct.status === "Out of stock";
-
-  useEffect(() => {
-    if (productStock > 0 && quantity > productStock) {
-      setQuantity(productStock);
-    }
-  }, [productStock]);
 
   const handleDecreaseQuantity = () => {
     setQuantity((q) => Math.max(1, q - 1));
