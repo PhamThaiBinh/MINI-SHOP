@@ -6,6 +6,7 @@ import { Product } from "@/types/product";
 import { useAuth } from "@/context/AuthContext";
 import { syncUserCartToSupabase, fetchUserCartFromSupabase } from "@/lib/supabaseUserFeatures";
 import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
+import { formatVND } from "@/lib/utils";
 
 interface CartContextType {
   cart: CartItem[];
@@ -59,10 +60,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const saved = localStorage.getItem(CART_STORAGE_KEY);
         if (saved) {
           const parsedCart: CartItem[] = JSON.parse(saved);
-          const validCart = parsedCart.filter((item) =>
-            allProducts.some((p) => p.id === item.product.id)
-          );
-          setCart(validCart);
+          if (Array.isArray(parsedCart)) {
+            setCart(parsedCart);
+          }
         }
       } catch (e) {
         console.error("Error reading cart from localStorage:", e);
@@ -114,28 +114,45 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     let isExceeded = false;
+    let comboResetToast: string | null = null;
+
     setCart((prev) => {
       const existingIndex = prev.findIndex((item) => item.product.id === product.id);
       if (existingIndex > -1) {
-        const currentQty = prev[existingIndex].quantity;
-        if (currentQty + quantity > maxStock) {
-          isExceeded = true;
-          return prev.map((item, idx) =>
-            idx === existingIndex ? { ...item, quantity: maxStock } : item
-          );
+        const currentItem = prev[existingIndex];
+        const newQty = currentItem.quantity + quantity;
+        const targetQty = Math.min(newQty, maxStock);
+        if (newQty > maxStock) isExceeded = true;
+
+        let updatedProduct = { ...currentItem.product };
+
+        // NẾU TĂNG SỐ LƯỢNG SẢN PHẨM COMBO LÊN > 1:
+        // TỰ ĐỘNG QUAY TRỞ VỀ GIÁ GỐC MẶC ĐỊNH CỦA SẢN PHẨM
+        if (targetQty > 1 && (currentItem.product.isCombo || currentItem.product.originalPrice)) {
+          const defaultPrice = currentItem.product.originalPrice || currentItem.product.price;
+          const defaultName = currentItem.product.originalName || currentItem.product.name.replace(/\s*\(Ưu Đãi Combo\)/g, "");
+          updatedProduct = {
+            ...updatedProduct,
+            price: defaultPrice,
+            name: defaultName,
+            isCombo: false,
+          };
+          comboResetToast = `Sản phẩm "${defaultName}" đã quay trở về giá mặc định (${formatVND(defaultPrice)}) khi tăng số lượng!`;
         }
+
         return prev.map((item, idx) =>
-          idx === existingIndex
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
+          idx === existingIndex ? { product: updatedProduct, quantity: targetQty } : item
         );
       }
+
       const initialQty = Math.min(quantity, maxStock);
       if (quantity > maxStock) isExceeded = true;
       return [...prev, { product, quantity: initialQty }];
     });
 
-    if (isExceeded) {
+    if (comboResetToast) {
+      showToast(comboResetToast);
+    } else if (isExceeded) {
       showToast(`Kho chỉ còn tối đa ${maxStock} món cho sản phẩm "${product.name}"!`);
     }
   };
@@ -149,19 +166,43 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       removeFromCart(productId);
       return;
     }
+
+    let comboResetToast: string | null = null;
+
     setCart((prev) =>
       prev.map((item) => {
         if (item.product.id === productId) {
           const maxStock = item.product.stock !== undefined ? item.product.stock : 99;
+          const targetQty = Math.min(quantity, maxStock);
+          let updatedProduct = { ...item.product };
+
+          // NẾU TĂNG SỐ LƯỢNG (> 1) VÀ SẢN PHẨM NÀY ĐANG ĐƯỢC ÁP DỤNG GIÁ COMBO:
+          // SẼ QUAY TRỞ VỀ GIÁ GỐC MẶC ĐỊNH CỦA SẢN PHẨM!
+          if (targetQty > 1 && (item.product.isCombo || item.product.originalPrice)) {
+            const defaultPrice = item.product.originalPrice || item.product.price;
+            const defaultName = item.product.originalName || item.product.name.replace(/\s*\(Ưu Đãi Combo\)/g, "");
+            updatedProduct = {
+              ...updatedProduct,
+              price: defaultPrice,
+              name: defaultName,
+              isCombo: false,
+            };
+            comboResetToast = `Sản phẩm "${defaultName}" đã quay trở về giá mặc định (${formatVND(defaultPrice)}) khi tăng số lượng!`;
+          }
+
           if (quantity > maxStock) {
             showToast(`Kho chỉ còn tối đa ${maxStock} món!`);
-            return { ...item, quantity: maxStock };
           }
-          return { ...item, quantity };
+
+          return { product: updatedProduct, quantity: targetQty };
         }
         return item;
       })
     );
+
+    if (comboResetToast) {
+      showToast(comboResetToast);
+    }
   };
 
   const clearCart = () => setCart([]);

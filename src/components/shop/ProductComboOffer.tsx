@@ -43,28 +43,48 @@ export const ProductComboOffer: React.FC<ProductComboOfferProps> = ({ currentPro
     addToCart({
       ...currentProduct,
       price: p0Price,
+      originalPrice: currentProduct.price,
+      originalName: currentProduct.name,
+      comboPrice: p0Price,
+      isCombo: true,
       name: `${currentProduct.name} (Ưu Đãi Combo)`,
-    });
+    }, 1);
 
     // Add combo item 1
     addToCart({
       id: comboItems[0].id,
       name: `${comboItems[0].name} (Ưu Đãi Combo)`,
       price: p1Price,
+      originalPrice: comboItems[0].price,
+      originalName: comboItems[0].name,
+      comboPrice: p1Price,
+      isCombo: true,
       image: comboItems[0].image,
       category: "C0005",
       categoryName: "Trang trí",
-    } as Product);
+      description: "Đèn trang trí thủ công mây tre mộc mạc phong cách Scandinavian",
+      fullDesc: "",
+      specs: {},
+      status: "In stock",
+    } as Product, 1);
 
     // Add combo item 2
     addToCart({
       id: comboItems[1].id,
       name: `${comboItems[1].name} (Ưu Đãi Combo)`,
       price: p2Price,
+      originalPrice: comboItems[1].price,
+      originalName: comboItems[1].name,
+      comboPrice: p2Price,
+      isCombo: true,
       image: comboItems[1].image,
       category: "C0005",
       categoryName: "Trang trí",
-    } as Product);
+      description: "Chậu cây xanh trang trí để bàn làm việc phong thủy tài lộc",
+      fullDesc: "",
+      specs: {},
+      status: "In stock",
+    } as Product, 1);
 
     setAdded(true);
     setTimeout(() => setAdded(false), 3000);

@@ -9,6 +9,10 @@ export interface Product {
   categoryName: string;
   price: number;
   oldPrice?: number;
+  originalPrice?: number;
+  originalName?: string;
+  isCombo?: boolean;
+  comboPrice?: number;
   stock?: number;
   status: string;
   badge?: string | null;
