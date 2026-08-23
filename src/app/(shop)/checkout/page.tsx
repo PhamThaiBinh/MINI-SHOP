@@ -296,6 +296,12 @@ export default function CheckoutPage() {
       total: grandTotal,
     };
 
+    const userIdentifier = user?.username
+      ? (user.username.startsWith("@") ? user.username : `@${user.username}`)
+      : user?.email
+      ? `@${user.email.split("@")[0]}`
+      : null;
+
     const unifiedRecord: UnifiedOrder = {
       id: finalCode,
       date: fullDateStr,
@@ -319,7 +325,7 @@ export default function CheckoutPage() {
       subtotal: subtotal,
       discount: discountAmount,
       total: grandTotal,
-      username: user?.username || "binh",
+      username: userIdentifier || undefined,
     };
 
     addPlacedOrder(placedOrderRecord);

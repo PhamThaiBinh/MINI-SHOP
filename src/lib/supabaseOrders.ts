@@ -68,7 +68,7 @@ export const fetchUserOrdersFromSupabase = async (
 ): Promise<UnifiedOrder[]> => {
   const cleanPhone = phone ? phone.trim().replace(/\D/g, "") : "";
   const cleanEmail = email ? email.trim().toLowerCase() : "";
-  const cleanUsername = username ? username.trim().toLowerCase() : "";
+  const cleanUsername = username ? username.trim().toLowerCase().replace(/^@/, "") : "";
 
   const { parseOrderDate } = await import("@/utils/orderStorage");
 
@@ -76,7 +76,8 @@ export const fetchUserOrdersFromSupabase = async (
     const supabase = createClient();
     const { data: orderRows, error } = await supabase
       .from("orders")
-      .select("*");
+      .select("*")
+      .order("created_at", { ascending: false });
 
     if (error) {
       console.warn("Supabase fetch user orders error:", error.message);
@@ -90,10 +91,12 @@ export const fetchUserOrdersFromSupabase = async (
     const matchedSupabaseOrders: UnifiedOrder[] = orderRows
       .filter((o: any) => {
         const oPhone = String(o.recipient_phone || "").replace(/\D/g, "");
-        const oUser = String(o.username || "").toLowerCase();
-        const matchPhone = cleanPhone && (oPhone.includes(cleanPhone) || cleanPhone.includes(oPhone));
-        const matchUser = cleanUsername && oUser === cleanUsername;
-        return matchPhone || matchUser || (!cleanPhone && !cleanUsername);
+        const oUser = String(o.username || "").toLowerCase().replace(/^@/, "");
+
+        const matchPhone = Boolean(cleanPhone && oPhone && (oPhone.includes(cleanPhone) || cleanPhone.includes(oPhone)));
+        const matchUser = Boolean(cleanUsername && oUser && (oUser === cleanUsername || oUser.includes(cleanUsername)));
+
+        return matchPhone || matchUser;
       })
       .map((o: any) => ({
         id: String(o.id),
