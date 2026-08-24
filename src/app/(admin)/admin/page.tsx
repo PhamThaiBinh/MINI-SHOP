@@ -1381,16 +1381,19 @@ export default function AdminDashboard() {
                             display: "flex",
                             alignItems: "flex-end",
                             justifyContent: "space-around",
-                            height: "160px",
+                            height: "170px",
                             marginLeft: "48px",
                             zIndex: 1,
-                            paddingBottom: "2px",
+                            paddingBottom: "1px",
                           }}
                         >
-                          {categoryStats.map((cat, idx) => {
+                          {categoryStats.map((cat) => {
                             const isHovered = hoveredCategoryCode === cat.code;
-                            const heightPct = cat.revenue > 0 ? Math.max(10, Math.min(100, Math.round((cat.revenue / maxCatRevenue) * 100))) : 0;
                             const hasRevenue = cat.revenue > 0;
+                            // Calculate exact pixel height (max 135px for chart area)
+                            const barHeightPx = hasRevenue
+                              ? Math.max(14, Math.round((cat.revenue / maxCatRevenue) * 135))
+                              : 4;
 
                             return (
                               <div
@@ -1401,61 +1404,51 @@ export default function AdminDashboard() {
                                   display: "flex",
                                   flexDirection: "column",
                                   alignItems: "center",
-                                  width: `${100 / categoryStats.length}%`,
-                                  height: "100%",
                                   justifyContent: "flex-end",
+                                  width: `${100 / categoryStats.length}%`,
                                   cursor: "pointer",
                                   position: "relative",
                                   padding: "0 4px",
                                 }}
                               >
-                                {/* Value Label above Bar */}
+                                {/* Value Label sitting right on top of the actual bar */}
                                 <div
                                   style={{
                                     fontSize: isHovered ? "11px" : "10px",
                                     fontWeight: 800,
                                     color: isHovered ? "#0f172a" : hasRevenue ? "#15803d" : "#94a3b8",
-                                    marginBottom: "6px",
+                                    marginBottom: "4px",
                                     whiteSpace: "nowrap",
-                                    transform: isHovered ? "scale(1.15) translateY(-2px)" : "none",
-                                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                                    transform: isHovered ? "scale(1.1) translateY(-2px)" : "none",
+                                    transition: "all 0.2s ease",
                                   }}
                                 >
-                                  {hasRevenue ? (cat.revenue >= 1000000 ? `${(cat.revenue / 1000000).toFixed(1)}M` : `${Math.round(cat.revenue / 1000)}K`) : "0đ"}
+                                  {hasRevenue
+                                    ? cat.revenue >= 1000000
+                                      ? `${(cat.revenue / 1000000).toFixed(1)}M`
+                                      : `${Math.round(cat.revenue / 1000)}K`
+                                    : "0đ"}
                                 </div>
 
-                                {/* Track Background + Column Bar */}
+                                {/* Dynamic Height Column Bar */}
                                 <div
                                   style={{
-                                    width: isHovered ? "34px" : "28px",
-                                    height: "100%",
-                                    maxHeight: "128px",
-                                    background: isHovered ? "#f1f5f9" : "rgba(241, 245, 249, 0.4)",
-                                    borderRadius: "8px 8px 0 0",
-                                    display: "flex",
-                                    alignItems: "flex-end",
-                                    position: "relative",
-                                    transition: "all 0.25s ease",
-                                    overflow: "hidden",
+                                    width: isHovered ? "36px" : "28px",
+                                    height: `${barHeightPx}px`,
+                                    background: hasRevenue
+                                      ? isHovered
+                                        ? "linear-gradient(180deg, #10b981 0%, #047857 100%)"
+                                        : "linear-gradient(180deg, #059669 0%, #10b981 100%)"
+                                      : isHovered
+                                      ? "#cbd5e1"
+                                      : "#e2e8f0",
+                                    borderRadius: hasRevenue ? "6px 6px 0 0" : "3px 3px 0 0",
+                                    boxShadow: isHovered && hasRevenue
+                                      ? "0 6px 18px rgba(16, 185, 129, 0.4)"
+                                      : "none",
+                                    transition: "all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
                                   }}
-                                >
-                                  <div
-                                    style={{
-                                      width: "100%",
-                                      height: `${heightPct}%`,
-                                      background: hasRevenue
-                                        ? isHovered
-                                          ? "linear-gradient(180deg, #10b981 0%, #047857 100%)"
-                                          : "linear-gradient(180deg, #059669 0%, #10b981 100%)"
-                                        : "transparent",
-                                      borderRadius: "6px 6px 0 0",
-                                      boxShadow: isHovered && hasRevenue
-                                        ? "0 6px 16px rgba(16, 185, 129, 0.4)"
-                                        : "none",
-                                      transition: "all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
-                                    }}
-                                  />
-                                </div>
+                                />
                               </div>
                             );
                           })}
