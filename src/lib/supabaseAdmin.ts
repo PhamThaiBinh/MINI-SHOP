@@ -4,6 +4,8 @@ import { PRODUCTS_DATA } from "@/data/products";
 import { SystemVoucher, INITIAL_SYSTEM_VOUCHERS } from "@/utils/voucherStorage";
 import { UnifiedOrder } from "@/utils/orderStorage";
 
+export type { UnifiedOrder };
+
 // ==================== 1. VOUCHERS CRUD ====================
 export const fetchAdminVouchers = async (): Promise<SystemVoucher[]> => {
   try {

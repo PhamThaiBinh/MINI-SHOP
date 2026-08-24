@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 import { CustomerOrder } from "../types";
-import { Package, Eye, Star, AlertTriangle, RotateCcw } from "lucide-react";
-import { fixImagePath } from "@/lib/utils";
+import { Package, Eye, Star, AlertTriangle, RotateCcw, Calendar, TrendingUp, Coins, ShoppingBag } from "lucide-react";
+import { fixImagePath, formatVND } from "@/lib/utils";
 
 interface OrderHistoryTabProps {
   orders: CustomerOrder[];
@@ -12,6 +12,30 @@ interface OrderHistoryTabProps {
   onOpenCancelModal: (order: CustomerOrder) => void;
   onOpenReturnModal: (order: CustomerOrder) => void;
 }
+
+// Helper: Extract YYYY-MM from various date formats
+const parseOrderMonthYear = (dateStr: string): string => {
+  if (!dateStr) return "";
+  if (dateStr.includes("-")) {
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) {
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      return `${yyyy}-${mm}`;
+    }
+  }
+  const parts = dateStr.trim().split(" ");
+  const datePart = parts.find((p) => p.includes("/")) || parts[0];
+  if (datePart && datePart.includes("/")) {
+    const sub = datePart.split("/");
+    if (sub.length === 3) {
+      const mm = sub[1].padStart(2, "0");
+      const yyyy = sub[2];
+      return `${yyyy}-${mm}`;
+    }
+  }
+  return "";
+};
 
 const isEligibleForReview = (dateStr: string): boolean => {
   if (!dateStr) return true;
@@ -44,7 +68,37 @@ export const OrderHistoryTab: React.FC<OrderHistoryTabProps> = ({
 }) => {
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
+  // Current Month default
+  const now = new Date();
+  const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const [selectedMonth, setSelectedMonth] = useState<string>("all");
+
+  // Month list for filter dropdown
+  const monthOptions = Array.from({ length: 12 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const label = `Tháng ${d.getMonth() + 1}/${d.getFullYear()}`;
+    return { key, label };
+  });
+
+  // Calculate Monthly Spending Statistics
+  const validOrders = orders.filter((o) => o.status !== "cancelled");
+  const monthOrders = selectedMonth === "all"
+    ? validOrders
+    : validOrders.filter((o) => parseOrderMonthYear(o.date) === selectedMonth);
+
+  const monthlyTotalSpent = monthOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+  const monthlyTotalDiscount = monthOrders.reduce((sum, o) => sum + (o.discount || 0), 0);
+  const completedMonthOrders = monthOrders.filter((o) => o.status === "completed").length;
+
   const filteredOrders = orders.filter((o) => {
+    // 1. Month filter
+    if (selectedMonth !== "all") {
+      const orderMonth = parseOrderMonthYear(o.date);
+      if (orderMonth !== selectedMonth) return false;
+    }
+
+    // 2. Status filter
     if (filterStatus === "all") return true;
     if (filterStatus === "returned") {
       return (
@@ -95,9 +149,108 @@ export const OrderHistoryTab: React.FC<OrderHistoryTabProps> = ({
 
   return (
     <div>
+      {/* MONTHLY SPENDING ANALYTICS CARD */}
+      <div
+        style={{
+          background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
+          border: "1.5px solid #bbf7d0",
+          borderRadius: "18px",
+          padding: "20px",
+          marginBottom: "24px",
+          boxShadow: "0 4px 16px rgba(22, 101, 52, 0.08)",
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px", marginBottom: "16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <div style={{ width: "38px", height: "38px", borderRadius: "12px", background: "var(--primary-color, #2e7d32)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <TrendingUp className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 style={{ fontSize: "16px", fontWeight: 900, color: "#14532d", margin: 0 }}>
+                Thống Kê Chi Tiêu {selectedMonth === "all" ? "Tất Cả Thời Gian" : `Tháng ${selectedMonth.split("-")[1]}/${selectedMonth.split("-")[0]}`}
+              </h4>
+              <p style={{ fontSize: "12px", color: "#166534", margin: "2px 0 0", fontWeight: 700 }}>
+                Báo cáo tổng tiền mua sắm và ưu đãi đã nhận
+              </p>
+            </div>
+          </div>
+
+          {/* Month Selector Dropdown */}
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <Calendar className="w-4 h-4 text-emerald-800" />
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              style={{
+                padding: "8px 14px",
+                fontSize: "13px",
+                fontWeight: 800,
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                borderRadius: "10px",
+                border: "1.5px solid #86efac",
+                background: "#ffffff",
+                color: "#166534",
+                outline: "none",
+                cursor: "pointer",
+                boxShadow: "0 2px 6px rgba(22, 101, 52, 0.06)",
+              }}
+            >
+              <option value="all">📅 Tất cả các tháng</option>
+              {monthOptions.map((m) => (
+                <option key={m.key} value={m.key}>
+                  📅 {m.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* 3 Metric Mini Cards */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px" }}>
+          {/* Total Spent */}
+          <div style={{ background: "#ffffff", padding: "14px 16px", borderRadius: "14px", border: "1px solid #bbf7d0" }}>
+            <div style={{ fontSize: "11.5px", fontWeight: 800, color: "#166534", textTransform: "uppercase", letterSpacing: "0.03em" }}>
+              Tổng Chi Tiêu
+            </div>
+            <div style={{ fontSize: "20px", fontWeight: 900, color: "#14532d", marginTop: "4px" }}>
+              {formatVND(monthlyTotalSpent)}
+            </div>
+            <div style={{ fontSize: "11.5px", color: "#64748b", fontWeight: 600, marginTop: "2px" }}>
+              {monthOrders.length} đơn phát sinh
+            </div>
+          </div>
+
+          {/* Completed Orders */}
+          <div style={{ background: "#ffffff", padding: "14px 16px", borderRadius: "14px", border: "1px solid #bbf7d0" }}>
+            <div style={{ fontSize: "11.5px", fontWeight: 800, color: "#0369a1", textTransform: "uppercase", letterSpacing: "0.03em" }}>
+              Đã Giao Thành Công
+            </div>
+            <div style={{ fontSize: "20px", fontWeight: 900, color: "#0c4a6e", marginTop: "4px" }}>
+              {completedMonthOrders} đơn
+            </div>
+            <div style={{ fontSize: "11.5px", color: "#64748b", fontWeight: 600, marginTop: "2px" }}>
+              Giao tận tay thành công
+            </div>
+          </div>
+
+          {/* Total Savings */}
+          <div style={{ background: "#ffffff", padding: "14px 16px", borderRadius: "14px", border: "1px solid #bbf7d0" }}>
+            <div style={{ fontSize: "11.5px", fontWeight: 800, color: "#b45309", textTransform: "uppercase", letterSpacing: "0.03em" }}>
+              Tiết Kiệm & Voucher
+            </div>
+            <div style={{ fontSize: "20px", fontWeight: 900, color: "#78350f", marginTop: "4px" }}>
+              {formatVND(monthlyTotalDiscount)}
+            </div>
+            <div style={{ fontSize: "11.5px", color: "#64748b", fontWeight: 600, marginTop: "2px" }}>
+              Ưu đãi đã áp dụng
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
         <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", margin: 0 }}>
-          Đơn Hàng Của Tôi ({orders.length})
+          Đơn Hàng Của Tôi ({filteredOrders.length})
         </h3>
 
         {/* Filter Pills */}
