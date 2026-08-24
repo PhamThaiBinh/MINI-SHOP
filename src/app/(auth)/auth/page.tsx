@@ -37,7 +37,10 @@ function AuthPageContent() {
   const { user, loading, signIn, signUp, loginUser, logout, redeemGift, addPointsAndHistory, addVoucherToUser } = useAuth();
 
   // Auth Guest Mode Tabs
-  const [activeTab, setActiveTab] = useState<"login" | "register">("login");
+  const currentTabParam = searchParams.get("tab") || searchParams.get("mode") || searchParams.get("action");
+  const [activeTab, setActiveTab] = useState<"login" | "register">(
+    currentTabParam === "register" || currentTabParam === "signup" || currentTabParam === "dang-ky" ? "register" : "login"
+  );
   const [authError, setAuthError] = useState<string>("");
   const [authSuccess, setAuthSuccess] = useState<string>("");
 
@@ -67,10 +70,10 @@ function AuthPageContent() {
   const [wardsList, setWardsList] = useState<string[]>([]);
 
   useEffect(() => {
-    const tabParam = searchParams.get("tab");
-    if (tabParam === "register") {
+    const tabParam = searchParams.get("tab") || searchParams.get("mode") || searchParams.get("action");
+    if (tabParam === "register" || tabParam === "signup" || tabParam === "dang-ky") {
       setActiveTab("register");
-    } else {
+    } else if (tabParam === "login" || tabParam === "signin" || tabParam === "dang-nhap") {
       setActiveTab("login");
     }
   }, [searchParams]);
