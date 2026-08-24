@@ -7,6 +7,7 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { fetchAdminUsers, saveAdminUser, toggleAdminUserStatus, AdminUserItem as UserItem } from "@/lib/supabaseAdmin";
 import { validateVNPhoneNumber } from "@/lib/utils";
+import { getMembershipTierInfo } from "@/lib/userUtils";
 import { Lock, Unlock, X, Users, UserCheck, ShieldCheck, UserX, Search, Plus, Filter, CheckCircle2 } from "lucide-react";
 
 export default function AdminUsersPage() {
@@ -490,7 +491,9 @@ export default function AdminUsersPage() {
                               </div>
                               <div>
                                 <div style={{ fontWeight: 800, color: "#0f172a", fontSize: "13.5px" }}>{u.name}</div>
-                                <div style={{ fontSize: "11px", color: "#64748b" }}>@{u.username}</div>
+                                <div style={{ fontSize: "11px", color: "#64748b" }}>
+                                  {u.username ? (u.username.startsWith("@") ? u.username : `@${u.username}`) : "@user"}
+                                </div>
                               </div>
                             </div>
                           </td>
@@ -506,8 +509,15 @@ export default function AdminUsersPage() {
                                 <span style={{ padding: "4px 10px", background: "#e0f2fe", border: "1px solid #bae6fd", color: "#0369a1", borderRadius: "12px", fontSize: "11px", fontWeight: 800, display: "inline-flex", alignItems: "center", gap: "4px" }}>
                                   <i className="fa-solid fa-user"></i> Khách hàng
                                 </span>
-                                <span style={{ fontSize: "10px", fontWeight: 800, color: "#64748b", display: "inline-flex", alignItems: "center", gap: "3px" }}>
-                                  VIP: {u.name.toLowerCase().includes("binh") ? <><i className="fa-solid fa-gem text-blue-500"></i> Kim Cương</> : <><i className="fa-solid fa-award text-slate-400"></i> Bạc</>}
+                                <span style={{ fontSize: "10.5px", fontWeight: 800, color: "#64748b", display: "inline-flex", alignItems: "center", gap: "3px" }}>
+                                  {(() => {
+                                    const tier = getMembershipTierInfo((u as any).totalSpent || 0);
+                                    if (tier.tierKey === "diamond") return <><i className="fa-solid fa-gem text-blue-500"></i> VIP: Kim Cương</>;
+                                    if (tier.tierKey === "gold") return <><i className="fa-solid fa-crown text-amber-500"></i> VIP: Vàng</>;
+                                    if (tier.tierKey === "silver") return <><i className="fa-solid fa-award text-slate-400"></i> VIP: Bạc</>;
+                                    if (tier.tierKey === "bronze") return <><i className="fa-solid fa-shield text-amber-700"></i> VIP: Đồng</>;
+                                    return <>Thành viên</>;
+                                  })()}
                                 </span>
                               </div>
                             )}

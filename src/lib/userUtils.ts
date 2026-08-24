@@ -113,7 +113,7 @@ export function getMembershipTierInfo(totalSpent: number = 0): MembershipTierInf
   }
   return {
     tierKey: "new",
-    name: "Thành viên Mới",
+    name: "Thành viên",
     badgeBg: "#f1f5f9",
     badgeBorder: "#e2e8f0",
     badgeColor: "#64748b",

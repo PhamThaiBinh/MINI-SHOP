@@ -474,11 +474,11 @@ export const RewardsPointsTab: React.FC<RewardsPointsTabProps> = ({
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "14px" }}>
-            {/* Tier 1: Thành viên Mới */}
+            {/* Tier 1: Thành viên */}
             <div style={{ border: "1px solid #e2e8f0", borderRadius: "16px", padding: "18px", background: "#ffffff", display: "flex", flexDirection: "column", gap: "8px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span style={{ padding: "4px 10px", borderRadius: "999px", background: "#f1f5f9", color: "#64748b", fontSize: "12px", fontWeight: 800 }}>
-                  Thành viên Mới
+                  Thành viên
                 </span>
                 <span style={{ fontSize: "13px", fontWeight: 800, color: "#0f172a" }}>Dưới 2.000.000đ</span>
               </div>
