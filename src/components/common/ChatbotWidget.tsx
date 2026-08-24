@@ -28,6 +28,9 @@ import {
 import { useCart } from "@/context/CartContext";
 import { processUserQueryAsync, ChatMessage, VOUCHERS_DATA } from "@/lib/chatbotKnowledge";
 import { PRODUCTS_DATA } from "@/data/products";
+import { Product } from "@/types/product";
+import { getCurrentVnTimeInfo, getSlotProducts, detectRequestedSlot } from "@/lib/flashSaleHelper";
+
 import { fixImagePath } from "@/lib/utils";
 import {
   getLocalMessages,
@@ -128,28 +131,50 @@ export const ChatbotWidget: React.FC = () => {
     const syncWithSupabase = async () => {
       const liveMsgs = await fetchSupabaseMessages(activeSessionId);
       if (liveMsgs.length > 0) {
-        const formattedLive: ChatMessage[] = liveMsgs.map((lm) => {
-          const isBot = lm.sender_type === "bot";
-          const matchedProducts = isBot
-            ? PRODUCTS_DATA.filter((p) => lm.message.toLowerCase().includes(p.name.toLowerCase())).slice(0, 3)
-            : [];
-
-          const matchedVouchers =
-            isBot && (lm.message.toLowerCase().includes("ma giam gia") || lm.message.toLowerCase().includes("voucher"))
-              ? VOUCHERS_DATA
-              : undefined;
-
-          return {
-            id: lm.id,
-            sender: lm.sender_type === "customer" ? "user" : "bot",
-            text: lm.message,
-            timestamp: lm.created_at,
-            products: matchedProducts.length > 0 ? matchedProducts : undefined,
-            vouchers: matchedVouchers,
-          };
-        });
-
         setMessages((prev) => {
+          const prevMap = new Map(prev.map((m) => [m.id, m]));
+
+          const formattedLive: ChatMessage[] = liveMsgs.map((lm) => {
+            const existing = prevMap.get(lm.id);
+            // CRUCIAL: If this message was already locally generated with its accurate products, Flash Sale prices, and quick replies, keep it!
+            if (existing && existing.products && existing.products.length > 0) {
+              return existing;
+            }
+
+            const isBot = lm.sender_type === "bot";
+            const isFlashSale = lm.message.includes("FLASH SALE") || lm.message.includes("Giá Flash Sale");
+
+            let matchedProducts: Product[] = [];
+            if (isBot && isFlashSale) {
+              const { currentSlotKey, dateKey } = getCurrentVnTimeInfo();
+              const slot = detectRequestedSlot(lm.message) || currentSlotKey;
+              const slotItems = getSlotProducts(PRODUCTS_DATA, slot, dateKey);
+              matchedProducts = slotItems.slice(0, 4).map((item) => ({
+                ...item.product,
+                price: item.flashPrice,
+                oldPrice: item.originalPrice,
+                badge: `-${item.discountPercent}% SALE`,
+              }));
+            } else if (isBot) {
+              matchedProducts = PRODUCTS_DATA.filter((p) => lm.message.toLowerCase().includes(p.name.toLowerCase())).slice(0, 3);
+            }
+
+            const matchedVouchers =
+              isBot && (lm.message.toLowerCase().includes("ma giam gia") || lm.message.toLowerCase().includes("voucher"))
+                ? VOUCHERS_DATA
+                : undefined;
+
+            return {
+              id: lm.id,
+              sender: lm.sender_type === "customer" ? "user" : "bot",
+              text: lm.message,
+              timestamp: lm.created_at,
+              products: matchedProducts.length > 0 ? matchedProducts : undefined,
+              vouchers: matchedVouchers,
+              quickReplies: existing?.quickReplies,
+            };
+          });
+
           const prevIds = new Set(prev.map((m) => m.id));
           const hasChanges =
             formattedLive.length !== prev.length || formattedLive.some((m) => !prevIds.has(m.id));
@@ -161,6 +186,7 @@ export const ChatbotWidget: React.FC = () => {
         });
       }
     };
+
 
     syncWithSupabase();
     const interval = setInterval(syncWithSupabase, 800);

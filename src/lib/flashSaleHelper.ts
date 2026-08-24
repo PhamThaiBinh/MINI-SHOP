@@ -170,6 +170,11 @@ export function getSlotProducts(
 
 /**
  * Parses user query to detect if they requested a specific Flash Sale slot
+ * Automatically maps:
+ * - 10h, 10:00, 11h, 12h, 14h -> slot2 (09:00 - 15:00)
+ * - 15h, 16h, 18h, 20h -> slot3 (15:00 - 21:00)
+ * - 21h, 22h, 23h -> slot4 (21:00 - 24:00)
+ * - 0h, 7h, 8h -> slot1 (00:00 - 09:00)
  */
 export function detectRequestedSlot(query: string): "slot1" | "slot2" | "slot3" | "slot4" | null {
   const norm = query
@@ -178,35 +183,32 @@ export function detectRequestedSlot(query: string): "slot1" | "slot2" | "slot3" 
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/đ/g, "d");
 
-  // Check Slot 4: 21:00 - 24:00
-  if (
-    /\b(21:00|21h|21 gio|9h toi|khung 21|khung 4|buoi toi|dem muon|toi|khuya)\b/.test(norm)
-  ) {
-    return "slot4";
+  // 1. Extract explicit hour number e.g. "10h", "10 giờ", "10:00", "14h30", "18h", "21h"
+  const hourMatch = norm.match(/\b(\d{1,2})\s*(?:h|gio|:\d{2})/i);
+  if (hourMatch) {
+    const hour = parseInt(hourMatch[1], 10);
+    if (!isNaN(hour)) {
+      if (hour >= 0 && hour < 9) return "slot1";
+      if (hour >= 9 && hour < 15) return "slot2";
+      if (hour >= 15 && hour < 21) return "slot3";
+      if (hour >= 21 && hour <= 24) return "slot4";
+    }
   }
 
-  // Check Slot 3: 15:00 - 21:00
-  if (
-    /\b(15:00|15h|15 gio|3h chieu|khung 15|khung 3|buoi chieu|tan tam|chieu)\b/.test(norm)
-  ) {
-    return "slot3";
-  }
+  // 2. Check explicit slot numbers: "khung 1", "khung 2", "khung 3", "khung 4"
+  if (/\b(khung 1|slot 1|slot1)\b/.test(norm)) return "slot1";
+  if (/\b(khung 2|slot 2|slot2)\b/.test(norm)) return "slot2";
+  if (/\b(khung 3|slot 3|slot3)\b/.test(norm)) return "slot3";
+  if (/\b(khung 4|slot 4|slot4)\b/.test(norm)) return "slot4";
 
-  // Check Slot 2: 09:00 - 15:00
-  if (
-    /\b(09:00|9:00|9h|9 gio|khung 9|khung 2|buoi trua|trua)\b/.test(norm)
-  ) {
-    return "slot2";
-  }
-
-  // Check Slot 1: 00:00 - 09:00
-  if (
-    /\b(00:00|0h|0 gio|khung 0|khung 1|dem khuya|sang som|sang)\b/.test(norm)
-  ) {
-    return "slot1";
-  }
+  // 3. Named periods
+  if (/\b(buoi toi|dem muon|toi|khuya|toi nay)\b/.test(norm)) return "slot4";
+  if (/\b(buoi chieu|tan tam|chieu|chieu nay)\b/.test(norm)) return "slot3";
+  if (/\b(buoi trua|trua|trua nay)\b/.test(norm)) return "slot2";
+  if (/\b(dem khuya|sang som|sang|sang nay)\b/.test(norm)) return "slot1";
 
   return null;
 }
+
 
 
