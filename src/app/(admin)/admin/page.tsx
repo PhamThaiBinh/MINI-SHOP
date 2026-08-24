@@ -125,7 +125,8 @@ export default function AdminDashboard() {
   );
 
   const averageOrderValue =
-    completedOrders.length > 0 ? netRevenue / completedOrders.length : 0;
+    completedOrders.length > 0 ? Math.round(netRevenue / completedOrders.length) : 0;
+
 
   const fulfillmentRate =
     orders.length > 0

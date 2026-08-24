@@ -1,8 +1,9 @@
 const SUPABASE_STORAGE_URL = "https://sngmpumzlhomtvfvlbdn.supabase.co/storage/v1/object/public/products";
 
 export function formatVND(amount: number): string {
-  return new Intl.NumberFormat("vi-VN").format(amount) + "đ";
+  return new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 0 }).format(Math.round(amount || 0)) + "đ";
 }
+
 
 export function fixImagePath(path: string): string {
   if (!path) {
