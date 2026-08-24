@@ -291,12 +291,14 @@ export const OrderReviewModal: React.FC<OrderReviewModalProps> = ({
                     transition: "transform 0.15s ease",
                   }}
                 >
-                  <Star
-                    className={`w-9 h-9 ${
-                      star <= activeStarCount
-                        ? "text-amber-400 fill-amber-400 drop-shadow-sm"
-                        : "text-slate-300 fill-slate-100"
-                    }`}
+                  <i
+                    className={star <= activeStarCount ? "fa-solid fa-star" : "fa-regular fa-star"}
+                    style={{
+                      fontSize: "32px",
+                      color: star <= activeStarCount ? "#f59e0b" : "#cbd5e1",
+                      filter: star <= activeStarCount ? "drop-shadow(0 2px 6px rgba(245, 158, 11, 0.4))" : "none",
+                      transition: "all 0.15s ease",
+                    }}
                   />
                 </button>
               ))}

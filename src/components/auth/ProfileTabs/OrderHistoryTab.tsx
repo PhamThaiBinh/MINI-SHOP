@@ -12,6 +12,28 @@ interface OrderHistoryTabProps {
   onOpenCancelModal: (order: CustomerOrder) => void;
 }
 
+const isEligibleForReview = (dateStr: string): boolean => {
+  if (!dateStr) return true;
+  let orderTime: number | null = null;
+  const parts = dateStr.split(" ");
+  if (parts[0]) {
+    const dateParts = parts[0].split("/");
+    if (dateParts.length === 3) {
+      const d = parseInt(dateParts[0], 10);
+      const m = parseInt(dateParts[1], 10) - 1;
+      const y = parseInt(dateParts[2], 10);
+      orderTime = new Date(y, m, d).getTime();
+    }
+  }
+  if (!orderTime) {
+    const parsed = new Date(dateStr).getTime();
+    if (!isNaN(parsed)) orderTime = parsed;
+  }
+  if (!orderTime) return true;
+  const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+  return Date.now() - orderTime <= SEVEN_DAYS_MS;
+};
+
 export const OrderHistoryTab: React.FC<OrderHistoryTabProps> = ({
   orders,
   onSelectOrder,
@@ -194,7 +216,7 @@ export const OrderHistoryTab: React.FC<OrderHistoryTabProps> = ({
                       >
                         <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" /> Đã đánh giá ({o.review.rating}★)
                       </button>
-                    ) : (
+                    ) : isEligibleForReview(o.date) ? (
                       <button
                         type="button"
                         onClick={() => onOpenReviewModal(o)}
@@ -214,7 +236,7 @@ export const OrderHistoryTab: React.FC<OrderHistoryTabProps> = ({
                       >
                         <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" /> Đánh giá (+50đ)
                       </button>
-                    )
+                    ) : null
                   )}
 
                   {(o.status === "processing" || o.status === "shipping") && (

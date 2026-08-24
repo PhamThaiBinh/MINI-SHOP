@@ -969,9 +969,9 @@ export default function AdminOrdersPage() {
               }}
             >
               <h3
-                style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a" }}
+                style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", margin: 0 }}
               >
-                Chi Tiết Đơn Hàng #{selectedOrder.id}
+                Chi Tiết Đơn Hàng {selectedOrder.id.startsWith("#") ? selectedOrder.id : `#${selectedOrder.id}`}
               </h3>
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }} className="btn-print-hide">
                 <button
@@ -994,8 +994,11 @@ export default function AdminOrdersPage() {
               style={{
                 display: "flex",
                 flexDirection: "column",
-                gap: "12px",
+                gap: "14px",
                 fontSize: "13px",
+                maxHeight: "70vh",
+                overflowY: "auto",
+                paddingRight: "4px",
               }}
             >
               <div
@@ -1004,8 +1007,9 @@ export default function AdminOrdersPage() {
                   gridTemplateColumns: "1fr 1fr",
                   gap: "10px",
                   background: "#f8fafc",
-                  padding: "12px",
-                  borderRadius: "8px",
+                  padding: "14px",
+                  borderRadius: "12px",
+                  border: "1px solid #e2e8f0",
                 }}
               >
                 <div>
@@ -1021,8 +1025,8 @@ export default function AdminOrdersPage() {
                   <strong>Trạng thái:</strong>{" "}
                   <span
                     style={{
-                      color: "var(--primary-color)",
-                      fontWeight: 700,
+                      color: "var(--primary-color, #2e7d32)",
+                      fontWeight: 800,
                     }}
                   >
                     {selectedOrder.statusText}
@@ -1032,72 +1036,238 @@ export default function AdminOrdersPage() {
               <div>
                 <strong>Địa chỉ giao hàng:</strong> {selectedOrder.address}
               </div>
-              <div style={{ marginTop: "4px" }}>
-                <strong style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                  <Truck className="w-3.5 h-3.5 text-emerald-700" /> Ghi chú vận chuyển / Mã vận đơn:
-                </strong>
-                <input
-                  type="text"
-                  placeholder="Nhập mã vận đơn hoặc ghi chú kho (VD: GHTK-882910)..."
-                  defaultValue={selectedOrder.cancelReason && !selectedOrder.cancelReason.startsWith("Khách") ? selectedOrder.cancelReason : ""}
-                  onBlur={(e) => {
-                    const note = e.target.value.trim();
-                    if (note) {
-                      setOrders((prev) =>
-                        prev.map((o) =>
-                          o.id === selectedOrder.id ? { ...o, cancelReason: `[Ghi chú kho]: ${note}` } : o
-                        )
-                      );
-                    }
-                  }}
-                  style={{
-                    width: "100%",
-                    marginTop: "4px",
-                    padding: "6px 10px",
-                    fontSize: "12px",
-                    borderRadius: "6px",
-                    border: "1px solid var(--border-color)",
-                    fontFamily: "inherit",
-                    boxSizing: "border-box",
-                  }}
-                />
+
+              {/* Auto-Generated Carrier Tracking Code */}
+              <div
+                style={{
+                  background: "#f0fdf4",
+                  border: "1px solid #bbf7d0",
+                  borderRadius: "12px",
+                  padding: "12px 14px",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                  <strong style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "#166534", fontSize: "13px" }}>
+                    <Truck className="w-4 h-4 text-emerald-700" /> Ghi chú vận chuyển / Mã vận đơn tự động:
+                  </strong>
+                  <span style={{ fontSize: "11px", fontWeight: 800, background: "#dcfce7", color: "#15803d", padding: "2px 8px", borderRadius: "999px" }}>
+                    Tự động sinh mã
+                  </span>
+                </div>
+
+                {(() => {
+                  const defaultTracking = `GHTK-VN-${selectedOrder.id.replace(/[^0-9]/g, "") || "882910"}`;
+                  const currentTracking = (selectedOrder.cancelReason && !selectedOrder.cancelReason.startsWith("Khách"))
+                    ? selectedOrder.cancelReason.replace(/^\[Ghi chú kho\]:\s*/, "")
+                    : defaultTracking;
+
+                  return (
+                    <div>
+                      <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                        <input
+                          type="text"
+                          defaultValue={currentTracking}
+                          id="admin-tracking-input"
+                          onBlur={(e) => {
+                            const note = e.target.value.trim();
+                            if (note) {
+                              setOrders((prev) =>
+                                prev.map((o) =>
+                                  o.id === selectedOrder.id ? { ...o, cancelReason: `[Ghi chú kho]: ${note}` } : o
+                                )
+                              );
+                            }
+                          }}
+                          style={{
+                            flex: 1,
+                            padding: "8px 12px",
+                            fontSize: "13px",
+                            fontWeight: 700,
+                            color: "#0f172a",
+                            borderRadius: "8px",
+                            border: "1.5px solid #86efac",
+                            background: "#ffffff",
+                            fontFamily: "inherit",
+                            boxSizing: "border-box",
+                            letterSpacing: "0.02em",
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const input = document.getElementById("admin-tracking-input") as HTMLInputElement;
+                            if (input) {
+                              navigator.clipboard.writeText(input.value);
+                              alert(`Đã sao chép mã vận đơn [${input.value}] vào clipboard!`);
+                            }
+                          }}
+                          style={{
+                            padding: "8px 12px",
+                            background: "#166534",
+                            color: "#ffffff",
+                            border: "none",
+                            borderRadius: "8px",
+                            fontSize: "12px",
+                            fontWeight: 800,
+                            cursor: "pointer",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          Sao chép
+                        </button>
+                      </div>
+
+                      {/* Carrier Quick Switch Pills */}
+                      <div style={{ display: "flex", gap: "6px", marginTop: "8px", flexWrap: "wrap", alignItems: "center" }}>
+                        <span style={{ fontSize: "11px", color: "#64748b", fontWeight: 700 }}>Đơn vị vận chuyển:</span>
+                        {["GHTK", "GHN", "Viettel Post", "J&T Express", "VNPost"].map((carrier) => (
+                          <button
+                            key={carrier}
+                            type="button"
+                            onClick={() => {
+                              const code = carrier === "GHTK"
+                                ? `GHTK-VN-${selectedOrder.id.replace(/[^0-9]/g, "") || "882910"}`
+                                : carrier === "GHN"
+                                ? `GHN-${selectedOrder.id.replace(/[^0-9]/g, "") || "773912"}`
+                                : carrier === "Viettel Post"
+                                ? `VTP-${selectedOrder.id.replace(/[^0-9]/g, "") || "991024"}`
+                                : carrier === "J&T Express"
+                                ? `JNT-${selectedOrder.id.replace(/[^0-9]/g, "") || "445812"}`
+                                : `VNP-${selectedOrder.id.replace(/[^0-9]/g, "") || "110293"}`;
+
+                              const input = document.getElementById("admin-tracking-input") as HTMLInputElement;
+                              if (input) input.value = code;
+
+                              setOrders((prev) =>
+                                prev.map((o) =>
+                                  o.id === selectedOrder.id ? { ...o, cancelReason: `[Ghi chú kho]: ${code}` } : o
+                                )
+                              );
+                            }}
+                            style={{
+                              padding: "3px 8px",
+                              fontSize: "11px",
+                              fontWeight: 700,
+                              background: "#ffffff",
+                              border: "1px solid #cbd5e1",
+                              borderRadius: "6px",
+                              cursor: "pointer",
+                              color: "#334155",
+                            }}
+                          >
+                            {carrier}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
+
+              {/* Sản phẩm đặt mua - Design matching Screenshot 5 (Ring product & breakdown) */}
               <div>
-                <strong>Sản phẩm đặt mua:</strong>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                  <strong style={{ fontSize: "13.5px", color: "#0f172a" }}>Sản phẩm đặt mua:</strong>
+                  <span style={{ fontSize: "12px", color: "#64748b", fontWeight: 700 }}>
+                    🏪 VICK Fashion Accessories / Mini Shop
+                  </span>
+                </div>
+
                 <div
                   style={{
-                    marginTop: "6px",
-                    padding: "10px",
-                    border: "1px solid var(--border-color)",
-                    borderRadius: "6px",
-                    fontWeight: 700,
-                    color: "#0f172a",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "14px",
+                    padding: "12px 14px",
+                    background: "#ffffff",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "12px",
                   }}
                 >
                   {selectedOrder.items.map((it, idx) => (
-                    <div key={idx} style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
-                      <span>
-                        • {it.name} (x{it.qty})
-                      </span>
-                      <span>{(it.price * it.qty).toLocaleString("vi-VN")}đ</span>
+                    <div key={idx} style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                      <img
+                        src={fixImagePath(it.image)}
+                        alt={it.name}
+                        style={{
+                          width: "56px",
+                          height: "56px",
+                          borderRadius: "10px",
+                          objectFit: "cover",
+                          border: "1px solid #e2e8f0",
+                          background: "#f8fafc",
+                          flexShrink: 0,
+                        }}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = "/assets/images/products/nhan-thep-titan-xanh-lam.png";
+                        }}
+                      />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: "13.5px", fontWeight: 800, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {it.name}
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
+                          <span style={{ fontSize: "11px", background: "#f1f5f9", padding: "2px 6px", borderRadius: "4px", color: "#64748b", fontWeight: 700 }}>
+                            {it.name.toLowerCase().includes("nhẫn") ? "Xanh lam, 7" : "Chính hãng cao cấp"}
+                          </span>
+                          <span style={{ fontSize: "12px", color: "#64748b", fontWeight: 700 }}>
+                            x{it.qty}
+                          </span>
+                        </div>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <div style={{ fontSize: "13.5px", fontWeight: 800, color: "#0f172a" }}>
+                          {(it.price * it.qty).toLocaleString("vi-VN")}đ
+                        </div>
+                        {it.qty > 1 && (
+                          <div style={{ fontSize: "11px", color: "#94a3b8" }}>
+                            {it.price.toLocaleString("vi-VN")}đ / cái
+                          </div>
+                        )}
+                      </div>
                     </div>
                   ))}
+
+                  <hr style={{ border: 0, borderTop: "1px solid #f1f5f9", margin: "4px 0" }} />
+
+                  {/* Financial Breakdown Table */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "12.5px", color: "#475569" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span>Tổng tiền hàng:</span>
+                      <strong style={{ color: "#0f172a" }}>{(selectedOrder.subtotal || selectedOrder.total).toLocaleString("vi-VN")}đ</strong>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span>Phí vận chuyển:</span>
+                      <span>30.000đ</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", color: "#16a34a" }}>
+                      <span>Ưu đãi phí vận chuyển:</span>
+                      <span>-30.000đ</span>
+                    </div>
+                    {selectedOrder.discount > 0 && (
+                      <div style={{ display: "flex", justifyContent: "space-between", color: "#dc2626" }}>
+                        <span>Giảm giá / Voucher / Shopee Xu:</span>
+                        <span>-{selectedOrder.discount.toLocaleString("vi-VN")}đ</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
+
               <div
                 style={{
                   display: "flex",
                   justifyContent: "space-between",
-                  fontSize: "15px",
-                  fontWeight: 800,
+                  fontSize: "16px",
+                  fontWeight: 900,
                   color: "#0f172a",
-                  marginTop: "8px",
-                  borderTop: "1px solid var(--border-color)",
-                  paddingTop: "10px",
+                  marginTop: "4px",
+                  borderTop: "1.5px solid #e2e8f0",
+                  paddingTop: "12px",
                 }}
               >
-                <span>TỔNG TIỀN THANH TOÁN:</span>
-                <span style={{ color: "var(--primary-color)" }}>
+                <span>THÀNH TIỀN:</span>
+                <span style={{ color: "var(--primary-color, #2e7d32)", fontSize: "18px" }}>
                   {selectedOrder.total.toLocaleString("vi-VN")}đ
                 </span>
               </div>

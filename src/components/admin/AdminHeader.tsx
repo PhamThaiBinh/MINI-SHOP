@@ -76,6 +76,16 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
     };
   }, []);
 
+  const [readNotifIds, setReadNotifIds] = useState<string[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const stored = localStorage.getItem("minishop_admin_read_notifs");
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+
   const [orderNotifs, setOrderNotifs] = useState<any[]>([]);
 
   useEffect(() => {
@@ -89,7 +99,6 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
           title: `Đơn hàng mới ${o.id.startsWith("#") ? o.id : "#" + o.id}`,
           desc: `Khách hàng ${o.recipientName || "Ẩn danh"} vừa đặt ${o.total.toLocaleString("vi-VN")}đ`,
           time: o.date || "Vừa xong",
-          unread: true,
           link: "/admin/orders",
         }));
         setOrderNotifs(latest);
@@ -102,8 +111,26 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
     return () => window.removeEventListener("ordersUpdated", syncOrderNotifs);
   }, []);
 
-  const notifications = [...chatNotifications, ...orderNotifs];
-  const unreadCount = chatUnreadTotal + orderNotifs.length;
+  const notifications = [...chatNotifications, ...orderNotifs].map((n) => ({
+    ...n,
+    unread: !readNotifIds.includes(n.id),
+  }));
+  const unreadCount = notifications.filter((n) => n.unread).length;
+
+  const handleMarkAllAsRead = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setChatUnreadTotal(0);
+    const allIds = notifications.map((n) => n.id);
+    setReadNotifIds(allIds);
+    try {
+      localStorage.setItem("minishop_admin_read_notifs", JSON.stringify(allIds));
+      const sessions = getLocalSessions();
+      const updated = sessions.map((s) => ({ ...s, unread_count: 0 }));
+      localStorage.setItem("minishop_live_chat_sessions", JSON.stringify(updated));
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -198,14 +225,17 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
                 </strong>
                 {unreadCount > 0 && (
                   <button
-                    onClick={() => setChatUnreadTotal(0)}
+                    type="button"
+                    onClick={handleMarkAllAsRead}
                     style={{
                       background: "none",
                       border: "none",
-                      color: "var(--primary-color)",
+                      color: "var(--primary-color, #2e7d32)",
                       fontSize: "12px",
-                      fontWeight: 700,
+                      fontWeight: 800,
                       cursor: "pointer",
+                      padding: "2px 6px",
+                      borderRadius: "4px",
                     }}
                   >
                     Đã đọc tất cả
@@ -218,7 +248,16 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
                   <Link
                     key={n.id}
                     href={n.link}
-                    onClick={() => setShowNotifications(false)}
+                    onClick={() => {
+                      setReadNotifIds((prev) => {
+                        const next = [...prev, n.id];
+                        try {
+                          localStorage.setItem("minishop_admin_read_notifs", JSON.stringify(next));
+                        } catch {}
+                        return next;
+                      });
+                      setShowNotifications(false);
+                    }}
                     style={{
                       display: "flex",
                       gap: "12px",
@@ -226,7 +265,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
                       borderBottom: "1px solid #f1f5f9",
                       textDecoration: "none",
                       color: "inherit",
-                      background: n.unread && unreadCount > 0 ? "#f0fdf4" : "#ffffff",
+                      background: n.unread ? "#f0fdf4" : "#ffffff",
                       transition: "background 0.2s ease",
                     }}
                   >
