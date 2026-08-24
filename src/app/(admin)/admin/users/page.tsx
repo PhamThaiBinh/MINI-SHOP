@@ -105,7 +105,7 @@ export default function AdminUsersPage() {
   // Calculate monthly stats for a user
   const getUserMonthlyStats = (user: UserItem, monthFilter: string) => {
     const userOrders = orders.filter((o) => isOrderMatchUser(o, user));
-    const validOrders = userOrders.filter((o) => o.status !== "cancelled");
+    const validOrders = userOrders.filter((o) => o.status === "completed");
 
     const filteredByMonth = monthFilter === "all"
       ? validOrders
@@ -370,7 +370,7 @@ export default function AdminUsersPage() {
                   <div style={{ fontSize: "24px", fontWeight: 900, color: "#14532d", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
                     {formatVND(
                       orders
-                        .filter((o) => o.status !== "cancelled" && (selectedMonth === "all" || parseOrderMonthYear(o.date) === selectedMonth))
+                        .filter((o) => o.status === "completed" && (selectedMonth === "all" || parseOrderMonthYear(o.date) === selectedMonth))
                         .reduce((sum, o) => sum + (o.total || 0), 0)
                     )}
                   </div>

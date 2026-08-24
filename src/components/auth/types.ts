@@ -37,6 +37,7 @@ export interface CustomerOrder {
   discount: number;
   total: number;
   review?: OrderReviewData;
+  voucherCode?: string;
 }
 
 export interface SearchableDropdownProps {

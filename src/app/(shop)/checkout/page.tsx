@@ -295,6 +295,7 @@ export default function CheckoutPage() {
       subtotal: subtotal,
       discount: discountAmount,
       total: grandTotal,
+      voucherCode: appliedVoucher?.code || undefined,
     };
 
     const userIdentifier = user?.username
@@ -327,6 +328,7 @@ export default function CheckoutPage() {
       discount: discountAmount,
       total: grandTotal,
       username: userIdentifier || undefined,
+      voucherCode: appliedVoucher?.code || undefined,
     };
 
     addPlacedOrder(placedOrderRecord);

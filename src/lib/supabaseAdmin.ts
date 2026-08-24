@@ -328,6 +328,7 @@ export const fetchAdminOrders = async (): Promise<UnifiedOrder[]> => {
         total: Number(o.total || 0),
         username: o.username ? String(o.username) : undefined,
         cancelReason: o.cancel_reason ? String(o.cancel_reason) : undefined,
+        voucherCode: o.voucher_code ? String(o.voucher_code) : undefined,
       };
     });
 
@@ -370,15 +371,16 @@ export const updateAdminOrderStatus = async (
       .update(updateObj)
       .or(`id.eq.${orderId},id.eq.${cleanId},id.eq.${hashId}`);
 
-    // If order is cancelled or returned, RESTORE stock for products in Supabase
+    // If order is cancelled or returned, RESTORE stock for products & RESTORE voucher in Supabase
     if (newStatus === "cancelled" || newStatus === "returned") {
       try {
         const { data: orderData } = await supabase
           .from("orders")
-          .select("items")
+          .select("items, voucher_code, username, discount")
           .or(`id.eq.${orderId},id.eq.${cleanId},id.eq.${hashId}`)
           .maybeSingle();
 
+        // 1. Restore product stock
         if (orderData && Array.isArray(orderData.items)) {
           for (const it of orderData.items) {
             if (it.name && it.qty) {
@@ -399,8 +401,51 @@ export const updateAdminOrderStatus = async (
             }
           }
         }
+
+        // 2. Restore voucher for user if applied
+        const vCode = orderData?.voucher_code;
+        if (vCode && orderData?.username) {
+          const cleanUser = String(orderData.username).replace(/^@/, "");
+          const { data: targetUser } = await supabase
+            .from("users")
+            .select("id, vouchers, used_system_coupons")
+            .or(`username.eq.${cleanUser},username.eq.@${cleanUser}`)
+            .maybeSingle();
+
+          if (targetUser) {
+            let updatedVouchers = Array.isArray(targetUser.vouchers) ? targetUser.vouchers : [];
+            let updatedUsedSys = Array.isArray(targetUser.used_system_coupons) ? targetUser.used_system_coupons : [];
+
+            updatedUsedSys = updatedUsedSys.filter((c: string) => c !== vCode);
+
+            const vIdx = updatedVouchers.findIndex((v: any) => v.code === vCode);
+            if (vIdx > -1) {
+              updatedVouchers = updatedVouchers.map((v: any, idx: number) =>
+                idx === vIdx ? { ...v, quantity: (v.quantity || 1) + 1 } : v
+              );
+            } else {
+              updatedVouchers = [
+                {
+                  code: vCode,
+                  label: `Mã ưu đãi hoàn trả (${vCode})`,
+                  discount: orderData.discount || 50000,
+                  quantity: 1,
+                },
+                ...updatedVouchers,
+              ];
+            }
+
+            await supabase
+              .from("users")
+              .update({
+                vouchers: updatedVouchers,
+                used_system_coupons: updatedUsedSys,
+              })
+              .eq("id", targetUser.id);
+          }
+        }
       } catch (errStock) {
-        console.warn("Could not restore stock upon cancel/return:", errStock);
+        console.warn("Could not restore stock or voucher upon cancel/return:", errStock);
       }
     }
 

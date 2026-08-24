@@ -54,6 +54,7 @@ export const lookupOrderFromSupabase = async (
       total: Number(matched.total || 0),
       username: matched.username ? String(matched.username) : undefined,
       cancelReason: matched.cancel_reason ? String(matched.cancel_reason) : undefined,
+      voucherCode: matched.voucher_code ? String(matched.voucher_code) : undefined,
     };
   } catch (err) {
     console.error("Error looking up order from Supabase:", err);
@@ -113,6 +114,7 @@ export const fetchUserOrdersFromSupabase = async (
         total: Number(o.total || 0),
         username: o.username ? String(o.username) : undefined,
         cancelReason: o.cancel_reason ? String(o.cancel_reason) : undefined,
+        voucherCode: o.voucher_code ? String(o.voucher_code) : undefined,
       }));
 
     return matchedSupabaseOrders.sort(
@@ -144,6 +146,7 @@ export const createOrderInSupabase = async (orderData: UnifiedOrder): Promise<bo
       total: orderData.total,
       username: orderData.username || null,
       cancel_reason: orderData.cancelReason || null,
+      voucher_code: (orderData as any).voucherCode || null,
     });
 
     if (orderErr) {

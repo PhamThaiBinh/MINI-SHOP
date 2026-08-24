@@ -35,7 +35,7 @@ import { AlertTriangle, CheckCircle2, X } from "lucide-react";
 function AuthPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, loading, signIn, signUp, loginUser, logout, redeemGift, addPointsAndHistory, addVoucherToUser } = useAuth();
+  const { user, loading, signIn, signUp, loginUser, logout, redeemGift, addPointsAndHistory, addVoucherToUser, restoreVoucher } = useAuth();
 
   // Auth Guest Mode Tabs
   const currentTabParam = searchParams.get("tab") || searchParams.get("mode") || searchParams.get("action");
@@ -408,8 +408,14 @@ function AuthPageContent() {
       console.error("Local storage update error:", e);
     }
 
+    // Restore voucher if used in this order
+    const voucherToRestore = cancelTargetOrder.voucherCode || (cancelTargetOrder as any).voucher_code;
+    if (voucherToRestore || (cancelTargetOrder.discount && cancelTargetOrder.discount > 0)) {
+      restoreVoucher(voucherToRestore || "VOUCHER", cancelTargetOrder.discount);
+    }
+
     setShowCancelModal(false);
-    alert(`Đã hủy thành công đơn hàng ${cancelTargetOrder.id}!`);
+    alert(`Đã hủy thành công đơn hàng ${cancelTargetOrder.id}!${voucherToRestore ? "\n🎁 Mã giảm giá đã được hoàn trả nguyên vẹn vào Ví Voucher của bạn!" : ""}`);
   };
 
   const handleSubmitReturn = async (orderId: string, reasonPreset: string, reasonDetail: string, images: string[]) => {
@@ -464,9 +470,15 @@ function AuthPageContent() {
       console.error("Local storage error:", e);
     }
 
+    // Restore voucher if used in this order
+    const voucherToRestore = returnTargetOrder?.voucherCode || (returnTargetOrder as any)?.voucher_code;
+    if (voucherToRestore || (returnTargetOrder?.discount && returnTargetOrder.discount > 0)) {
+      restoreVoucher(voucherToRestore || "VOUCHER", returnTargetOrder?.discount);
+    }
+
     setShowReturnModal(false);
     setReturnTargetOrder(null);
-    alert(`🎉 Đã gửi yêu cầu trả hàng cho đơn ${orderId} thành công!\nChính sách đổi trả 7 ngày của Mini Shop đã được kích hoạt. Bộ phận CSKH sẽ liên hệ với bạn trong vòng 24h để hoàn tất thu hồi và hoàn tiền.`);
+    alert(`🎉 Đã gửi yêu cầu trả hàng cho đơn ${orderId} thành công!\nChính sách đổi trả 7 ngày của Mini Shop đã được kích hoạt. Bộ phận CSKH sẽ liên hệ với bạn trong vòng 24h để hoàn tất thu hồi và hoàn tiền.${voucherToRestore ? "\n🎁 Mã giảm giá đã được hoàn trả nguyên vẹn vào Ví Voucher của bạn!" : ""}`);
   };
 
   if (loading) {

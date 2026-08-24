@@ -20,6 +20,7 @@ export interface UnifiedOrder {
   total: number;
   username?: string;
   cancelReason?: string;
+  voucherCode?: string;
 }
 
 export const formatFullTimestamp = (d?: Date): string => {

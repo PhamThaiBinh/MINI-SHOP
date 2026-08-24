@@ -81,15 +81,15 @@ export const OrderHistoryTab: React.FC<OrderHistoryTabProps> = ({
     return { key, label };
   });
 
-  // Calculate Monthly Spending Statistics
-  const validOrders = orders.filter((o) => o.status !== "cancelled");
+  // Calculate Monthly Spending Statistics (Completed orders only)
+  const validOrders = orders.filter((o) => o.status === "completed");
   const monthOrders = selectedMonth === "all"
     ? validOrders
     : validOrders.filter((o) => parseOrderMonthYear(o.date) === selectedMonth);
 
   const monthlyTotalSpent = monthOrders.reduce((sum, o) => sum + (o.total || 0), 0);
   const monthlyTotalDiscount = monthOrders.reduce((sum, o) => sum + (o.discount || 0), 0);
-  const completedMonthOrders = monthOrders.filter((o) => o.status === "completed").length;
+  const completedMonthOrders = monthOrders.length;
 
   const filteredOrders = orders.filter((o) => {
     // 1. Month filter

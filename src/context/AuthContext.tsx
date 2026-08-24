@@ -34,6 +34,7 @@ export interface PlacedOrder {
   discount?: number;
   total: number;
   items: Array<any>;
+  voucherCode?: string;
 }
 
 export interface UserProfile {
@@ -72,6 +73,7 @@ interface AuthContextType {
   ) => void;
   addVoucherToUser: (label: string, discount: number, code: string) => void;
   consumeVoucher: (code: string) => void;
+  restoreVoucher: (code: string, discount?: number) => void;
   addPlacedOrder: (order: PlacedOrder) => void;
   completeOnboarding: () => void;
 }
@@ -887,6 +889,65 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setUser(updatedUser);
   };
 
+  const restoreVoucher = (code: string, discount?: number) => {
+    if (!code) return;
+
+    if (user) {
+      const updatedUsedSystem = (user.usedSystemCoupons || []).filter((c) => c !== code);
+      let updatedVouchers = [...(user.vouchers || [])];
+
+      const existingVoucherIndex = updatedVouchers.findIndex((v) => v.code === code);
+      if (existingVoucherIndex > -1) {
+        updatedVouchers = updatedVouchers.map((v, idx) =>
+          idx === existingVoucherIndex
+            ? { ...v, quantity: (v.quantity || 1) + 1 }
+            : v
+        );
+      } else {
+        // If it was a redeemed gift voucher or has discount, restore to wallet
+        if (code.startsWith("RED-") || code.startsWith("GIFT-") || code.startsWith("WELCOME") || discount) {
+          updatedVouchers = [
+            {
+              code,
+              label: `Mã ưu đãi hoàn trả (${code})`,
+              discount: discount || 50000,
+              quantity: 1,
+            },
+            ...updatedVouchers,
+          ];
+        }
+      }
+
+      const updatedUser: UserProfile = {
+        ...user,
+        vouchers: updatedVouchers,
+        usedSystemCoupons: updatedUsedSystem,
+      };
+
+      setUser(updatedUser);
+
+      if (typeof window !== "undefined") {
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updatedUser));
+        localStorage.setItem(`minishop_user_vouchers_${user.username}`, JSON.stringify(updatedVouchers));
+      }
+
+      try {
+        const supabase = createClient();
+        const cleanUser = user.username.replace(/^@/, "");
+        supabase
+          .from("users")
+          .update({
+            vouchers: updatedVouchers,
+            used_system_coupons: updatedUsedSystem,
+          })
+          .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${user.email}`)
+          .then();
+      } catch (err) {
+        console.warn("Supabase user voucher restore notice:", err);
+      }
+    }
+  };
+
   const addPlacedOrder = (order: PlacedOrder) => {
     if (!user) return;
     const updatedUser: UserProfile = {
@@ -942,6 +1003,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         addPointsAndHistory,
         addVoucherToUser,
         consumeVoucher,
+        restoreVoucher,
         addPlacedOrder,
         completeOnboarding,
       }}
