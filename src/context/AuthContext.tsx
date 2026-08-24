@@ -86,6 +86,7 @@ function getStoredUserPointsAndHistory(username: string) {
   let points = 500;
   let history: RedemptionHistory[] = [];
   let vouchers: UserVoucher[] = [];
+  let usedSystemCoupons: string[] = [];
   if (typeof window !== "undefined") {
     const storedPts = localStorage.getItem(`minishop_user_points_${username}`);
     if (storedPts !== null) {
@@ -106,8 +107,15 @@ function getStoredUserPointsAndHistory(username: string) {
         if (Array.isArray(parsedVouchers)) vouchers = parsedVouchers;
       } catch (e) {}
     }
+    const storedUsed = localStorage.getItem(`minishop_user_used_coupons_${username}`);
+    if (storedUsed) {
+      try {
+        const parsedUsed = JSON.parse(storedUsed);
+        if (Array.isArray(parsedUsed)) usedSystemCoupons = parsedUsed;
+      } catch (e) {}
+    }
   }
-  return { points, history, vouchers };
+  return { points, history, vouchers, usedSystemCoupons };
 }
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -135,6 +143,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
               points: storedData.points,
               history: storedData.history.length > 0 ? storedData.history : parsed.history || [],
               vouchers: storedData.vouchers.length > 0 ? storedData.vouchers : parsed.vouchers || [],
+              usedSystemCoupons: storedData.usedSystemCoupons.length > 0 ? storedData.usedSystemCoupons : parsed.usedSystemCoupons || [],
             });
             setLoading(false);
             return;
@@ -161,6 +170,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             points: storedData.points,
             history: storedData.history,
             vouchers: storedData.vouchers,
+            usedSystemCoupons: storedData.usedSystemCoupons,
           };
           setUser(profile);
           localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(profile));
@@ -866,15 +876,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const consumeVoucher = (code: string) => {
+  const consumeVoucher = (code: string, quantityToConsume: number = 1) => {
     if (!user) return;
 
-    const existingVoucher = user.vouchers.find((v) => v.code === code);
-    let updatedVouchers = user.vouchers;
-    let updatedUsedSystem = user.usedSystemCoupons || [];
+    const existingVoucher = (user.vouchers || []).find((v) => v.code === code);
+    let updatedVouchers = [...(user.vouchers || [])];
+    let updatedUsedSystem = [...(user.usedSystemCoupons || [])];
 
     if (existingVoucher) {
-      updatedVouchers = user.vouchers.filter((v) => v.code !== code);
+      const currentQty = existingVoucher.quantity || 1;
+      if (currentQty > quantityToConsume) {
+        updatedVouchers = updatedVouchers.map((v) =>
+          v.code === code ? { ...v, quantity: currentQty - quantityToConsume } : v
+        );
+      } else {
+        // All quantity used up (single use or stacked full usage)
+        updatedVouchers = updatedVouchers.filter((v) => v.code !== code);
+      }
     } else {
       if (!updatedUsedSystem.includes(code)) {
         updatedUsedSystem = [...updatedUsedSystem, code];
@@ -887,6 +905,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       usedSystemCoupons: updatedUsedSystem,
     };
     setUser(updatedUser);
+
+    if (typeof window !== "undefined") {
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updatedUser));
+      localStorage.setItem(`minishop_user_vouchers_${user.username}`, JSON.stringify(updatedVouchers));
+      localStorage.setItem(`minishop_user_used_coupons_${user.username}`, JSON.stringify(updatedUsedSystem));
+    }
+
+    try {
+      const supabase = createClient();
+      const cleanUser = user.username.replace(/^@/, "");
+      supabase
+        .from("users")
+        .update({
+          vouchers: updatedVouchers,
+          used_system_coupons: updatedUsedSystem,
+        })
+        .or(`username.eq.${cleanUser},username.eq.@${cleanUser},email.eq.${user.email}`)
+        .then();
+    } catch (err) {
+      console.warn("Supabase user voucher sync notice:", err);
+    }
   };
 
   const restoreVoucher = (code: string, discount?: number) => {

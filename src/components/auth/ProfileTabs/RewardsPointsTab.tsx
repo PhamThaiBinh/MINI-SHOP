@@ -225,55 +225,147 @@ export const RewardsPointsTab: React.FC<RewardsPointsTabProps> = ({
       {/* SUBTAB 2: KHO VOUCHER CỦA TÔI */}
       {rewardSubTab === "myvouchers" && (
         <div>
+          {/* Thông báo quy định sử dụng 1 lần & cộng dồn */}
+          <div
+            style={{
+              background: "#ecfdf5",
+              border: "1px solid #a7f3d0",
+              borderRadius: "12px",
+              padding: "12px 16px",
+              marginBottom: "16px",
+              display: "flex",
+              alignItems: "flex-start",
+              gap: "10px",
+              fontSize: "13px",
+              color: "#065f46",
+              lineHeight: "1.5",
+            }}
+          >
+            <Shield className="w-5 h-5 text-emerald-700 flex-shrink-0" style={{ marginTop: "2px" }} />
+            <div>
+              <strong style={{ color: "#047857" }}>Quy định sử dụng Voucher:</strong>
+              <div style={{ marginTop: "2px" }}>
+                • Mỗi mã trong kho voucher chỉ được áp dụng <strong>1 lần cho 1 đơn hàng</strong>.<br />
+                • Nếu bạn có <strong>nhiều số lượng cho cùng 1 mã</strong> (x2, x3...), hệ thống sẽ tự động <strong>cộng dồn toàn bộ giá trị giảm</strong> để trừ thẳng vào đơn hàng khi thanh toán!
+              </div>
+            </div>
+          </div>
+
           {userVouchers.length === 0 ? (
-            <p style={{ fontSize: "13px", color: "#94a3b8", textAlign: "center", padding: "20px 0" }}>
-              Bạn chưa có mã giảm giá nào. Hãy đổi điểm thưởng để nhận voucher!
-            </p>
+            <div style={{ textAlign: "center", padding: "36px 20px", background: "#f8fafc", borderRadius: "14px", border: "1px dashed #cbd5e1" }}>
+              <Ticket className="w-12 h-12 text-slate-300 mx-auto mb-2" />
+              <p style={{ fontSize: "14px", fontWeight: 700, color: "#64748b", margin: "0 0 6px 0" }}>
+                Kho Voucher của bạn đang trống!
+              </p>
+              <p style={{ fontSize: "12.5px", color: "#94a3b8", margin: 0 }}>
+                Hãy tham gia đổi điểm thưởng, làm nhiệm vụ hoặc quay Vòng quay may mắn để nhận thêm voucher ưu đãi độc quyền.
+              </p>
+            </div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              {userVouchers.map((v, idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    border: "1px dashed var(--primary-color, #2e7d32)",
-                    borderRadius: "12px",
-                    padding: "12px 16px",
-                    background: "#f0fdf4",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <div>
-                    <div style={{ fontSize: "14px", fontWeight: 800, color: "#0f172a" }}>{v.label}</div>
-                    <div style={{ fontSize: "12px", color: "var(--primary-color, #2e7d32)", fontWeight: 800, marginTop: "2px" }}>
-                      Mã: <code>{v.code}</code>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      navigator.clipboard.writeText(v.code);
-                      alert(`Đã sao chép mã [${v.code}] vào bộ nhớ tạm!`);
-                    }}
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              {userVouchers.map((v, idx) => {
+                const qty = v.quantity || 1;
+                const isShipping = v.code.toUpperCase().includes("FREESHIP");
+                const totalDiscount = isShipping ? v.discount : (v.discount || 0) * qty;
+
+                return (
+                  <div
+                    key={idx}
                     style={{
-                      padding: "6px 12px",
-                      borderRadius: "6px",
-                      background: "var(--primary-color, #2e7d32)",
-                      color: "#ffffff",
-                      border: "none",
-                      fontSize: "12px",
-                      fontWeight: 800,
-                      cursor: "pointer",
-                      display: "inline-flex",
+                      border: "1.5px dashed var(--primary-color, #2e7d32)",
+                      borderRadius: "14px",
+                      padding: "14px 18px",
+                      background: "#f0fdf4",
+                      display: "flex",
+                      justifyContent: "space-between",
                       alignItems: "center",
-                      gap: "4px",
+                      gap: "14px",
+                      flexWrap: "wrap",
+                      boxShadow: "0 2px 6px rgba(46, 125, 50, 0.04)",
                     }}
                   >
-                    <Copy className="w-3.5 h-3.5" /> Sao chép
-                  </button>
-                </div>
-              ))}
+                    <div style={{ flex: 1, minWidth: "220px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                        <div style={{ fontSize: "14.5px", fontWeight: 800, color: "#0f172a" }}>{v.label}</div>
+                        {qty > 1 ? (
+                          <span
+                            style={{
+                              background: "#fef3c7",
+                              border: "1px solid #fde68a",
+                              color: "#b45309",
+                              fontSize: "11px",
+                              fontWeight: 800,
+                              padding: "2px 8px",
+                              borderRadius: "999px",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "3px",
+                            }}
+                          >
+                            ⭐ Số lượng: x{qty} (Cộng dồn)
+                          </span>
+                        ) : (
+                          <span
+                            style={{
+                              background: "#e0f2fe",
+                              border: "1px solid #bae6fd",
+                              color: "#0369a1",
+                              fontSize: "11px",
+                              fontWeight: 800,
+                              padding: "2px 8px",
+                              borderRadius: "999px",
+                            }}
+                          >
+                            Sử dụng 1 lần (x1)
+                          </span>
+                        )}
+                      </div>
+
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "6px", flexWrap: "wrap" }}>
+                        <div style={{ fontSize: "12.5px", color: "var(--primary-color, #2e7d32)", fontWeight: 800 }}>
+                          Mã: <code style={{ background: "#ffffff", padding: "2px 6px", borderRadius: "4px", border: "1px solid #bbf7d0" }}>{v.code}</code>
+                        </div>
+                        <div style={{ fontSize: "12.5px", color: "#166534", fontWeight: 700 }}>
+                          Ưu đãi:{" "}
+                          <strong>
+                            {isShipping
+                              ? `Miễn phí vận chuyển ${v.discount.toLocaleString("vi-VN")}đ`
+                              : qty > 1
+                              ? `Giảm ${totalDiscount.toLocaleString("vi-VN")}đ (Cộng dồn x${qty})`
+                              : `Giảm ${v.discount.toLocaleString("vi-VN")}đ`}
+                          </strong>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(v.code);
+                          alert(`Đã sao chép mã [${v.code}] vào bộ nhớ tạm! Bạn có thể dán hoặc chọn mã tại trang Giỏ hàng & Thanh toán.`);
+                        }}
+                        style={{
+                          padding: "8px 14px",
+                          borderRadius: "8px",
+                          background: "var(--primary-color, #2e7d32)",
+                          color: "#ffffff",
+                          border: "none",
+                          fontSize: "12.5px",
+                          fontWeight: 800,
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "5px",
+                          boxShadow: "0 2px 4px rgba(46, 125, 50, 0.2)",
+                        }}
+                      >
+                        <Copy className="w-3.5 h-3.5" /> Sao chép
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
