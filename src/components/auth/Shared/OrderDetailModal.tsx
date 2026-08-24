@@ -157,14 +157,20 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                   <span>Tổng tiền hàng:</span>
                   <strong style={{ color: "#0f172a" }}>{(selectedOrder.subtotal || selectedOrder.total).toLocaleString("vi-VN")}đ</strong>
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span>Phí vận chuyển:</span>
-                  <span>30.000đ</span>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", color: "#16a34a" }}>
-                  <span>Ưu đãi phí vận chuyển:</span>
-                  <span>-30.000đ</span>
-                </div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span>Phí vận chuyển:</span>
+                    <span style={{ color: (selectedOrder as any).shippingFee > 0 ? "#0f172a" : "#16a34a", fontWeight: 700 }}>
+                      {(selectedOrder as any).shippingFee > 0
+                        ? `${Number((selectedOrder as any).shippingFee).toLocaleString("vi-VN")}đ`
+                        : "Miễn phí (0đ)"}
+                    </span>
+                  </div>
+                  {Boolean((selectedOrder as any).shippingDiscount && Number((selectedOrder as any).shippingDiscount) > 0) && (
+                    <div style={{ display: "flex", justifyContent: "space-between", color: "#16a34a" }}>
+                      <span>Ưu đãi phí vận chuyển:</span>
+                      <span>-{Number((selectedOrder as any).shippingDiscount).toLocaleString("vi-VN")}đ</span>
+                    </div>
+                  )}
                 {selectedOrder.discount > 0 && (
                   <div style={{ display: "flex", justifyContent: "space-between", color: "#dc2626" }}>
                     <span>Giảm giá / Shopee Xu:</span>

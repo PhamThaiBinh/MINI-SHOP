@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { CustomerOrder } from "../types";
-import { Package, Eye, Star, AlertTriangle } from "lucide-react";
+import { Package, Eye, Star, AlertTriangle, RotateCcw } from "lucide-react";
 import { fixImagePath } from "@/lib/utils";
 
 interface OrderHistoryTabProps {
@@ -10,6 +10,7 @@ interface OrderHistoryTabProps {
   onSelectOrder: (order: CustomerOrder) => void;
   onOpenReviewModal: (order: CustomerOrder) => void;
   onOpenCancelModal: (order: CustomerOrder) => void;
+  onOpenReturnModal: (order: CustomerOrder) => void;
 }
 
 const isEligibleForReview = (dateStr: string): boolean => {
@@ -39,15 +40,31 @@ export const OrderHistoryTab: React.FC<OrderHistoryTabProps> = ({
   onSelectOrder,
   onOpenReviewModal,
   onOpenCancelModal,
+  onOpenReturnModal,
 }) => {
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
   const filteredOrders = orders.filter((o) => {
     if (filterStatus === "all") return true;
+    if (filterStatus === "returned") {
+      return (
+        o.status === "returned" ||
+        (o.status as any) === "returning" ||
+        o.statusText?.toLowerCase().includes("trả hàng") ||
+        (o as any).cancelReason?.toLowerCase().includes("trả hàng")
+      );
+    }
     return o.status === filterStatus;
   });
 
   const getStatusBadge = (status: string, statusText: string) => {
+    if (status === "returned" || (status as any) === "returning" || statusText?.toLowerCase().includes("trả hàng")) {
+      return (
+        <span style={{ padding: "4px 10px", borderRadius: "999px", background: "#ffedd5", color: "#c2410c", fontSize: "12px", fontWeight: 800 }}>
+          {statusText || "Trả hàng / Hoàn tiền"}
+        </span>
+      );
+    }
     if (status === "completed") {
       return (
         <span style={{ padding: "4px 10px", borderRadius: "999px", background: "#dcfce7", color: "#166534", fontSize: "12px", fontWeight: 800 }}>
@@ -195,48 +212,74 @@ export const OrderHistoryTab: React.FC<OrderHistoryTabProps> = ({
                   </button>
 
                   {o.status === "completed" && (
-                    o.review ? (
-                      <button
-                        type="button"
-                        onClick={() => onOpenReviewModal(o)}
-                        style={{
-                          padding: "6px 12px",
-                          borderRadius: "8px",
-                          background: "#f0fdf4",
-                          border: "1px solid #bbf7d0",
-                          color: "#166534",
-                          fontSize: "12px",
-                          fontWeight: 800,
-                          cursor: "pointer",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "4px",
-                        }}
-                        title="Xem lại đánh giá của bạn"
-                      >
-                        <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" /> Đã đánh giá ({o.review.rating}★)
-                      </button>
-                    ) : isEligibleForReview(o.date) ? (
-                      <button
-                        type="button"
-                        onClick={() => onOpenReviewModal(o)}
-                        style={{
-                          padding: "6px 12px",
-                          borderRadius: "8px",
-                          background: "#fef3c7",
-                          border: "1px solid #fde68a",
-                          color: "#b45309",
-                          fontSize: "12px",
-                          fontWeight: 800,
-                          cursor: "pointer",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "4px",
-                        }}
-                      >
-                        <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" /> Đánh giá (+50đ)
-                      </button>
-                    ) : null
+                    <>
+                      {o.review ? (
+                        <button
+                          type="button"
+                          onClick={() => onOpenReviewModal(o)}
+                          style={{
+                            padding: "6px 12px",
+                            borderRadius: "8px",
+                            background: "#f0fdf4",
+                            border: "1px solid #bbf7d0",
+                            color: "#166534",
+                            fontSize: "12px",
+                            fontWeight: 800,
+                            cursor: "pointer",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px",
+                          }}
+                          title="Xem lại đánh giá của bạn"
+                        >
+                          <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" /> Đã đánh giá ({o.review.rating}★)
+                        </button>
+                      ) : isEligibleForReview(o.date) ? (
+                        <button
+                          type="button"
+                          onClick={() => onOpenReviewModal(o)}
+                          style={{
+                            padding: "6px 12px",
+                            borderRadius: "8px",
+                            background: "#fef3c7",
+                            border: "1px solid #fde68a",
+                            color: "#b45309",
+                            fontSize: "12px",
+                            fontWeight: 800,
+                            cursor: "pointer",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px",
+                          }}
+                        >
+                          <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" /> Đánh giá (+50đ)
+                        </button>
+                      ) : null}
+
+                      {/* 7-Day Return Button */}
+                      {isEligibleForReview(o.date) && (
+                        <button
+                          type="button"
+                          onClick={() => onOpenReturnModal(o)}
+                          style={{
+                            padding: "6px 12px",
+                            borderRadius: "8px",
+                            background: "#fff7ed",
+                            border: "1px solid #fed7aa",
+                            color: "#c2410c",
+                            fontSize: "12px",
+                            fontWeight: 800,
+                            cursor: "pointer",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px",
+                          }}
+                          title="Yêu cầu trả hàng / hoàn tiền trong vòng 7 ngày kể từ khi nhận đơn"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5 text-orange-600" /> Trả hàng (7 ngày)
+                        </button>
+                      )}
+                    </>
                   )}
 
                   {(o.status === "processing" || o.status === "shipping") && (

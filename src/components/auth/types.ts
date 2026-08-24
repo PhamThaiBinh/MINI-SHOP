@@ -21,7 +21,7 @@ export interface OrderReviewData {
 export interface CustomerOrder {
   id: string;
   date: string;
-  status: "completed" | "shipping" | "processing" | "cancelled";
+  status: "completed" | "shipping" | "processing" | "cancelled" | "returned" | "returning" | "pending";
   statusText: string;
   recipientName: string;
   recipientPhone: string;

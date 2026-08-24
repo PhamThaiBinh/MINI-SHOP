@@ -29,6 +29,7 @@ import { RewardsPointsTab } from "@/components/auth/ProfileTabs/RewardsPointsTab
 import { SecuritySettingsTab } from "@/components/auth/ProfileTabs/SecuritySettingsTab";
 import { OrderDetailModal } from "@/components/auth/Shared/OrderDetailModal";
 import { OrderReviewModal } from "@/components/auth/Shared/OrderReviewModal";
+import { ReturnOrderModal } from "@/components/auth/Shared/ReturnOrderModal";
 import { AlertTriangle, CheckCircle2, X } from "lucide-react";
 
 function AuthPageContent() {
@@ -41,26 +42,34 @@ function AuthPageContent() {
   const [activeTab, setActiveTab] = useState<"login" | "register">(
     currentTabParam === "register" || currentTabParam === "signup" || currentTabParam === "dang-ky" ? "register" : "login"
   );
-  const [authError, setAuthError] = useState<string>("");
-  const [authSuccess, setAuthSuccess] = useState<string>("");
+  const [profileTab, setProfileTab] = useState<AuthProfileTab>("profile");
 
-  // OTP Modal State
+  // Authentication State
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [authSuccess, setAuthSuccess] = useState<string | null>(null);
+  const [isSubmittingReg, setIsSubmittingReg] = useState(false);
+
+  // OTP Verification Modal State
   const [showOtpModal, setShowOtpModal] = useState<boolean>(false);
-  const [isSubmittingReg, setIsSubmittingReg] = useState<boolean>(false);
   const [sentOtpToken, setSentOtpToken] = useState<string>("");
   const [regName, setRegName] = useState<string>("");
   const [regEmail, setRegEmail] = useState<string>("");
   const [regPassword, setRegPassword] = useState<string>("");
+  const [pendingRegData, setPendingRegData] = useState<any>(null);
+  const [generatedOtp, setGeneratedOtp] = useState<string>("");
 
-  // Profile Tab State
-  const [profileTab, setProfileTab] = useState<AuthProfileTab>("profile");
-
-  // Orders State
+  // Customer Dashboard Orders & Reviews State
   const [liveOrders, setLiveOrders] = useState<CustomerOrder[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<CustomerOrder | null>(null);
-  const [showReviewModal, setShowReviewModal] = useState<boolean>(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewTargetOrder, setReviewTargetOrder] = useState<CustomerOrder | null>(null);
   const [reviewedOrdersMap, setReviewedOrdersMap] = useState<Record<string, OrderReviewData>>({});
+
+  // 7-Day Return Modal State
+  const [showReturnModal, setShowReturnModal] = useState(false);
+  const [returnTargetOrder, setReturnTargetOrder] = useState<CustomerOrder | null>(null);
+
+  // Cancel Order Modal State
   const [showCancelModal, setShowCancelModal] = useState<boolean>(false);
   const [cancelTargetOrder, setCancelTargetOrder] = useState<CustomerOrder | null>(null);
   const [cancelReasonPreset, setCancelReasonPreset] = useState<string>("Đổi ý không muốn mua nữa");
@@ -375,6 +384,52 @@ function AuthPageContent() {
     alert(`Đã hủy thành công đơn hàng ${cancelTargetOrder.id}!`);
   };
 
+  const handleSubmitReturn = async (orderId: string, reasonPreset: string, reasonDetail: string, images: string[]) => {
+    const fullReason = reasonDetail ? `[Khách yêu cầu trả hàng]: ${reasonPreset} - ${reasonDetail}` : `[Khách yêu cầu trả hàng]: ${reasonPreset}`;
+
+    // Update live state
+    setLiveOrders((prev) =>
+      prev.map((o) =>
+        o.id === orderId
+          ? { ...o, status: "returned" as any, statusText: "Yêu cầu trả hàng", cancelReason: fullReason }
+          : o
+      )
+    );
+
+    // Update localStorage
+    try {
+      const stored = localStorage.getItem("mini_shop_orders");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const updated = parsed.map((o: any) =>
+          o.id === orderId ? { ...o, status: "returned", status_text: "Yêu cầu trả hàng", cancel_reason: fullReason } : o
+        );
+        localStorage.setItem("mini_shop_orders", JSON.stringify(updated));
+      }
+    } catch (e) {
+      console.error("Local storage error:", e);
+    }
+
+    // Sync to Supabase Orders table
+    try {
+      const supabase = createClient();
+      await supabase
+        .from("orders")
+        .update({
+          status: "returned",
+          status_text: "Yêu cầu trả hàng",
+          cancel_reason: fullReason,
+        })
+        .eq("id", orderId.replace("#", ""));
+    } catch (err) {
+      console.error("Error syncing return request to Supabase:", err);
+    }
+
+    setShowReturnModal(false);
+    setReturnTargetOrder(null);
+    alert(`🎉 Đã gửi yêu cầu trả hàng cho đơn ${orderId} thành công!\nChính sách đổi trả 7 ngày của Mini Shop đã được kích hoạt. Bộ phận CSKH sẽ liên hệ với bạn trong vòng 24h để hoàn tất thu hồi và hoàn tiền.`);
+  };
+
   if (loading) {
     return (
       <div style={{ minHeight: "80vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -550,6 +605,10 @@ function AuthPageContent() {
                     setCancelTargetOrder(ord);
                     setShowCancelModal(true);
                   }}
+                  onOpenReturnModal={(ord) => {
+                    setReturnTargetOrder(ord);
+                    setShowReturnModal(true);
+                  }}
                 />
               )}
               {profileTab === "addresses" && (
@@ -622,6 +681,16 @@ function AuthPageContent() {
           setReviewTargetOrder(null);
           alert("🎉 Cảm ơn bạn đã gửi đánh giá! Bạn đã nhận được +50 Điểm Thưởng VIP.");
         }}
+      />
+
+      <ReturnOrderModal
+        isOpen={showReturnModal}
+        order={returnTargetOrder}
+        onClose={() => {
+          setShowReturnModal(false);
+          setReturnTargetOrder(null);
+        }}
+        onSubmitReturn={handleSubmitReturn}
       />
 
       {/* Cancel Order Modal */}
