@@ -11,14 +11,39 @@ import { Zap, Flame, Clock, ShoppingCart, ArrowRight, Check } from "lucide-react
 
 import { fetchAdminOrders } from "@/lib/supabaseAdmin";
 
+// Helper: Convert string to 32-bit positive integer seed
+function stringToSeed(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
+// Helper: Mulberry32 fast deterministic pseudo-random number generator
+function createPRNG(seed: number) {
+  let s = seed;
+  return function () {
+    s |= 0;
+    s = (s + 0x6d2b79f5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
 export const HomeFlashSale: React.FC = () => {
   const { addToCart } = useCart();
   const [products, setProducts] = useState<Product[]>([]);
   const [realSoldMap, setRealSoldMap] = useState<Record<string, number>>({});
   const [addedId, setAddedId] = useState<number | null>(null);
 
-  // VN Countdown Timer
+  // VN Countdown Timer & Slot Tracking
   const [timeLeft, setTimeLeft] = useState({ hours: 3, minutes: 45, seconds: 20 });
+  const [currentSlotKey, setCurrentSlotKey] = useState<string>("slot1");
+  const [vnDateKey, setVnDateKey] = useState<string>("");
 
   useEffect(() => {
     async function loadData() {
@@ -43,12 +68,41 @@ export const HomeFlashSale: React.FC = () => {
     }
     loadData();
 
-    const interval = setInterval(() => {
+    const updateTimer = () => {
       const now = new Date();
       const vnDateStr = now.toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" });
       const vnTime = new Date(vnDateStr);
+      const currentHour = vnTime.getHours();
+
+      const yyyy = vnTime.getFullYear();
+      const mm = String(vnTime.getMonth() + 1).padStart(2, "0");
+      const dd = String(vnTime.getDate()).padStart(2, "0");
+      setVnDateKey(`${yyyy}-${mm}-${dd}`);
+
+      let slot = "slot1";
+      let targetEndHour = 9;
+
+      if (currentHour >= 0 && currentHour < 9) {
+        slot = "slot1";
+        targetEndHour = 9;
+      } else if (currentHour >= 9 && currentHour < 15) {
+        slot = "slot2";
+        targetEndHour = 15;
+      } else if (currentHour >= 15 && currentHour < 21) {
+        slot = "slot3";
+        targetEndHour = 21;
+      } else {
+        slot = "slot4";
+        targetEndHour = 24;
+      }
+      setCurrentSlotKey(slot);
+
       const targetTime = new Date(vnTime);
-      targetTime.setHours(23, 59, 59, 999);
+      if (targetEndHour === 24) {
+        targetTime.setHours(23, 59, 59, 999);
+      } else {
+        targetTime.setHours(targetEndHour, 0, 0, 0);
+      }
 
       const diffMs = targetTime.getTime() - vnTime.getTime();
       if (diffMs > 0) {
@@ -58,14 +112,29 @@ export const HomeFlashSale: React.FC = () => {
         const s = totalSec % 60;
         setTimeLeft({ hours: h, minutes: m, seconds: s });
       }
-    }, 1000);
+    };
 
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
   }, []);
 
-  const flashItems = (products.length > 0 ? products : PRODUCTS_DATA).slice(0, 4).map((p, idx) => {
-    const discountPercent = 25 + (idx * 5);
-    const flashPrice = Math.round((p.price * (1 - discountPercent / 100)) / 1000) * 1000;
+  const activePool = (products.length > 0 ? products : PRODUCTS_DATA).filter((p) => p.status !== "Hidden");
+  const pool = activePool.length >= 4 ? activePool : (products.length > 0 ? products : PRODUCTS_DATA);
+  const seed = stringToSeed(`MINI_SHOP_FS_${vnDateKey || "2026-08-24"}_${currentSlotKey}`);
+  const random = createPRNG(seed);
+
+  const shuffled = [...pool];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  const discountPattern = [50, 45, 40, 35];
+  const flashItems = shuffled.slice(0, 4).map((p, idx) => {
+    const discountPercent = discountPattern[idx] || 35;
+    const rawPrice = Math.round((p.price * (1 - discountPercent / 100)) / 1000) * 1000;
+    const flashPrice = Math.min(p.price - 10000, rawPrice);
     const totalStock = p.stock && p.stock > 0 ? p.stock : 20;
     const realSold = realSoldMap[p.name.trim().toLowerCase()] || 0;
     const soldCount = Math.min(totalStock, realSold);

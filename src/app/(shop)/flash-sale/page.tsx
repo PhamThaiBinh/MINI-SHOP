@@ -12,18 +12,65 @@ import { Zap, ShoppingCart, Flame, Clock, Check, Bell, Sparkles, ArrowRight, Shi
 
 import { fetchAdminOrders } from "@/lib/supabaseAdmin";
 
-// Generate 10 Flash Sale items per time slot guaranteed to be lower than original price
-const getSlotProducts = (productsList: Product[], slotIndex: number, soldMap: Record<string, number>) => {
-  const list = productsList.length > 0 ? productsList : PRODUCTS_DATA;
-  const startIndex = (slotIndex * 4) % list.length;
-  const items = [];
+// Helper: Convert string to 32-bit positive integer seed
+function stringToSeed(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
 
-  const discountPattern = [50, 45, 40, 35, 32, 30, 28, 25, 38, 27];
+// Helper: Mulberry32 fast deterministic pseudo-random number generator
+function createPRNG(seed: number) {
+  let s = seed;
+  return function () {
+    s |= 0;
+    s = (s + 0x6d2b79f5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
 
-  for (let i = 0; i < 10; i++) {
-    const pIndex = (startIndex + i) % list.length;
-    const p = list[pIndex];
-    const discountPercent = discountPattern[(i + slotIndex) % discountPattern.length];
+// Generate exactly 12 Flash Sale items per time slot & per date randomized from Supabase products
+const getSlotProducts = (
+  productsList: Product[],
+  slotKey: string,
+  dateKey: string,
+  soldMap: Record<string, number>
+) => {
+  // Use active products from Supabase (or fallback to mock if empty)
+  const activeList = productsList.length > 0
+    ? productsList.filter((p) => p.status !== "Hidden")
+    : PRODUCTS_DATA;
+  
+  const pool = activeList.length >= 12 ? activeList : (productsList.length > 0 ? productsList : PRODUCTS_DATA);
+
+  // Deterministic seed based on Date + Time Slot
+  const seed = stringToSeed(`MINI_SHOP_FS_${dateKey || "2026-08-24"}_${slotKey}`);
+  const random = createPRNG(seed);
+
+  // Fisher-Yates shuffle
+  const shuffled = [...pool];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  // Exactly 12 items
+  const selectedProducts: Product[] = [];
+  for (let i = 0; i < 12; i++) {
+    selectedProducts.push(shuffled[i % shuffled.length]);
+  }
+
+  // Tiered discount pattern for 12 items: 1st is 50% Super Deal, followed by 45%, 42%, 40%, 38%, 35%,...
+  const discountTiers = [50, 45, 42, 40, 38, 35, 35, 30, 30, 28, 25, 25];
+
+  return selectedProducts.map((p, idx) => {
+    const discountPercent = discountTiers[idx] || Math.floor(25 + random() * 25);
     
     // Calculate flashPrice strictly lower than original price
     const rawFlashPrice = Math.round((p.price * (1 - discountPercent / 100)) / 1000) * 1000;
@@ -33,16 +80,14 @@ const getSlotProducts = (productsList: Product[], slotIndex: number, soldMap: Re
     const realSold = soldMap[p.name.trim().toLowerCase()] || 0;
     const soldCount = Math.min(totalStock, realSold);
 
-    items.push({
+    return {
       product: p,
       flashPrice,
       discountPercent,
       soldCount,
       totalStock,
-    });
-  }
-
-  return items;
+    };
+  });
 };
 
 export default function FlashSalePage() {
@@ -84,6 +129,7 @@ export default function FlashSalePage() {
   // Timezone VN Calculation & Slots
   const [activeSlot, setActiveSlot] = useState<"slot1" | "slot2" | "slot3" | "slot4">("slot1");
   const [currentVnSlot, setCurrentVnSlot] = useState<"slot1" | "slot2" | "slot3" | "slot4">("slot1");
+  const [vnDateKey, setVnDateKey] = useState<string>("");
   const isSlotInitRef = React.useRef(false);
   const [vnHour, setVnHour] = useState<number>(0);
   const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
@@ -96,6 +142,12 @@ export default function FlashSalePage() {
       const vnTime = new Date(vnDateStr);
       const currentHour = vnTime.getHours();
       setVnHour(currentHour);
+
+      // Date key (YYYY-MM-DD)
+      const yyyy = vnTime.getFullYear();
+      const mm = String(vnTime.getMonth() + 1).padStart(2, "0");
+      const dd = String(vnTime.getDate()).padStart(2, "0");
+      setVnDateKey(`${yyyy}-${mm}-${dd}`);
 
       let activeKey: "slot1" | "slot2" | "slot3" | "slot4" = "slot1";
       let targetEndHour = 9;
@@ -146,11 +198,10 @@ export default function FlashSalePage() {
     return () => clearInterval(interval);
   }, []);
 
-  const slotMap = { slot1: 0, slot2: 1, slot3: 2, slot4: 3 };
   const slotStartHours = { slot1: 0, slot2: 9, slot3: 15, slot4: 21 };
   
-  const currentSlotIndex = slotMap[activeSlot];
-  const slotProducts = getSlotProducts(products, currentSlotIndex, realSoldMap);
+  // 12 products deterministically randomized by slot and date
+  const slotProducts = getSlotProducts(products, activeSlot, vnDateKey, realSoldMap);
   const heroSuperDeal = slotProducts[0]; // Top 50% deal of the slot
 
   const isSlotAvailableToBuy = vnHour >= slotStartHours[activeSlot];
