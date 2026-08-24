@@ -683,25 +683,6 @@ export default function AdminProductsPage() {
                           <td style={{ textAlign: "center" }}>
                             <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
                               <button
-                                onClick={() => handleOpenInventoryModal(prod.id, "IMPORT")}
-                                style={{
-                                  padding: "4px 8px",
-                                  background: "#f0fdf4",
-                                  color: "#166534",
-                                  border: "1px solid #bbf7d0",
-                                  borderRadius: "6px",
-                                  cursor: "pointer",
-                                  fontSize: "12px",
-                                  fontWeight: 700,
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: "4px",
-                                }}
-                                title="Lập phiếu nhập/xuất tồn kho cho sản phẩm này"
-                              >
-                                <PackageCheck className="w-3.5 h-3.5" /> Nhập/Xuất
-                              </button>
-                              <button
                                 onClick={() => handleEditClick(prod)}
                                 style={{
                                   padding: "4px 8px",
