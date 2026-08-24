@@ -1636,27 +1636,36 @@ export default function AdminProductsPage() {
                 })()}
               </div>
 
-              {/* AUDIT MODE: DISCREPANCY REASON SELECTOR */}
-              {inventoryMode === "AUDIT" && (
-                <div style={{ marginBottom: "18px", background: "#fefce8", padding: "14px", borderRadius: "14px", border: "1px solid #fef08a" }}>
-                  <label style={{ fontSize: "12.5px", fontWeight: 800, color: "#854d0e", display: "block", marginBottom: "6px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                    Lý Do Lệch Kho / Thất Thoát Hàng Thực Tế *
-                  </label>
-                  <select
-                    className="form-control admin-setting-input"
-                    value={discrepancyPresetReason}
-                    onChange={(e) => setDiscrepancyPresetReason(e.target.value)}
-                    style={{ borderRadius: "10px", padding: "10px 12px", fontSize: "13px", fontWeight: 700, fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-                  >
-                    <option value="Mất hàng / Thất thoát kiểm kho">Mất hàng / Thất thoát chưa rõ nguyên nhân</option>
-                    <option value="Hư hỏng / Lỗi vận chuyển / Trầy xước">Hư hỏng / Lỗi vận chuyển / Trầy xước gỗ</option>
-                    <option value="Sai lệch do đếm sót đợt kiểm trước">Sai lệch đếm sót đợt kiểm kê trước</option>
-                    <option value="Xuất hàng dùng thử / Quà tặng mẫu">Xuất hàng dùng thử / Quà tặng trưng bày</option>
-                    <option value="Hàng trả về chưa kịp ghi nhận">Hàng khách trả về chưa kịp nhập sổ</option>
-                    <option value="Khác (Ghi rõ ở bên dưới)">Lý do khác (Nhập ghi chú chi tiết bên dưới)</option>
-                  </select>
-                </div>
-              )}
+              {/* AUDIT MODE: DISCREPANCY REASON SELECTOR (Only displayed when there is a difference / discrepancy between system and actual count) */}
+              {(() => {
+                const targetP = products.find((p) => p.id === selectedInventoryProdId);
+                const currentS = targetP?.stock !== undefined ? targetP.stock : 15;
+                const qtyVal = parseInt(inventoryQty, 10) || 0;
+                const isDiscrepant = qtyVal !== currentS;
+
+                if (inventoryMode !== "AUDIT" || !isDiscrepant) return null;
+
+                return (
+                  <div style={{ marginBottom: "18px", background: "#fefce8", padding: "14px", borderRadius: "14px", border: "1.5px solid #fde68a" }}>
+                    <label style={{ fontSize: "12.5px", fontWeight: 800, color: "#854d0e", display: "block", marginBottom: "6px", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                      Lý Do Lệch Kho / Thất Thoát Hàng Thực Tế *
+                    </label>
+                    <select
+                      className="form-control admin-setting-input"
+                      value={discrepancyPresetReason}
+                      onChange={(e) => setDiscrepancyPresetReason(e.target.value)}
+                      style={{ borderRadius: "10px", padding: "10px 12px", fontSize: "13px", fontWeight: 700, fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                    >
+                      <option value="Mất hàng / Thất thoát kiểm kho">Mất hàng / Thất thoát chưa rõ nguyên nhân</option>
+                      <option value="Hư hỏng / Lỗi vận chuyển / Trầy xước">Hư hỏng / Lỗi vận chuyển / Trầy xước gỗ</option>
+                      <option value="Sai lệch do đếm sót đợt kiểm trước">Sai lệch đếm sót đợt kiểm kê trước</option>
+                      <option value="Xuất hàng dùng thử / Quà tặng mẫu">Xuất hàng dùng thử / Quà tặng trưng bày</option>
+                      <option value="Hàng trả về chưa kịp ghi nhận">Hàng khách trả về chưa kịp nhập sổ</option>
+                      <option value="Khác (Ghi rõ ở bên dưới)">Lý do khác (Nhập ghi chú chi tiết bên dưới)</option>
+                    </select>
+                  </div>
+                );
+              })()}
 
               {/* SUPPLIER / DESTINATION INPUT */}
               <div style={{ marginBottom: "18px" }}>
