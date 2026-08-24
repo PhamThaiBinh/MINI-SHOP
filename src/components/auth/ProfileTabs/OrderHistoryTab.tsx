@@ -173,25 +173,48 @@ export const OrderHistoryTab: React.FC<OrderHistoryTabProps> = ({
                   </button>
 
                   {o.status === "completed" && (
-                    <button
-                      type="button"
-                      onClick={() => onOpenReviewModal(o)}
-                      style={{
-                        padding: "6px 12px",
-                        borderRadius: "8px",
-                        background: "#fef3c7",
-                        border: "1px solid #fde68a",
-                        color: "#b45309",
-                        fontSize: "12px",
-                        fontWeight: 700,
-                        cursor: "pointer",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "4px",
-                      }}
-                    >
-                      <Star className="w-3.5 h-3.5" /> Đánh giá
-                    </button>
+                    o.review ? (
+                      <button
+                        type="button"
+                        onClick={() => onOpenReviewModal(o)}
+                        style={{
+                          padding: "6px 12px",
+                          borderRadius: "8px",
+                          background: "#f0fdf4",
+                          border: "1px solid #bbf7d0",
+                          color: "#166534",
+                          fontSize: "12px",
+                          fontWeight: 800,
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "4px",
+                        }}
+                        title="Xem lại đánh giá của bạn"
+                      >
+                        <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" /> Đã đánh giá ({o.review.rating}★)
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => onOpenReviewModal(o)}
+                        style={{
+                          padding: "6px 12px",
+                          borderRadius: "8px",
+                          background: "#fef3c7",
+                          border: "1px solid #fde68a",
+                          color: "#b45309",
+                          fontSize: "12px",
+                          fontWeight: 800,
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "4px",
+                        }}
+                      >
+                        <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" /> Đánh giá (+50đ)
+                      </button>
+                    )
                   )}
 
                   {(o.status === "processing" || o.status === "shipping") && (

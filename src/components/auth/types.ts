@@ -8,6 +8,16 @@ export interface AddressItem {
   isDefault: boolean;
 }
 
+export interface OrderReviewData {
+  orderId: string;
+  rating: number;
+  comment: string;
+  tags: string[];
+  createdAt: string;
+  isAnonymous?: boolean;
+  images?: string[];
+}
+
 export interface CustomerOrder {
   id: string;
   date: string;
@@ -26,6 +36,7 @@ export interface CustomerOrder {
   subtotal: number;
   discount: number;
   total: number;
+  review?: OrderReviewData;
 }
 
 export interface SearchableDropdownProps {

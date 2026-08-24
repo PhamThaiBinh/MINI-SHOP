@@ -16,7 +16,7 @@ import {
 } from "@/lib/supabaseAddress";
 import { createClient } from "@/utils/supabase/client";
 import { OtpVerificationModal } from "@/components/common/OtpVerificationModal";
-import { AddressItem, CustomerOrder } from "@/components/auth/types";
+import { AddressItem, CustomerOrder, OrderReviewData } from "@/components/auth/types";
 import { LoginForm } from "@/components/auth/AuthForms/LoginForm";
 import { RegisterForm } from "@/components/auth/AuthForms/RegisterForm";
 import { AuthCarousel } from "@/components/auth/AuthCarousel";
@@ -59,6 +59,8 @@ function AuthPageContent() {
   const [liveOrders, setLiveOrders] = useState<CustomerOrder[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<CustomerOrder | null>(null);
   const [showReviewModal, setShowReviewModal] = useState<boolean>(false);
+  const [reviewTargetOrder, setReviewTargetOrder] = useState<CustomerOrder | null>(null);
+  const [reviewedOrdersMap, setReviewedOrdersMap] = useState<Record<string, OrderReviewData>>({});
   const [showCancelModal, setShowCancelModal] = useState<boolean>(false);
   const [cancelTargetOrder, setCancelTargetOrder] = useState<CustomerOrder | null>(null);
   const [cancelReasonPreset, setCancelReasonPreset] = useState<string>("Đổi ý không muốn mua nữa");
@@ -78,11 +80,26 @@ function AuthPageContent() {
     }
   }, [searchParams]);
 
-  // Sync Orders & Addresses on login
+  // Sync Orders, Reviews & Addresses on login
   useEffect(() => {
     if (user) {
+      let savedReviews: Record<string, OrderReviewData> = {};
+      try {
+        const stored = localStorage.getItem("mini_shop_order_reviews");
+        if (stored) {
+          savedReviews = JSON.parse(stored);
+          setReviewedOrdersMap(savedReviews);
+        }
+      } catch (e) {
+        console.error("Error reading saved reviews:", e);
+      }
+
       fetchUserOrdersFromSupabase(user.phone, user.email, user.username).then((dbOrders) => {
-        setLiveOrders(dbOrders as CustomerOrder[]);
+        const mappedWithReviews = (dbOrders as CustomerOrder[]).map((ord) => ({
+          ...ord,
+          review: savedReviews[ord.id] || ord.review,
+        }));
+        setLiveOrders(mappedWithReviews);
       });
 
       const loadAddresses = () => {
@@ -525,7 +542,10 @@ function AuthPageContent() {
                 <OrderHistoryTab
                   orders={liveOrders}
                   onSelectOrder={setSelectedOrder}
-                  onOpenReviewModal={(ord) => setShowReviewModal(true)}
+                  onOpenReviewModal={(ord) => {
+                    setReviewTargetOrder(ord);
+                    setShowReviewModal(true);
+                  }}
                   onOpenCancelModal={(ord) => {
                     setCancelTargetOrder(ord);
                     setShowCancelModal(true);
@@ -566,10 +586,41 @@ function AuthPageContent() {
 
       <OrderReviewModal
         isOpen={showReviewModal}
-        onClose={() => setShowReviewModal(false)}
-        onSubmitReview={(rating, comment) => {
+        order={reviewTargetOrder}
+        existingReview={reviewTargetOrder ? (reviewedOrdersMap[reviewTargetOrder.id] || reviewTargetOrder.review) : null}
+        isReadOnly={Boolean(reviewTargetOrder && (reviewedOrdersMap[reviewTargetOrder.id] || reviewTargetOrder.review))}
+        onClose={() => {
           setShowReviewModal(false);
-          alert("Cảm ơn bạn đã gửi đánh giá sản phẩm!");
+          setReviewTargetOrder(null);
+        }}
+        onSubmitReview={(orderId, rating, comment, tags, isAnonymous, images) => {
+          const newReview: OrderReviewData = {
+            orderId,
+            rating,
+            comment,
+            tags,
+            createdAt: new Date().toLocaleDateString("vi-VN"),
+            isAnonymous,
+            images,
+          };
+
+          const updatedMap = { ...reviewedOrdersMap, [orderId]: newReview };
+          setReviewedOrdersMap(updatedMap);
+          try {
+            localStorage.setItem("mini_shop_order_reviews", JSON.stringify(updatedMap));
+          } catch (e) {
+            console.error("Error saving review to storage:", e);
+          }
+
+          setLiveOrders((prev) =>
+            prev.map((o) => (o.id === orderId ? { ...o, review: newReview } : o))
+          );
+
+          addPointsAndHistory(`Đánh giá đơn hàng #${orderId}`, 50);
+
+          setShowReviewModal(false);
+          setReviewTargetOrder(null);
+          alert("🎉 Cảm ơn bạn đã gửi đánh giá! Bạn đã nhận được +50 Điểm Thưởng VIP.");
         }}
       />
 
