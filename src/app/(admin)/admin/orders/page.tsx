@@ -222,12 +222,27 @@ export default function AdminOrdersPage() {
       order.recipientPhone.includes(searchQuery);
 
     let matchesPayment = true;
-    if (paymentFilter === "cod") {
-      matchesPayment = order.paymentMethod.includes("COD");
-    } else if (paymentFilter === "bank") {
-      matchesPayment = order.paymentMethod.includes("VietQR") || order.paymentMethod.includes("Ngân hàng");
-    } else if (paymentFilter === "wallet") {
-      matchesPayment = order.paymentMethod.includes("MoMo") || order.paymentMethod.includes("ZaloPay") || order.paymentMethod.includes("Ví");
+    if (paymentFilter !== "all") {
+      const pmLower = (order.paymentMethod || "").toLowerCase();
+      if (paymentFilter === "cod") {
+        matchesPayment = pmLower.includes("cod") || pmLower.includes("tiền mặt") || pmLower.includes("khi nhận hàng");
+      } else if (paymentFilter === "vietqr") {
+        matchesPayment = pmLower.includes("vietqr") || pmLower.includes("ngân hàng") || pmLower.includes("chuyển khoản") || pmLower.includes("qr");
+      } else if (paymentFilter === "momo") {
+        matchesPayment = pmLower.includes("momo");
+      } else if (paymentFilter === "zalopay") {
+        matchesPayment = pmLower.includes("zalopay") || pmLower.includes("zalo");
+      } else if (paymentFilter === "vnpay") {
+        matchesPayment = pmLower.includes("vnpay");
+      } else if (paymentFilter === "viettelmoney") {
+        matchesPayment = pmLower.includes("viettel");
+      } else if (paymentFilter === "vnptmoney") {
+        matchesPayment = pmLower.includes("vnpt");
+      } else if (paymentFilter === "shopeepay") {
+        matchesPayment = pmLower.includes("shopee") || pmLower.includes("airpay");
+      } else {
+        matchesPayment = pmLower.includes(paymentFilter.toLowerCase());
+      }
     }
 
     let matchesDate = true;
@@ -600,10 +615,14 @@ export default function AdminOrdersPage() {
                     }}
                   >
                     <option value="all">Tất cả thanh toán</option>
-                    <option value="VietQR">Chuyển khoản VietQR</option>
-                    <option value="MoMo">Ví MoMo</option>
-                    <option value="ZaloPay">Ví ZaloPay</option>
-                    <option value="COD">Thanh toán khi nhận hàng (COD)</option>
+                    <option value="cod">Thanh toán khi nhận hàng (COD)</option>
+                    <option value="vietqr">Chuyển khoản VietQR / Ngân hàng (QR)</option>
+                    <option value="momo">Ví MoMo</option>
+                    <option value="zalopay">Ví ZaloPay</option>
+                    <option value="viettelmoney">Ví Viettel Money</option>
+                    <option value="vnptmoney">Ví VNPT Money</option>
+                    <option value="vnpay">Ví VNPAY</option>
+                    <option value="shopeepay">Ví ShopeePay</option>
                   </select>
 
                   {(searchQuery || paymentFilter !== "all" || fromDate || toDate || activeTab !== "all") && (
@@ -650,26 +669,6 @@ export default function AdminOrdersPage() {
                   >
                     <IconDownload size={14} color="#ffffff" /> Xuất File Excel
                   </button>
-
-                      {selectedOrderIds.length > 0 && (
-                        <button
-                          onClick={handleBulkApprove}
-                          className="select-filter-sm"
-                          style={{
-                            cursor: "pointer",
-                            background: "#1d4ed8",
-                            color: "#fff",
-                            border: "none",
-                            fontWeight: 700,
-                            marginLeft: "6px",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "4px",
-                          }}
-                        >
-                          <Zap className="w-3.5 h-3.5" /> Duyệt ({selectedOrderIds.length}) đơn đã chọn
-                        </button>
-                      )}
                     </div>
                   </div>
 

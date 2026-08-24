@@ -368,6 +368,40 @@ export const updateAdminOrderStatus = async (
       .update(updateObj)
       .or(`id.eq.${orderId},id.eq.${cleanId},id.eq.${hashId}`);
 
+    // If order is cancelled or returned, RESTORE stock for products in Supabase
+    if (newStatus === "cancelled" || newStatus === "returned") {
+      try {
+        const { data: orderData } = await supabase
+          .from("orders")
+          .select("items")
+          .or(`id.eq.${orderId},id.eq.${cleanId},id.eq.${hashId}`)
+          .maybeSingle();
+
+        if (orderData && Array.isArray(orderData.items)) {
+          for (const it of orderData.items) {
+            if (it.name && it.qty) {
+              const { data: prodRows } = await supabase
+                .from("products")
+                .select("id, stock")
+                .ilike("name", it.name)
+                .limit(1);
+
+              if (prodRows && prodRows.length > 0) {
+                const p = prodRows[0];
+                const newStock = (p.stock ?? 0) + Number(it.qty);
+                await supabase
+                  .from("products")
+                  .update({ stock: newStock, status: "In stock" })
+                  .eq("id", p.id);
+              }
+            }
+          }
+        }
+      } catch (errStock) {
+        console.warn("Could not restore stock upon cancel/return:", errStock);
+      }
+    }
+
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("ordersUpdated"));
     }

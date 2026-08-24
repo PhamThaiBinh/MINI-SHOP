@@ -99,7 +99,10 @@ export default function AdminCategoriesPage() {
         fetchAdminOrders(),
       ]);
 
-      const completedOrders = (orders || []).filter((o) => o.status === "completed" || o.status !== "cancelled");
+      // Strictly only COMPLETED orders count towards Revenue (Cancelled & Returned are strictly excluded)
+      const completedOrders = (orders || []).filter(
+        (o) => o.status === "completed" && !o.statusText?.toLowerCase().includes("trả hàng")
+      );
       if (completedOrders.length === 0) {
         setTopCatInfo({ name: "Chưa có doanh thu", revenue: 0 });
         return;
@@ -110,19 +113,54 @@ export default function AdminCategoriesPage() {
         catRevenueMap[c.name] = 0;
       });
 
-      completedOrders.forEach((order) => {
-        (order.items || []).forEach((item: any) => {
-          const matchedProd = prods.find((p) => p.name.trim().toLowerCase() === item.name.trim().toLowerCase());
-          if (matchedProd) {
-            const catName = matchedProd.categoryName || matchedProd.category;
-            const matchedCat = categories.find(
-              (c) => c.name.toLowerCase() === catName.toLowerCase() || c.slug.toLowerCase() === catName.toLowerCase()
-            );
-            if (matchedCat) {
-              catRevenueMap[matchedCat.name] = (catRevenueMap[matchedCat.name] || 0) + item.price * item.qty;
-            }
-          }
+      categories.forEach((cat) => {
+        const catCodeLower = (cat.slug || `c${String(cat.id).padStart(4, "0")}`).toLowerCase();
+        const catSlugLower = (cat.slug || "").toLowerCase();
+        const catNameLower = (cat.name || "").toLowerCase();
+
+        const catProducts = prods.filter((p) => {
+          const pCat = (p.category || "").toLowerCase();
+          const pCatName = (p.categoryName || "").toLowerCase();
+          return (
+            pCat === catCodeLower ||
+            pCat === catSlugLower ||
+            pCat === catNameLower ||
+            pCatName === catNameLower
+          );
         });
+        const catProdNames = new Set(catProducts.map((p) => p.name.toLowerCase()));
+
+        let catRevenue = 0;
+        completedOrders.forEach((ord) => {
+          (ord.items || []).forEach((it) => {
+            const itNameLower = (it.name || "").toLowerCase();
+            const itCatLower = ((it as any).category || "").toLowerCase();
+
+            const isNameMatch = Array.from(catProdNames).some(
+              (pn) => itNameLower.includes(pn) || pn.includes(itNameLower)
+            );
+            const isCatMatch =
+              itCatLower === catCodeLower ||
+              itCatLower === catSlugLower ||
+              itCatLower === catNameLower;
+
+            let isKeywordMatch = false;
+            if (catNameLower.includes("khách") && (itNameLower.includes("sofa") || itNameLower.includes("bàn trà") || itNameLower.includes("kệ tivi"))) isKeywordMatch = true;
+            if (catNameLower.includes("ngủ") && (itNameLower.includes("giường") || itNameLower.includes("nệm") || itNameLower.includes("chăn"))) isKeywordMatch = true;
+            if (catNameLower.includes("bếp") && (itNameLower.includes("bàn ăn") || itNameLower.includes("ghế ăn") || itNameLower.includes("tủ bếp") || itNameLower.includes("nồi"))) isKeywordMatch = true;
+            if (catNameLower.includes("đèn") && (itNameLower.includes("đèn") || itNameLower.includes("chiếu sáng"))) isKeywordMatch = true;
+            if (catNameLower.includes("trang trí") && (itNameLower.includes("trang trí") || itNameLower.includes("gốm") || itNameLower.includes("sơn mài") || itNameLower.includes("bình") || itNameLower.includes("mèo"))) isKeywordMatch = true;
+            if (catNameLower.includes("lưu trữ") && (itNameLower.includes("kệ") || itNameLower.includes("tủ giày") || itNameLower.includes("giỏ"))) isKeywordMatch = true;
+            if (catNameLower.includes("rèm") && (itNameLower.includes("rèm") || itNameLower.includes("màn"))) isKeywordMatch = true;
+            if (catNameLower.includes("lavabo") && (itNameLower.includes("lavabo") || itNameLower.includes("chậu rửa") || itNameLower.includes("phòng tắm"))) isKeywordMatch = true;
+
+            if (isNameMatch || isCatMatch || isKeywordMatch) {
+              catRevenue += Number(it.price || 0) * Number(it.qty || 1);
+            }
+          });
+        });
+
+        catRevenueMap[cat.name] = catRevenue;
       });
 
       let highestName = "Chưa có doanh thu";
