@@ -185,6 +185,92 @@ export interface ExtractedIntent {
 }
 
 /**
+ * Helper to parse Vietnamese colloquial price expressions
+ * Supports:
+ * - 5 củ, 5 cu, 5 chai, 5 quả, 5 triệu, 5tr, 5m, 1.5 củ, 1 củ rưỡi
+ * - 5 xị, 5 xi, 3 lít, 2 lốp, 2 xị rưỡi (1 xị = 100k)
+ * - 500k, 500 ngàn, 500 nghìn, 500.000, 500000, 5.000.000, 5000000
+ * - nửa củ, nửa triệu, nửa xị
+ */
+export function parseVietnamesePrice(numStr: string, unitStr?: string, hasHalf?: boolean): number {
+  let raw = (numStr || "").trim();
+  let unit = (unitStr || "").toLowerCase().trim();
+
+  // Special words without explicit number
+  if (raw === "nua" || raw === "nửa") {
+    if (unit.includes("cu") || unit.includes("chai") || unit.includes("trieu") || unit.includes("tr") || unit.includes("m") || unit.includes("qua")) {
+      return 500000;
+    }
+    if (unit.includes("xi") || unit.includes("lit") || unit.includes("lop")) {
+      return 50000;
+    }
+    return 500000;
+  }
+
+  // Handle formats like "5.000.000", "500.000", "500000" (two or more groups of 3 digits)
+  if (/^\d{1,3}(?:[.,]\d{3})+$/.test(raw)) {
+    return parseInt(raw.replace(/[.,]/g, ""), 10);
+  }
+
+  let val = parseFloat(raw.replace(",", "."));
+  if (isNaN(val)) val = 1;
+
+  if (hasHalf) {
+    val += 0.5;
+  }
+
+  // 1. Million units: củ, cu, chai, quả, triệu, trieu, tr, m
+  if (
+    unit.includes("cu") ||
+    unit.includes("củ") ||
+    unit.includes("chai") ||
+    unit.includes("qua") ||
+    unit.includes("quả") ||
+    unit.includes("tr") ||
+    unit.includes("m") ||
+    unit.includes("trieu") ||
+    unit.includes("triệu")
+  ) {
+    return Math.round(val * 1000000);
+  }
+
+  // 2. Hundred-thousand units: xị, xi, lít, lit, lốp, lop, lét (1 xị = 100,000đ)
+  if (
+    unit.includes("xi") ||
+    unit.includes("xị") ||
+    unit.includes("lit") ||
+    unit.includes("lít") ||
+    unit.includes("lop") ||
+    unit.includes("lốp") ||
+    unit.includes("let") ||
+    unit.includes("lét")
+  ) {
+    return Math.round(val * 100000);
+  }
+
+  // 3. Thousand units: k, nghìn, nghin, ngàn, ngan
+  if (
+    unit.includes("k") ||
+    unit.includes("nghin") ||
+    unit.includes("nghìn") ||
+    unit.includes("ngan") ||
+    unit.includes("ngàn")
+  ) {
+    return Math.round(val * 1000);
+  }
+
+  if (val >= 1000) {
+    return Math.round(val);
+  } else if (val < 20) {
+    return Math.round(val * 1000000);
+  } else if (val < 1000) {
+    return Math.round(val * 1000);
+  }
+
+  return Math.round(val);
+}
+
+/**
  * Intelligent Multi-Keyword & Natural Language Intent Parser
  */
 export function parseUserIntent(query: string): ExtractedIntent {
@@ -231,36 +317,55 @@ export function parseUserIntent(query: string): ExtractedIntent {
   let maxPrice: number | undefined;
   let priceSort: "asc" | "desc" | undefined;
 
-  // Helper to parse price string like "500k", "1.5tr", "3 triệu", "500000"
-  const parsePriceAmount = (numStr: string, unitStr?: string): number => {
-    let val = parseFloat(numStr.replace(",", "."));
-    const unit = (unitStr || "").toLowerCase();
-    if (unit.includes("tr") || unit.includes("m") || unit.includes("trieu")) {
-      val *= 1000000;
-    } else if (unit.includes("k") || unit.includes("nghin") || unit.includes("ngan") || val < 1000) {
-      val *= 1000;
-    }
-    return val;
-  };
 
-  // Pattern: từ X đến Y / X - Y (ví dụ: "từ 1 đến 3 triệu", "từ 500k đến 1tr", "1 - 3tr", "khoảng 1tr - 2tr")
-  const rangeMatch = normalized.match(/(?:tu|khoang)?\s*(\d+(?:[.,]\d+)?)\s*(k|nghin|ngan|trieu|tr|m)?\s*(?:den|-|toi|\.\.)\s*(\d+(?:[.,]\d+)?)\s*(k|nghin|ngan|trieu|tr|m)?/);
+  const unitGroup = "k|nghin|ngan|trieu|tr|m|cu|chai|qua|xi|lit|lop|let";
+  const numToken = "\\d+(?:[.,]\\d+)*|nua";
+
+  // Pattern: từ X đến Y / X - Y (ví dụ: "từ 1 đến 3 củ", "từ 500k đến 2 triệu", "khoảng 2 - 5 chai", "từ 2 xị đến 5 xị")
+  const rangeRegex = new RegExp(
+    `(?:tu|khoang)?\\s*(${numToken})\\s*(${unitGroup})?\\s*(?:ruoi)?\\s*(?:den|-|toi|\\.\\.)\\s*(${numToken})\\s*(${unitGroup})?\\s*(ruoi)?`,
+    "i"
+  );
+  const rangeMatch = normalized.match(rangeRegex);
   if (rangeMatch) {
     const rawUnit1 = rangeMatch[2];
-    const rawUnit2 = rangeMatch[4] || rawUnit1; // Inherit unit if omitted
-    minPrice = parsePriceAmount(rangeMatch[1], rawUnit1 || rawUnit2);
-    maxPrice = parsePriceAmount(rangeMatch[3], rawUnit2);
+    const rawUnit2 = rangeMatch[4] || rawUnit1;
+    minPrice = parseVietnamesePrice(rangeMatch[1], rawUnit1 || rawUnit2, normalized.includes("ruoi"));
+    maxPrice = parseVietnamesePrice(rangeMatch[3], rawUnit2, Boolean(rangeMatch[5]));
   } else {
-    // Pattern: dưới 500k, dưới 1 triệu, < 2tr, khong qua 3tr
-    const underMatch = normalized.match(/(?:duoi|nho hon|<|khong qua|tam)\s*(\d+(?:[.,]\d+)?)\s*(k|nghin|ngan|trieu|tr|m)?/);
+    // Pattern: dưới 5 xị, dưới 5 củ, < 2tr, khong qua 3 chai, tam 500k, duoi 5.000.000
+    const underRegex = new RegExp(
+      `(?:duoi|nho hon|<|<=|khong qua|tam|toi da|duoi muc)\\s*(${numToken})\\s*(${unitGroup})?\\s*(ruoi)?`,
+      "i"
+    );
+    const underMatch = normalized.match(underRegex);
     if (underMatch) {
-      maxPrice = parsePriceAmount(underMatch[1], underMatch[2]);
+      maxPrice = parseVietnamesePrice(underMatch[1], underMatch[2], Boolean(underMatch[3]) || normalized.includes("ruoi"));
     }
 
-    // Pattern: trên 1 triệu, > 500k, tu 2tr tro len
-    const overMatch = normalized.match(/(?:tren|lon hon|>|tu)\s*(\d+(?:[.,]\d+)?)\s*(k|nghin|ngan|trieu|tr|m)?/);
-    if (overMatch) {
-      minPrice = parsePriceAmount(overMatch[1], overMatch[2]);
+    // Pattern: trên 1 triệu, > 500k, tu 2 củ tro len, hon 1 chai
+    const overRegex = new RegExp(
+      `(?:tren|lon hon|>|>=|tu|hon)\\s*(${numToken})\\s*(${unitGroup})?\\s*(ruoi)?(?:\\s*tro len)?`,
+      "i"
+    );
+    const overMatch = normalized.match(overRegex);
+    if (overMatch && !underMatch) {
+      minPrice = parseVietnamesePrice(overMatch[1], overMatch[2], Boolean(overMatch[3]) || normalized.includes("ruoi"));
+    }
+  }
+
+  // Standalone colloquial price or pure number (e.g. user just asks "sofa 5 củ", "bàn 5 xị", "giường 5.000.000", "500000")
+  if (minPrice === undefined && maxPrice === undefined) {
+    const standaloneRegex = new RegExp(
+      `\\b(${numToken})\\s*(${unitGroup})?\\b`,
+      "i"
+    );
+    const standaloneMatch = normalized.match(standaloneRegex);
+    if (standaloneMatch) {
+      const parsed = parseVietnamesePrice(standaloneMatch[1], standaloneMatch[2], normalized.includes("ruoi"));
+      if (parsed > 0) {
+        maxPrice = parsed;
+      }
     }
   }
 
@@ -273,10 +378,11 @@ export function parseUserIntent(query: string): ExtractedIntent {
     if (!minPrice) minPrice = 3000000;
   }
 
-  // 5. Clean query for category matching by removing price range numbers and prepositions
+  // 5. Clean query for category matching by removing price range numbers, colloquial slang, and prepositions
   let queryForCategory = normalized
-    .replace(/(?:tu|khoang)\s*\d+(?:[.,]\d+)?\s*(?:k|nghin|ngan|trieu|tr|m)?\s*(?:den|-|toi|\.\.)\s*\d+(?:[.,]\d+)?\s*(?:k|nghin|ngan|trieu|tr|m)?/g, " ")
-    .replace(/(?:duoi|nho hon|<|khong qua|tam|tren|lon hon|>|tu|den)\s*\d+(?:[.,]\d+)?\s*(?:k|nghin|ngan|trieu|tr|m)?/g, " ")
+    .replace(new RegExp(`(?:tu|khoang)?\\s*(${numToken})\\s*(${unitGroup})?\\s*(?:ruoi)?\\s*(?:den|-|toi|\\.\\.)\\s*(${numToken})\\s*(${unitGroup})?\\s*(ruoi)?`, "gi"), " ")
+    .replace(new RegExp(`(?:duoi|nho hon|<|<=|khong qua|tam|tren|lon hon|>|>=|tu|den|hon)\\s*(${numToken})\\s*(${unitGroup})?\\s*(ruoi)?`, "gi"), " ")
+    .replace(new RegExp(`\\b(${numToken})\\s*(${unitGroup})\\b`, "gi"), " ")
     .replace(/\b(?:tu|den)\s+\d+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
@@ -284,12 +390,20 @@ export function parseUserIntent(query: string): ExtractedIntent {
   // Multi-Keyword & Category Parser (Supporting "hoặc", "và", "với", "hay", ",", "+")
   CATEGORY_DEFINITIONS.forEach((catDef) => {
     for (const token of catDef.exactTokens) {
-      // If token is ambiguous short word like "tu" or "den", require exact accented presence if accented input
+      // If token is ambiguous short word like "tu" or "den", check accented presence in raw query
       if (token === "tu" || token === "den") {
+        const rawLower = query.toLowerCase();
+        if (token === "tu" && rawLower.includes("tủ")) {
+          matchedCategories.add(catDef.name);
+          break;
+        }
+        if (token === "den" && rawLower.includes("đèn")) {
+          matchedCategories.add(catDef.name);
+          break;
+        }
         if (!hasWordToken(queryForCategory, token)) continue;
-        // Check if user literally meant preposition vs noun
-        if (query.toLowerCase().includes("từ") && !query.toLowerCase().includes("tủ")) continue;
-        if (query.toLowerCase().includes("đến") && !query.toLowerCase().includes("đèn")) continue;
+        if (rawLower.includes("từ") && !rawLower.includes("tủ")) continue;
+        if (rawLower.includes("đến") && !rawLower.includes("đèn")) continue;
       }
 
       if (hasWordToken(queryForCategory, token)) {
@@ -301,6 +415,7 @@ export function parseUserIntent(query: string): ExtractedIntent {
       }
     }
   });
+
 
   // Special standalone keywords recognition (e.g. "tre", "go", "gom", "chau cay", "khay")
   const specificTerms = [
