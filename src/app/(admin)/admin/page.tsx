@@ -1218,67 +1218,179 @@ export default function AdminDashboard() {
                   );
                 })()}
 
-                {/* 2B. CATEGORY REVENUE: ANIMATED COLUMN BAR CHART */}
+                {/* 2B. CATEGORY REVENUE: PROFESSIONAL MODERN FINTECH COLUMN BAR CHART */}
                 {(() => {
-                  const maxCatRevenue = Math.max(...categoryStats.map((c) => c.revenue), 1000000);
-                  const barGradients = [
-                    "linear-gradient(180deg, #10b981 0%, #047857 100%)",
-                    "linear-gradient(180deg, #0284c7 0%, #0369a1 100%)",
-                    "linear-gradient(180deg, #8b5cf6 0%, #6d28d9 100%)",
-                    "linear-gradient(180deg, #f59e0b 0%, #b45309 100%)",
-                    "linear-gradient(180deg, #06b6d4 0%, #0891b2 100%)",
-                    "linear-gradient(180deg, #ec4899 0%, #be185d 100%)",
-                    "linear-gradient(180deg, #6366f1 0%, #4338ca 100%)",
-                    "linear-gradient(180deg, #14b8a6 0%, #0f766e 100%)",
-                  ];
+                  const rawMax = Math.max(...categoryStats.map((c) => c.revenue), 1000000);
+                  const maxCatRevenue = Math.ceil(rawMax / 500000) * 500000;
 
+                  const yAxisSteps = [1, 0.75, 0.5, 0.25, 0];
                   const hoveredCat = categoryStats.find((c) => c.code === hoveredCategoryCode);
 
                   return (
-                    <div className="dashboard-card" style={{ display: "flex", flexDirection: "column", background: "#ffffff", borderRadius: "18px", padding: "20px", boxShadow: "0 4px 20px rgba(0,0,0,0.04)" }}>
-                      <div className="card-header-row" style={{ marginBottom: "12px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <div
+                      className="dashboard-card"
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        background: "#ffffff",
+                        borderRadius: "18px",
+                        padding: "22px 24px",
+                        boxShadow: "0 4px 20px rgba(0,0,0,0.04)",
+                        border: "1px solid #eef2f6",
+                      }}
+                    >
+                      {/* Header Row */}
+                      <div
+                        className="card-header-row"
+                        style={{
+                          marginBottom: "16px",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "flex-start",
+                        }}
+                      >
                         <div>
-                          <h3 className="card-header-title" style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "16px", fontWeight: 800, color: "#0f172a", margin: 0 }}>
-                            <BarChart3 className="w-5 h-5 text-sky-600" /> Đóng Góp Doanh Thu Theo Danh Mục
+                          <h3
+                            className="card-header-title"
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                              fontSize: "16px",
+                              fontWeight: 800,
+                              color: "#0f172a",
+                              margin: 0,
+                            }}
+                          >
+                            <BarChart3 className="w-5 h-5 text-emerald-600" /> Đóng Góp Doanh Thu Theo Danh Mục
                           </h3>
-                          <p style={{ fontSize: "12px", color: "var(--text-muted)", margin: "4px 0 0" }}>
-                            Hiệu quả kinh doanh thực tế của <strong>{categories.length} nhóm sản phẩm</strong>
+                          <p style={{ fontSize: "12px", color: "#64748b", margin: "4px 0 0" }}>
+                            Phân tích cơ cấu doanh số thực tế của <strong>{categories.length} nhóm ngành hàng</strong>
                           </p>
                         </div>
+
+                        {/* Top Indicator */}
                         {hoveredCat ? (
-                          <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "4px 12px", borderRadius: "12px", textAlign: "right" }}>
-                            <span style={{ fontSize: "11px", fontWeight: 700, color: "#166534" }}>{hoveredCat.name}: </span>
-                            <strong style={{ fontSize: "13px", color: "#15803d" }}>{formatVND(hoveredCat.revenue)}</strong>
-                            <span style={{ fontSize: "11px", color: "#64748b", marginLeft: "4px" }}>({hoveredCat.percentage}%)</span>
+                          <div
+                            style={{
+                              background: "#f0fdf4",
+                              border: "1px solid #bbf7d0",
+                              padding: "6px 14px",
+                              borderRadius: "12px",
+                              textAlign: "right",
+                              boxShadow: "0 2px 8px rgba(22, 101, 52, 0.08)",
+                            }}
+                          >
+                            <div style={{ fontSize: "11px", fontWeight: 700, color: "#166534" }}>
+                              {hoveredCat.name} <code style={{ fontSize: "10px", color: "#15803d", background: "#dcfce7", padding: "1px 5px", borderRadius: "4px" }}>{hoveredCat.code}</code>
+                            </div>
+                            <div style={{ fontSize: "14px", fontWeight: 900, color: "#15803d", marginTop: "2px" }}>
+                              {formatVND(hoveredCat.revenue)}{" "}
+                              <span style={{ fontSize: "11px", fontWeight: 700, color: "#166534" }}>
+                                ({hoveredCat.percentage}%)
+                              </span>
+                            </div>
                           </div>
                         ) : (
-                          <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", padding: "4px 12px", borderRadius: "12px", textAlign: "right" }}>
-                            <span style={{ fontSize: "11px", fontWeight: 700, color: "#64748b" }}>Tổng DT hoàn thành: </span>
-                            <strong style={{ fontSize: "13px", color: "var(--primary-color)" }}>{formatVND(netRevenue)}</strong>
+                          <div
+                            style={{
+                              background: "#f8fafc",
+                              border: "1px solid #e2e8f0",
+                              padding: "6px 14px",
+                              borderRadius: "12px",
+                              textAlign: "right",
+                            }}
+                          >
+                            <div style={{ fontSize: "11px", fontWeight: 700, color: "#64748b" }}>Tổng DT Hoàn Thành</div>
+                            <div style={{ fontSize: "14px", fontWeight: 900, color: "var(--primary-color, #2e7d32)", marginTop: "2px" }}>
+                              {formatVND(netRevenue)}
+                            </div>
                           </div>
                         )}
                       </div>
 
-                      {/* Bar Chart Canvas with Gridlines */}
-                      <div style={{ position: "relative", flex: 1, minHeight: "190px", display: "flex", flexDirection: "column", justifyContent: "flex-end", marginTop: "10px" }}>
-                        {/* Background Horizontal Grid Lines */}
-                        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "space-between", pointerEvents: "none", zIndex: 0 }}>
-                          {[1, 0.75, 0.5, 0.25, 0].map((step, i) => (
-                            <div key={i} style={{ display: "flex", alignItems: "center", width: "100%", opacity: 0.6 }}>
-                              <span style={{ fontSize: "9.5px", fontWeight: 700, color: "#94a3b8", width: "42px", textAlign: "right", paddingRight: "6px" }}>
-                                {step === 0 ? "0đ" : `${((maxCatRevenue * step) / 1000000).toFixed(1)}M`}
-                              </span>
-                              <div style={{ flex: 1, borderBottom: "1px dashed #e2e8f0" }} />
-                            </div>
-                          ))}
+                      {/* Bar Chart Area */}
+                      <div
+                        style={{
+                          position: "relative",
+                          flex: 1,
+                          minHeight: "220px",
+                          display: "flex",
+                          flexDirection: "column",
+                          justifyContent: "flex-end",
+                          marginTop: "8px",
+                        }}
+                      >
+                        {/* Horizontal Gridlines & Y-Axis Scale */}
+                        <div
+                          style={{
+                            position: "absolute",
+                            inset: "0 0 54px 0",
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "space-between",
+                            pointerEvents: "none",
+                            zIndex: 0,
+                          }}
+                        >
+                          {yAxisSteps.map((step, i) => {
+                            const val = maxCatRevenue * step;
+                            const label =
+                              val === 0
+                                ? "0đ"
+                                : val >= 1000000
+                                ? `${(val / 1000000).toFixed(1)}M`
+                                : `${Math.round(val / 1000)}K`;
+
+                            return (
+                              <div
+                                key={i}
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  width: "100%",
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    fontSize: "10.5px",
+                                    fontWeight: 700,
+                                    color: "#94a3b8",
+                                    width: "44px",
+                                    textAlign: "right",
+                                    paddingRight: "8px",
+                                    userSelect: "none",
+                                  }}
+                                >
+                                  {label}
+                                </span>
+                                <div
+                                  style={{
+                                    flex: 1,
+                                    borderBottom: i === yAxisSteps.length - 1 ? "1.5px solid #cbd5e1" : "1px dashed #f1f5f9",
+                                  }}
+                                />
+                              </div>
+                            );
+                          })}
                         </div>
 
-                        {/* Bars Container */}
-                        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-around", height: "150px", marginLeft: "46px", zIndex: 1, paddingBottom: "4px" }}>
+                        {/* Columns Container */}
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "flex-end",
+                            justifyContent: "space-around",
+                            height: "160px",
+                            marginLeft: "48px",
+                            zIndex: 1,
+                            paddingBottom: "2px",
+                          }}
+                        >
                           {categoryStats.map((cat, idx) => {
                             const isHovered = hoveredCategoryCode === cat.code;
-                            const heightPct = Math.max(cat.revenue > 0 ? 12 : 5, Math.round((cat.revenue / maxCatRevenue) * 100));
-                            const grad = barGradients[idx % barGradients.length];
+                            const heightPct = cat.revenue > 0 ? Math.max(10, Math.min(100, Math.round((cat.revenue / maxCatRevenue) * 100))) : 0;
+                            const hasRevenue = cat.revenue > 0;
 
                             return (
                               <div
@@ -1290,83 +1402,103 @@ export default function AdminDashboard() {
                                   flexDirection: "column",
                                   alignItems: "center",
                                   width: `${100 / categoryStats.length}%`,
-                                  maxWidth: "54px",
                                   height: "100%",
                                   justifyContent: "flex-end",
                                   cursor: "pointer",
                                   position: "relative",
+                                  padding: "0 4px",
                                 }}
                               >
                                 {/* Value Label above Bar */}
                                 <div
                                   style={{
-                                    fontSize: "10px",
+                                    fontSize: isHovered ? "11px" : "10px",
                                     fontWeight: 800,
-                                    color: isHovered ? "#0f172a" : cat.revenue > 0 ? "#15803d" : "#94a3b8",
-                                    marginBottom: "4px",
+                                    color: isHovered ? "#0f172a" : hasRevenue ? "#15803d" : "#94a3b8",
+                                    marginBottom: "6px",
                                     whiteSpace: "nowrap",
                                     transform: isHovered ? "scale(1.15) translateY(-2px)" : "none",
-                                    transition: "all 0.2s ease",
+                                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                                   }}
                                 >
-                                  {cat.revenue > 0 ? `${(cat.revenue / 1000000).toFixed(1)}M` : "0đ"}
+                                  {hasRevenue ? (cat.revenue >= 1000000 ? `${(cat.revenue / 1000000).toFixed(1)}M` : `${Math.round(cat.revenue / 1000)}K`) : "0đ"}
                                 </div>
 
-                                {/* Animated Column Bar */}
+                                {/* Track Background + Column Bar */}
                                 <div
                                   style={{
-                                    width: isHovered ? "32px" : "24px",
-                                    height: `${heightPct}%`,
-                                    background: cat.revenue > 0 ? grad : "#e2e8f0",
-                                    borderRadius: "8px 8px 3px 3px",
-                                    boxShadow: isHovered
-                                      ? "0 8px 20px rgba(16, 185, 129, 0.4)"
-                                      : cat.revenue > 0
-                                      ? "0 4px 10px rgba(0,0,0,0.08)"
-                                      : "none",
-                                    transition: "all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
-                                    border: isHovered ? "2px solid #ffffff" : "none",
+                                    width: isHovered ? "34px" : "28px",
+                                    height: "100%",
+                                    maxHeight: "128px",
+                                    background: isHovered ? "#f1f5f9" : "rgba(241, 245, 249, 0.4)",
+                                    borderRadius: "8px 8px 0 0",
+                                    display: "flex",
+                                    alignItems: "flex-end",
+                                    position: "relative",
+                                    transition: "all 0.25s ease",
+                                    overflow: "hidden",
                                   }}
-                                />
+                                >
+                                  <div
+                                    style={{
+                                      width: "100%",
+                                      height: `${heightPct}%`,
+                                      background: hasRevenue
+                                        ? isHovered
+                                          ? "linear-gradient(180deg, #10b981 0%, #047857 100%)"
+                                          : "linear-gradient(180deg, #059669 0%, #10b981 100%)"
+                                        : "transparent",
+                                      borderRadius: "6px 6px 0 0",
+                                      boxShadow: isHovered && hasRevenue
+                                        ? "0 6px 16px rgba(16, 185, 129, 0.4)"
+                                        : "none",
+                                      transition: "all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                                    }}
+                                  />
+                                </div>
                               </div>
                             );
                           })}
                         </div>
 
-                        {/* X-Axis Category Labels */}
-                        <div style={{ display: "flex", justifyContent: "space-around", marginLeft: "46px", paddingTop: "8px", borderTop: "1.5px solid #cbd5e1", zIndex: 1 }}>
-                          {categoryStats.map((cat, idx) => {
+                        {/* X-Axis Category Names (Clean, Full & Professional - No Emojis/Icons) */}
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-around",
+                            marginLeft: "48px",
+                            paddingTop: "10px",
+                            borderTop: "1.5px solid #cbd5e1",
+                            zIndex: 1,
+                          }}
+                        >
+                          {categoryStats.map((cat) => {
                             const isHovered = hoveredCategoryCode === cat.code;
                             return (
                               <div
                                 key={cat.code}
                                 onMouseEnter={() => setHoveredCategoryCode(cat.code)}
                                 onMouseLeave={() => setHoveredCategoryCode(null)}
-                                title={`${cat.name} (${cat.code}): ${formatVND(cat.revenue)} - ${cat.orderCount} đơn`}
+                                title={`${cat.name} (${cat.code}): ${formatVND(cat.revenue)}`}
                                 style={{
                                   width: `${100 / categoryStats.length}%`,
-                                  maxWidth: "54px",
                                   textAlign: "center",
                                   cursor: "pointer",
-                                  transition: "all 0.2s ease",
-                                  transform: isHovered ? "translateY(-2px)" : "none",
+                                  padding: "0 2px",
                                 }}
                               >
-                                <span style={{ fontSize: "14px", display: "block" }}>{cat.icon}</span>
                                 <span
                                   style={{
-                                    fontSize: "10.5px",
-                                    fontWeight: isHovered ? 800 : 700,
+                                    fontSize: "11px",
+                                    fontWeight: isHovered ? 800 : 600,
                                     color: isHovered ? "#0f172a" : "#475569",
                                     display: "block",
-                                    whiteSpace: "nowrap",
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    maxWidth: "50px",
-                                    margin: "0 auto",
+                                    lineHeight: "1.25",
+                                    wordBreak: "break-word",
+                                    transition: "all 0.2s ease",
                                   }}
                                 >
-                                  {cat.name.split(" ")[0]}
+                                  {cat.name}
                                 </span>
                               </div>
                             );
