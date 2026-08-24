@@ -324,30 +324,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [user]);
 
-  // Enhanced SignUp (Strictly saved to Supabase DB 'users' table, NO Supabase Auth)
+  // Enhanced SignUp (Strictly saved to Supabase DB 'users' table, NO duplicate name restriction)
   const signUp = async (email: string, password: string, name: string, phone?: string): Promise<{ success: boolean; error?: string }> => {
     const cleanEmail = email.trim().toLowerCase();
     const cleanName = name.trim();
     const cleanPhone = phone?.trim() || "";
     const isEmailAdmin = cleanEmail === "admin@minishop.vn";
     const role: "admin" | "customer" = isEmailAdmin ? "admin" : "customer";
-    const formattedUsername = generateCleanUsername(cleanName);
+    
+    // Generate clean username handle with unique random tag so people with identical names can register freely
+    const baseSlug = generateCleanUsername(cleanName || cleanEmail);
+    const uniqueSuffix = Math.floor(100 + Math.random() * 900);
+    const formattedUsername = `${baseSlug}_${uniqueSuffix}`;
     const username = formattedUsername.replace(/^@/, "");
     const supabase = createClient();
 
     const userCode = "U" + Math.floor(1000 + Math.random() * 9000).toString();
 
-    // Check if user already exists in Supabase DB
+    // ONLY check if email already exists in Supabase DB (People can share identical names)
     try {
       const { data: existingUsers } = await supabase
         .from("users")
-        .select("id, email, username")
-        .or(`email.ilike.${cleanEmail},username.ilike.${formattedUsername}`);
+        .select("id, email")
+        .ilike("email", cleanEmail);
 
       if (existingUsers && existingUsers.length > 0) {
         return {
           success: false,
-          error: "Email hoặc tên người dùng đã tồn tại! Vui lòng chọn tên khác hoặc đăng nhập.",
+          error: "Địa chỉ email này đã được đăng ký tài khoản trước đó! Vui lòng chuyển sang tab Đăng Nhập hoặc sử dụng email khác.",
         };
       }
     } catch (checkErr) {

@@ -203,13 +203,13 @@ function AuthPageContent() {
 
     setIsSubmittingReg(true);
 
-    // 3. PRE-CHECK IN DATABASE: Does this user/email already exist?
+    // 3. PRE-CHECK IN DATABASE: Only check if email already exists (Names can be shared)
     try {
       const supabase = createClient();
       const { data: existingUsers, error: checkErr } = await supabase
         .from("users")
-        .select("id, email, username")
-        .or(`email.ilike.${cleanEmail},email.eq.${cleanEmail}`);
+        .select("id, email")
+        .ilike("email", cleanEmail);
 
       if (existingUsers && existingUsers.length > 0) {
         setAuthError(`Email "${cleanEmail}" đã được đăng ký tài khoản trước đó. Vui lòng chuyển sang tab Đăng Nhập hoặc sử dụng email khác!`);
