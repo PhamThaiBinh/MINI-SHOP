@@ -691,7 +691,7 @@ export default function AdminOrdersPage() {
                         <th>Tổng Tiền</th>
                         <th>Thanh Toán</th>
                         <th>Trạng Thái</th>
-                        <th style={{ textAlign: "center" }}>Thao Tác</th>
+                        <th style={{ textAlign: "center", width: "130px", minWidth: "120px" }}>Thao Tác</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -769,69 +769,117 @@ export default function AdminOrdersPage() {
                               className="badge-visible"
                               style={{
                                 background: order.paymentMethod.includes("VietQR")
-                                  ? "#e8f5e9"
-                                  : order.paymentMethod.includes("MoMo")
-                                  ? "#e0f2fe"
-                                  : order.paymentMethod.includes("ZaloPay")
-                                  ? "#f3e8ff"
-                                  : "#fef3c7",
+                                    ? "#e8f5e9"
+                                    : order.paymentMethod.includes("MoMo")
+                                    ? "#e0f2fe"
+                                    : order.paymentMethod.includes("ZaloPay")
+                                    ? "#f3e8ff"
+                                    : "#fef3c7",
                                 color: order.paymentMethod.includes("VietQR")
-                                  ? "var(--primary-color)"
-                                  : order.paymentMethod.includes("MoMo")
-                                  ? "#0284c7"
-                                  : order.paymentMethod.includes("ZaloPay")
-                                  ? "#7e22ce"
-                                  : "#d97706",
+                                    ? "var(--primary-color)"
+                                    : order.paymentMethod.includes("MoMo")
+                                    ? "#0284c7"
+                                    : order.paymentMethod.includes("ZaloPay")
+                                    ? "#7e22ce"
+                                    : "#d97706",
                               }}
                             >
                               {order.paymentMethod}
                             </span>
                           </td>
                           <td>{getStatusPill(order.status)}</td>
-                          <td style={{ textAlign: "center", whiteSpace: "nowrap" }}>
+                          <td style={{ textAlign: "center", verticalAlign: "middle" }}>
                             <div
                               style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                gap: "6px",
-                                flexWrap: "nowrap",
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: "4px",
+                                width: "115px",
+                                margin: "0 auto",
                               }}
                             >
                               {order.status === "pending" && (
                                 <button
                                   className="btn-action-edit"
                                   onClick={() => handleApproveOrder(order.id)}
-                                  style={{ display: "inline-flex", alignItems: "center", gap: "4px", whiteSpace: "nowrap" }}
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    gap: "4px",
+                                    height: "26px",
+                                    padding: "2px 6px",
+                                    fontSize: "11px",
+                                    fontWeight: 700,
+                                    width: "100%",
+                                    borderRadius: "6px",
+                                    whiteSpace: "nowrap",
+                                  }}
                                 >
-                                  <Check className="w-3.5 h-3.5" /> Duyệt đơn
+                                  <Check className="w-3 h-3" /> Duyệt đơn
                                 </button>
                               )}
                               {order.status === "processing" && (
                                 <button
                                   className="btn-action-edit"
                                   onClick={() => handleShipOrder(order.id)}
-                                  style={{ display: "inline-flex", alignItems: "center", gap: "4px", whiteSpace: "nowrap" }}
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    gap: "4px",
+                                    height: "26px",
+                                    padding: "2px 6px",
+                                    fontSize: "11px",
+                                    fontWeight: 700,
+                                    width: "100%",
+                                    borderRadius: "6px",
+                                    whiteSpace: "nowrap",
+                                  }}
                                 >
-                                  <Truck className="w-3.5 h-3.5" /> Giao ĐVVC
+                                  <Truck className="w-3 h-3" /> Giao ĐVVC
                                 </button>
                               )}
                               {order.status === "shipping" && (
                                 <button
                                   className="btn-action-edit"
                                   onClick={() => handleCompleteOrder(order.id)}
-                                  style={{ display: "inline-flex", alignItems: "center", gap: "4px", whiteSpace: "nowrap" }}
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    gap: "4px",
+                                    height: "26px",
+                                    padding: "2px 6px",
+                                    fontSize: "11px",
+                                    fontWeight: 700,
+                                    width: "100%",
+                                    borderRadius: "6px",
+                                    whiteSpace: "nowrap",
+                                  }}
                                 >
-                                  <CheckCircle2 className="w-3.5 h-3.5" /> Đã giao
+                                  <CheckCircle2 className="w-3 h-3" /> Đã giao
                                 </button>
                               )}
                               {order.status !== "completed" && order.status !== "cancelled" && order.status !== "returned" && (
                                 <button
                                   className="btn-action-delete"
                                   onClick={() => handleOpenCancelModal(order.id)}
-                                  style={{ display: "inline-flex", alignItems: "center", gap: "4px", whiteSpace: "nowrap" }}
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    gap: "4px",
+                                    height: "26px",
+                                    padding: "2px 6px",
+                                    fontSize: "11px",
+                                    fontWeight: 700,
+                                    width: "100%",
+                                    borderRadius: "6px",
+                                    whiteSpace: "nowrap",
+                                  }}
                                 >
-                                  <XCircle className="w-3.5 h-3.5" /> Hủy đơn
+                                  <XCircle className="w-3 h-3" /> Hủy đơn
                                 </button>
                               )}
                               <button
@@ -840,13 +888,21 @@ export default function AdminOrdersPage() {
                                 style={{
                                   borderColor: "#cbd5e1",
                                   color: "#475569",
-                                  display: "inline-flex",
+                                  display: "flex",
                                   alignItems: "center",
+                                  justifyContent: "center",
                                   gap: "4px",
+                                  height: "26px",
+                                  padding: "2px 6px",
+                                  fontSize: "11px",
+                                  fontWeight: 700,
+                                  width: "100%",
+                                  borderRadius: "6px",
                                   whiteSpace: "nowrap",
+                                  background: "#f8fafc",
                                 }}
                               >
-                                <Eye className="w-3.5 h-3.5" /> Chi tiết
+                                <Eye className="w-3 h-3" /> Chi tiết
                               </button>
                             </div>
                           </td>
