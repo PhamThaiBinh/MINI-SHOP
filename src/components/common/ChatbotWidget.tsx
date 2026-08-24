@@ -638,7 +638,7 @@ export const ChatbotWidget: React.FC = () => {
                                     <Zap style={{ width: "11px", height: "11px", color: "#fef08a" }} /> Mua ngay
                                   </button>
                                   <Link
-                                    href={`/products/${p.id}`}
+                                    href={p.oldPrice && p.oldPrice > p.price ? `/products/${p.id}?flashSalePrice=${p.price}` : `/products/${p.id}`}
                                     target="_blank"
                                     style={{
                                       padding: "5px 8px",

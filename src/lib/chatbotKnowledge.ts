@@ -4,6 +4,12 @@ import { lookupOrderFromSupabase } from "@/lib/supabaseOrders";
 import { PRODUCTS_DATA } from "@/data/products";
 import { Product } from "@/types/product";
 import { SystemVoucher } from "@/utils/voucherStorage";
+import {
+  getCurrentVnTimeInfo,
+  getSlotProducts,
+  detectRequestedSlot,
+  FLASH_SALE_SLOTS,
+} from "@/lib/flashSaleHelper";
 
 export interface ChatMessage {
   id: string;
@@ -26,6 +32,7 @@ export interface ChatMessage {
   }[];
   quickReplies?: string[];
 }
+
 
 // System Knowledge Base (FAQs & Store Policies)
 const FAQ_KNOWLEDGE = [
@@ -176,6 +183,8 @@ export interface ExtractedIntent {
   maxPrice?: number;
   priceSort?: "asc" | "desc";
   isSale?: boolean;
+  isFlashSale?: boolean;
+  flashSaleSlot?: "slot1" | "slot2" | "slot3" | "slot4" | null;
   isHot?: boolean;
   isNew?: boolean;
   orderCode?: string;
@@ -183,6 +192,7 @@ export interface ExtractedIntent {
   isFaq?: boolean;
   faqResponse?: string;
 }
+
 
 /**
  * Helper to parse Vietnamese colloquial price expressions
@@ -440,9 +450,17 @@ export function parseUserIntent(query: string): ExtractedIntent {
   });
 
 
-  // 6. Check Status: Sale, Hot, New
-  const isSale =
+  // 6. Check Status: Sale, Flash Sale, Hot, New
+  const flashSaleSlot = detectRequestedSlot(query);
+  const isFlashSale =
     normalized.includes("flash sale") ||
+    normalized.includes("san deal") ||
+    normalized.includes("deal soc") ||
+    normalized.includes("khung gio") ||
+    flashSaleSlot !== null;
+
+  const isSale =
+    isFlashSale ||
     normalized.includes("giam gia") ||
     normalized.includes("sale") ||
     normalized.includes("khuyen mai") ||
@@ -468,6 +486,8 @@ export function parseUserIntent(query: string): ExtractedIntent {
     maxPrice,
     priceSort,
     isSale,
+    isFlashSale,
+    flashSaleSlot,
     isHot,
     isNew,
     orderCode,
@@ -476,6 +496,7 @@ export function parseUserIntent(query: string): ExtractedIntent {
     faqResponse,
   };
 }
+
 
 /**
  * Format product list into a clean, well-spaced text summary
@@ -626,7 +647,63 @@ export async function processUserQueryAsync(userQuery: string, currentUser?: any
   const rawProducts = await fetchProductsFromSupabase(false);
   const allProducts = rawProducts.filter((p) => p.status !== "Hidden" && p.price > 0);
 
-  // 5.1 MULTI-KEYWORD / MULTI-CATEGORY INTENT MATCHING
+  // 5.1 FLASH SALE BY TIME SLOTS (Khung giờ Flash Sale 00-09h, 09-15h, 15-21h, 21-24h)
+  if (
+    intent.isFlashSale ||
+    (intent.isSale && intent.categories.length === 0 && !intent.minPrice && !intent.maxPrice)
+  ) {
+    const { currentHour, dateKey, currentSlotKey } = getCurrentVnTimeInfo();
+    const targetSlotKey = intent.flashSaleSlot || detectRequestedSlot(userQuery) || currentSlotKey;
+    const slotInfo = FLASH_SALE_SLOTS.find((s) => s.key === targetSlotKey) || FLASH_SALE_SLOTS[0];
+
+    let statusText = "ĐANG DIỄN RA";
+    if (targetSlotKey === currentSlotKey) {
+      statusText = "ĐANG DIỄN RA";
+    } else if (slotInfo.startHour > currentHour) {
+      statusText = "SẮP DIỄN RA";
+    } else {
+      statusText = "ĐÃ QUA";
+    }
+
+    const slotItems = getSlotProducts(allProducts, targetSlotKey, dateKey);
+    const topFlashItems = slotItems.slice(0, 4);
+
+    const flashProductsForCards: Product[] = topFlashItems.map((item) => ({
+      ...item.product,
+      price: item.flashPrice, // Gán đúng giá Flash Sale thực tế
+      oldPrice: item.originalPrice, // Giá gốc gạch ngang
+      badge: `-${item.discountPercent}% SALE`,
+    }));
+
+    const formattedListText = topFlashItems
+      .map(
+        (item, index) =>
+          `${index + 1}. ${item.product.name}\n   - Giá Flash Sale: ${item.flashPrice.toLocaleString("vi-VN")}đ (Giá gốc: ${item.originalPrice.toLocaleString("vi-VN")}đ - Giảm ${item.discountPercent}%)\n   - Danh mục: ${item.product.categoryName || item.product.category}`
+      )
+      .join("\n\n");
+
+    const headerMsg =
+      statusText === "ĐANG DIỄN RA"
+        ? `⚡ FLASH SALE MINI SHOP - KHUNG GIỜ [${slotInfo.timeRange}] (${statusText} 🔥):\nƯu đãi giảm sốc lên đến 50% cho các sản phẩm tuyển chọn hôm nay:\n\n${formattedListText}\n\nAnh/chị có thể nhấn "Thêm giỏ" hoặc "Mua ngay" để hưởng trọn giá Flash Sale ưu đãi!`
+        : `⚡ FLASH SALE MINI SHOP - KHUNG GIỜ [${slotInfo.timeRange}] (${statusText}):\nDanh sách các siêu phẩm săn deal trong khung giờ ${slotInfo.timeRange}:\n\n${formattedListText}\n\nAnh/chị có thể chọn xem các khung giờ khác bên dưới:`;
+
+    return {
+      id,
+      sender: "bot",
+      text: headerMsg,
+      timestamp,
+      products: flashProductsForCards,
+      quickReplies: [
+        "⚡ Khung 00:00 - 09:00",
+        "⚡ Khung 09:00 - 15:00",
+        "⚡ Khung 15:00 - 21:00",
+        "⚡ Khung 21:00 - 24:00",
+        "Xem trang Flash Sale",
+      ],
+    };
+  }
+
+  // 5.2 MULTI-KEYWORD / MULTI-CATEGORY INTENT MATCHING
   // Example 1: "Ghế hoặc giường" -> intent.categories = ["Ghế", "Giường"]
   // Example 2: "Bàn ăn và sofa dưới 3 triệu" -> intent.categories = ["Bàn", "Sofa"], maxPrice = 3000000
   if (intent.categories.length > 0) {
@@ -713,7 +790,7 @@ export async function processUserQueryAsync(userQuery: string, currentUser?: any
     }
   }
 
-  // 5.2 PURE PRICE & BUDGET INTENT FILTERING (e.g. "700k", "4 xị", "2 củ", "dưới 500k", "từ 1 đến 3 củ", "5.000.000")
+  // 5.3 PURE PRICE & BUDGET INTENT FILTERING (e.g. "700k", "4 xị", "2 củ", "dưới 500k", "từ 1 đến 3 củ", "5.000.000")
   if (intent.minPrice !== undefined || intent.maxPrice !== undefined) {
     let priceFiltered = allProducts;
 
@@ -762,7 +839,7 @@ export async function processUserQueryAsync(userQuery: string, currentUser?: any
     }
   }
 
-  // 5.3 KEYWORD TOKEN SEARCH ACROSS PRODUCT NAMES & DESCRIPTIONS
+  // 5.4 KEYWORD TOKEN SEARCH ACROSS PRODUCT NAMES & DESCRIPTIONS
   const priceStopWords = new Set(["k", "tr", "cu", "xi", "lit", "lop", "let", "chai", "qua", "trieu", "nghin", "ngan", "vnd", "dong", "ruoi", "duoi", "tren", "tam", "khoang", "tu", "den"]);
   const tokens = normalized.split(/\s+/).filter((t) => t.length >= 2 && !priceStopWords.has(t));
 
@@ -792,23 +869,6 @@ export async function processUserQueryAsync(userQuery: string, currentUser?: any
   }
 
 
-  // 5.3 FLASH SALE / SALE INTENT
-  if (intent.isSale) {
-    const saleProducts = allProducts
-      .filter((p) => (p.badge && p.badge.toLowerCase().includes("sale")) || Boolean(p.oldPrice))
-      .slice(0, 3);
-    const finalSale = saleProducts.length > 0 ? saleProducts : allProducts.slice(0, 3);
-    const titleText = "Sản phẩm Flash Sale & Giảm giá đặc biệt hôm nay tại MINI SHOP:";
-
-    return {
-      id,
-      sender: "bot",
-      text: formatProductListToText(titleText, finalSale),
-      timestamp,
-      products: finalSale,
-      quickReplies: ["Xem sản phẩm Bàn", "Xem sản phẩm Sofa", "Lấy mã giảm giá"],
-    };
-  }
 
   // 5.4 DEFAULT POLITE ASSISTANT FALLBACK
   const defaultProducts = allProducts.slice(0, 3);
