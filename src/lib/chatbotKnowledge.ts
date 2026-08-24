@@ -713,9 +713,60 @@ export async function processUserQueryAsync(userQuery: string, currentUser?: any
     }
   }
 
-  // 5.2 KEYWORD TOKEN SEARCH ACROSS PRODUCT NAMES & DESCRIPTIONS
-  if (normalized.length >= 2) {
-    const tokens = normalized.split(/\s+/).filter((t) => t.length >= 2);
+  // 5.2 PURE PRICE & BUDGET INTENT FILTERING (e.g. "700k", "4 xị", "2 củ", "dưới 500k", "từ 1 đến 3 củ", "5.000.000")
+  if (intent.minPrice !== undefined || intent.maxPrice !== undefined) {
+    let priceFiltered = allProducts;
+
+    if (intent.minPrice !== undefined && intent.maxPrice !== undefined) {
+      priceFiltered = priceFiltered.filter((p) => p.price >= intent.minPrice! && p.price <= intent.maxPrice!);
+    } else if (intent.maxPrice !== undefined) {
+      priceFiltered = priceFiltered.filter((p) => p.price <= intent.maxPrice!);
+    } else if (intent.minPrice !== undefined) {
+      priceFiltered = priceFiltered.filter((p) => p.price >= intent.minPrice!);
+    }
+
+    // Sort by price: sort descending (closest to target price or premium)
+    priceFiltered.sort((a, b) => b.price - a.price);
+
+    if (priceFiltered.length > 0) {
+      const topProducts = priceFiltered.slice(0, 4);
+      let titleText = `Dạ, dưới đây là các sản phẩm nội thất có mức giá tầm ${intent.maxPrice?.toLocaleString("vi-VN")}đ (hoặc dưới ${intent.maxPrice?.toLocaleString("vi-VN")}đ) tại MINI SHOP:`;
+
+      if (intent.minPrice && intent.maxPrice) {
+        titleText = `Dạ, dưới đây là các sản phẩm nội thất trong tầm giá từ ${intent.minPrice.toLocaleString("vi-VN")}đ đến ${intent.maxPrice.toLocaleString("vi-VN")}đ tại MINI SHOP:`;
+      } else if (intent.minPrice) {
+        titleText = `Dạ, dưới đây là các sản phẩm nội thất phân khúc trên ${intent.minPrice.toLocaleString("vi-VN")}đ tại MINI SHOP:`;
+      }
+
+      return {
+        id,
+        sender: "bot",
+        text: formatProductListToText(titleText, topProducts),
+        timestamp,
+        products: topProducts,
+        quickReplies: ["Xem mẫu Ghế & Bàn", "Xem mẫu Sofa", "Xem Giường ngủ", "Kiểm tra voucher"],
+      };
+    } else {
+      // If no product is below the price, suggest lowest priced items
+      const lowestItems = [...allProducts].sort((a, b) => a.price - b.price).slice(0, 3);
+      const titleText = `Dạ, hiện MINI SHOP chưa có sản phẩm trong mức giá "${userQuery}". Xin gợi ý một số sản phẩm có giá tiết kiệm nhất tại cửa hàng:`;
+
+      return {
+        id,
+        sender: "bot",
+        text: formatProductListToText(titleText, lowestItems),
+        timestamp,
+        products: lowestItems,
+        quickReplies: ["Xem mẫu Ghế & Bàn", "Xem mã giảm giá 50k", "Gặp tư vấn viên"],
+      };
+    }
+  }
+
+  // 5.3 KEYWORD TOKEN SEARCH ACROSS PRODUCT NAMES & DESCRIPTIONS
+  const priceStopWords = new Set(["k", "tr", "cu", "xi", "lit", "lop", "let", "chai", "qua", "trieu", "nghin", "ngan", "vnd", "dong", "ruoi", "duoi", "tren", "tam", "khoang", "tu", "den"]);
+  const tokens = normalized.split(/\s+/).filter((t) => t.length >= 2 && !priceStopWords.has(t));
+
+  if (tokens.length > 0) {
     let matched = allProducts.filter((p) => {
       const pName = normalizeText(p.name);
       const pDesc = normalizeText(p.description || "");
@@ -739,6 +790,7 @@ export async function processUserQueryAsync(userQuery: string, currentUser?: any
       };
     }
   }
+
 
   // 5.3 FLASH SALE / SALE INTENT
   if (intent.isSale) {
