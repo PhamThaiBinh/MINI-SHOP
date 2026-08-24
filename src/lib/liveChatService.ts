@@ -229,11 +229,12 @@ export async function clearAllChatSessions(): Promise<boolean> {
 
     // 2. Clear from Supabase Database
     const supabase = createClient();
-    await supabase.from("live_chat_messages").delete().neq("id", "");
-    await supabase.from("live_chat_sessions").delete().neq("id", "");
+    await supabase.from("live_chat_messages").delete().not("id", "is", null);
+    await supabase.from("live_chat_sessions").delete().not("id", "is", null);
     return true;
   } catch (err) {
     console.error("Error clearing all chat sessions:", err);
     return false;
   }
 }
+

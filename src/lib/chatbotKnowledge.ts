@@ -30,32 +30,32 @@ export interface ChatMessage {
 // System Knowledge Base (FAQs & Store Policies)
 const FAQ_KNOWLEDGE = [
   {
-    keywords: ["bao hanh", "bảo hành", "hu hong", "hư hỏng", "loi", "lỗi", "bao hanh bao lau"],
+    keywords: ["bao hanh", "hu hong", "loi san pham", "bao hanh bao lau", "chinh sach bao hanh"],
     response:
       "Chính Sách Bảo Hành Tại MINI SHOP:\n- Tất cả sản phẩm nội thất gỗ, bàn ghế, sofa, giường tủ đều được bảo hành chính hãng từ 12 - 24 tháng.\n- Hỗ trợ 1 đổi 1 trong 7 ngày đầu nếu có lỗi từ nhà sản xuất.\n- Đội ngũ kỹ thuật viên hỗ trợ bảo hành tận nơi nhanh chóng!",
   },
   {
-    keywords: ["giao hang", "vận chuyển", "ship", "phi ship", "phí ship", "thoi gian giao", "bao lau", "freeship", "mien phi ship"],
+    keywords: ["giao hang", "van chuyen", "ship", "phi ship", "thoi gian giao", "bao lau nhan duoc", "freeship", "mien phi ship", "giao toan quoc"],
     response:
       "Chính Sách Vận Chuyển & Giao Hàng:\n- MIỄN PHÍ VẬN CHUYỂN toàn quốc cho đơn hàng từ 500.000đ trở lên.\n- Giao hỏa tốc trong 2 - 4 giờ tại khu vực nội thành.\n- Giao hàng tiêu chuẩn toàn quốc từ 2 - 3 ngày làm việc.",
   },
   {
-    keywords: ["thanh toan", "thanh toán", "chuyen khoan", "chuyển khoản", "cod", "banking", "qr", "tra gop"],
+    keywords: ["thanh toan", "chuyen khoan", "cod", "banking", "qr", "tra gop", "quet ma", "the tin dung"],
     response:
       "Phương Thức Thanh Toán Linh Hoạt:\n- Thanh toán khi nhận hàng (COD).\n- Chuyển khoản ngân hàng qua mã VietQR tự động xác nhận tức thì.\n- Hỗ trợ trả góp 0% lãi suất qua thẻ tín dụng.",
   },
   {
-    keywords: ["doi tra", "đổi trả", "tra hang", "trả hàng", "hoan tien", "hoàn tiền", "7 ngay", "7 ngày"],
+    keywords: ["doi tra", "tra hang", "hoan tien", "7 ngay", "khong ung y", "doi san pham"],
     response:
       "Chính Sách Đổi Trả & Trả Hàng (7 Ngày):\n- Quý khách có quyền yêu cầu Trả hàng / Hoàn tiền trong vòng 7 ngày kể từ khi nhận hàng nếu không ưng ý hoặc sản phẩm không đúng mô tả.\n- Thao tác trực tiếp tại mục 'Lịch sử đơn hàng' trong trang cá nhân!",
   },
   {
-    keywords: ["dia chi", "địa chỉ", "showroom", "cua hang", "cửa hàng", "o dau", "ở đâu", "vi tri", "map"],
+    keywords: ["dia chi", "showroom", "cua hang", "o dau", "vi tri", "map", "chi nhanh", "den xem truc tiep"],
     response:
       "Hệ Thống Showroom MINI SHOP:\n- Địa chỉ: 123 Nguyễn Văn Cừ, Phường 2, Quận 5, TP. Hồ Chí Minh.\n- Thời gian mở cửa: 8:00 - 21:00 (Tất cả các ngày trong tuần).\n- Hotline tư vấn: 0988.123.456",
   },
   {
-    keywords: ["tich diem", "tích điểm", "doi diem", "đổi điểm", "rewards", "xu"],
+    keywords: ["tich diem", "doi diem", "rewards", "xu", "tich luy", "hang thanh vien"],
     response:
       "Chương Trình Điểm Thưởng Khách Hàng Thân Thiết:\n- Tích lũy 1 điểm cho mỗi 10.000đ giá trị đơn hàng.\n- Dùng điểm để đổi các mã Voucher giảm giá 50.000đ, 100.000đ hoặc Miễn phí vận chuyển tại mục 'Điểm thưởng'!",
   },
@@ -84,6 +84,7 @@ export const VOUCHERS_DATA = [
 ];
 
 export function normalizeText(text: string): string {
+  if (!text) return "";
   return text
     .toLowerCase()
     .normalize("NFD")
@@ -94,24 +95,89 @@ export function normalizeText(text: string): string {
     .trim();
 }
 
-// Category keyword dictionary for intelligent classification
-const CATEGORY_KEYWORDS: Record<string, string[]> = {
-  "Ghế": ["ghe", "ghe xoay", "ghe an", "ghe gaming", "ghe luoi", "ghe linh hoat", "ghe go", "ghe tua", "ghe bar"],
-  "Giường": ["giuong", "giuong ngu", "giuong don", "giuong doi", "giuong tang", "giuong go", "giuong gap", "giuong pallet"],
-  "Bàn": ["ban", "ban an", "ban lam viec", "ban tra", "ban trang diem", "ban hoc", "ban sofa", "ban go", "ban cafe"],
-  "Sofa": ["sofa", "salon", "sofa da", "sofa ni", "sofa goc", "sofa phong khach", "sofa don", "sofa giuong", "sofa bed"],
-  "Tủ kệ": ["tu", "ke", "tu quan ao", "tu giay", "tu dau giuong", "tu bep", "ke tivi", "ke sach", "ke trang tri", "ke giay", "tu go"],
-  "Rèm cửa": ["rem", "rem cua", "rem cuon", "man cua", "rem vai"],
-  "Đèn trang trí": ["den", "den ngu", "den chum", "den cay", "den ban", "den trang tri", "den led"],
-  "Nệm & Chăn ga": ["nem", "dem", "nem cao su", "nem bong ep", "nem lo xo", "chan ga"],
-};
+/**
+ * Check if text contains a specific token/phrase matching whole word boundaries
+ */
+export function hasWordToken(sourceText: string, token: string): boolean {
+  if (!sourceText || !token) return false;
+  const normSource = normalizeText(sourceText);
+  const normToken = normalizeText(token);
+  // Match as whole phrase or boundary
+  const escaped = normToken.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp(`(^|\\s)${escaped}(\\s|$)`, "i");
+  return regex.test(normSource);
+}
+
+// Comprehensive Category & Product Keyword Dictionary
+export interface CategoryDefinition {
+  name: string;
+  keywords: string[];
+  exactTokens: string[];
+}
+
+export const CATEGORY_DEFINITIONS: CategoryDefinition[] = [
+  {
+    name: "Ghế",
+    keywords: ["ghế", "ghế xoay", "ghế ăn", "ghế gaming", "ghế lưới", "ghế tựa", "ghế đôn", "ghế thư giãn", "ghế bọc da", "ghế gỗ", "ghế eames", "ghe", "ghe xoay", "ghe an", "ghe gaming", "ghe luoi", "ghe tua", "ghe don", "ghe thu gian", "ghe eames"],
+    exactTokens: ["ghe", "ghe xoay", "ghe an", "ghe tua", "ghe don", "ghe thu gian", "ghe eames"],
+  },
+  {
+    name: "Giường",
+    keywords: ["giường", "giường ngủ", "giường đơn", "giường đôi", "giường tầng", "giường gỗ", "giường gấp", "giường bọc nệm", "giuong", "giuong ngu", "giuong don", "giuong doi", "giuong tang", "giuong go", "giuong boc nem"],
+    exactTokens: ["giuong", "giuong ngu", "giuong don", "giuong doi", "giuong tang", "giuong go", "giuong boc nem"],
+  },
+  {
+    name: "Bàn",
+    keywords: ["bàn", "bàn ăn", "bàn làm việc", "bàn trà", "bàn trang điểm", "bàn học", "bàn sofa", "bàn gỗ", "bàn cafe", "bàn tròn", "ban", "ban an", "ban lam viec", "ban tra", "ban trang diem", "ban hoc", "ban sofa", "ban go", "ban cafe", "ban tron"],
+    exactTokens: ["ban", "ban an", "ban lam viec", "ban tra", "ban trang diem", "ban hoc", "ban sofa", "ban go", "ban cafe", "ban tron"],
+  },
+  {
+    name: "Sofa",
+    keywords: ["sofa", "salon", "sofa da", "sofa nỉ", "sofa vải", "sofa góc", "sofa phòng khách", "sofa đơn", "sofa giường", "sofa bed", "sofa ni", "sofa vai", "sofa goc", "sofa phong khach", "sofa don", "sofa giuong"],
+    exactTokens: ["sofa", "salon", "sofa da", "sofa ni", "sofa vai", "sofa goc", "sofa don", "sofa giuong"],
+  },
+  {
+    name: "Tủ kệ",
+    keywords: ["tủ", "kệ", "tủ quần áo", "tủ giày", "tủ đầu giường", "tủ bếp", "kệ tivi", "kệ sách", "kệ trang trí", "kệ gỗ", "tu", "ke", "tu quan ao", "tu giay", "tu dau giuong", "tu bep", "ke tivi", "ke sach", "ke trang tri", "ke go"],
+    exactTokens: ["tu", "ke", "tu quan ao", "tu giay", "tu dau giuong", "tu bep", "ke tivi", "ke sach", "ke trang tri", "ke go"],
+  },
+  {
+    name: "Rèm cửa",
+    keywords: ["rèm", "rèm cửa", "rèm cuốn", "màn cửa", "rèm vải", "rèm cầu vồng", "rèm roman", "rèm sáo", "rem", "rem cua", "rem cuon", "man cua", "rem vai", "rem cau vong", "rem roman"],
+    exactTokens: ["rem", "rem cua", "rem cuon", "man cua", "rem vai", "rem cau vong", "rem roman"],
+  },
+  {
+    name: "Đèn trang trí",
+    keywords: ["đèn", "đèn ngủ", "đèn chùm", "đèn cây", "đèn bàn", "đèn trang trí", "đèn led", "đèn tre", "đèn lồng", "den", "den ngu", "den chum", "den cay", "den ban", "den trang tri", "den led", "den tre", "den long"],
+    exactTokens: ["den", "den ngu", "den chum", "den cay", "den ban", "den trang tri", "den led", "den tre", "den long"],
+  },
+  {
+    name: "Tủ lavabo & Phòng tắm",
+    keywords: ["lavabo", "tủ lavabo", "bồn rửa", "chậu rửa", "gương phòng tắm", "phòng tắm", "tu lavabo", "bon rua", "chau rua", "guong phong tam", "phong tam", "bon cau"],
+    exactTokens: ["lavabo", "tu lavabo", "bon rua", "chau rua", "guong phong tam", "phong tam", "bon cau"],
+  },
+  {
+    name: "Nệm & Chăn ga",
+    keywords: ["nệm", "đệm", "nệm cao su", "nệm bông ép", "nệm lò xo", "chăn ga", "gối", "nem", "dem", "nem cao su", "nem bong ep", "nem lo xo", "chan ga", "goi"],
+    exactTokens: ["nem", "dem", "nem cao su", "nem bong ep", "nem lo xo", "chan ga", "goi"],
+  },
+  {
+    name: "Đồ mỹ nghệ & Thủ công",
+    keywords: ["tre", "mây", "gốm", "bình gốm", "khay gỗ", "tranh treo", "sơn mài", "khảm trai", "thủ công", "mỹ nghệ", "do tre", "may", "gom", "binh gom", "khay go", "tranh treo", "son mai", "kham trai", "thu cong", "my nghe"],
+    exactTokens: ["tre", "may", "gom", "binh gom", "khay go", "tranh macrame", "son mai", "kham trai", "thu cong", "chau cay"],
+  },
+];
 
 export interface ExtractedIntent {
+  rawQuery: string;
   categories: string[];
   productKeywords: string[];
   minPrice?: number;
   maxPrice?: number;
+  priceSort?: "asc" | "desc";
   isSale?: boolean;
+  isHot?: boolean;
+  isNew?: boolean;
   orderCode?: string;
   isVoucher?: boolean;
   isFaq?: boolean;
@@ -119,7 +185,7 @@ export interface ExtractedIntent {
 }
 
 /**
- * Intelligent Natural Language Keyword & Intent Parser
+ * Intelligent Multi-Keyword & Natural Language Intent Parser
  */
 export function parseUserIntent(query: string): ExtractedIntent {
   const normalized = normalizeText(query);
@@ -127,7 +193,7 @@ export function parseUserIntent(query: string): ExtractedIntent {
   const productKeywords: string[] = [];
 
   // 1. Check Order Tracking (#MS-xxxx or Oxxxx)
-  const orderRegex = /(?:MS-?|O)?\d{4,8}/i;
+  const orderRegex = /(?:MS-?|O)\d{4,8}/i;
   const orderCodeMatch = query.match(orderRegex);
   let orderCode: string | undefined;
   if (
@@ -149,74 +215,146 @@ export function parseUserIntent(query: string): ExtractedIntent {
     normalized.includes("khuyen mai") ||
     normalized.includes("ma khuyen mai") ||
     normalized.includes("uu dai") ||
-    normalized.includes("giam gia");
+    (normalized.includes("giam gia") && !normalized.includes("san pham giam gia"));
 
   // 3. Check FAQ Knowledge Base
   let faqResponse: string | undefined;
   for (const faq of FAQ_KNOWLEDGE) {
-    if (faq.keywords.some((kw) => normalized.includes(kw))) {
+    if (faq.keywords.some((kw) => hasWordToken(normalized, kw))) {
       faqResponse = faq.response;
       break;
     }
   }
 
-  // 4. Extract Category Tokens with conjunction support ("hoặc", "và", ",", "hay", "với")
-  Object.entries(CATEGORY_KEYWORDS).forEach(([catName, keywords]) => {
-    for (const kw of keywords) {
-      // Use regex word boundary check
-      const regex = new RegExp(`\\b${kw}\\b`, "i");
-      if (regex.test(normalized)) {
-        matchedCategories.add(catName);
-        productKeywords.push(kw);
+  // 4. Extract Price Range Constraints FIRST so price prepositions ('từ', 'đến') don't collide with 'tủ', 'đèn'
+  let minPrice: number | undefined;
+  let maxPrice: number | undefined;
+  let priceSort: "asc" | "desc" | undefined;
+
+  // Helper to parse price string like "500k", "1.5tr", "3 triệu", "500000"
+  const parsePriceAmount = (numStr: string, unitStr?: string): number => {
+    let val = parseFloat(numStr.replace(",", "."));
+    const unit = (unitStr || "").toLowerCase();
+    if (unit.includes("tr") || unit.includes("m") || unit.includes("trieu")) {
+      val *= 1000000;
+    } else if (unit.includes("k") || unit.includes("nghin") || unit.includes("ngan") || val < 1000) {
+      val *= 1000;
+    }
+    return val;
+  };
+
+  // Pattern: từ X đến Y / X - Y (ví dụ: "từ 1 đến 3 triệu", "từ 500k đến 1tr", "1 - 3tr", "khoảng 1tr - 2tr")
+  const rangeMatch = normalized.match(/(?:tu|khoang)?\s*(\d+(?:[.,]\d+)?)\s*(k|nghin|ngan|trieu|tr|m)?\s*(?:den|-|toi|\.\.)\s*(\d+(?:[.,]\d+)?)\s*(k|nghin|ngan|trieu|tr|m)?/);
+  if (rangeMatch) {
+    const rawUnit1 = rangeMatch[2];
+    const rawUnit2 = rangeMatch[4] || rawUnit1; // Inherit unit if omitted
+    minPrice = parsePriceAmount(rangeMatch[1], rawUnit1 || rawUnit2);
+    maxPrice = parsePriceAmount(rangeMatch[3], rawUnit2);
+  } else {
+    // Pattern: dưới 500k, dưới 1 triệu, < 2tr, khong qua 3tr
+    const underMatch = normalized.match(/(?:duoi|nho hon|<|khong qua|tam)\s*(\d+(?:[.,]\d+)?)\s*(k|nghin|ngan|trieu|tr|m)?/);
+    if (underMatch) {
+      maxPrice = parsePriceAmount(underMatch[1], underMatch[2]);
+    }
+
+    // Pattern: trên 1 triệu, > 500k, tu 2tr tro len
+    const overMatch = normalized.match(/(?:tren|lon hon|>|tu)\s*(\d+(?:[.,]\d+)?)\s*(k|nghin|ngan|trieu|tr|m)?/);
+    if (overMatch) {
+      minPrice = parsePriceAmount(overMatch[1], overMatch[2]);
+    }
+  }
+
+  // Price adjectives: "giá rẻ", "bình dân", "tiết kiệm", "cao cấp", "sang trọng"
+  if (normalized.includes("gia re") || normalized.includes("binh dan") || normalized.includes("tiet kiem")) {
+    priceSort = "asc";
+    if (!maxPrice) maxPrice = 1500000;
+  } else if (normalized.includes("cao cap") || normalized.includes("sang trong") || normalized.includes("hang sang") || normalized.includes("dat tien")) {
+    priceSort = "desc";
+    if (!minPrice) minPrice = 3000000;
+  }
+
+  // 5. Clean query for category matching by removing price range numbers and prepositions
+  let queryForCategory = normalized
+    .replace(/(?:tu|khoang)\s*\d+(?:[.,]\d+)?\s*(?:k|nghin|ngan|trieu|tr|m)?\s*(?:den|-|toi|\.\.)\s*\d+(?:[.,]\d+)?\s*(?:k|nghin|ngan|trieu|tr|m)?/g, " ")
+    .replace(/(?:duoi|nho hon|<|khong qua|tam|tren|lon hon|>|tu|den)\s*\d+(?:[.,]\d+)?\s*(?:k|nghin|ngan|trieu|tr|m)?/g, " ")
+    .replace(/\b(?:tu|den)\s+\d+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  // Multi-Keyword & Category Parser (Supporting "hoặc", "và", "với", "hay", ",", "+")
+  CATEGORY_DEFINITIONS.forEach((catDef) => {
+    for (const token of catDef.exactTokens) {
+      // If token is ambiguous short word like "tu" or "den", require exact accented presence if accented input
+      if (token === "tu" || token === "den") {
+        if (!hasWordToken(queryForCategory, token)) continue;
+        // Check if user literally meant preposition vs noun
+        if (query.toLowerCase().includes("từ") && !query.toLowerCase().includes("tủ")) continue;
+        if (query.toLowerCase().includes("đến") && !query.toLowerCase().includes("đèn")) continue;
+      }
+
+      if (hasWordToken(queryForCategory, token)) {
+        matchedCategories.add(catDef.name);
+        if (!productKeywords.includes(token)) {
+          productKeywords.push(token);
+        }
         break;
       }
     }
   });
 
-  // 5. Extract Price Constraints
-  let minPrice: number | undefined;
-  let maxPrice: number | undefined;
+  // Special standalone keywords recognition (e.g. "tre", "go", "gom", "chau cay", "khay")
+  const specificTerms = [
+    { term: "tre", cat: "Đồ mỹ nghệ & Thủ công" },
+    { term: "gom", cat: "Đồ mỹ nghệ & Thủ công" },
+    { term: "khay", cat: "Đồ mỹ nghệ & Thủ công" },
+    { term: "chau cay", cat: "Đồ mỹ nghệ & Thủ công" },
+    { term: "bon cau", cat: "Tủ lavabo & Phòng tắm" },
+    { term: "phong tam", cat: "Tủ lavabo & Phòng tắm" },
+    { term: "phong khach", cat: "Sofa" },
+    { term: "phong ngu", cat: "Giường" },
+    { term: "nha bep", cat: "Bàn" },
+  ];
 
-  // Pattern: dưới 500k, dưới 1 triệu, < 2tr
-  const underPriceMatch = normalized.match(/(?:duoi|nho hon|<|khong qua)\s*(\d+(?:[.,]\d+)?)\s*(k|nghin|ngan|trieu|tr|m)?/);
-  if (underPriceMatch) {
-    let val = parseFloat(underPriceMatch[1].replace(",", "."));
-    const unit = underPriceMatch[2] || "";
-    if (unit.includes("tr") || unit.includes("m") || unit.includes("trieu")) {
-      val *= 1000000;
-    } else if (unit.includes("k") || unit.includes("nghin") || unit.includes("ngan") || val < 1000) {
-      val *= 1000;
+  specificTerms.forEach(({ term, cat }) => {
+    if (hasWordToken(queryForCategory, term)) {
+      matchedCategories.add(cat);
+      if (!productKeywords.includes(term)) {
+        productKeywords.push(term);
+      }
     }
-    maxPrice = val;
-  }
+  });
 
-  // Pattern: trên 1 triệu, > 500k
-  const overPriceMatch = normalized.match(/(?:tren|lon hon|>|tu)\s*(\d+(?:[.,]\d+)?)\s*(k|nghin|ngan|trieu|tr|m)?/);
-  if (overPriceMatch && !underPriceMatch) {
-    let val = parseFloat(overPriceMatch[1].replace(",", "."));
-    const unit = overPriceMatch[2] || "";
-    if (unit.includes("tr") || unit.includes("m") || unit.includes("trieu")) {
-      val *= 1000000;
-    } else if (unit.includes("k") || unit.includes("nghin") || unit.includes("ngan") || val < 1000) {
-      val *= 1000;
-    }
-    minPrice = val;
-  }
 
-  // 6. Check Sale / Flash Sale intent
+  // 6. Check Status: Sale, Hot, New
   const isSale =
     normalized.includes("flash sale") ||
     normalized.includes("giam gia") ||
     normalized.includes("sale") ||
+    normalized.includes("khuyen mai") ||
+    normalized.includes("uu dai");
+
+  const isHot =
+    normalized.includes("ban chay") ||
     normalized.includes("hot") ||
-    normalized.includes("ban chay");
+    normalized.includes("yeu thich") ||
+    normalized.includes("mua nhieu");
+
+  const isNew =
+    normalized.includes("hang moi") ||
+    normalized.includes("mau moi") ||
+    normalized.includes("moi nhat") ||
+    normalized.includes("new");
 
   return {
+    rawQuery: query,
     categories: Array.from(matchedCategories),
     productKeywords,
     minPrice,
     maxPrice,
+    priceSort,
     isSale,
+    isHot,
+    isNew,
     orderCode,
     isVoucher,
     isFaq: Boolean(faqResponse),
@@ -225,7 +363,7 @@ export function parseUserIntent(query: string): ExtractedIntent {
 }
 
 /**
- * Format product list into a readable clean text summary
+ * Format product list into a clean, well-spaced text summary
  */
 function formatProductListToText(title: string, products: Product[]): string {
   if (products.length === 0) return title;
@@ -235,6 +373,26 @@ function formatProductListToText(title: string, products: Product[]): string {
     return `${idx + 1}. ${p.name}\n   - Giá bán: ${formattedPrice}${oldPriceText}\n   - Danh mục: ${p.categoryName || p.category}`;
   });
   return `${title}\n\n${productTextLines.join("\n\n")}`;
+}
+
+/**
+ * Filter product by intent criteria with safe token matching
+ */
+function isProductMatchingCategory(p: Product, categoryName: string): boolean {
+  const normName = normalizeText(p.name);
+  const normCat = normalizeText(p.category || "");
+  const normCatName = normalizeText(p.categoryName || "");
+
+  const catDef = CATEGORY_DEFINITIONS.find((c) => c.name === categoryName);
+  if (!catDef) {
+    const targetNorm = normalizeText(categoryName);
+    return hasWordToken(normName, targetNorm) || hasWordToken(normCatName, targetNorm) || hasWordToken(normCat, targetNorm);
+  }
+
+  // Must match at least one token from category definition as whole word
+  return catDef.exactTokens.some((token) => {
+    return hasWordToken(normName, token) || hasWordToken(normCatName, token) || hasWordToken(normCat, token);
+  });
 }
 
 /**
@@ -303,7 +461,7 @@ export async function processUserQueryAsync(userQuery: string, currentUser?: any
           text: `Dạ, MINI SHOP hiện đang có các mã giảm giá siêu ưu đãi dành cho anh/chị hôm nay:\n\n${voucherText}\n\nAnh/chị có thể nhấn nút "Sao chép" trực tiếp bên dưới để áp dụng khi thanh toán!`,
           timestamp,
           vouchers: formattedVouchers,
-          quickReplies: ["Tư vấn bàn ghế", "Tư vấn sofa", "Xem Flash Sale"],
+          quickReplies: ["Tư vấn Bàn ghế", "Tư vấn Sofa & Giường", "Xem Flash Sale"],
         };
       }
     } catch (e) {
@@ -316,128 +474,12 @@ export async function processUserQueryAsync(userQuery: string, currentUser?: any
       text: "Dạ, hiện tại mã giảm giá WELCOME50 (giảm 50k) và FREESHIP đang sẵn sàng. Anh/chị có thể áp dụng ngay tại bước thanh toán!",
       timestamp,
       vouchers: VOUCHERS_DATA,
-      quickReplies: ["Tư vấn bàn ghế", "Tư vấn sofa", "Xem Flash Sale"],
+      quickReplies: ["Tư vấn Bàn ghế", "Tư vấn Sofa & Giường", "Xem Flash Sale"],
     };
   }
 
-  // 3. PRODUCT INTENT: Match specific categories or keywords from Supabase!
-  // Example: "Tôi muốn mua ghế hoặc giường?" -> intent.categories = ["Ghế", "Giường"]
-  const allProducts = await fetchProductsFromSupabase(false);
-
-  if (intent.categories.length > 0) {
-    const matchedProducts: Product[] = [];
-    const categoryLabels = intent.categories.join(" và ");
-
-    // Gather best products per matched category
-    intent.categories.forEach((cat) => {
-      let filtered = allProducts.filter((p) => {
-        const pCat = normalizeText(p.category || "");
-        const pCatName = normalizeText(p.categoryName || "");
-        const pName = normalizeText(p.name || "");
-        const targetCat = normalizeText(cat);
-
-        return pCat.includes(targetCat) || pCatName.includes(targetCat) || pName.includes(targetCat);
-      });
-
-      // Apply price filter if present
-      if (intent.maxPrice) {
-        filtered = filtered.filter((p) => p.price <= (intent.maxPrice || Infinity));
-      }
-      if (intent.minPrice) {
-        filtered = filtered.filter((p) => p.price >= (intent.minPrice || 0));
-      }
-
-      // Pick top 2 items from each category
-      matchedProducts.push(...filtered.slice(0, 2));
-    });
-
-    // If no direct category match, search broadly across product names
-    let finalProducts = matchedProducts;
-    if (finalProducts.length === 0) {
-      finalProducts = allProducts
-        .filter((p) => {
-          const normName = normalizeText(p.name);
-          return intent.productKeywords.some((kw) => normName.includes(kw));
-        })
-        .slice(0, 4);
-    }
-
-    // Fallback if still empty
-    if (finalProducts.length === 0) {
-      finalProducts = allProducts.slice(0, 3);
-    }
-
-    let introTitle = `Dạ, em đã tìm thấy các mẫu ${categoryLabels} đẹp và bán chạy nhất tại MINI SHOP dành cho anh/chị:`;
-    if (intent.maxPrice) {
-      introTitle = `Dạ, dưới đây là các mẫu ${categoryLabels} có giá dưới ${intent.maxPrice.toLocaleString("vi-VN")}đ phù hợp với yêu cầu của anh/chị:`;
-    }
-
-    return {
-      id,
-      sender: "bot",
-      text: formatProductListToText(introTitle, finalProducts),
-      timestamp,
-      products: finalProducts,
-      quickReplies: [
-        `Xem thêm mẫu ${intent.categories[0]}`,
-        "Kiểm tra mã giảm giá",
-        "Tư vấn phí vận chuyển",
-      ],
-    };
-  }
-
-  // 4. GENERAL PRODUCT QUERY OR SEARCH BY KEYWORD (e.g. "san pham go", "do noi that", "phong khach")
-  if (
-    normalized.includes("san pham") ||
-    normalized.includes("do noi that") ||
-    normalized.includes("hinh anh") ||
-    normalized.includes("tim kiem") ||
-    normalized.includes("phong khach") ||
-    normalized.includes("phong ngu") ||
-    normalized.includes("go")
-  ) {
-    let matched = allProducts;
-    if (normalized.includes("phong khach")) {
-      matched = allProducts.filter((p) => normalizeText(p.name).includes("sofa") || normalizeText(p.name).includes("ban tra"));
-    } else if (normalized.includes("phong ngu")) {
-      matched = allProducts.filter((p) => normalizeText(p.name).includes("giuong") || normalizeText(p.name).includes("tu quan ao"));
-    } else if (normalized.includes("go")) {
-      matched = allProducts.filter((p) => normalizeText(p.name).includes("go") || normalizeText(p.description || "").includes("go"));
-    }
-
-    const finalProducts = matched.length > 0 ? matched.slice(0, 3) : allProducts.slice(0, 3);
-    const titleText = "Dạ, dưới đây là danh sách sản phẩm nội thất nổi bật trên hệ thống MINI SHOP:";
-
-    return {
-      id,
-      sender: "bot",
-      text: formatProductListToText(titleText, finalProducts),
-      timestamp,
-      products: finalProducts,
-      quickReplies: ["Tư vấn Bàn ghế", "Tư vấn Sofa", "Lấy mã giảm giá"],
-    };
-  }
-
-  // 5. FLASH SALE / HOT DISCOUNT QUERY
-  if (intent.isSale) {
-    const saleProducts = allProducts
-      .filter((p) => (p.badge && p.badge.toLowerCase().includes("sale")) || Boolean(p.oldPrice))
-      .slice(0, 3);
-    const finalSale = saleProducts.length > 0 ? saleProducts : allProducts.slice(0, 3);
-    const titleText = "Sản phẩm Flash Sale & Giảm giá đặc biệt hôm nay:";
-
-    return {
-      id,
-      sender: "bot",
-      text: formatProductListToText(titleText, finalSale),
-      timestamp,
-      products: finalSale,
-      quickReplies: ["Xem sản phẩm Bàn", "Xem sản phẩm Sofa", "Lấy mã giảm giá"],
-    };
-  }
-
-  // 6. FAQ KNOWLEDGE BASE MATCH
-  if (intent.isFaq && intent.faqResponse) {
+  // 3. FAQ KNOWLEDGE BASE MATCH (Prioritize direct store policy questions)
+  if (intent.isFaq && intent.faqResponse && intent.categories.length === 0 && !intent.minPrice && !intent.maxPrice) {
     return {
       id,
       sender: "bot",
@@ -447,7 +489,7 @@ export async function processUserQueryAsync(userQuery: string, currentUser?: any
     };
   }
 
-  // 7. HUMAN CONSULTANT ESCALATION
+  // 4. HUMAN CONSULTANT ESCALATION
   if (
     normalized.includes("tu van vien") ||
     normalized.includes("nguoi that") ||
@@ -464,9 +506,146 @@ export async function processUserQueryAsync(userQuery: string, currentUser?: any
     };
   }
 
-  // 8. DEFAULT FALLBACK ASSISTANT
+  // 5. REALTIME SUPABASE PRODUCT DATA RETRIEVAL
+  // Only query active, in-stock products from Supabase
+  const rawProducts = await fetchProductsFromSupabase(false);
+  const allProducts = rawProducts.filter((p) => p.status !== "Hidden" && p.price > 0);
+
+  // 5.1 MULTI-KEYWORD / MULTI-CATEGORY INTENT MATCHING
+  // Example 1: "Ghế hoặc giường" -> intent.categories = ["Ghế", "Giường"]
+  // Example 2: "Bàn ăn và sofa dưới 3 triệu" -> intent.categories = ["Bàn", "Sofa"], maxPrice = 3000000
+  if (intent.categories.length > 0) {
+    const matchedProducts: Product[] = [];
+    const categoryLabels = intent.categories.join(" & ");
+
+    // Gather products per matched category group
+    intent.categories.forEach((catName) => {
+      let filtered = allProducts.filter((p) => isProductMatchingCategory(p, catName));
+
+      // Apply price range
+      if (intent.maxPrice !== undefined) {
+        filtered = filtered.filter((p) => p.price <= intent.maxPrice!);
+      }
+      if (intent.minPrice !== undefined) {
+        filtered = filtered.filter((p) => p.price >= intent.minPrice!);
+      }
+
+      // Apply sale / hot / new filter if requested
+      if (intent.isSale) {
+        const saleOnly = filtered.filter((p) => Boolean(p.oldPrice) || (p.badge && p.badge.toLowerCase().includes("sale")));
+        if (saleOnly.length > 0) filtered = saleOnly;
+      }
+      if (intent.isHot) {
+        const hotOnly = filtered.filter((p) => p.badge?.toLowerCase() === "hot");
+        if (hotOnly.length > 0) filtered = hotOnly;
+      }
+      if (intent.isNew) {
+        const newOnly = filtered.filter((p) => p.badge?.toLowerCase() === "mới" || p.badge?.toLowerCase() === "new");
+        if (newOnly.length > 0) filtered = newOnly;
+      }
+
+      // Sort if requested
+      if (intent.priceSort === "asc") {
+        filtered.sort((a, b) => a.price - b.price);
+      } else if (intent.priceSort === "desc") {
+        filtered.sort((a, b) => b.price - a.price);
+      }
+
+      // Take balanced items per category (up to 2 per category if multi, or up to 4 if single)
+      const takeCount = intent.categories.length > 1 ? 2 : 4;
+      matchedProducts.push(...filtered.slice(0, takeCount));
+    });
+
+    if (matchedProducts.length > 0) {
+      let introTitle = `Dạ, em đã tìm thấy các mẫu ${categoryLabels} đẹp và bán chạy nhất tại MINI SHOP dành cho anh/chị:`;
+      if (intent.minPrice && intent.maxPrice) {
+        introTitle = `Dạ, dưới đây là các mẫu ${categoryLabels} có giá từ ${intent.minPrice.toLocaleString("vi-VN")}đ đến ${intent.maxPrice.toLocaleString("vi-VN")}đ phù hợp yêu cầu của anh/chị:`;
+      } else if (intent.maxPrice) {
+        introTitle = `Dạ, dưới đây là các mẫu ${categoryLabels} có giá dưới ${intent.maxPrice.toLocaleString("vi-VN")}đ phù hợp với yêu cầu của anh/chị:`;
+      } else if (intent.minPrice) {
+        introTitle = `Dạ, dưới đây là các mẫu ${categoryLabels} phân khúc trên ${intent.minPrice.toLocaleString("vi-VN")}đ phù hợp với yêu cầu của anh/chị:`;
+      }
+
+      return {
+        id,
+        sender: "bot",
+        text: formatProductListToText(introTitle, matchedProducts),
+        timestamp,
+        products: matchedProducts,
+        quickReplies: [
+          `Xem thêm mẫu ${intent.categories[0]}`,
+          "Kiểm tra mã giảm giá",
+          "Tư vấn phí vận chuyển",
+        ],
+      };
+    } else {
+      // No products matched the specific criteria -> Graceful notification + Smart Suggestions
+      const suggestions = allProducts
+        .filter((p) => (intent.maxPrice ? p.price <= intent.maxPrice * 1.5 : true))
+        .slice(0, 3);
+      const fallbackList = suggestions.length > 0 ? suggestions : allProducts.slice(0, 3);
+
+      const politeMessage = `Dạ, rất tiếc MINI SHOP hiện chưa có sản phẩm "${userQuery}" theo đúng khoảng giá hoặc tiêu chí này ạ.\n\nTuy nhiên, em xin gợi ý cho anh/chị một số mẫu nội thất bán chạy nổi bật cùng phân khúc dưới đây:`;
+
+      return {
+        id,
+        sender: "bot",
+        text: formatProductListToText(politeMessage, fallbackList),
+        timestamp,
+        products: fallbackList,
+        quickReplies: ["Xem mẫu Ghế & Bàn", "Xem mẫu Giường ngủ", "Xem mã ưu đãi 50k", "Gặp tư vấn viên"],
+      };
+    }
+  }
+
+  // 5.2 KEYWORD TOKEN SEARCH ACROSS PRODUCT NAMES & DESCRIPTIONS
+  if (normalized.length >= 2) {
+    const tokens = normalized.split(/\s+/).filter((t) => t.length >= 2);
+    let matched = allProducts.filter((p) => {
+      const pName = normalizeText(p.name);
+      const pDesc = normalizeText(p.description || "");
+      const pCat = normalizeText(p.categoryName || p.category || "");
+      return tokens.some((token) => hasWordToken(pName, token) || hasWordToken(pDesc, token) || hasWordToken(pCat, token));
+    });
+
+    if (intent.maxPrice) matched = matched.filter((p) => p.price <= intent.maxPrice!);
+    if (intent.minPrice) matched = matched.filter((p) => p.price >= intent.minPrice!);
+
+    if (matched.length > 0) {
+      const finalProducts = matched.slice(0, 4);
+      const titleText = `Dạ, em đã tìm thấy các sản phẩm phù hợp với từ khóa "${userQuery}" tại MINI SHOP:`;
+      return {
+        id,
+        sender: "bot",
+        text: formatProductListToText(titleText, finalProducts),
+        timestamp,
+        products: finalProducts,
+        quickReplies: ["Kiểm tra mã giảm giá", "Tư vấn phí ship", "Gặp nhân viên hỗ trợ"],
+      };
+    }
+  }
+
+  // 5.3 FLASH SALE / SALE INTENT
+  if (intent.isSale) {
+    const saleProducts = allProducts
+      .filter((p) => (p.badge && p.badge.toLowerCase().includes("sale")) || Boolean(p.oldPrice))
+      .slice(0, 3);
+    const finalSale = saleProducts.length > 0 ? saleProducts : allProducts.slice(0, 3);
+    const titleText = "Sản phẩm Flash Sale & Giảm giá đặc biệt hôm nay tại MINI SHOP:";
+
+    return {
+      id,
+      sender: "bot",
+      text: formatProductListToText(titleText, finalSale),
+      timestamp,
+      products: finalSale,
+      quickReplies: ["Xem sản phẩm Bàn", "Xem sản phẩm Sofa", "Lấy mã giảm giá"],
+    };
+  }
+
+  // 5.4 DEFAULT POLITE ASSISTANT FALLBACK
   const defaultProducts = allProducts.slice(0, 3);
-  const fallbackTitle = "Xin chào! Em là Trợ Lý AI của MINI SHOP.\nDưới đây là một số sản phẩm nổi bật anh/chị có thể tham khảo:";
+  const fallbackTitle = `Dạ, rất tiếc em chưa tìm thấy sản phẩm khớp với "${userQuery}" trên hệ thống.\nXin gửi anh/chị một số mẫu nội thất đẹp và bán chạy nhất tại MINI SHOP để tham khảo ạ:`;
 
   return {
     id,
@@ -474,7 +653,7 @@ export async function processUserQueryAsync(userQuery: string, currentUser?: any
     text: formatProductListToText(fallbackTitle, defaultProducts),
     timestamp,
     products: defaultProducts,
-    quickReplies: ["Gợi ý Ghế & Giường", "Gợi ý Sofa & Bàn", "Tra cứu đơn hàng", "Lấy mã giảm giá 50k"],
+    quickReplies: ["Gợi ý Ghế & Bàn", "Gợi ý Sofa & Giường", "Tra cứu đơn hàng", "Lấy mã giảm giá 50k"],
   };
 }
 
@@ -494,3 +673,4 @@ export function processUserQuery(userQuery: string): ChatMessage {
     quickReplies: ["Tư vấn bàn ghế", "Tra cứu đơn hàng", "Lấy mã giảm giá"],
   };
 }
+

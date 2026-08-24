@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
   MessageSquare,
   X,
@@ -22,10 +23,12 @@ import {
   Lock,
   ExternalLink,
   Tag,
+  Zap,
 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { processUserQueryAsync, ChatMessage, VOUCHERS_DATA } from "@/lib/chatbotKnowledge";
 import { PRODUCTS_DATA } from "@/data/products";
+import { fixImagePath } from "@/lib/utils";
 import {
   getLocalMessages,
   saveLocalMessages,
@@ -41,6 +44,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 
 export const ChatbotWidget: React.FC = () => {
+  const router = useRouter();
   const { addToCart } = useCart();
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -49,6 +53,7 @@ export const ChatbotWidget: React.FC = () => {
   const [hasUnread, setHasUnread] = useState(true);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [addedCartId, setAddedCartId] = useState<number | string | null>(null);
+
   const [guestToken, setGuestToken] = useState<string>("");
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -255,6 +260,12 @@ export const ChatbotWidget: React.FC = () => {
     addToCart(p, 1);
     setAddedCartId(p.id);
     setTimeout(() => setAddedCartId(null), 1800);
+  };
+
+  const handleBuyNow = (p: any) => {
+    addToCart(p, 1);
+    setIsOpen(false);
+    router.push("/checkout");
   };
 
   const handleCopyVoucher = (code: string) => {
@@ -519,75 +530,140 @@ export const ChatbotWidget: React.FC = () => {
                     {/* Rich Content: Products Recommendations Carousel */}
                     {msg.products && msg.products.length > 0 && (
                       <div style={{ width: "100%", marginTop: "6px", display: "flex", flexDirection: "column", gap: "10px" }}>
-                        {msg.products.map((p) => (
-                          <div
-                            key={p.id}
-                            style={{
-                              background: "#ffffff",
-                              borderRadius: "14px",
-                              padding: "10px",
-                              border: "1px solid #e2e8f0",
-                              display: "flex",
-                              gap: "12px",
-                              alignItems: "center",
-                              boxShadow: "0 2px 6px rgba(0,0,0,0.03)",
-                            }}
-                          >
-                            <div style={{ position: "relative", width: "64px", height: "64px", borderRadius: "10px", overflow: "hidden", flexShrink: 0 }}>
-                              <Image src={p.image} alt={p.name} fill style={{ objectFit: "cover" }} />
-                            </div>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <h5 style={{ margin: "0 0 2px 0", fontSize: "12.5px", fontWeight: 700, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                                {p.name}
-                              </h5>
-                              <div style={{ fontSize: "13px", fontWeight: 800, color: "#2e7d32" }}>
-                                {formatPrice(p.price)}
-                              </div>
-                              <div style={{ display: "flex", gap: "8px", marginTop: "6px" }}>
-                                <button
-                                  type="button"
-                                  onClick={() => addToCart(p, 1)}
-                                  style={{
-                                    padding: "4px 10px",
-                                    borderRadius: "6px",
-                                    background: "#2e7d32",
-                                    color: "#ffffff",
-                                    border: "none",
-                                    fontSize: "11px",
-                                    fontWeight: 700,
-                                    cursor: "pointer",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "4px",
+                        {msg.products.map((p) => {
+                          const isAdded = addedCartId === p.id;
+                          return (
+                            <div
+                              key={p.id}
+                              style={{
+                                background: "#ffffff",
+                                borderRadius: "14px",
+                                padding: "10px",
+                                border: "1px solid #e2e8f0",
+                                display: "flex",
+                                gap: "12px",
+                                alignItems: "center",
+                                boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                                transition: "all 0.2s ease",
+                              }}
+                            >
+                              <div style={{ position: "relative", width: "68px", height: "68px", borderRadius: "10px", overflow: "hidden", flexShrink: 0, background: "#f1f5f9" }}>
+                                <img
+                                  src={fixImagePath(p.image)}
+                                  alt={p.name}
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src = "/assets/images/banner/banner-trang-chu-mini-shop.webp";
                                   }}
-                                >
-                                  <ShoppingBag style={{ width: "12px", height: "12px" }} /> Thêm giỏ
-                                </button>
-                                <Link
-                                  href={`/products/${p.id}`}
-                                  target="_blank"
-                                  style={{
-                                    padding: "4px 10px",
-                                    borderRadius: "6px",
-                                    background: "#f1f5f9",
-                                    color: "#475569",
-                                    border: "none",
-                                    fontSize: "11px",
-                                    fontWeight: 700,
-                                    textDecoration: "none",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "4px",
-                                  }}
-                                >
-                                  <ExternalLink style={{ width: "12px", height: "12px" }} /> Xem
-                                </Link>
+                                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                />
+                                {p.badge && (
+                                  <span
+                                    style={{
+                                      position: "absolute",
+                                      top: "2px",
+                                      left: "2px",
+                                      fontSize: "9px",
+                                      fontWeight: 800,
+                                      padding: "1px 5px",
+                                      borderRadius: "4px",
+                                      background: p.badge.toLowerCase().includes("sale") ? "#ef4444" : "#2e7d32",
+                                      color: "#ffffff",
+                                    }}
+                                  >
+                                    {p.badge}
+                                  </span>
+                                )}
+                              </div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <h5 style={{ margin: "0 0 2px 0", fontSize: "12.5px", fontWeight: 700, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                  {p.name}
+                                </h5>
+                                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
+                                  <span style={{ fontSize: "13px", fontWeight: 800, color: "#2e7d32" }}>
+                                    {formatPrice(p.price)}
+                                  </span>
+                                  {p.oldPrice && (
+                                    <span style={{ fontSize: "11px", color: "#94a3b8", textDecoration: "line-through" }}>
+                                      {formatPrice(p.oldPrice)}
+                                    </span>
+                                  )}
+                                </div>
+                                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleAddToCartWithFeedback(p)}
+                                    style={{
+                                      padding: "5px 9px",
+                                      borderRadius: "6px",
+                                      background: isAdded ? "#15803d" : "#f0fdf4",
+                                      color: isAdded ? "#ffffff" : "#166534",
+                                      border: "1px solid #bbf7d0",
+                                      fontSize: "11px",
+                                      fontWeight: 700,
+                                      cursor: "pointer",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: "4px",
+                                      transition: "all 0.2s ease",
+                                    }}
+                                  >
+                                    {isAdded ? (
+                                      <>
+                                        <CheckCircle2 style={{ width: "12px", height: "12px" }} /> Đã thêm
+                                      </>
+                                    ) : (
+                                      <>
+                                        <ShoppingBag style={{ width: "12px", height: "12px" }} /> Thêm giỏ
+                                      </>
+                                    )}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleBuyNow(p)}
+                                    style={{
+                                      padding: "5px 9px",
+                                      borderRadius: "6px",
+                                      background: "linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%)",
+                                      color: "#ffffff",
+                                      border: "none",
+                                      fontSize: "11px",
+                                      fontWeight: 700,
+                                      cursor: "pointer",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: "3px",
+                                      boxShadow: "0 2px 4px rgba(46, 125, 50, 0.2)",
+                                    }}
+                                  >
+                                    <Zap style={{ width: "11px", height: "11px", color: "#fef08a" }} /> Mua ngay
+                                  </button>
+                                  <Link
+                                    href={`/products/${p.id}`}
+                                    target="_blank"
+                                    style={{
+                                      padding: "5px 8px",
+                                      borderRadius: "6px",
+                                      background: "#f1f5f9",
+                                      color: "#475569",
+                                      border: "none",
+                                      fontSize: "11px",
+                                      fontWeight: 700,
+                                      textDecoration: "none",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: "3px",
+                                    }}
+                                  >
+                                    <ExternalLink style={{ width: "11px", height: "11px" }} /> Xem
+                                  </Link>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
+
 
                     {/* Rich Content: Voucher Cards */}
                     {msg.vouchers && msg.vouchers.length > 0 && (

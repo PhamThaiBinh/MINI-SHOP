@@ -154,23 +154,26 @@ export default function AdminLiveChatPage() {
   };
 
   const handleDeleteSession = async (sessionId: string) => {
-    await deleteChatSession(sessionId);
     const updated = sessions.filter((s) => s.id !== sessionId);
     setSessions(updated);
+    saveLocalSessions(updated);
     if (selectedSessionId === sessionId) {
       setSelectedSessionId(updated.length > 0 ? updated[0].id : "");
       setMessages([]);
     }
+    await deleteChatSession(sessionId);
   };
 
   const handleClearAllSessions = async () => {
     if (confirm("Bạn có chắc chắn muốn xóa TOÀN BỘ lịch sử tất cả các cuộc trò chuyện tư vấn không?")) {
-      await clearAllChatSessions();
       setSessions([]);
+      saveLocalSessions([]);
       setSelectedSessionId("");
       setMessages([]);
+      await clearAllChatSessions();
     }
   };
+
 
   const filteredSessions = sessions.filter((s) => {
     const matchesSearch =

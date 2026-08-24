@@ -6,6 +6,8 @@ import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { LiveChatMessage } from "@/lib/liveChatService";
 import { PRODUCTS_DATA } from "@/data/products";
+import { fixImagePath } from "@/lib/utils";
+
 
 interface ChatMessageStreamProps {
   messages: LiveChatMessage[];
@@ -115,10 +117,19 @@ export const ChatMessageStream: React.FC<ChatMessageStreamProps> = ({
                         borderRadius: "8px",
                         overflow: "hidden",
                         flexShrink: 0,
+                        background: "#f1f5f9",
                       }}
                     >
-                      <Image src={p.image} alt={p.name} fill style={{ objectFit: "cover" }} />
+                      <img
+                        src={fixImagePath(p.image)}
+                        alt={p.name}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = "/assets/images/banner/banner-trang-chu-mini-shop.webp";
+                        }}
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      />
                     </div>
+
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <h5
                         style={{
