@@ -541,136 +541,164 @@ export default function AdminOrdersPage() {
             <div className="admin-card-shell">
               <div className="admin-card-core">
                 <div
-                  className="card-header-row"
-                  style={{ flexWrap: "wrap", gap: "12px", marginBottom: "20px" }}
-                >
-                  <h2 className="card-header-title text-xl font-extrabold text-slate-900 tracking-tight">
-                    Danh Sách Đơn Hàng Gần Đây
-                  </h2>
-                <div
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: "8px",
-                    flexWrap: "wrap",
+                    justifyContent: "space-between",
+                    gap: "16px",
+                    marginBottom: "20px",
+                    width: "100%",
+                    flexWrap: "nowrap",
                   }}
                 >
+                  <h2
+                    style={{
+                      fontSize: "17px",
+                      fontWeight: 800,
+                      color: "#0f172a",
+                      margin: 0,
+                      whiteSpace: "nowrap",
+                      letterSpacing: "-0.02em",
+                      flexShrink: 0,
+                    }}
+                  >
+                    Danh Sách Đơn Hàng Gần Đây
+                  </h2>
+
                   <div
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: "6px",
-                      background: "#f8fafc",
-                      padding: "4px 8px",
-                      border: "1px solid var(--border-color)",
-                      borderRadius: "6px",
-                      fontSize: "12px",
+                      gap: "8px",
+                      flexWrap: "nowrap",
+                      whiteSpace: "nowrap",
+                      flexShrink: 0,
                     }}
                   >
-                    <label style={{ fontWeight: 700, color: "#475569" }}>
-                      Từ ngày:
-                    </label>
-                    <input
-                      type="date"
-                      value={fromDate}
-                      onChange={(e) => setFromDate(e.target.value)}
+                    <div
                       style={{
-                        border: "none",
-                        background: "transparent",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        background: "#f8fafc",
+                        padding: "4px 8px",
+                        border: "1px solid var(--border-color)",
+                        borderRadius: "6px",
                         fontSize: "12px",
-                        fontFamily: "'Plus Jakarta Sans', sans-serif",
+                        whiteSpace: "nowrap",
                       }}
-                    />
-                    <label style={{ fontWeight: 700, color: "#475569" }}>
-                      Đến ngày:
-                    </label>
-                    <input
-                      type="date"
-                      value={toDate}
-                      onChange={(e) => setToDate(e.target.value)}
-                      style={{
-                        border: "none",
-                        background: "transparent",
-                        fontSize: "12px",
-                        fontFamily: "'Plus Jakarta Sans', sans-serif",
-                      }}
-                    />
-                  </div>
+                    >
+                      <label style={{ fontWeight: 700, color: "#475569" }}>
+                        Từ ngày:
+                      </label>
+                      <input
+                        type="date"
+                        value={fromDate}
+                        onChange={(e) => setFromDate(e.target.value)}
+                        style={{
+                          border: "none",
+                          background: "transparent",
+                          fontSize: "12px",
+                          fontFamily: "'Plus Jakarta Sans', sans-serif",
+                          outline: "none",
+                        }}
+                      />
+                      <label style={{ fontWeight: 700, color: "#475569" }}>
+                        Đến ngày:
+                      </label>
+                      <input
+                        type="date"
+                        value={toDate}
+                        onChange={(e) => setToDate(e.target.value)}
+                        style={{
+                          border: "none",
+                          background: "transparent",
+                          fontSize: "12px",
+                          fontFamily: "'Plus Jakarta Sans', sans-serif",
+                          outline: "none",
+                        }}
+                      />
+                    </div>
 
-                  {/* Payment Method Select Filter */}
-                  <select
-                    value={paymentFilter}
-                    onChange={(e) => setPaymentFilter(e.target.value)}
-                    style={{
-                      padding: "8px 14px",
-                      fontSize: "12px",
-                      fontWeight: 800,
-                      fontFamily: "'Plus Jakarta Sans', sans-serif",
-                      borderRadius: "999px",
-                      border: "1px solid #cbd5e1",
-                      background: "#ffffff",
-                      color: "#334155",
-                      outline: "none",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <option value="all">Tất cả thanh toán</option>
-                    <option value="cod">Thanh toán khi nhận hàng (COD)</option>
-                    <option value="vietqr">Chuyển khoản VietQR / Ngân hàng (QR)</option>
-                    <option value="momo">Ví MoMo</option>
-                    <option value="zalopay">Ví ZaloPay</option>
-                    <option value="viettelmoney">Ví Viettel Money</option>
-                    <option value="vnptmoney">Ví VNPT Money</option>
-                    <option value="vnpay">Ví VNPAY</option>
-                    <option value="shopeepay">Ví ShopeePay</option>
-                  </select>
-
-                  {(searchQuery || paymentFilter !== "all" || fromDate || toDate || activeTab !== "all") && (
-                    <button
-                      onClick={() => {
-                        setSearchQuery("");
-                        setPaymentFilter("all");
-                        setFromDate("");
-                        setToDate("");
-                        setActiveTab("all");
-                      }}
+                    {/* Payment Method Select Filter */}
+                    <select
+                      value={paymentFilter}
+                      onChange={(e) => setPaymentFilter(e.target.value)}
                       style={{
                         padding: "6px 12px",
                         fontSize: "12px",
-                        fontWeight: 700,
-                        background: "#fee2e2",
-                        color: "#dc2626",
-                        border: "1px solid #fca5a5",
-                        borderRadius: "6px",
+                        fontWeight: 800,
+                        fontFamily: "'Plus Jakarta Sans', sans-serif",
+                        borderRadius: "999px",
+                        border: "1px solid #cbd5e1",
+                        background: "#ffffff",
+                        color: "#334155",
+                        outline: "none",
                         cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "4px",
+                        whiteSpace: "nowrap",
                       }}
-                      title="Xóa tất cả bộ lọc"
                     >
-                      <X className="w-3.5 h-3.5" /> Xóa lọc
-                    </button>
-                  )}
+                      <option value="all">Tất cả thanh toán</option>
+                      <option value="cod">Thanh toán khi nhận hàng (COD)</option>
+                      <option value="vietqr">Chuyển khoản VietQR / Ngân hàng (QR)</option>
+                      <option value="momo">Ví MoMo</option>
+                      <option value="zalopay">Ví ZaloPay</option>
+                      <option value="viettelmoney">Ví Viettel Money</option>
+                      <option value="vnptmoney">Ví VNPT Money</option>
+                      <option value="vnpay">Ví VNPAY</option>
+                      <option value="shopeepay">Ví ShopeePay</option>
+                    </select>
 
-                  <button
-                    onClick={handleExportCSV}
-                    className="select-filter-sm"
-                    style={{
-                      cursor: "pointer",
-                      background: "#15803d",
-                      color: "#fff",
-                      border: "none",
-                      fontWeight: 700,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "5px",
-                    }}
-                  >
-                    <IconDownload size={14} color="#ffffff" /> Xuất File Excel
-                  </button>
-                    </div>
+                    {(searchQuery || paymentFilter !== "all" || fromDate || toDate || activeTab !== "all") && (
+                      <button
+                        onClick={() => {
+                          setSearchQuery("");
+                          setPaymentFilter("all");
+                          setFromDate("");
+                          setToDate("");
+                          setActiveTab("all");
+                        }}
+                        style={{
+                          padding: "6px 10px",
+                          fontSize: "12px",
+                          fontWeight: 700,
+                          background: "#fee2e2",
+                          color: "#dc2626",
+                          border: "1px solid #fca5a5",
+                          borderRadius: "6px",
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          whiteSpace: "nowrap",
+                        }}
+                        title="Xóa tất cả bộ lọc"
+                      >
+                        <X className="w-3.5 h-3.5" /> Xóa lọc
+                      </button>
+                    )}
+
+                    <button
+                      onClick={handleExportCSV}
+                      className="select-filter-sm"
+                      style={{
+                        cursor: "pointer",
+                        background: "#15803d",
+                        color: "#fff",
+                        border: "none",
+                        fontWeight: 700,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "5px",
+                        whiteSpace: "nowrap",
+                        padding: "6px 12px",
+                        borderRadius: "6px",
+                      }}
+                    >
+                      <IconDownload size={14} color="#ffffff" /> Xuất File Excel
+                    </button>
                   </div>
+                </div>
 
                   <table className="admin-table">
                     <thead>

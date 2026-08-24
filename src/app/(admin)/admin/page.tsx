@@ -579,8 +579,8 @@ export default function AdminDashboard() {
                 const filteredLabels = chartPoints.filter((_, i) => i % labelStep === 0 || i === chartPoints.length - 1);
 
                 return (
-                  <div className="admin-card-shell" style={{ marginBottom: "24px" }}>
-                    <div className="admin-card-core" style={{ padding: "24px" }}>
+                  <div className="admin-card-shell" style={{ marginBottom: "24px", width: "100%", maxWidth: "100%", minWidth: 0, boxSizing: "border-box", overflow: "hidden" }}>
+                    <div className="admin-card-core" style={{ padding: "24px", width: "100%", maxWidth: "100%", minWidth: 0, boxSizing: "border-box" }}>
                       {/* Card Header Title & KPIs */}
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "16px", marginBottom: "20px" }}>
                         <div>
@@ -642,6 +642,10 @@ export default function AdminDashboard() {
                           padding: "14px 18px",
                           marginBottom: "20px",
                           boxShadow: "0 2px 6px rgba(0,0,0,0.03)",
+                          width: "100%",
+                          maxWidth: "100%",
+                          minWidth: 0,
+                          boxSizing: "border-box",
                         }}
                       >
                         {/* Slicer Header: Title on Left, Granularity Dropdown on Right */}
@@ -649,7 +653,7 @@ export default function AdminDashboard() {
                           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                             <i className="fa-solid fa-timeline text-emerald-700" style={{ fontSize: "15px" }}></i>
                             <span style={{ fontSize: "12.5px", fontWeight: 800, color: "#1e293b", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                              Timeline Slicer (Báo Cáo Thời Gian Excel)
+                              Timeline Slicer
                             </span>
                           </div>
 
@@ -689,7 +693,19 @@ export default function AdminDashboard() {
                         </div>
 
                         {/* Slicer Horizontal Timeline Tiles Bar */}
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px", overflowX: "auto", paddingBottom: "4px" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            flexWrap: "wrap",
+                            width: "100%",
+                            maxWidth: "100%",
+                            minWidth: 0,
+                            boxSizing: "border-box",
+                            paddingBottom: "2px",
+                          }}
+                        >
                           {chartGroup === "day" && (
                             <>
                               {[
@@ -742,7 +758,7 @@ export default function AdminDashboard() {
                                     onClick={() => !isFutureMonth && setChartSubPreset(key)}
                                     title={isFutureMonth ? `Tháng ${monthNum} chưa diễn ra` : `Chọn Tháng ${monthNum}`}
                                     style={{
-                                      padding: "7px 14px",
+                                      padding: "7px 13px",
                                       borderRadius: "10px",
                                       border: isSelected ? "1.5px solid #0369a1" : "1px solid #cbd5e1",
                                       background: isSelected ? "#0284c7" : isFutureMonth ? "#f1f5f9" : "#ffffff",
@@ -753,6 +769,7 @@ export default function AdminDashboard() {
                                       cursor: isFutureMonth ? "not-allowed" : "pointer",
                                       whiteSpace: "nowrap",
                                       boxShadow: isSelected ? "0 2px 8px rgba(2, 132, 199, 0.25)" : "none",
+                                      transition: "all 0.15s ease",
                                     }}
                                   >
                                     Tháng {monthNum} {isFutureMonth ? "🔒" : ""}
@@ -763,7 +780,7 @@ export default function AdminDashboard() {
                                 type="button"
                                 onClick={() => setChartSubPreset("all_months")}
                                 style={{
-                                  padding: "7px 14px",
+                                  padding: "7px 13px",
                                   borderRadius: "10px",
                                   border: chartSubPreset === "all_months" ? "1.5px solid #0369a1" : "1px solid #cbd5e1",
                                   background: chartSubPreset === "all_months" ? "#0284c7" : "#ffffff",
@@ -773,6 +790,8 @@ export default function AdminDashboard() {
                                   fontFamily: "'Plus Jakarta Sans', sans-serif",
                                   cursor: "pointer",
                                   whiteSpace: "nowrap",
+                                  boxShadow: chartSubPreset === "all_months" ? "0 2px 8px rgba(2, 132, 199, 0.25)" : "none",
+                                  transition: "all 0.15s ease",
                                 }}
                               >
                                 Cả Năm (12 Tháng)
