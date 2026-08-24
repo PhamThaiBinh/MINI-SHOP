@@ -209,10 +209,10 @@ function AuthPageContent() {
       const { data: existingUsers, error: checkErr } = await supabase
         .from("users")
         .select("id, email, username")
-        .eq("email", cleanEmail);
+        .or(`email.ilike.${cleanEmail},email.eq.${cleanEmail}`);
 
       if (existingUsers && existingUsers.length > 0) {
-        setAuthError(`Email "${cleanEmail}" đã được đăng ký trên hệ thống! Vui lòng chuyển sang tab Đăng Nhập hoặc sử dụng email khác.`);
+        setAuthError(`Email "${cleanEmail}" đã được đăng ký tài khoản trước đó. Vui lòng chuyển sang tab Đăng Nhập hoặc sử dụng email khác!`);
         setIsSubmittingReg(false);
         return;
       }
@@ -223,7 +223,7 @@ function AuthPageContent() {
           const stored = localStorage.getItem("minishop_registered_users");
           const list = stored ? JSON.parse(stored) : [];
           if (list.some((u: any) => u.email?.toLowerCase() === cleanEmail)) {
-            setAuthError(`Email "${cleanEmail}" đã được đăng ký trên hệ thống! Vui lòng chuyển sang tab Đăng Nhập hoặc sử dụng email khác.`);
+            setAuthError(`Email "${cleanEmail}" đã được đăng ký tài khoản trước đó. Vui lòng chuyển sang tab Đăng Nhập hoặc sử dụng email khác!`);
             setIsSubmittingReg(false);
             return;
           }

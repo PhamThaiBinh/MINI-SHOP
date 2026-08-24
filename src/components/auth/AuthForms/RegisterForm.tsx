@@ -38,6 +38,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSubmit, is
           disabled={isLoading}
           value={regName}
           onChange={(e) => setRegName(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleSubmit(e);
+          }}
         />
       </div>
 
@@ -55,6 +58,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSubmit, is
           disabled={isLoading}
           value={regEmail}
           onChange={(e) => setRegEmail(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleSubmit(e);
+          }}
         />
       </div>
 
@@ -73,6 +79,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSubmit, is
             disabled={isLoading}
             value={regPassword}
             onChange={(e) => setRegPassword(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSubmit(e);
+            }}
           />
           <button
             type="button"
@@ -111,6 +120,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSubmit, is
             disabled={isLoading}
             value={regConfirmPassword}
             onChange={(e) => setRegConfirmPassword(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSubmit(e);
+            }}
           />
           <button
             type="button"

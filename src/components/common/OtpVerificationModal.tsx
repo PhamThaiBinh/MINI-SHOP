@@ -70,6 +70,10 @@ export const OtpVerificationModal: React.FC<OtpVerificationModalProps> = ({
     if (e.key === "Backspace" && !digits[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleVerifySubmit();
+    }
   };
 
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
@@ -205,7 +209,7 @@ export const OtpVerificationModal: React.FC<OtpVerificationModalProps> = ({
 
           <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "10px 14px", fontSize: "12px", color: "#64748b", marginBottom: "20px", display: "flex", alignItems: "flex-start", gap: "8px", lineHeight: "1.5" }}>
             <span style={{ fontSize: "14px", flexShrink: 0 }}>💡</span>
-            <span>Nếu chưa thấy thư sau vài giây, vui lòng làm mới hộp thư hoặc kiểm tra thêm mục <strong>Thư rác (Spam) / Quảng cáo</strong>.</span>
+            <span>Nếu chưa thấy thư sau vài giây, vui lòng làm mới hộp thư hoặc kiểm tra thêm mục <strong>Thư rác (Spam)</strong>.</span>
           </div>
 
           {/* 6 Digit Input Boxes */}
