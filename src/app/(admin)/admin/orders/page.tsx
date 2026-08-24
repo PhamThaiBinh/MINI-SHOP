@@ -11,7 +11,7 @@ import { fixImagePath } from "@/lib/utils";
 import { type UnifiedOrder } from "@/utils/orderStorage";
 import { fetchAdminOrders, updateAdminOrderStatus } from "@/lib/supabaseAdmin";
 import { createClient } from "@/utils/supabase/client";
-import { Check, Truck, CheckCircle2, XCircle, Clock, Printer, Eye, X, Zap, AlertTriangle, Package } from "lucide-react";
+import { Check, Truck, CheckCircle2, XCircle, Clock, Printer, Eye, X, Zap, AlertTriangle, Package, RotateCcw } from "lucide-react";
 
 interface OrderItem {
   id: string;
@@ -152,17 +152,19 @@ export default function AdminOrdersPage() {
   const getStatusPill = (status: UnifiedOrder["status"]) => {
     switch (status) {
       case "pending":
-        return <span className="status-pill status-pending" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}><Clock className="w-3.5 h-3.5" /> Chờ xác nhận</span>;
+        return <span className="status-pill status-pending" style={{ display: "inline-flex", alignItems: "center", gap: "4px", whiteSpace: "nowrap" }}><Clock className="w-3.5 h-3.5" /> Chờ xác nhận</span>;
       case "processing":
-        return <span className="status-pill status-processing" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}><Package className="w-3.5 h-3.5" /> Chờ lấy hàng</span>;
+        return <span className="status-pill status-processing" style={{ display: "inline-flex", alignItems: "center", gap: "4px", whiteSpace: "nowrap" }}><Package className="w-3.5 h-3.5" /> Chờ lấy hàng</span>;
       case "shipping":
-        return <span className="status-pill status-shipping" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}><Truck className="w-3.5 h-3.5" /> Đang giao hàng</span>;
+        return <span className="status-pill status-shipping" style={{ display: "inline-flex", alignItems: "center", gap: "4px", whiteSpace: "nowrap" }}><Truck className="w-3.5 h-3.5" /> Đang giao hàng</span>;
       case "completed":
-        return <span className="status-pill status-completed" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}><CheckCircle2 className="w-3.5 h-3.5" /> Đã hoàn thành</span>;
+        return <span className="status-pill status-completed" style={{ display: "inline-flex", alignItems: "center", gap: "4px", whiteSpace: "nowrap" }}><CheckCircle2 className="w-3.5 h-3.5" /> Đã hoàn thành</span>;
       case "cancelled":
-        return <span className="status-pill status-cancelled" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}><XCircle className="w-3.5 h-3.5" /> Đã hủy</span>;
+        return <span className="status-pill status-cancelled" style={{ display: "inline-flex", alignItems: "center", gap: "4px", whiteSpace: "nowrap" }}><XCircle className="w-3.5 h-3.5" /> Đã hủy</span>;
+      case "returned":
+        return <span className="status-pill" style={{ background: "#ffedd5", color: "#c2410c", border: "1px solid #fed7aa", padding: "4px 10px", borderRadius: "999px", fontWeight: 800, fontSize: "12px", display: "inline-flex", alignItems: "center", gap: "4px", whiteSpace: "nowrap" }}><RotateCcw className="w-3.5 h-3.5 text-orange-600" /> Trả hàng (7 ngày)</span>;
       default:
-        return <span className="status-pill status-pending" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}><Clock className="w-3.5 h-3.5" /> {status}</span>;
+        return <span className="status-pill status-pending" style={{ display: "inline-flex", alignItems: "center", gap: "4px", whiteSpace: "nowrap" }}><Clock className="w-3.5 h-3.5" /> {status}</span>;
     }
   };
 
@@ -786,57 +788,67 @@ export default function AdminOrdersPage() {
                             </span>
                           </td>
                           <td>{getStatusPill(order.status)}</td>
-                          <td style={{ textAlign: "center" }}>
-                            {order.status === "pending" && (
-                              <button
-                                className="btn-action-edit"
-                                onClick={() => handleApproveOrder(order.id)}
-                                style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}
-                              >
-                                <Check className="w-3.5 h-3.5" /> Duyệt đơn
-                              </button>
-                            )}
-                            {order.status === "processing" && (
-                              <button
-                                className="btn-action-edit"
-                                onClick={() => handleShipOrder(order.id)}
-                                style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}
-                              >
-                                <Truck className="w-3.5 h-3.5" /> Giao ĐVVC
-                              </button>
-                            )}
-                            {order.status === "shipping" && (
-                              <button
-                                className="btn-action-edit"
-                                onClick={() => handleCompleteOrder(order.id)}
-                                style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}
-                              >
-                                <CheckCircle2 className="w-3.5 h-3.5" /> Đã giao
-                              </button>
-                            )}
-                            {order.status !== "completed" && order.status !== "cancelled" && (
-                              <button
-                                className="btn-action-delete"
-                                onClick={() => handleOpenCancelModal(order.id)}
-                                style={{ marginLeft: "4px", display: "inline-flex", alignItems: "center", gap: "4px" }}
-                              >
-                                <XCircle className="w-3.5 h-3.5" /> Hủy đơn
-                              </button>
-                            )}
-                            <button
-                              className="btn-action-edit"
-                              onClick={() => setSelectedOrder(order)}
+                          <td style={{ textAlign: "center", whiteSpace: "nowrap" }}>
+                            <div
                               style={{
-                                borderColor: "#cbd5e1",
-                                color: "#475569",
-                                marginLeft: "4px",
                                 display: "inline-flex",
                                 alignItems: "center",
-                                gap: "4px",
+                                justifyContent: "center",
+                                gap: "6px",
+                                flexWrap: "nowrap",
                               }}
                             >
-                              <Eye className="w-3.5 h-3.5" /> Chi tiết
-                            </button>
+                              {order.status === "pending" && (
+                                <button
+                                  className="btn-action-edit"
+                                  onClick={() => handleApproveOrder(order.id)}
+                                  style={{ display: "inline-flex", alignItems: "center", gap: "4px", whiteSpace: "nowrap" }}
+                                >
+                                  <Check className="w-3.5 h-3.5" /> Duyệt đơn
+                                </button>
+                              )}
+                              {order.status === "processing" && (
+                                <button
+                                  className="btn-action-edit"
+                                  onClick={() => handleShipOrder(order.id)}
+                                  style={{ display: "inline-flex", alignItems: "center", gap: "4px", whiteSpace: "nowrap" }}
+                                >
+                                  <Truck className="w-3.5 h-3.5" /> Giao ĐVVC
+                                </button>
+                              )}
+                              {order.status === "shipping" && (
+                                <button
+                                  className="btn-action-edit"
+                                  onClick={() => handleCompleteOrder(order.id)}
+                                  style={{ display: "inline-flex", alignItems: "center", gap: "4px", whiteSpace: "nowrap" }}
+                                >
+                                  <CheckCircle2 className="w-3.5 h-3.5" /> Đã giao
+                                </button>
+                              )}
+                              {order.status !== "completed" && order.status !== "cancelled" && order.status !== "returned" && (
+                                <button
+                                  className="btn-action-delete"
+                                  onClick={() => handleOpenCancelModal(order.id)}
+                                  style={{ display: "inline-flex", alignItems: "center", gap: "4px", whiteSpace: "nowrap" }}
+                                >
+                                  <XCircle className="w-3.5 h-3.5" /> Hủy đơn
+                                </button>
+                              )}
+                              <button
+                                className="btn-action-edit"
+                                onClick={() => setSelectedOrder(order)}
+                                style={{
+                                  borderColor: "#cbd5e1",
+                                  color: "#475569",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "4px",
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                <Eye className="w-3.5 h-3.5" /> Chi tiết
+                              </button>
+                            </div>
                           </td>
                     </tr>
                   ))}

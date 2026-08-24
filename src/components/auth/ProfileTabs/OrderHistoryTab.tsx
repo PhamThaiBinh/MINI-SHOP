@@ -282,7 +282,7 @@ export const OrderHistoryTab: React.FC<OrderHistoryTabProps> = ({
                     </>
                   )}
 
-                  {(o.status === "processing" || o.status === "shipping") && (
+                  {(o.status === "pending" || o.status === "processing" || o.status === "shipping" || o.statusText?.toLowerCase().includes("chờ") || o.statusText?.toLowerCase().includes("xử lý")) && o.status !== "cancelled" && o.status !== "completed" && o.status !== "returned" && (
                     <button
                       type="button"
                       onClick={() => onOpenCancelModal(o)}

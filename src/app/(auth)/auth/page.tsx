@@ -358,6 +358,10 @@ function AuthPageContent() {
       ? cancelReasonCustom || "Khách hàng không nêu rõ lý do"
       : cancelReasonPreset;
 
+    const orderId = cancelTargetOrder.id;
+    const cleanId = orderId.replace(/^#/, "");
+    const hashId = `#${cleanId}`;
+
     // Update Supabase Orders Table so Admin Interface & Customer Order syncs immediately
     try {
       const supabase = createClient();
@@ -368,47 +372,59 @@ function AuthPageContent() {
           status_text: "Đã hủy đơn",
           cancel_reason: finalReason,
         })
-        .eq("id", cancelTargetOrder.id.replace("#", ""));
+        .or(`id.eq.${orderId},id.eq.${cleanId},id.eq.${hashId}`);
     } catch (err) {
       console.error("Error syncing cancelled status to Supabase:", err);
     }
 
     setLiveOrders((prev) =>
       prev.map((o) =>
-        o.id === cancelTargetOrder.id
+        o.id === cancelTargetOrder.id || o.id === cleanId || o.id === hashId
           ? { ...o, status: "cancelled" as const, statusText: `Đã hủy (${finalReason})` }
           : o
       )
     );
+
+    // Update localStorage caches
+    try {
+      ["mini_shop_orders", "mini_shop_placed_orders", "minishop_customer_orders"].forEach((key) => {
+        const stored = localStorage.getItem(key);
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed)) {
+              const updated = parsed.map((o: any) =>
+                o.id === orderId || o.id === cleanId || o.id === hashId
+                  ? { ...o, status: "cancelled", status_text: "Đã hủy đơn", cancel_reason: finalReason }
+                  : o
+              );
+              localStorage.setItem(key, JSON.stringify(updated));
+            }
+          } catch (e) {}
+        }
+      });
+      window.dispatchEvent(new Event("ordersUpdated"));
+    } catch (e) {
+      console.error("Local storage update error:", e);
+    }
+
     setShowCancelModal(false);
     alert(`Đã hủy thành công đơn hàng ${cancelTargetOrder.id}!`);
   };
 
   const handleSubmitReturn = async (orderId: string, reasonPreset: string, reasonDetail: string, images: string[]) => {
     const fullReason = reasonDetail ? `[Khách yêu cầu trả hàng]: ${reasonPreset} - ${reasonDetail}` : `[Khách yêu cầu trả hàng]: ${reasonPreset}`;
+    const cleanId = orderId.replace(/^#/, "");
+    const hashId = `#${cleanId}`;
 
     // Update live state
     setLiveOrders((prev) =>
       prev.map((o) =>
-        o.id === orderId
-          ? { ...o, status: "returned" as any, statusText: "Yêu cầu trả hàng", cancelReason: fullReason }
+        o.id === orderId || o.id === cleanId || o.id === hashId
+          ? { ...o, status: "returned" as any, statusText: "Trả hàng (7 ngày)", cancelReason: fullReason }
           : o
       )
     );
-
-    // Update localStorage
-    try {
-      const stored = localStorage.getItem("mini_shop_orders");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        const updated = parsed.map((o: any) =>
-          o.id === orderId ? { ...o, status: "returned", status_text: "Yêu cầu trả hàng", cancel_reason: fullReason } : o
-        );
-        localStorage.setItem("mini_shop_orders", JSON.stringify(updated));
-      }
-    } catch (e) {
-      console.error("Local storage error:", e);
-    }
 
     // Sync to Supabase Orders table
     try {
@@ -417,12 +433,35 @@ function AuthPageContent() {
         .from("orders")
         .update({
           status: "returned",
-          status_text: "Yêu cầu trả hàng",
+          status_text: "Trả hàng (7 ngày)",
           cancel_reason: fullReason,
         })
-        .eq("id", orderId.replace("#", ""));
+        .or(`id.eq.${orderId},id.eq.${cleanId},id.eq.${hashId}`);
     } catch (err) {
       console.error("Error syncing return request to Supabase:", err);
+    }
+
+    // Update localStorage caches
+    try {
+      ["mini_shop_orders", "mini_shop_placed_orders", "minishop_customer_orders"].forEach((key) => {
+        const stored = localStorage.getItem(key);
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed)) {
+              const updated = parsed.map((o: any) =>
+                o.id === orderId || o.id === cleanId || o.id === hashId
+                  ? { ...o, status: "returned", status_text: "Trả hàng (7 ngày)", cancel_reason: fullReason }
+                  : o
+              );
+              localStorage.setItem(key, JSON.stringify(updated));
+            }
+          } catch (e) {}
+        }
+      });
+      window.dispatchEvent(new Event("ordersUpdated"));
+    } catch (e) {
+      console.error("Local storage error:", e);
     }
 
     setShowReturnModal(false);

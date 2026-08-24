@@ -338,22 +338,26 @@ export const fetchAdminOrders = async (): Promise<UnifiedOrder[]> => {
 
 export const updateAdminOrderStatus = async (
   orderId: string,
-  newStatus: "pending" | "processing" | "shipping" | "completed" | "cancelled",
+  newStatus: "pending" | "processing" | "shipping" | "completed" | "cancelled" | "returned",
   cancelReason?: string
 ): Promise<boolean> => {
   try {
     const supabase = createClient();
-    const statusMap = {
+    const cleanId = orderId.replace(/^#/, "");
+    const hashId = `#${cleanId}`;
+
+    const statusMap: Record<string, string> = {
       pending: "Chờ xác nhận",
-      processing: "Đang xử lý đơn hàng",
-      shipping: "Đang vận chuyển",
-      completed: "Đã giao hàng thành công",
+      processing: "Chờ lấy hàng",
+      shipping: "Đang giao hàng",
+      completed: "Đã hoàn thành",
       cancelled: `Đã hủy đơn${cancelReason ? `: ${cancelReason}` : ""}`,
+      returned: `Trả hàng (7 ngày)${cancelReason ? `: ${cancelReason}` : ""}`,
     };
 
     const updateObj: any = {
       status: newStatus,
-      status_text: statusMap[newStatus],
+      status_text: statusMap[newStatus] || newStatus,
     };
     if (cancelReason) {
       updateObj.cancel_reason = cancelReason;
@@ -362,7 +366,11 @@ export const updateAdminOrderStatus = async (
     const { error } = await supabase
       .from("orders")
       .update(updateObj)
-      .eq("id", orderId);
+      .or(`id.eq.${orderId},id.eq.${cleanId},id.eq.${hashId}`);
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("ordersUpdated"));
+    }
 
     return !error;
   } catch (err) {

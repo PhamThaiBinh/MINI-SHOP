@@ -90,18 +90,32 @@ export default function AdminDashboard() {
   }, []);
 
   // ==================== DATA ANALYST METRICS AGGREGATION ====================
-  const completedOrders = orders.filter((o) => o.status === "completed");
+  const completedOrders = orders.filter(
+    (o) => o.status === "completed" && !o.statusText?.toLowerCase().includes("trả hàng")
+  );
   const shippingOrders = orders.filter((o) => o.status === "shipping");
   const processingOrders = orders.filter((o) => o.status === "processing");
   const pendingOrders = orders.filter((o) => o.status === "pending");
   const cancelledOrders = orders.filter((o) => o.status === "cancelled");
+  const returnedOrders = orders.filter(
+    (o) => o.status === "returned" || o.statusText?.toLowerCase().includes("trả hàng")
+  );
 
-  // Financial Metrics
+  // Financial Metrics: Only valid completed orders count as Revenue (Cancelled & Returned are strictly excluded)
   const netRevenue = completedOrders.reduce((sum, o) => sum + (o.total || 0), 0);
   const grossPipeline = orders
-    .filter((o) => o.status !== "cancelled")
+    .filter(
+      (o) =>
+        o.status !== "cancelled" &&
+        o.status !== "returned" &&
+        !o.statusText?.toLowerCase().includes("trả hàng")
+    )
     .reduce((sum, o) => sum + (o.total || 0), 0);
   const cancelledLoss = cancelledOrders.reduce(
+    (sum, o) => sum + (o.total || 0),
+    0
+  );
+  const returnedLoss = returnedOrders.reduce(
     (sum, o) => sum + (o.total || 0),
     0
   );
