@@ -3,23 +3,25 @@
 import React, { useState } from "react";
 import { Key, Eye, EyeOff } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
+import { useToastAndConfirm } from "@/context/ToastAndConfirmContext";
 
 export const SecuritySettingsTab: React.FC = () => {
+  const { showToast } = useToastAndConfirm();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword.length < 6) {
-      alert("Mật khẩu mới phải có ít nhất 6 ký tự!");
+      showToast("Mật khẩu mới phải có ít nhất 6 ký tự!", "warning");
       return;
     }
     if (newPassword !== confirmPassword) {
-      alert("Mật khẩu mới và xác nhận mật khẩu không khớp!");
+      showToast("Mật khẩu mới và xác nhận mật khẩu không khớp!", "warning");
       return;
     }
 
@@ -27,17 +29,18 @@ export const SecuritySettingsTab: React.FC = () => {
       const supabase = createClient();
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) {
-        alert(`Lỗi cập nhật mật khẩu: ${error.message}`);
+        showToast(`Lỗi cập nhật mật khẩu: ${error.message}`, "error");
       } else {
-        alert("Đã cập nhật mật khẩu mới thành công!");
+        showToast("Đã cập nhật mật khẩu mới thành công!", "success");
         setCurrentPassword("");
         setNewPassword("");
         setConfirmPassword("");
       }
     } catch (err: any) {
-      alert("Có lỗi xảy ra khi đổi mật khẩu!");
+      showToast("Có lỗi xảy ra khi đổi mật khẩu!", "error");
     }
   };
+
 
   return (
     <div>
@@ -93,7 +96,7 @@ export const SecuritySettingsTab: React.FC = () => {
           <label className="auth-label">Xác nhận mật khẩu mới *</label>
           <div style={{ position: "relative" }}>
             <input
-              type={showConfirm ? "text" : "password"}
+              type={showConfirmPassword ? "text" : "password"}
               className="form-control auth-input"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
@@ -103,11 +106,12 @@ export const SecuritySettingsTab: React.FC = () => {
             />
             <button
               type="button"
-              onClick={() => setShowConfirm(!showConfirm)}
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer" }}
             >
-              {showConfirm ? <EyeOff className="w-4 h-4 text-slate-500" /> : <Eye className="w-4 h-4 text-slate-500" />}
+              {showConfirmPassword ? <EyeOff className="w-4 h-4 text-slate-500" /> : <Eye className="w-4 h-4 text-slate-500" />}
             </button>
+
           </div>
         </div>
 

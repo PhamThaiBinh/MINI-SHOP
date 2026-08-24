@@ -5,9 +5,11 @@ import Link from "next/link";
 import "@/styles/contact.css";
 import { sendContactMessageToSupabase } from "@/lib/supabaseContact";
 import { getStoreSettings, StoreSettings } from "@/lib/storeSettings";
+import { useToastAndConfirm } from "@/context/ToastAndConfirmContext";
 import { MapPin, Phone, Mail, Clock, Send, CheckCircle2, MessageSquare, Headphones, ShieldCheck } from "lucide-react";
 
 export default function ContactPage() {
+  const { showToast } = useToastAndConfirm();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -37,14 +39,14 @@ export default function ContactPage() {
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email.trim())) {
-      alert("Vui lòng nhập địa chỉ Email đúng định dạng (Ví dụ: name@example.com)!");
+      showToast("Vui lòng nhập địa chỉ Email đúng định dạng (Ví dụ: name@example.com)!", "warning");
       return;
     }
 
     if (formData.phone.trim()) {
       const cleanPhone = formData.phone.replace(/\D/g, "");
       if (cleanPhone.length < 9 || cleanPhone.length > 11) {
-        alert("Số điện thoại liên hệ phải chứa từ 9 đến 11 chữ số!");
+        showToast("Số điện thoại liên hệ phải chứa từ 9 đến 11 chữ số!", "warning");
         return;
       }
     }
@@ -55,10 +57,11 @@ export default function ContactPage() {
 
     if (success) {
       setSubmitted(true);
+      showToast("Gửi tin nhắn liên hệ thành công! Chúng tôi sẽ phản hồi sớm nhất.", "success");
       setFormData({ name: "", email: "", phone: "", message: "" });
       setTimeout(() => setSubmitted(false), 5000);
     } else {
-      alert("Không thể gửi tin nhắn. Vui lòng thử lại sau!");
+      showToast("Không thể gửi tin nhắn. Vui lòng thử lại sau!", "error");
     }
   };
 

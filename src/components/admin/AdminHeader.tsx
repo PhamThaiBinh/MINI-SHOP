@@ -4,7 +4,9 @@ import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useToastAndConfirm } from "@/context/ToastAndConfirmContext";
 import { ShoppingCart, AlertTriangle, UserCheck, MessageSquare, Menu, Bell, Settings, Users, LogOut, ArrowRight } from "lucide-react";
+
 
 import { getLocalSessions, LiveChatSession } from "@/lib/liveChatService";
 
@@ -146,12 +148,23 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const { showConfirm } = useToastAndConfirm();
+
   const handleLogout = () => {
-    if (confirm("Bạn có chắc chắn muốn thoát quyền Admin và đăng xuất?")) {
-      logout();
-      router.push("/auth");
-    }
+    showConfirm({
+      title: "Đăng xuất tài khoản Admin",
+      message: "Bạn có chắc chắn muốn thoát quyền Admin và đăng xuất?",
+      confirmText: "Đăng xuất",
+      cancelText: "Ở lại",
+      type: "danger",
+      icon: "fa-solid fa-right-from-bracket",
+      onConfirm: () => {
+        logout();
+        router.push("/auth");
+      },
+    });
   };
+
 
   return (
     <header className="admin-top-header">

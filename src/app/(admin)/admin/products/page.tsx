@@ -7,7 +7,9 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { fixImagePath, formatVND } from "@/lib/utils";
 import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
+import { useToastAndConfirm } from "@/context/ToastAndConfirmContext";
 import { Edit, Trash2, Plus, X, Package, AlertTriangle, ArrowUpDown, PackageCheck, History, ArrowDownRight, ArrowUpRight, ShieldCheck, CheckCircle2 } from "lucide-react";
+
 import { saveAdminProduct, deleteAdminProduct, fetchAdminCategories } from "@/lib/supabaseAdmin";
 import { uploadProductImage } from "@/lib/supabaseStorage";
 
@@ -44,7 +46,9 @@ export interface StockLogItem {
 }
 
 export default function AdminProductsPage() {
+  const { showToast, showConfirm } = useToastAndConfirm();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [dbCategories, setDbCategories] = useState<CategoryItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -93,16 +97,16 @@ export default function AdminProductsPage() {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      alert("Vui lòng chọn 1 file định dạng hình ảnh (.png, .jpg, .jpeg, .webp)");
+      showToast("Vui lòng chọn 1 file định dạng hình ảnh (.png, .jpg, .jpeg, .webp)", "warning");
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      alert("Dung lượng file tối đa là 5MB");
+      showToast("Dung lượng file tối đa là 5MB", "warning");
       return;
     }
 
-    // Set immediate local preview so the user instantly sees their image (e.g. cat picture)
+    // Set immediate local preview so the user instantly sees their image
     const localPreviewUrl = URL.createObjectURL(file);
     setFormImageUrl(localPreviewUrl);
 
@@ -113,18 +117,20 @@ export default function AdminProductsPage() {
       if (publicUrl) {
         setFormImageUrl(publicUrl);
         setUploadStatusMsg("Tải ảnh lên Supabase Storage thành công!");
+        showToast("Tải ảnh lên Supabase Storage thành công!", "success");
       } else {
-        alert("Có lỗi khi tải ảnh lên Supabase Storage. Vui lòng thử lại!");
+        showToast("Có lỗi khi tải ảnh lên Supabase Storage. Vui lòng thử lại!", "error");
         setUploadStatusMsg("");
       }
     } catch (err) {
       console.error("Upload failed:", err);
-      alert("Tải ảnh thất bại!");
+      showToast("Tải ảnh thất bại!", "error");
       setUploadStatusMsg("");
     } finally {
       setIsUploadingImage(false);
     }
   };
+
 
   // Pagination states
   const [pageSize, setPageSize] = useState<number>(10);
@@ -209,17 +215,26 @@ export default function AdminProductsPage() {
     setShowModal(true);
   };
 
-  const handleDeleteProduct = async (id: number) => {
-    if (confirm("Bạn có chắc muốn xóa sản phẩm này không?")) {
-      setLoading(true);
-      const success = await deleteAdminProduct(id);
-      if (success) {
-        setProducts((prev) => prev.filter((p) => p.id !== id));
-      } else {
-        alert("Xóa sản phẩm thất bại!");
-      }
-      setLoading(false);
-    }
+  const handleDeleteProduct = (id: number) => {
+    showConfirm({
+      title: "Xóa sản phẩm",
+      message: "Bạn có chắc chắn muốn xóa sản phẩm này khỏi hệ thống không?",
+      confirmText: "Xóa vĩnh viễn",
+      cancelText: "Hủy bỏ",
+      type: "danger",
+      icon: "fa-solid fa-trash-can",
+      onConfirm: async () => {
+        setLoading(true);
+        const success = await deleteAdminProduct(id);
+        if (success) {
+          setProducts((prev) => prev.filter((p) => p.id !== id));
+          showToast("Đã xóa sản phẩm thành công!", "success");
+        } else {
+          showToast("Xóa sản phẩm thất bại!", "error");
+        }
+        setLoading(false);
+      },
+    });
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -228,7 +243,7 @@ export default function AdminProductsPage() {
 
     const numericPrice = parseFloat(formPrice);
     if (isNaN(numericPrice) || numericPrice < 0) {
-      alert("Giá bán không hợp lệ!");
+      showToast("Giá bán không hợp lệ!", "warning");
       setLoading(false);
       return;
     }
@@ -257,8 +272,9 @@ export default function AdminProductsPage() {
     if (saved) {
       await loadData();
       setShowModal(false);
+      showToast(editingProduct ? "Đã cập nhật thông tin sản phẩm!" : "Đã thêm sản phẩm mới thành công!", "success");
     } else {
-      alert("Lưu sản phẩm thất bại!");
+      showToast("Lưu sản phẩm thất bại!", "error");
     }
     setLoading(false);
   };
@@ -291,13 +307,13 @@ export default function AdminProductsPage() {
     e.preventDefault();
     const qtyVal = parseInt(inventoryQty, 10);
     if (isNaN(qtyVal) || qtyVal < 0) {
-      alert("Số lượng giao dịch phải là một số không âm (≥ 0)!");
+      showToast("Số lượng giao dịch phải là một số không âm (≥ 0)!", "warning");
       return;
     }
 
     const targetProd = products.find((p) => p.id === selectedInventoryProdId);
     if (!targetProd) {
-      alert("Chưa chọn sản phẩm!");
+      showToast("Chưa chọn sản phẩm!", "warning");
       return;
     }
 
@@ -307,18 +323,18 @@ export default function AdminProductsPage() {
 
     if (inventoryMode === "IMPORT") {
       if (qtyVal <= 0) {
-        alert("Số lượng nhập kho phải lớn hơn 0!");
+        showToast("Số lượng nhập kho phải lớn hơn 0!", "warning");
         return;
       }
       newStock = currentStock + qtyVal;
       if (!finalReason) finalReason = "Nhập bổ sung hàng kho";
     } else if (inventoryMode === "EXPORT") {
       if (qtyVal <= 0) {
-        alert("Số lượng xuất kho phải lớn hơn 0!");
+        showToast("Số lượng xuất kho phải lớn hơn 0!", "warning");
         return;
       }
       if (qtyVal > currentStock) {
-        alert(`Số lượng xuất (${qtyVal}) vượt quá số tồn kho hiện tại (${currentStock})!`);
+        showToast(`Số lượng xuất (${qtyVal}) vượt quá số tồn kho hiện tại (${currentStock})!`, "warning");
         return;
       }
       newStock = currentStock - qtyVal;
@@ -365,9 +381,9 @@ export default function AdminProductsPage() {
       setStockLogs((prev) => [newLog, ...prev]);
       await loadData();
       setShowInventoryModal(false);
-      alert(`✅ Cập nhật kho thành công! Mã phiếu duy nhất: ${uniqueCode}. Tồn mới: ${newStock} món.`);
+      showToast(`Cập nhật kho thành công! Mã phiếu: ${uniqueCode}. Tồn mới: ${newStock} món.`, "success");
     } else {
-      alert("Cập nhật tồn kho thất bại! Vui lòng thử lại.");
+      showToast("Cập nhật tồn kho thất bại! Vui lòng thử lại.", "error");
     }
     setLoading(false);
   };

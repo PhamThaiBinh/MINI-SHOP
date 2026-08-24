@@ -3,6 +3,8 @@
 import React from "react";
 import { Search } from "lucide-react";
 import { LiveChatSession } from "@/lib/liveChatService";
+import { useToastAndConfirm } from "@/context/ToastAndConfirmContext";
+
 
 interface ChatSessionListProps {
   sessions: LiveChatSession[];
@@ -29,7 +31,9 @@ export const ChatSessionList: React.FC<ChatSessionListProps> = ({
   onDeleteSession,
   onClearAll,
 }) => {
+  const { showConfirm } = useToastAndConfirm();
   return (
+
     <div
       className="dashboard-card"
       style={{
@@ -294,9 +298,17 @@ export const ChatSessionList: React.FC<ChatSessionListProps> = ({
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (confirm(`Xóa cuộc trò chuyện của "${s.customer_name}"?`)) {
-                              onDeleteSession(s.id);
-                            }
+                            showConfirm({
+                              title: "Xóa cuộc trò chuyện",
+                              message: `Xóa cuộc trò chuyện của "${s.customer_name}"?`,
+                              confirmText: "Xóa",
+                              cancelText: "Hủy",
+                              type: "danger",
+                              icon: "fa-solid fa-trash-can",
+                              onConfirm: () => {
+                                onDeleteSession(s.id);
+                              },
+                            });
                           }}
                           title="Xóa cuộc trò chuyện này"
                           style={{
@@ -313,6 +325,7 @@ export const ChatSessionList: React.FC<ChatSessionListProps> = ({
                           <i className="fa-solid fa-trash-can"></i>
                         </button>
                       )}
+
                     </div>
                   </div>
                 </div>

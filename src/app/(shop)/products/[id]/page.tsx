@@ -9,7 +9,9 @@ import { formatVND, fixImagePath } from "@/lib/utils";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { useAuth } from "@/context/AuthContext";
+import { useToastAndConfirm } from "@/context/ToastAndConfirmContext";
 import { Product } from "@/types/product";
+
 import { fetchProductByIdFromSupabase, fetchProductsFromSupabase } from "@/lib/supabaseProducts";
 import { fetchUserAddressesFromSupabase, UserAddressItem } from "@/lib/supabaseAddress";
 import { createClient } from "@/utils/supabase/client";
@@ -91,7 +93,9 @@ function ProductDetailPageContent({
   params: Promise<{ id: string }>;
 }) {
   const router = useRouter();
+  const { showToast } = useToastAndConfirm();
   const searchParams = useSearchParams();
+
   const flashSalePriceParam = searchParams ? searchParams.get("flashSalePrice") : null;
   const flashSalePrice = flashSalePriceParam ? parseInt(flashSalePriceParam, 10) : null;
 
@@ -347,10 +351,10 @@ function ProductDetailPageContent({
   const handleIncreaseQuantity = () => {
     if (isOutOfStock) return;
     if (quantity >= productStock) {
-      setToastMsg(`⚠️ Số lượng mua không thể vượt quá số lượng tồn kho (${productStock} sản phẩm)!`);
-      setTimeout(() => setToastMsg(""), 3500);
+      showToast(`Số lượng mua không thể vượt quá số lượng tồn kho (${productStock} sản phẩm)!`, "warning");
       return;
     }
+
     setQuantity((q) => Math.min(productStock, q + 1));
   };
 
@@ -687,7 +691,7 @@ function ProductDetailPageContent({
                     className="btn-nested-primary"
                     onClick={() => {
                       if (isOutOfStock) {
-                        alert("Sản phẩm hiện đang tạm hết hàng!");
+                        showToast("Sản phẩm hiện đang tạm hết hàng!", "warning");
                         return;
                       }
                       const existingCartItem = cart.find((it) => it.product.id === currentProduct.id);
@@ -695,14 +699,15 @@ function ProductDetailPageContent({
                       if (inCartQty + quantity > productStock) {
                         const canAdd = Math.max(0, productStock - inCartQty);
                         if (canAdd === 0) {
-                          alert(`Bạn đã có ${inCartQty} sản phẩm trong giỏ hàng (đã đạt giới hạn tồn kho ${productStock} món)!`);
+                          showToast(`Bạn đã có ${inCartQty} sản phẩm trong giỏ hàng (đã đạt giới hạn tồn kho ${productStock} món)!`, "warning");
                         } else {
-                          alert(`Bạn chỉ có thể thêm tối đa ${canAdd} sản phẩm nữa vào giỏ hàng (Tồn kho: ${productStock})!`);
+                          showToast(`Bạn chỉ có thể thêm tối đa ${canAdd} sản phẩm nữa vào giỏ hàng (Tồn kho: ${productStock})!`, "warning");
                         }
                         return;
                       }
                       addToCart({ ...currentProduct, price: finalDisplayPrice }, quantity);
                       setAddedToCart(true);
+                      showToast(`Đã thêm ${quantity} sản phẩm "${currentProduct.name}" vào giỏ hàng thành công!`, "success");
                       setToastMsg(`Đã thêm ${quantity} sản phẩm "${currentProduct.name}" vào giỏ hàng thành công!`);
                       setTimeout(() => {
                         setAddedToCart(false);
@@ -727,12 +732,13 @@ function ProductDetailPageContent({
                     className="btn-nested-secondary"
                     onClick={() => {
                       if (isOutOfStock) {
-                        alert("Sản phẩm hiện đang tạm hết hàng!");
+                        showToast("Sản phẩm hiện đang tạm hết hàng!", "warning");
                         return;
                       }
                       addToCart({ ...currentProduct, price: finalDisplayPrice }, quantity);
                       router.push("/checkout");
                     }}
+
                     style={{
                       cursor: isOutOfStock ? "not-allowed" : "pointer",
                       opacity: isOutOfStock ? 0.6 : 1,

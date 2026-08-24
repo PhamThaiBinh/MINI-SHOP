@@ -128,9 +128,10 @@ export default function BlogListPage() {
                 {/* Right Meta & Actions */}
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
-                    <span style={{ fontSize: "11px", fontWeight: 900, background: "#fef3c7", color: "#b45309", padding: "3px 10px", borderRadius: "999px" }}>
-                      ⭐ CHUYÊN MỤC TIÊU ĐIỂM
+                    <span style={{ fontSize: "11px", fontWeight: 900, background: "#fef3c7", color: "#b45309", padding: "3px 10px", borderRadius: "999px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                      <i className="fa-solid fa-star text-amber-500"></i> CHUYÊN MỤC TIÊU ĐIỂM
                     </span>
+
                     <span style={{ fontSize: "12px", color: "#64748b", fontWeight: 700 }}>
                       {featuredArticle.category}
                     </span>

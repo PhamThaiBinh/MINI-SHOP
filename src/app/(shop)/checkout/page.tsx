@@ -11,7 +11,9 @@ import { fetchAdminVouchers } from "@/lib/supabaseAdmin";
 import { fetchUserAddressesFromSupabase } from "@/lib/supabaseAddress";
 import { formatFullTimestamp, UnifiedOrder } from "@/utils/orderStorage";
 import { createOrderInSupabase } from "@/lib/supabaseOrders";
+import { useToastAndConfirm } from "@/context/ToastAndConfirmContext";
 import { CreditCard, ShieldCheck, ShoppingCart, MapPin, Ticket, Gift, Home, CheckCircle2, AlertTriangle, Check, X, Printer, Clock, ArrowRight } from "lucide-react";
+
 
 interface Coupon {
   code: string;
@@ -26,6 +28,8 @@ interface Coupon {
 export default function CheckoutPage() {
   const { cart, clearCart } = useCart();
   const { user, consumeVoucher, addPlacedOrder } = useAuth();
+  const { showToast } = useToastAndConfirm();
+
 
   // Form Fields (Pre-filled from user profile)
   const [fullname, setFullname] = useState(user?.name || "");
@@ -239,8 +243,9 @@ export default function CheckoutPage() {
         console.error(e);
       }
       setVoucherMsg(
-        `⚠️ Mã ${kickedCode} đã tự động bị hủy do giá trị đơn hàng (${formatVND(subtotal)}) không còn đủ điều kiện tối thiểu ${formatVND(requiredMin)}.`
+        `Mã ${kickedCode} đã tự động bị hủy do giá trị đơn hàng (${formatVND(subtotal)}) không còn đủ điều kiện tối thiểu ${formatVND(requiredMin)}.`
       );
+
     }
   }, [subtotal, appliedVoucher]);
 
@@ -357,9 +362,10 @@ export default function CheckoutPage() {
     e.preventDefault();
     const phoneCheck = validateVNPhoneNumber(phone);
     if (!phoneCheck.isValid) {
-      alert(phoneCheck.message || "Số điện thoại không đúng đầu số các nhà mạng tại Việt Nam!");
+      showToast(phoneCheck.message || "Số điện thoại không đúng đầu số các nhà mạng tại Việt Nam!", "warning");
       return;
     }
+
 
     const newCode = "#MS-" + Math.floor(10000 + Math.random() * 90000);
     setOrderCode(newCode);

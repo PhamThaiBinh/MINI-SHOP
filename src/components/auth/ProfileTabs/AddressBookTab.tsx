@@ -5,6 +5,7 @@ import { AddressItem } from "../types";
 import { SearchableDropdown } from "../Shared/SearchableDropdown";
 import { MapPin, Trash2, Plus, Save, X, Edit3, CheckCircle2, AlertCircle } from "lucide-react";
 import { validateVNPhoneNumber } from "@/lib/utils";
+import { useToastAndConfirm } from "@/context/ToastAndConfirmContext";
 
 interface AddressBookTabProps {
   addresses: AddressItem[];
@@ -31,11 +32,12 @@ export const AddressBookTab: React.FC<AddressBookTabProps> = ({
   onSetDefaultAddress,
   onDeleteAddress,
 }) => {
+  const { showToast, showConfirm } = useToastAndConfirm();
   const [showModal, setShowModal] = useState(false);
   const [editingAddress, setEditingAddress] = useState<AddressItem | null>(null);
 
-  const [addrName, setAddrName] = useState("");
-  const [addrPhone, setAddrPhone] = useState("");
+  const [addrName, setAddrName] = useState(defaultName);
+  const [addrPhone, setAddrPhone] = useState(defaultPhone);
   const [addrProvince, setAddrProvince] = useState("");
   const [addrWard, setAddrWard] = useState("");
   const [addrDetail, setAddrDetail] = useState("");
@@ -70,18 +72,18 @@ export const AddressBookTab: React.FC<AddressBookTabProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!addrName.trim()) {
-      alert("Vui lòng nhập họ và tên người nhận!");
+      showToast("Vui lòng nhập họ và tên người nhận!", "warning");
       return;
     }
 
     const phoneCheck = validateVNPhoneNumber(addrPhone);
     if (!phoneCheck.isValid) {
-      alert(phoneCheck.message || "Số điện thoại không đúng đầu số nhà mạng tại Việt Nam!");
+      showToast(phoneCheck.message || "Số điện thoại không đúng đầu số nhà mạng tại Việt Nam!", "warning");
       return;
     }
 
     if (!addrProvince || !addrWard) {
-      alert("Vui lòng chọn Tỉnh/Thành phố và Xã/Phường!");
+      showToast("Vui lòng chọn Tỉnh/Thành phố và Xã/Phường!", "warning");
       return;
     }
 

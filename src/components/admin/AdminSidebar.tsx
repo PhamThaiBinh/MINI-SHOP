@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useToastAndConfirm } from "@/context/ToastAndConfirmContext";
 import {
   BarChart3,
   FolderTree,
@@ -68,13 +69,24 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     };
   }, []);
 
+  const { showConfirm } = useToastAndConfirm();
+
   const handleAdminLogout = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (confirm("Bạn có chắc chắn muốn thoát quyền Admin và đăng xuất?")) {
-      logout();
-      router.push("/auth");
-    }
+    showConfirm({
+      title: "Đăng xuất tài khoản Admin",
+      message: "Bạn có chắc chắn muốn thoát quyền Admin và đăng xuất?",
+      confirmText: "Đăng xuất",
+      cancelText: "Ở lại",
+      type: "danger",
+      icon: "fa-solid fa-right-from-bracket",
+      onConfirm: () => {
+        logout();
+        router.push("/auth");
+      },
+    });
   };
+
 
   const menuItems = [
     { key: "overview", label: "Tổng quan", href: "/admin", icon: BarChart3 },

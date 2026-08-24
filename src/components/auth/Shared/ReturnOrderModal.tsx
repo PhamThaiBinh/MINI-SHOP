@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { RotateCcw, X, ShieldCheck, Camera } from "lucide-react";
 import { CustomerOrder } from "@/components/auth/types";
 import { formatVND, fixImagePath } from "@/lib/utils";
+import { useToastAndConfirm } from "@/context/ToastAndConfirmContext";
 
 interface ReturnOrderModalProps {
   isOpen: boolean;
@@ -27,6 +28,7 @@ export const ReturnOrderModal: React.FC<ReturnOrderModalProps> = ({
   onClose,
   onSubmitReturn,
 }) => {
+  const { showToast } = useToastAndConfirm();
   const [selectedReason, setSelectedReason] = useState<string>(RETURN_REASONS[0]);
   const [reasonDetail, setReasonDetail] = useState<string>("");
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
@@ -55,7 +57,7 @@ export const ReturnOrderModal: React.FC<ReturnOrderModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedReason) {
-      alert("Vui lòng chọn lý do trả hàng!");
+      showToast("Vui lòng chọn lý do trả hàng!", "warning");
       return;
     }
     setIsSubmitting(true);

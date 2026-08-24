@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { UserProfile } from "@/context/AuthContext";
+import { useToastAndConfirm } from "@/context/ToastAndConfirmContext";
 import { Sparkles, Ticket, Gift, Truck, Sofa, Disc, Check, Copy, Crown, Shield } from "lucide-react";
 
 interface RewardsPointsTabProps {
@@ -26,6 +27,7 @@ export const RewardsPointsTab: React.FC<RewardsPointsTabProps> = ({
   onAddVoucher,
   onAddPoints,
 }) => {
+  const { showToast } = useToastAndConfirm();
   const [rewardSubTab, setRewardSubTab] = useState<"catalog" | "myvouchers" | "history" | "tasks" | "wheel" | "tiers">("catalog");
   const [spinDeg, setSpinDeg] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
@@ -56,12 +58,12 @@ export const RewardsPointsTab: React.FC<RewardsPointsTabProps> = ({
 
   const handleRedeem = (giftName: string, pointsRequired: number, discount: number, code: string) => {
     if (userPoints < pointsRequired) {
-      alert(`Bạn cần tối thiểu ${pointsRequired} điểm để đổi quà tặng này!`);
+      showToast(`Bạn cần tối thiểu ${pointsRequired} điểm để đổi quà tặng này!`, "warning");
       return;
     }
     const success = onRedeemGift(giftName, pointsRequired, discount, code);
     if (success) {
-      alert(`Chúc mừng bạn đã đổi thành công "${giftName}"! Mã voucher [${code}] đã được thêm vào Kho Voucher của bạn.`);
+      showToast(`Chúc mừng bạn đã đổi thành công "${giftName}"! Mã voucher [${code}] đã được thêm vào Kho Voucher của bạn.`, "success");
     }
   };
 
@@ -92,7 +94,7 @@ export const RewardsPointsTab: React.FC<RewardsPointsTabProps> = ({
     }
     setHasCompletedShareToday(true);
     setIsClaimReady(false);
-    alert("🎉 Chúc mừng bạn đã hoàn thành nhiệm vụ và nhận thành công +50 Điểm Thưởng VIP!");
+    showToast("🎉 Chúc mừng bạn đã hoàn thành nhiệm vụ và nhận thành công +50 Điểm Thưởng VIP!", "success");
   };
 
   const handleSpinWheel = () => {
@@ -108,18 +110,13 @@ export const RewardsPointsTab: React.FC<RewardsPointsTabProps> = ({
 
     setTimeout(() => {
       setIsSpinning(false);
-      if (typeof window !== "undefined") {
-        localStorage.setItem(wheelStorageKey, "completed");
-      }
-      setHasSpunWheelToday(true);
-
       const rewards = [
-        { type: "voucher", label: "Voucher Giảm 50.000đ", discount: 50000, code: "MSWHEEL50K", msg: "🎉 Chúc mừng! Bạn trúng Voucher Giảm 50K (Mã: MSWHEEL50K)! Đã thêm vào Kho Voucher." },
-        { type: "points", amount: 100, msg: "🎉 Bạn nhận được +100 Điểm Thưởng VIP vào tài khoản!" },
-        { type: "voucher", label: "Voucher Miễn Phí Vận Chuyển 30.000đ", discount: 30000, code: "MSFREESHIP30K", msg: "🎉 Chúc mừng! Bạn nhận Mã Miễn Phí Vận Chuyển 30K! Đã thêm vào Kho Voucher." },
-        { type: "points", amount: 50, msg: "🎉 Chúc mừng! Bạn nhận được +50 Điểm Thưởng VIP!" },
-        { type: "voucher", label: "Mã Độc Quyền Giảm 10% đơn hàng", discount: 50000, code: "MSVIP10PERCENT", msg: "🎉 Bạn nhận Mã Độc Quyền Giảm 10% đơn hàng (Mã: MSVIP10PERCENT)! Đã thêm vào Kho Voucher." },
-        { type: "none", msg: "😊 Chúc bạn may mắn lần sau!" },
+        { type: "voucher", label: "Voucher Giảm 50.000đ", discount: 50000, code: "MSWHEEL50K", msg: "Chúc mừng! Bạn trúng Voucher Giảm 50K (Mã: MSWHEEL50K)! Đã thêm vào Kho Voucher." },
+        { type: "points", amount: 100, msg: "Bạn nhận được +100 Điểm Thưởng VIP vào tài khoản!" },
+        { type: "voucher", label: "Voucher Miễn Phí Vận Chuyển 30.000đ", discount: 30000, code: "MSFREESHIP30K", msg: "Chúc mừng! Bạn nhận Mã Miễn Phí Vận Chuyển 30K! Đã thêm vào Kho Voucher." },
+        { type: "points", amount: 50, msg: "Chúc mừng! Bạn nhận được +50 Điểm Thưởng VIP!" },
+        { type: "voucher", label: "Mã Độc Quyền Giảm 10% đơn hàng", discount: 50000, code: "MSVIP10PERCENT", msg: "Bạn nhận Mã Độc Quyền Giảm 10% đơn hàng (Mã: MSVIP10PERCENT)! Đã thêm vào Kho Voucher." },
+        { type: "none", msg: "Chúc bạn may mắn lần sau!" },
       ];
 
       const chosen = rewards[Math.floor(Math.random() * rewards.length)];
@@ -128,245 +125,372 @@ export const RewardsPointsTab: React.FC<RewardsPointsTabProps> = ({
       if (chosen.type === "voucher" && onAddVoucher) {
         onAddVoucher(chosen.label!, chosen.discount!, chosen.code!);
       } else if (chosen.type === "points" && onAddPoints) {
-        onAddPoints("Trúng thưởng Vòng Quay May Mắn", chosen.amount!);
+        onAddPoints("Vòng Quay May Mắn VIP", chosen.amount!);
       }
-    }, 3500);
+    }, 4000);
   };
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
-        <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#0f172a", margin: 0, display: "flex", alignItems: "center", gap: "6px" }}>
-          <Sparkles className="w-5 h-5 text-emerald-700" /> Quản Lý Điểm Thưởng VIP & Đổi Quà
-        </h3>
-        <div style={{ background: "#e8f5e9", border: "1px solid #bbf7d0", padding: "6px 14px", borderRadius: "999px", fontWeight: 900, color: "var(--primary-color, #2e7d32)", fontSize: "13px" }}>
-          Điểm khả dụng: {userPoints.toLocaleString("vi-VN")} PTS
+      <div
+        style={{
+          background: "linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%)",
+          borderRadius: "20px",
+          padding: "28px",
+          color: "#ffffff",
+          marginBottom: "24px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: "20px",
+          boxShadow: "0 10px 25px -5px rgba(46, 125, 50, 0.3)",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <div
+            style={{
+              width: "60px",
+              height: "60px",
+              borderRadius: "18px",
+              background: "rgba(255, 255, 255, 0.15)",
+              backdropFilter: "blur(8px)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "24px",
+              color: "#fef08a",
+            }}
+          >
+            <Crown className="w-8 h-8" />
+          </div>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+              <h2 style={{ fontSize: "22px", fontWeight: 900, margin: 0, letterSpacing: "-0.02em" }}>
+                {userPoints.toLocaleString("vi-VN")} Điểm Thưởng
+              </h2>
+              <span
+                style={{
+                  background: "rgba(255, 255, 255, 0.2)",
+                  padding: "3px 10px",
+                  borderRadius: "999px",
+                  fontSize: "11.5px",
+                  fontWeight: 800,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px",
+                }}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
+                Hạng VIP Thân Thiết
+              </span>
+            </div>
+            <p style={{ margin: 0, fontSize: "13.5px", opacity: 0.9, fontWeight: 500 }}>
+              Tích điểm không giới hạn khi mua sắm & đổi các voucher giá trị lớn
+            </p>
+          </div>
+        </div>
+
+        <div style={{ display: "flex", gap: "10px" }}>
+          <button
+            type="button"
+            onClick={() => setRewardSubTab("wheel")}
+            style={{
+              padding: "10px 18px",
+              borderRadius: "12px",
+              background: "#ffffff",
+              color: "#166534",
+              border: "none",
+              fontWeight: 800,
+              fontSize: "13px",
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+              transition: "all 0.2s ease",
+            }}
+          >
+            <i className="fa-solid fa-dharmachakra"></i> Vòng Quay May Mắn
+          </button>
+          <button
+            type="button"
+            onClick={() => setRewardSubTab("tasks")}
+            style={{
+              padding: "10px 18px",
+              borderRadius: "12px",
+              background: "rgba(255, 255, 255, 0.15)",
+              color: "#ffffff",
+              border: "1px solid rgba(255,255,255,0.3)",
+              fontWeight: 800,
+              fontSize: "13px",
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              transition: "all 0.2s ease",
+            }}
+          >
+            <i className="fa-solid fa-list-check"></i> Nhiệm Vụ Tích Điểm
+          </button>
         </div>
       </div>
 
-      {/* Sub tabs */}
-      <div style={{ display: "flex", gap: "8px", borderBottom: "1px solid #e2e8f0", paddingBottom: "12px", marginBottom: "16px", flexWrap: "wrap" }}>
+      <div
+        style={{
+          display: "flex",
+          gap: "8px",
+          borderBottom: "1px solid #e2e8f0",
+          marginBottom: "24px",
+          overflowX: "auto",
+          paddingBottom: "4px",
+        }}
+      >
         {[
-          { id: "catalog", label: "Catalog Đổi Quà" },
-          { id: "myvouchers", label: `Kho Voucher Của Tôi (${userVouchers.length})` },
-          { id: "tasks", label: "Nhiệm Vụ Nhận Điểm" },
-          { id: "wheel", label: "Vòng Quay May Mắn" },
-          { id: "tiers", label: "Hạng Thành Viên" },
-          { id: "history", label: "Lịch Sử Đổi Điểm" },
-        ].map((sub) => (
+          { key: "catalog", label: "Đổi Quà Tặng", icon: "fa-solid fa-gift" },
+          { key: "myvouchers", label: `Kho Voucher Của Tôi (${userVouchers.length})`, icon: "fa-solid fa-ticket" },
+          { key: "tasks", label: "Nhiệm Vụ Nhận Điểm", icon: "fa-solid fa-list-check" },
+          { key: "wheel", label: "Vòng Quay May Mắn", icon: "fa-solid fa-dharmachakra" },
+          { key: "tiers", label: "Quyền Lợi Hạng VIP", icon: "fa-solid fa-crown" },
+        ].map((tab) => (
           <button
-            key={sub.id}
+            key={tab.key}
             type="button"
-            onClick={() => setRewardSubTab(sub.id as any)}
+            onClick={() => setRewardSubTab(tab.key as any)}
             style={{
-              padding: "8px 14px",
-              borderRadius: "8px",
+              padding: "10px 16px",
+              borderRadius: "10px 10px 0 0",
               border: "none",
-              background: rewardSubTab === sub.id ? "var(--primary-color, #2e7d32)" : "#f1f5f9",
-              color: rewardSubTab === sub.id ? "#ffffff" : "#475569",
-              fontSize: "12.5px",
+              background: rewardSubTab === tab.key ? "var(--primary-color, #2e7d32)" : "transparent",
+              color: rewardSubTab === tab.key ? "#ffffff" : "#64748b",
               fontWeight: 800,
+              fontSize: "13.5px",
               cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              transition: "all 0.15s ease",
+              whiteSpace: "nowrap",
             }}
           >
-            {sub.label}
+            <i className={tab.icon}></i>
+            {tab.label}
           </button>
         ))}
       </div>
 
-      {/* SUBTAB 1: CATALOG ĐỔI QUÀ */}
       {rewardSubTab === "catalog" && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
-          {GIFTS_CATALOG.map((g) => (
-            <div
-              key={g.id}
-              style={{
-                border: "1px solid #e2e8f0",
-                borderRadius: "14px",
-                padding: "14px",
-                background: "#ffffff",
-                display: "flex",
-                gap: "12px",
-                alignItems: "center",
-              }}
-            >
-              <div style={{ width: "46px", height: "46px", borderRadius: "12px", background: "#e8f5e9", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <Gift className="w-6 h-6 text-emerald-700" />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <h4 style={{ fontSize: "13.5px", fontWeight: 800, margin: "0 0 4px 0", color: "#0f172a" }}>{g.name}</h4>
-                <div style={{ fontSize: "12px", color: "var(--primary-color, #2e7d32)", fontWeight: 800 }}>
-                  Yêu cầu: {g.points} PTS
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleRedeem(g.name, g.points, g.discount, g.code)}
-                disabled={userPoints < g.points}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "16px" }}>
+          {GIFTS_CATALOG.map((gift) => {
+            const canAfford = userPoints >= gift.points;
+            return (
+              <div
+                key={gift.id}
                 style={{
-                  padding: "6px 12px",
-                  borderRadius: "8px",
-                  background: userPoints >= g.points ? "var(--primary-color, #2e7d32)" : "#cbd5e1",
-                  color: "#ffffff",
-                  border: "none",
-                  fontSize: "12px",
-                  fontWeight: 800,
-                  cursor: userPoints >= g.points ? "pointer" : "not-allowed",
-                  whiteSpace: "nowrap",
+                  background: "#ffffff",
+                  border: "1.5px solid #e2e8f0",
+                  borderRadius: "16px",
+                  padding: "20px",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  transition: "all 0.2s ease",
                 }}
               >
-                Đổi Ngay
-              </button>
-            </div>
-          ))}
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+                    <div
+                      style={{
+                        width: "44px",
+                        height: "44px",
+                        borderRadius: "12px",
+                        background: "#dcfce7",
+                        color: "#166534",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <i className="fa-solid fa-ticket text-emerald-700"></i>
+                    </div>
+                    <span
+                      style={{
+                        padding: "4px 10px",
+                        borderRadius: "999px",
+                        background: canAfford ? "#dcfce7" : "#f1f5f9",
+                        color: canAfford ? "#166534" : "#94a3b8",
+                        fontSize: "12px",
+                        fontWeight: 800,
+                      }}
+                    >
+                      <i className="fa-solid fa-coins mr-1"></i> {gift.points} Điểm
+                    </span>
+                  </div>
+                  <h4 style={{ margin: "0 0 6px 0", fontSize: "15px", fontWeight: 800, color: "#0f172a", lineHeight: 1.4 }}>
+                    {gift.name}
+                  </h4>
+                  <p style={{ margin: 0, fontSize: "12.5px", color: "#64748b" }}>
+                    Mã ưu đãi: <strong style={{ color: "#0f172a" }}>{gift.code}</strong>
+                  </p>
+                </div>
+
+                <div style={{ marginTop: "16px" }}>
+                  <button
+                    type="button"
+                    disabled={!canAfford}
+                    onClick={() => handleRedeem(gift.name, gift.points, gift.discount, gift.code)}
+                    style={{
+                      width: "100%",
+                      padding: "10px",
+                      borderRadius: "10px",
+                      background: canAfford ? "var(--primary-color, #2e7d32)" : "#f1f5f9",
+                      color: canAfford ? "#ffffff" : "#94a3b8",
+                      border: "none",
+                      fontWeight: 800,
+                      fontSize: "13px",
+                      cursor: canAfford ? "pointer" : "not-allowed",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "6px",
+                      transition: "all 0.15s ease",
+                    }}
+                  >
+                    <i className="fa-solid fa-gift"></i> {canAfford ? "Đổi Quà Ngay" : `Cần Thêm ${gift.points - userPoints} Điểm`}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
-      {/* SUBTAB 2: KHO VOUCHER CỦA TÔI */}
       {rewardSubTab === "myvouchers" && (
         <div>
-          {/* Thông báo quy định sử dụng 1 lần & cộng dồn */}
-          <div
-            style={{
-              background: "#ecfdf5",
-              border: "1px solid #a7f3d0",
-              borderRadius: "12px",
-              padding: "12px 16px",
-              marginBottom: "16px",
-              display: "flex",
-              alignItems: "flex-start",
-              gap: "10px",
-              fontSize: "13px",
-              color: "#065f46",
-              lineHeight: "1.5",
-            }}
-          >
-            <Shield className="w-5 h-5 text-emerald-700 flex-shrink-0" style={{ marginTop: "2px" }} />
-            <div>
-              <strong style={{ color: "#047857" }}>Quy định sử dụng Voucher:</strong>
-              <div style={{ marginTop: "2px" }}>
-                • Mỗi mã trong kho voucher chỉ được áp dụng <strong>1 lần cho 1 đơn hàng</strong>.<br />
-                • Nếu bạn có <strong>nhiều số lượng cho cùng 1 mã</strong> (x2, x3...), hệ thống sẽ tự động <strong>cộng dồn toàn bộ giá trị giảm</strong> để trừ thẳng vào đơn hàng khi thanh toán!
-              </div>
-            </div>
-          </div>
-
           {userVouchers.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "36px 20px", background: "#f8fafc", borderRadius: "14px", border: "1px dashed #cbd5e1" }}>
-              <Ticket className="w-12 h-12 text-slate-300 mx-auto mb-2" />
-              <p style={{ fontSize: "14px", fontWeight: 700, color: "#64748b", margin: "0 0 6px 0" }}>
-                Kho Voucher của bạn đang trống!
+            <div style={{ textAlign: "center", padding: "48px 20px", background: "#f8fafc", borderRadius: "16px", border: "1px dashed #cbd5e1" }}>
+              <i className="fa-solid fa-ticket" style={{ fontSize: "36px", color: "#94a3b8", marginBottom: "12px", display: "block" }}></i>
+              <h4 style={{ margin: "0 0 6px 0", fontSize: "16px", fontWeight: 800, color: "#334155" }}>
+                Kho voucher của bạn đang trống
+              </h4>
+              <p style={{ margin: "0 0 16px 0", fontSize: "13px", color: "#64748b" }}>
+                Hãy tích điểm từ các đơn hàng hoặc hoàn thành nhiệm vụ để đổi các mã giảm giá hấp dẫn!
               </p>
-              <p style={{ fontSize: "12.5px", color: "#94a3b8", margin: 0 }}>
-                Hãy tham gia đổi điểm thưởng, làm nhiệm vụ hoặc quay Vòng quay may mắn để nhận thêm voucher ưu đãi độc quyền.
-              </p>
+              <button
+                type="button"
+                onClick={() => setRewardSubTab("catalog")}
+                style={{
+                  padding: "10px 20px",
+                  borderRadius: "10px",
+                  background: "var(--primary-color, #2e7d32)",
+                  color: "#ffffff",
+                  border: "none",
+                  fontWeight: 800,
+                  fontSize: "13px",
+                  cursor: "pointer",
+                }}
+              >
+                Khám phá kho quà tặng
+              </button>
             </div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "16px" }}>
               {userVouchers.map((v, idx) => {
                 const qty = v.quantity || 1;
-                const isShipping = v.code.toUpperCase().includes("FREESHIP");
-                const totalDiscount = isShipping ? v.discount : (v.discount || 0) * qty;
-
+                const totalDiscount = (v.discount || 0) * qty;
                 return (
                   <div
                     key={idx}
                     style={{
-                      border: "1.5px dashed var(--primary-color, #2e7d32)",
-                      borderRadius: "14px",
-                      padding: "14px 18px",
-                      background: "#f0fdf4",
+                      background: "#ffffff",
+                      border: "1.5px solid #dcfce7",
+                      borderRadius: "16px",
+                      padding: "18px",
                       display: "flex",
-                      justifyContent: "space-between",
                       alignItems: "center",
+                      justifyContent: "space-between",
                       gap: "14px",
-                      flexWrap: "wrap",
-                      boxShadow: "0 2px 6px rgba(46, 125, 50, 0.04)",
+                      boxShadow: "0 4px 12px rgba(22, 101, 52, 0.05)",
                     }}
                   >
-                    <div style={{ flex: 1, minWidth: "220px" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-                        <div style={{ fontSize: "14.5px", fontWeight: 800, color: "#0f172a" }}>{v.label}</div>
-                        {qty > 1 ? (
-                          <span
-                            style={{
-                              background: "#fef3c7",
-                              border: "1px solid #fde68a",
-                              color: "#b45309",
-                              fontSize: "11px",
-                              fontWeight: 800,
-                              padding: "2px 8px",
-                              borderRadius: "999px",
-                              display: "inline-flex",
-                              alignItems: "center",
-                              gap: "3px",
-                            }}
-                          >
-                            ⭐ Số lượng: x{qty} (Cộng dồn)
-                          </span>
-                        ) : (
-                          <span
-                            style={{
-                              background: "#e0f2fe",
-                              border: "1px solid #bae6fd",
-                              color: "#0369a1",
-                              fontSize: "11px",
-                              fontWeight: 800,
-                              padding: "2px 8px",
-                              borderRadius: "999px",
-                            }}
-                          >
-                            Sử dụng 1 lần (x1)
-                          </span>
-                        )}
-                      </div>
-
-                      <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "6px", flexWrap: "wrap" }}>
-                        <div style={{ fontSize: "12.5px", color: "var(--primary-color, #2e7d32)", fontWeight: 800 }}>
-                          Mã: <code style={{ background: "#ffffff", padding: "2px 6px", borderRadius: "4px", border: "1px solid #bbf7d0" }}>{v.code}</code>
-                        </div>
-                        <div style={{ fontSize: "12.5px", color: "#166534", fontWeight: 700 }}>
-                          Ưu đãi:{" "}
-                          <strong>
-                            {isShipping
-                              ? `Miễn phí vận chuyển ${v.discount.toLocaleString("vi-VN")}đ`
-                              : qty > 1
-                              ? `Giảm ${totalDiscount.toLocaleString("vi-VN")}đ (Cộng dồn x${qty})`
-                              : `Giảm ${v.discount.toLocaleString("vi-VN")}đ`}
-                          </strong>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          navigator.clipboard.writeText(v.code);
-                          alert(`Đã sao chép mã [${v.code}] vào bộ nhớ tạm! Bạn có thể dán hoặc chọn mã tại trang Giỏ hàng & Thanh toán.`);
-                        }}
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      <div
                         style={{
-                          padding: "8px 14px",
-                          borderRadius: "8px",
-                          background: "var(--primary-color, #2e7d32)",
-                          color: "#ffffff",
-                          border: "none",
-                          fontSize: "12.5px",
-                          fontWeight: 800,
-                          cursor: "pointer",
-                          display: "inline-flex",
+                          width: "42px",
+                          height: "42px",
+                          borderRadius: "10px",
+                          background: "#dcfce7",
+                          color: "#166534",
+                          display: "flex",
                           alignItems: "center",
-                          gap: "5px",
-                          boxShadow: "0 2px 4px rgba(46, 125, 50, 0.2)",
+                          justifyContent: "center",
+                          fontSize: "18px",
+                          flexShrink: 0,
                         }}
                       >
-                        <Copy className="w-3.5 h-3.5" /> Sao chép
-                      </button>
+                        <i className="fa-solid fa-ticket"></i>
+                      </div>
+                      <div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "2px" }}>
+                          <span style={{ fontSize: "14.5px", fontWeight: 900, color: "#166534", letterSpacing: "0.02em" }}>
+                            {v.code}
+                          </span>
+                          {qty > 1 && (
+                            <span
+                              style={{
+                                background: "#fef3c7",
+                                border: "1px solid #fde68a",
+                                color: "#b45309",
+                                fontSize: "11px",
+                                fontWeight: 800,
+                                padding: "2px 8px",
+                                borderRadius: "999px",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "3px",
+                              }}
+                            >
+                              <i className="fa-solid fa-star text-amber-500"></i> Số lượng: x{qty}
+                            </span>
+                          )}
+                        </div>
+                        <p style={{ margin: 0, fontSize: "12px", color: "#64748b" }}>
+                          {v.label || "Voucher giảm giá"}
+                        </p>
+                        <div style={{ marginTop: "4px", fontSize: "12px", color: "#16a34a", fontWeight: 700 }}>
+                          Giảm {totalDiscount > 0 ? totalDiscount.toLocaleString("vi-VN") + "đ" : "Ưu đãi trực tiếp"}
+                        </div>
+                      </div>
                     </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(v.code);
+                        showToast(`Đã sao chép mã [${v.code}] vào bộ nhớ tạm!`, "success");
+                      }}
+                      style={{
+                        padding: "8px 14px",
+                        borderRadius: "8px",
+                        background: "var(--primary-color, #2e7d32)",
+                        color: "#ffffff",
+                        border: "none",
+                        fontSize: "12px",
+                        fontWeight: 800,
+                        cursor: "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        flexShrink: 0,
+                      }}
+                    >
+                      <i className="fa-regular fa-copy"></i> Dùng mã
+                    </button>
                   </div>
                 );
               })}
             </div>
+
           )}
         </div>
       )}

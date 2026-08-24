@@ -225,12 +225,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setUser(null);
       if (typeof window !== "undefined") {
         localStorage.removeItem(AUTH_STORAGE_KEY);
-      }
-      alert("Tài khoản của bạn đã bị Quản trị viên khóa. Hệ thống tự động đăng xuất!");
-      if (typeof window !== "undefined") {
-        window.location.href = "/auth";
+        window.location.href = "/auth?error=blocked";
       }
     };
+
 
     const verifyActiveStatus = async () => {
       try {

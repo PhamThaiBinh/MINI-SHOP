@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Eye, EyeOff, Key } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
+import { useToastAndConfirm } from "@/context/ToastAndConfirmContext";
 
 interface LoginFormProps {
   onLoginSubmit: (email: string, pass: string) => void;
@@ -11,6 +12,7 @@ interface LoginFormProps {
 export const LoginForm: React.FC<LoginFormProps> = ({
   onLoginSubmit,
 }) => {
+  const { showToast } = useToastAndConfirm();
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -21,24 +23,20 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   };
 
   const handleForgotPassword = async () => {
-    const emailPrompt = prompt(
-      "Nhập Email đăng ký của bạn để nhận liên kết khôi phục mật khẩu:",
-      loginEmail || ""
-    );
-    if (!emailPrompt) return;
-    const email = emailPrompt.trim();
-    if (!email.includes("@")) {
-      alert("Vui lòng nhập địa chỉ Email hợp lệ!");
+    const email = loginEmail.trim();
+    if (!email || !email.includes("@")) {
+      showToast("Vui lòng nhập địa chỉ Email vào ô đăng nhập trước khi bấm Quên mật khẩu!", "warning");
       return;
     }
     const supabase = createClient();
     const { error } = await supabase.auth.resetPasswordForEmail(email);
     if (error) {
-      alert(`Lỗi: ${error.message}`);
+      showToast(`Lỗi: ${error.message}`, "error");
     } else {
-      alert(`Hệ thống đã gửi hướng dẫn khôi phục mật khẩu tới Email "${email}". Vui lòng kiểm tra hộp thư!`);
+      showToast(`Hệ thống đã gửi hướng dẫn khôi phục mật khẩu tới Email "${email}". Vui lòng kiểm tra hộp thư!`, "success");
     }
   };
+
 
   return (
     <form className="auth-form" onSubmit={handleSubmit} style={{ gap: "14px" }}>

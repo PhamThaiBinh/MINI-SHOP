@@ -7,7 +7,9 @@ import "@/styles/auth.css";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { getStoreSettings, saveStoreSettings } from "@/lib/storeSettings";
+import { useToastAndConfirm } from "@/context/ToastAndConfirmContext";
 import { Building, CreditCard, Truck, ShieldCheck, Save, Download, Check, Banknote, Package, Gift, Edit3, Trash2, Play, Pause, UserPlus, Lock, Unlock, Shield, Key, User, ShoppingBag, Crown, Pin, X } from "lucide-react";
+
 
 interface StaffUser {
   id: number;
@@ -228,13 +230,25 @@ export default function AdminSettingsPage() {
     );
   };
 
+  const { showConfirm, showToast } = useToastAndConfirm();
+
   const handleDeleteStaff = (id: number) => {
     const target = staffList.find((s) => s.id === id);
-    if (confirm(`Bạn có chắc muốn xóa nhân viên ${target?.name}?`)) {
-      setStaffList((prev) => prev.filter((s) => s.id !== id));
-      triggerNotify(`Đã xóa nhân viên ${target?.name}!`);
-    }
+    showConfirm({
+      title: "Xóa nhân viên",
+      message: `Bạn có chắc chắn muốn xóa nhân viên ${target?.name} khỏi hệ thống không?`,
+      confirmText: "Xóa nhân viên",
+      cancelText: "Hủy bỏ",
+      type: "danger",
+      icon: "fa-solid fa-user-xmark",
+      onConfirm: () => {
+        setStaffList((prev) => prev.filter((s) => s.id !== id));
+        triggerNotify(`Đã xóa nhân viên ${target?.name}!`);
+        showToast(`Đã xóa nhân viên ${target?.name}!`, "success");
+      },
+    });
   };
+
 
   const handleToggleShippingRateStatus = (id: number) => {
     setShippingRates((prev) =>

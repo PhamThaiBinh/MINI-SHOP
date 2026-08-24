@@ -3,6 +3,7 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
 import { WishlistProvider } from "@/context/WishlistContext";
+import { ToastAndConfirmProvider } from "@/context/ToastAndConfirmContext";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ChatbotWidget } from "@/components/common/ChatbotWidget";
@@ -48,18 +49,21 @@ export default function RootLayout({
         />
       </head>
       <body suppressHydrationWarning>
-        <AuthProvider>
-          <CartProvider>
-            <WishlistProvider>
-              <Header />
-              <main className="main-content">{children}</main>
-              <Footer />
-              <ChatbotWidget />
-            </WishlistProvider>
-          </CartProvider>
-        </AuthProvider>
+        <ToastAndConfirmProvider>
+          <AuthProvider>
+            <CartProvider>
+              <WishlistProvider>
+                <Header />
+                <main className="main-content">{children}</main>
+                <Footer />
+                <ChatbotWidget />
+              </WishlistProvider>
+            </CartProvider>
+          </AuthProvider>
+        </ToastAndConfirmProvider>
       </body>
     </html>
   );
 }
+
 

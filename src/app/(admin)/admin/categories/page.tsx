@@ -10,7 +10,9 @@ import { fetchAdminCategories, saveAdminCategory, deleteAdminCategory, fetchAdmi
 import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
 import { formatVND, fixImagePath } from "@/lib/utils";
 import { createClient } from "@/utils/supabase/client";
+import { useToastAndConfirm } from "@/context/ToastAndConfirmContext";
 import { Edit3, Trash2, Folder, Plus, X, Eye, Package, Layers, ExternalLink } from "lucide-react";
+
 
 interface Category {
   id: number;
@@ -36,7 +38,9 @@ export default function AdminCategoriesPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const { showToast } = useToastAndConfirm();
   const [searchQuery, setSearchQuery] = useState("");
+
   const [showModal, setShowModal] = useState<boolean>(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
 
@@ -310,16 +314,18 @@ export default function AdminCategoriesPage() {
           relatedCount: 0,
           deleting: false,
         });
+        showToast("Đã xóa danh mục thành công!", "success");
       } else {
-        alert("Lỗi khi xóa danh mục khỏi cơ sở dữ liệu!");
+        showToast("Lỗi khi xóa danh mục khỏi cơ sở dữ liệu!", "error");
         setDeleteModalState((prev) => ({ ...prev, deleting: false }));
       }
     } catch (err) {
       console.error(err);
-      alert("Đã xảy ra lỗi khi xóa danh mục.");
+      showToast("Đã xảy ra lỗi khi xóa danh mục.", "error");
       setDeleteModalState((prev) => ({ ...prev, deleting: false }));
     }
   };
+
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

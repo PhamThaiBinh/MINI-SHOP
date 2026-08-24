@@ -2,6 +2,7 @@
 
 import React from "react";
 import { LiveChatSession } from "@/lib/liveChatService";
+import { useToastAndConfirm } from "@/context/ToastAndConfirmContext";
 
 interface ChatActiveHeaderProps {
   selectedSession: LiveChatSession;
@@ -14,11 +15,22 @@ export const ChatActiveHeader: React.FC<ChatActiveHeaderProps> = ({
   onToggleMode,
   onDeleteSession,
 }) => {
+  const { showConfirm } = useToastAndConfirm();
+
   const handleDelete = () => {
-    if (confirm(`Bạn có chắc chắn muốn xóa toàn bộ cuộc trò chuyện của "${selectedSession.customer_name}"?`)) {
-      onDeleteSession?.(selectedSession.id);
-    }
+    showConfirm({
+      title: "Xóa cuộc trò chuyện",
+      message: `Bạn có chắc chắn muốn xóa toàn bộ cuộc trò chuyện của "${selectedSession.customer_name}"?`,
+      confirmText: "Xóa trò chuyện",
+      cancelText: "Hủy bỏ",
+      type: "danger",
+      icon: "fa-solid fa-trash-can",
+      onConfirm: () => {
+        onDeleteSession?.(selectedSession.id);
+      },
+    });
   };
+
 
   return (
     <div

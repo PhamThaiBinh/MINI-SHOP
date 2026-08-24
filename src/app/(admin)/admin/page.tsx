@@ -684,12 +684,13 @@ export default function AdminDashboard() {
                                 fontFamily: "'Plus Jakarta Sans', sans-serif",
                               }}
                             >
-                              <option value="day">📅 Theo Ngày (Days Timeline)</option>
-                              <option value="month">📆 Theo Tháng (Months Timeline)</option>
-                              <option value="quarter">📊 Theo Quý (Quarters Timeline)</option>
-                              <option value="year">📈 Theo Năm (Years Timeline)</option>
-                              <option value="custom">⚙️ Tùy Chỉnh Ngày (Custom Range)</option>
+                              <option value="day">Theo Ngày (Days Timeline)</option>
+                              <option value="month">Theo Tháng (Months Timeline)</option>
+                              <option value="quarter">Theo Quý (Quarters Timeline)</option>
+                              <option value="year">Theo Năm (Years Timeline)</option>
+                              <option value="custom">Tùy Chỉnh Ngày (Custom Range)</option>
                             </select>
+
                           </div>
                         </div>
 
@@ -1007,16 +1008,17 @@ export default function AdminDashboard() {
                               fontFamily: "'Plus Jakarta Sans', sans-serif",
                             }}
                           >
-                            <div style={{ fontSize: "11px", color: "#94a3b8", fontWeight: 700, marginBottom: "2px" }}>
-                              📅 {hoveredPoint.label}
+                            <div style={{ fontSize: "11px", color: "#94a3b8", fontWeight: 700, marginBottom: "2px", display: "flex", alignItems: "center", gap: "4px" }}>
+                              <i className="fa-regular fa-calendar-days"></i> {hoveredPoint.label}
                             </div>
                             <div style={{ fontSize: "14px", fontWeight: 900, color: "#4ade80" }}>
                               {formatVND(hoveredPoint.revenue)}
                             </div>
-                            <div style={{ fontSize: "11.5px", fontWeight: 700, color: "#38bdf8", marginTop: "2px" }}>
-                              📦 {hoveredPoint.orderCount} đơn hoàn thành
+                            <div style={{ fontSize: "11.5px", fontWeight: 700, color: "#38bdf8", marginTop: "2px", display: "flex", alignItems: "center", gap: "4px" }}>
+                              <i className="fa-solid fa-box"></i> {hoveredPoint.orderCount} đơn hoàn thành
                             </div>
                           </div>
+
                         )}
 
                         {/* X-Axis Date Labels Row */}

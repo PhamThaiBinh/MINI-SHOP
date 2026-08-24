@@ -5,7 +5,9 @@ import Link from "next/link";
 import "@/styles/cart.css";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
+import { useToastAndConfirm } from "@/context/ToastAndConfirmContext";
 import { formatVND, fixImagePath } from "@/lib/utils";
+
 import { fetchAdminVouchers } from "@/lib/supabaseAdmin";
 import {
   Truck,
@@ -44,9 +46,10 @@ const AVAILABLE_COUPONS: Coupon[] = [
   { code: "HE2026", percent: 15, desc: "Ưu đãi chào hè giảm 15%" },
 ];
 
-export default function CartPage() {
+export default function CartPageContent() {
   const { cart, updateQuantity, removeFromCart, clearCart } = useCart();
   const { user } = useAuth();
+  const { showToast, showConfirm } = useToastAndConfirm();
 
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
@@ -219,8 +222,9 @@ export default function CartPage() {
         console.error(e);
       }
       setCouponMsg(
-        `⚠️ Mã ${kickedCode} đã tự động bị hủy do giá trị đơn hàng (${formatVND(subtotal)}) không còn đủ điều kiện tối thiểu ${formatVND(requiredMin)}.`
+        `Mã ${kickedCode} đã tự động bị hủy do giá trị đơn hàng (${formatVND(subtotal)}) không còn đủ điều kiện tối thiểu ${formatVND(requiredMin)}.`
       );
+
     }
   }, [subtotal, appliedCoupon]);
 
@@ -541,7 +545,7 @@ export default function CartPage() {
                                   let val = parseInt(e.target.value, 10);
                                   const maxStock = item.product.stock ?? 50;
                                   if (val > maxStock) {
-                                    alert(`Sản phẩm này chỉ còn ${maxStock} trong kho!`);
+                                    showToast(`Sản phẩm này chỉ còn ${maxStock} trong kho!`, "warning");
                                     val = maxStock;
                                   }
                                   updateQuantity(item.product.id, isNaN(val) ? 1 : val);
@@ -566,7 +570,7 @@ export default function CartPage() {
                                   if (item.quantity < maxStock) {
                                     updateQuantity(item.product.id, item.quantity + 1);
                                   } else {
-                                    alert(`Sản phẩm này chỉ còn ${maxStock} trong kho!`);
+                                    showToast(`Sản phẩm này chỉ còn ${maxStock} trong kho!`, "warning");
                                   }
                                 }}
                                 style={{
@@ -621,9 +625,18 @@ export default function CartPage() {
                     <button
                       type="button"
                       onClick={() => {
-                        if (confirm(`Bạn có chắc chắn muốn xóa toàn bộ ${cart.length} sản phẩm khỏi giỏ hàng không?`)) {
-                          clearCart();
-                        }
+                        showConfirm({
+                          title: "Xóa toàn bộ giỏ hàng",
+                          message: `Bạn có chắc chắn muốn xóa toàn bộ ${cart.length} sản phẩm khỏi giỏ hàng không?`,
+                          confirmText: "Xóa hết",
+                          cancelText: "Giữ lại",
+                          type: "danger",
+                          icon: "fa-solid fa-trash-can",
+                          onConfirm: () => {
+                            clearCart();
+                            showToast("Đã làm trống giỏ hàng thành công!", "info");
+                          },
+                        });
                       }}
                       style={{
                         background: "none",

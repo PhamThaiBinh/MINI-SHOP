@@ -20,6 +20,8 @@ import { ChatActiveHeader } from "@/components/admin/chat/ChatActiveHeader";
 import { ChatMessageStream } from "@/components/admin/chat/ChatMessageStream";
 import { ChatInputArea } from "@/components/admin/chat/ChatInputArea";
 import { ChatEmptyState } from "@/components/admin/chat/ChatEmptyState";
+import { useToastAndConfirm } from "@/context/ToastAndConfirmContext";
+
 
 export default function AdminLiveChatPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -164,15 +166,27 @@ export default function AdminLiveChatPage() {
     await deleteChatSession(sessionId);
   };
 
-  const handleClearAllSessions = async () => {
-    if (confirm("Bạn có chắc chắn muốn xóa TOÀN BỘ lịch sử tất cả các cuộc trò chuyện tư vấn không?")) {
-      setSessions([]);
-      saveLocalSessions([]);
-      setSelectedSessionId("");
-      setMessages([]);
-      await clearAllChatSessions();
-    }
+  const { showConfirm, showToast } = useToastAndConfirm();
+
+  const handleClearAllSessions = () => {
+    showConfirm({
+      title: "Xóa toàn bộ cuộc trò chuyện",
+      message: "Bạn có chắc chắn muốn xóa TOÀN BỘ lịch sử tất cả các cuộc trò chuyện tư vấn không? Thao tác này không thể hoàn tác.",
+      confirmText: "Xóa tất cả",
+      cancelText: "Hủy bỏ",
+      type: "danger",
+      icon: "fa-solid fa-trash-can",
+      onConfirm: async () => {
+        setSessions([]);
+        saveLocalSessions([]);
+        setSelectedSessionId("");
+        setMessages([]);
+        await clearAllChatSessions();
+        showToast("Đã xóa sạch toàn bộ lịch sử tư vấn!", "info");
+      },
+    });
   };
+
 
 
   const filteredSessions = sessions.filter((s) => {

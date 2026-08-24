@@ -470,8 +470,9 @@ export default function FlashSalePage() {
                       {addedId === heroSuperDeal.product.id ? (
                         <><Check className="w-5 h-5" /> Đã Thêm Giỏ Hàng!</>
                       ) : (
-                        <><Zap className="w-5 h-5 text-amber-300 fill-amber-300" /> ⚡ SĂN DEAL SIÊU TỐC</>
+                        <><Zap className="w-5 h-5 text-amber-300 fill-amber-300" /> SĂN DEAL SIÊU TỐC</>
                       )}
+
                     </button>
                   ) : (
                     <button

@@ -7,7 +7,9 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { SystemVoucher } from "@/utils/voucherStorage";
 import { fetchAdminVouchers, saveAdminVoucher, deleteAdminVoucher } from "@/lib/supabaseAdmin";
+import { useToastAndConfirm } from "@/context/ToastAndConfirmContext";
 import { Ticket, Edit3, Trash2, X } from "lucide-react";
+
 
 export default function AdminVouchersPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -73,26 +75,41 @@ export default function AdminVouchersPage() {
     await saveAdminVoucher(updatedV);
   };
 
-  const handleDeleteVoucher = async (targetCode: string) => {
-    if (confirm(`Bạn có chắc muốn xóa mã voucher ${targetCode}?`)) {
-      const updated = vouchers.filter((v) => v.code !== targetCode);
-      setVouchers(updated);
-      await deleteAdminVoucher(targetCode);
-    }
+  const { showConfirm, showToast } = useToastAndConfirm();
+
+  const handleDeleteVoucher = (targetCode: string) => {
+    showConfirm({
+      title: "Xóa mã voucher",
+      message: `Bạn có chắc chắn muốn xóa mã voucher ${targetCode} khỏi hệ thống không?`,
+      confirmText: "Xóa mã",
+      cancelText: "Hủy bỏ",
+      type: "danger",
+      icon: "fa-solid fa-trash-can",
+      onConfirm: async () => {
+        const updated = vouchers.filter((v) => v.code !== targetCode);
+        setVouchers(updated);
+        await deleteAdminVoucher(targetCode);
+        showToast(`Đã xóa mã voucher [${targetCode}] thành công!`, "success");
+      },
+    });
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const formattedCode = formCode.trim().toUpperCase();
-    if (!formattedCode) return;
+    if (!formattedCode) {
+      showToast("Vui lòng nhập mã voucher!", "warning");
+      return;
+    }
 
     const valNum = Number(formDiscountValue) || 0;
     const minOrderNum = Number(formMinOrder) || 0;
 
     if (minOrderNum < 0 || valNum < 0) {
-      alert("Số tiền giảm giá và giá trị đơn tối thiểu phải lớn hoặc bằng 0!");
+      showToast("Số tiền giảm giá và giá trị đơn tối thiểu phải lớn hoặc bằng 0!", "warning");
       return;
     }
+
 
     const newVoucherItem: SystemVoucher = {
       code: formattedCode,

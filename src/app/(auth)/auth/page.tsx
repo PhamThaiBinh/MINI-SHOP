@@ -5,7 +5,9 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import "@/styles/auth.css";
 import { useAuth } from "@/context/AuthContext";
+import { useToastAndConfirm } from "@/context/ToastAndConfirmContext";
 import { fetchProvincesApi, fetchWardsForProvinceApi } from "@/lib/locationApi";
+
 import { fetchUserOrdersFromSupabase } from "@/lib/supabaseOrders";
 import {
   fetchUserAddressesFromSupabase,
@@ -34,8 +36,10 @@ import { AlertTriangle, CheckCircle2, X } from "lucide-react";
 
 function AuthPageContent() {
   const router = useRouter();
+  const { showToast } = useToastAndConfirm();
   const searchParams = useSearchParams();
   const { user, loading, signIn, signUp, loginUser, logout, redeemGift, addPointsAndHistory, addVoucherToUser, restoreVoucher } = useAuth();
+
 
   // Auth Guest Mode Tabs
   const currentTabParam = searchParams.get("tab") || searchParams.get("mode") || searchParams.get("action");
@@ -82,12 +86,17 @@ function AuthPageContent() {
 
   useEffect(() => {
     const tabParam = searchParams.get("tab") || searchParams.get("mode") || searchParams.get("action");
+    const errorParam = searchParams.get("error");
+    if (errorParam === "blocked") {
+      setAuthError("Tài khoản của bạn đã bị Quản trị viên khóa. Hệ thống đã tự động đăng xuất!");
+    }
     if (tabParam === "register" || tabParam === "signup" || tabParam === "dang-ky") {
       setActiveTab("register");
     } else if (tabParam === "login" || tabParam === "signin" || tabParam === "dang-nhap") {
       setActiveTab("login");
     }
   }, [searchParams]);
+
 
   // Sync Orders, Reviews & Addresses on login
   useEffect(() => {
@@ -415,8 +424,9 @@ function AuthPageContent() {
     }
 
     setShowCancelModal(false);
-    alert(`Đã hủy thành công đơn hàng ${cancelTargetOrder.id}!${voucherToRestore ? "\n🎁 Mã giảm giá đã được hoàn trả nguyên vẹn vào Ví Voucher của bạn!" : ""}`);
+    showToast(`Đã hủy thành công đơn hàng ${cancelTargetOrder.id}! ${voucherToRestore ? "Mã giảm giá đã được hoàn trả nguyên vẹn vào Ví Voucher của bạn!" : ""}`, "success");
   };
+
 
   const handleSubmitReturn = async (orderId: string, reasonPreset: string, reasonDetail: string, images: string[]) => {
     const fullReason = reasonDetail ? `[Khách yêu cầu trả hàng]: ${reasonPreset} - ${reasonDetail}` : `[Khách yêu cầu trả hàng]: ${reasonPreset}`;
@@ -478,8 +488,9 @@ function AuthPageContent() {
 
     setShowReturnModal(false);
     setReturnTargetOrder(null);
-    alert(`🎉 Đã gửi yêu cầu trả hàng cho đơn ${orderId} thành công!\nChính sách đổi trả 7 ngày của Mini Shop đã được kích hoạt. Bộ phận CSKH sẽ liên hệ với bạn trong vòng 24h để hoàn tất thu hồi và hoàn tiền.${voucherToRestore ? "\n🎁 Mã giảm giá đã được hoàn trả nguyên vẹn vào Ví Voucher của bạn!" : ""}`);
+    showToast(`Đã gửi yêu cầu trả hàng cho đơn ${orderId} thành công! Bộ phận CSKH sẽ liên hệ với bạn trong vòng 24h.`, "success");
   };
+
 
   if (loading) {
     return (
@@ -730,9 +741,10 @@ function AuthPageContent() {
 
           setShowReviewModal(false);
           setReviewTargetOrder(null);
-          alert("🎉 Cảm ơn bạn đã gửi đánh giá! Bạn đã nhận được +50 Điểm Thưởng VIP.");
+          showToast("Cảm ơn bạn đã gửi đánh giá! Bạn đã nhận được +50 Điểm Thưởng VIP.", "success");
         }}
       />
+
 
       <ReturnOrderModal
         isOpen={showReturnModal}

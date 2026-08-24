@@ -11,7 +11,9 @@ import { fixImagePath } from "@/lib/utils";
 import { type UnifiedOrder } from "@/utils/orderStorage";
 import { fetchAdminOrders, updateAdminOrderStatus } from "@/lib/supabaseAdmin";
 import { createClient } from "@/utils/supabase/client";
+import { useToastAndConfirm } from "@/context/ToastAndConfirmContext";
 import { Check, Truck, CheckCircle2, XCircle, Clock, Printer, Eye, X, Zap, AlertTriangle, Package, RotateCcw } from "lucide-react";
+
 
 interface OrderItem {
   id: string;
@@ -121,20 +123,32 @@ export default function AdminOrdersPage() {
   const [toDate, setToDate] = useState<string>("");
   const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
 
+  const { showConfirm, showToast } = useToastAndConfirm();
+
   const handleBulkApprove = async () => {
     if (selectedOrderIds.length === 0) {
-      alert("Vui lòng chọn ít nhất 1 đơn hàng để duyệt!");
+      showToast("Vui lòng chọn ít nhất 1 đơn hàng để duyệt!", "warning");
       return;
     }
-    if (confirm(`Bạn có chắc chắn muốn duyệt ${selectedOrderIds.length} đơn hàng đã chọn sang trạng thái "Chờ lấy hàng" không?`)) {
-      setLoading(true);
-      for (const id of selectedOrderIds) {
-        await updateAdminOrderStatus(id, "processing");
-      }
-      setSelectedOrderIds([]);
-      await loadData();
-    }
+    showConfirm({
+      title: "Duyệt hàng loạt đơn hàng",
+      message: `Bạn có chắc chắn muốn duyệt ${selectedOrderIds.length} đơn hàng đã chọn sang trạng thái "Chờ lấy hàng" không?`,
+      confirmText: "Duyệt ngay",
+      cancelText: "Hủy bỏ",
+      type: "info",
+      icon: "fa-solid fa-truck-fast",
+      onConfirm: async () => {
+        setLoading(true);
+        for (const id of selectedOrderIds) {
+          await updateAdminOrderStatus(id, "processing");
+        }
+        setSelectedOrderIds([]);
+        await loadData();
+        showToast("Đã duyệt chuyển trạng thái thành công!", "success");
+      },
+    });
   };
+
 
   const loadData = async () => {
     setLoading(true);
@@ -292,9 +306,10 @@ export default function AdminOrdersPage() {
 
   const handleExportCSV = () => {
     if (filteredOrders.length === 0) {
-      alert("Không có đơn hàng nào phù hợp để xuất file!");
+      showToast("Không có đơn hàng nào phù hợp để xuất file!", "warning");
       return;
     }
+
 
     const headers = ["Mã Đơn Hàng", "Người Nhận", "Số Điện Thoại", "Địa Chỉ", "Tổng Tiền (VND)", "Thanh Toán", "Trạng Thái", "Ngày Đặt"];
     const rows = filteredOrders.map((o) => [
@@ -1193,9 +1208,10 @@ export default function AdminOrdersPage() {
                             const input = document.getElementById("admin-tracking-input") as HTMLInputElement;
                             if (input) {
                               navigator.clipboard.writeText(input.value);
-                              alert(`Đã sao chép mã vận đơn [${input.value}] vào clipboard!`);
+                              showToast(`Đã sao chép mã vận đơn [${input.value}] vào clipboard!`, "success");
                             }
                           }}
+
                           style={{
                             padding: "8px 12px",
                             background: "#166534",

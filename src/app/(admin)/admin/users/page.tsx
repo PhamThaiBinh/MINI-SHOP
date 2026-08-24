@@ -8,7 +8,9 @@ import { AdminHeader } from "@/components/admin/AdminHeader";
 import { fetchAdminUsers, saveAdminUser, toggleAdminUserStatus, fetchAdminOrders, AdminUserItem as UserItem, UnifiedOrder } from "@/lib/supabaseAdmin";
 import { validateVNPhoneNumber, formatVND } from "@/lib/utils";
 import { getMembershipTierInfo } from "@/lib/userUtils";
+import { useToastAndConfirm } from "@/context/ToastAndConfirmContext";
 import { Lock, Unlock, X, Users, UserCheck, ShieldCheck, UserX, Search, Plus, Filter, CheckCircle2, Calendar, DollarSign, ShoppingBag, Eye, TrendingUp } from "lucide-react";
+
 
 // Helper: Extract YYYY-MM from various date formats
 const parseOrderMonthYear = (dateStr: string): string => {
@@ -56,7 +58,9 @@ export default function AdminUsersPage() {
   const [users, setUsers] = useState<UserItem[]>([]);
   const [orders, setOrders] = useState<UnifiedOrder[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const { showToast } = useToastAndConfirm();
   const [searchQuery, setSearchQuery] = useState("");
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [pageSize, setPageSize] = useState<number>(10);
@@ -199,9 +203,10 @@ export default function AdminUsersPage() {
 
     const phoneCheck = validateVNPhoneNumber(staffPhone);
     if (!phoneCheck.isValid) {
-      alert(phoneCheck.message || "Số điện thoại không đúng đầu số nhà mạng tại Việt Nam!");
+      showToast(phoneCheck.message || "Số điện thoại không đúng đầu số nhà mạng tại Việt Nam!", "warning");
       return;
     }
+
 
     const newUser: UserItem = {
       id: Date.now(),
@@ -220,8 +225,8 @@ export default function AdminUsersPage() {
     setUsers((prev) => [newUser, ...prev]);
     await saveAdminUser(newUser);
     setShowAddModal(false);
-    setToastMsg(`🎉 Đã thêm quản trị viên "${staffName}" thành công! (${phoneCheck.carrier})`);
-    setTimeout(() => setToastMsg(""), 3500);
+    showToast(`Đã thêm quản trị viên "${staffName}" thành công! (${phoneCheck.carrier})`, "success");
+
 
     setStaffName("");
     setStaffEmail("");
