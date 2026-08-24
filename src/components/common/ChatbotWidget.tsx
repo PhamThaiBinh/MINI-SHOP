@@ -24,7 +24,7 @@ import {
   Tag,
 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
-import { processUserQuery, ChatMessage, VOUCHERS_DATA } from "@/lib/chatbotKnowledge";
+import { processUserQueryAsync, ChatMessage, VOUCHERS_DATA } from "@/lib/chatbotKnowledge";
 import { PRODUCTS_DATA } from "@/data/products";
 import {
   getLocalMessages,
@@ -48,6 +48,7 @@ export const ChatbotWidget: React.FC = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [hasUnread, setHasUnread] = useState(true);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [addedCartId, setAddedCartId] = useState<number | string | null>(null);
   const [guestToken, setGuestToken] = useState<string>("");
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -80,10 +81,10 @@ export const ChatbotWidget: React.FC = () => {
     id: "init-1",
     sender: "bot",
     text: user
-      ? `Xin chào ${user.name}! Em là Trợ Lý AI của MINI SHOP.\nEm có thể giúp gì cho anh/chị hôm nay ạ?`
+      ? `Xin chào ${user.name}! Em là Trợ Lý AI của MINI SHOP.\nEm có thể hỗ trợ tư vấn sản phẩm, tra cứu đơn hàng hoặc cung cấp mã ưu đãi cho anh/chị ạ!`
       : "Xin chào! Em là Trợ Lý AI của MINI SHOP.\nEm có thể giúp anh/chị chọn đồ nội thất đẹp, tra cứu đơn hàng hoặc săn mã giảm giá hôm nay!",
     timestamp: "Vừa xong",
-    quickReplies: ["Gợi ý Bàn ghế & Sofa", "Tra cứu đơn hàng", "Lấy mã giảm giá", "Chính sách bảo hành"],
+    quickReplies: ["Gợi ý Bàn ghế & Sofa", "Tra cứu đơn hàng của tôi", "Lấy mã giảm giá", "Chính sách bảo hành"],
   };
 
   const [messages, setMessages] = useState<ChatMessage[]>([welcomeMsg]);
@@ -142,11 +143,17 @@ export const ChatbotWidget: React.FC = () => {
             vouchers: matchedVouchers,
           };
         });
-        setMessages(formattedLive);
-        // Only scroll if user hasn't scrolled up to read old history
-        scrollToBottom(false);
-      } else {
-        setMessages([welcomeMsg]);
+
+        setMessages((prev) => {
+          const prevIds = new Set(prev.map((m) => m.id));
+          const hasChanges =
+            formattedLive.length !== prev.length || formattedLive.some((m) => !prevIds.has(m.id));
+
+          if (hasChanges) {
+            return formattedLive;
+          }
+          return prev;
+        });
       }
     };
 
@@ -208,9 +215,9 @@ export const ChatbotWidget: React.FC = () => {
 
     setIsTyping(true);
 
-    // Simulate realistic typing latency for AI Bot when in Bot mode
-    setTimeout(async () => {
-      const botResponse = processUserQuery(text);
+    try {
+      // Process AI Bot query asynchronously with Supabase DB knowledge
+      const botResponse = await processUserQueryAsync(text, user);
       setMessages((prev) => [...prev, botResponse]);
       userHasScrolledUpRef.current = false;
       setTimeout(() => scrollToBottom(true), 50);
@@ -237,9 +244,17 @@ export const ChatbotWidget: React.FC = () => {
         last_message_at: botResponse.timestamp,
         unread_count: 0,
       });
-
+    } catch (error) {
+      console.error("Lỗi khi xử lý tin nhắn bot:", error);
+    } finally {
       setIsTyping(false);
-    }, 600);
+    }
+  };
+
+  const handleAddToCartWithFeedback = (p: any) => {
+    addToCart(p, 1);
+    setAddedCartId(p.id);
+    setTimeout(() => setAddedCartId(null), 1800);
   };
 
   const handleCopyVoucher = (code: string) => {
