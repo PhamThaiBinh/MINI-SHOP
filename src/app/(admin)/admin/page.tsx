@@ -16,7 +16,7 @@ import { fetchProductsFromSupabase } from "@/lib/supabaseProducts";
 import { createClient } from "@/utils/supabase/client";
 import { UnifiedOrder } from "@/utils/orderStorage";
 import { Product } from "@/types/product";
-import { DollarSign, BarChart3, Target, AlertTriangle, CheckCircle2, Truck, Package, Clock, XCircle, Eye, ArrowRight } from "lucide-react";
+import { DollarSign, BarChart3, Target, AlertTriangle, CheckCircle2, Truck, Package, Clock, XCircle, Eye, ArrowRight, RotateCcw, PieChart } from "lucide-react";
 
 interface CategoryStat {
   code: string;
@@ -31,6 +31,10 @@ export default function AdminDashboard() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Interactive Chart States
+  const [hoveredDonutIndex, setHoveredDonutIndex] = useState<number | null>(null);
+  const [hoveredCategoryCode, setHoveredCategoryCode] = useState<string | null>(null);
 
   // Hierarchical Chart Filter States
   const [chartGroup, setChartGroup] = useState<"day" | "month" | "quarter" | "year" | "custom">("day");
@@ -128,26 +132,100 @@ export default function AdminDashboard() {
       ? Math.round((completedOrders.length / orders.length) * 100)
       : 0;
 
-  // Category Breakdown Aggregation
+  // Category Breakdown Aggregation with accurate fuzzy + keyword fallback matching
   const categoryStats: CategoryStat[] = categories.map((cat) => {
+    const catCodeLower = (cat.code || "").toLowerCase();
+    const catSlugLower = (cat.slug || "").toLowerCase();
+    const catNameLower = (cat.name || "").toLowerCase();
+
     // Match product category code or category name
-    const catProducts = products.filter(
-      (p) =>
-        p.category === cat.code ||
-        p.category === cat.slug ||
-        p.categoryName === cat.name
-    );
-    const catProdNames = new Set(catProducts.map((p) => p.name));
+    const catProducts = products.filter((p) => {
+      const pCat = (p.category || "").toLowerCase();
+      const pCatName = (p.categoryName || "").toLowerCase();
+      return (
+        pCat === catCodeLower ||
+        pCat === catSlugLower ||
+        pCat === catNameLower ||
+        pCatName === catNameLower
+      );
+    });
+    const catProdNames = new Set(catProducts.map((p) => p.name.toLowerCase()));
 
     // Calculate revenue from completed orders matching products in this category
     let catRevenue = 0;
     let catOrderCount = 0;
 
     completedOrders.forEach((ord) => {
-      const matchedItem = ord.items.find((it) => catProdNames.has(it.name));
-      if (matchedItem) {
+      let matchedItemsTotal = 0;
+      let orderHasCategoryItem = false;
+
+      ord.items.forEach((it) => {
+        const itNameLower = (it.name || "").toLowerCase();
+        const itCatLower = ((it as any).category || "").toLowerCase();
+
+        const isNameMatch = Array.from(catProdNames).some(
+          (pn) => itNameLower.includes(pn) || pn.includes(itNameLower)
+        );
+        const isCatMatch =
+          itCatLower === catCodeLower ||
+          itCatLower === catSlugLower ||
+          itCatLower === catNameLower;
+
+        // Keyword inference fallback for diverse mock/real products
+        let isKeywordMatch = false;
+        if (
+          catNameLower.includes("lavabo") &&
+          (itNameLower.includes("lavabo") || itNameLower.includes("tủ"))
+        ) {
+          isKeywordMatch = true;
+        } else if (
+          (catNameLower.includes("chiếu sáng") || catNameLower.includes("đèn")) &&
+          (itNameLower.includes("đèn") || itNameLower.includes("tre") || itNameLower.includes("sáng"))
+        ) {
+          isKeywordMatch = true;
+        } else if (
+          catNameLower.includes("khách") &&
+          (itNameLower.includes("bàn") || itNameLower.includes("ghế") || itNameLower.includes("sofa"))
+        ) {
+          isKeywordMatch = true;
+        } else if (
+          catNameLower.includes("trang trí") &&
+          (itNameLower.includes("bình") || itNameLower.includes("gốm") || itNameLower.includes("mèo") || itNameLower.includes("decor") || itNameLower.includes("chậu"))
+        ) {
+          isKeywordMatch = true;
+        } else if (
+          catNameLower.includes("ngủ") &&
+          (itNameLower.includes("giường") || itNameLower.includes("gối") || itNameLower.includes("nệm") || itNameLower.includes("chăn"))
+        ) {
+          isKeywordMatch = true;
+        } else if (
+          catNameLower.includes("bếp") &&
+          (itNameLower.includes("bếp") || itNameLower.includes("nồi") || itNameLower.includes("chảo") || itNameLower.includes("dĩa") || itNameLower.includes("bát"))
+        ) {
+          isKeywordMatch = true;
+        } else if (
+          catNameLower.includes("rèm") &&
+          itNameLower.includes("rèm")
+        ) {
+          isKeywordMatch = true;
+        } else if (
+          catNameLower.includes("lưu trữ") &&
+          (itNameLower.includes("kệ") || itNameLower.includes("tủ giày") || itNameLower.includes("hộp"))
+        ) {
+          isKeywordMatch = true;
+        }
+
+        if (isNameMatch || isCatMatch || isKeywordMatch) {
+          orderHasCategoryItem = true;
+          const price = Number(it.price) || 0;
+          const qty = Number(it.qty) || 1;
+          matchedItemsTotal += price * qty;
+        }
+      });
+
+      if (orderHasCategoryItem) {
         catOrderCount++;
-        catRevenue += ord.total || 0;
+        catRevenue += matchedItemsTotal > 0 ? matchedItemsTotal : (ord.total || 0);
       }
     });
 
@@ -957,159 +1035,347 @@ export default function AdminDashboard() {
                 );
               })()}
 
-              {/* 2. MIDDLE SECTION: ORDER FUNNEL & CATEGORY PERFORMANCE */}
+              {/* 2. MIDDLE SECTION: INTERACTIVE DONUT & COLUMN BAR CHARTS */}
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "1fr 1.2fr",
+                  gridTemplateColumns: "1fr 1.35fr",
                   gap: "20px",
+                  marginBottom: "24px",
                 }}
               >
-                {/* 2A. ORDER FUNNEL BREAKDOWN (COUNTING ORDERS AS REQUESTED) */}
-                <div className="dashboard-card" style={{ display: "flex", flexDirection: "column" }}>
-                  <div className="card-header-row" style={{ marginBottom: "16px" }}>
-                    <div>
-                      <h3 className="card-header-title">Phễu Xử Lý Đơn Hàng</h3>
-                      <p style={{ fontSize: "12px", color: "var(--text-muted)", margin: 0 }}>
-                        Phân bổ <strong>{orders.length} đơn hàng</strong> theo trạng thái vận hành
-                      </p>
-                    </div>
-                  </div>
+                {/* 2A. ORDER FUNNEL: INTERACTIVE DONUT PIE CHART */}
+                {(() => {
+                  const funnelSegments = [
+                    { key: "completed", label: "Đã hoàn thành", count: completedOrders.length, color: "#16a34a", lightBg: "#dcfce7", icon: CheckCircle2 },
+                    { key: "shipping", label: "Đang vận chuyển", count: shippingOrders.length, color: "#0284c7", lightBg: "#e0f2fe", icon: Truck },
+                    { key: "processing", label: "Đang xử lý đóng gói", count: processingOrders.length, color: "#f59e0b", lightBg: "#fef3c7", icon: Package },
+                    { key: "pending", label: "Chờ duyệt mới", count: pendingOrders.length, color: "#8b5cf6", lightBg: "#ede9fe", icon: Clock },
+                    { key: "returned", label: "Trả hàng (7 ngày)", count: returnedOrders.length, color: "#ea580c", lightBg: "#ffedd5", icon: RotateCcw },
+                    { key: "cancelled", label: "Đã hủy", count: cancelledOrders.length, color: "#ef4444", lightBg: "#fee2e2", icon: XCircle },
+                  ];
 
-                  <div style={{ display: "flex", flexDirection: "column", gap: "12px", flex: 1, justifyContent: "center" }}>
-                    {/* Progress Bar 1: Completed */}
-                    <div>
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", fontWeight: 700, marginBottom: "4px" }}>
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Đã hoàn thành ({completedOrders.length})
-                        </span>
-                        <span style={{ color: "#166534", fontWeight: 800 }}>
-                          {completedOrders.length} đơn hàng ({orders.length > 0 ? Math.round((completedOrders.length / orders.length) * 100) : 0}%)
-                        </span>
-                      </div>
-                      <div style={{ background: "#f1f5f9", height: "10px", borderRadius: "5px", overflow: "hidden" }}>
-                        <div style={{ background: "#16a34a", height: "100%", width: `${orders.length > 0 ? (completedOrders.length / orders.length) * 100 : 0}%` }} />
-                      </div>
-                    </div>
+                  const totalCount = orders.length > 0 ? orders.length : 1;
+                  const radius = 68;
+                  const circumference = 2 * Math.PI * radius; // ~427.26
+                  let accumulatedPercent = 0;
 
-                    {/* Progress Bar 2: Shipping */}
-                    <div>
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", fontWeight: 700, marginBottom: "4px" }}>
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                          <Truck className="w-3.5 h-3.5 text-sky-600" /> Đang vận chuyển ({shippingOrders.length})
-                        </span>
-                        <span style={{ color: "#0284c7", fontWeight: 800 }}>
-                          {shippingOrders.length} đơn hàng ({orders.length > 0 ? Math.round((shippingOrders.length / orders.length) * 100) : 0}%)
-                        </span>
-                      </div>
-                      <div style={{ background: "#f1f5f9", height: "10px", borderRadius: "5px", overflow: "hidden" }}>
-                        <div style={{ background: "#0284c7", height: "100%", width: `${orders.length > 0 ? (shippingOrders.length / orders.length) * 100 : 0}%` }} />
-                      </div>
-                    </div>
+                  const activeSegment = hoveredDonutIndex !== null ? funnelSegments[hoveredDonutIndex] : null;
 
-                    {/* Progress Bar 3: Processing */}
-                    <div>
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", fontWeight: 700, marginBottom: "4px" }}>
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                          <Package className="w-3.5 h-3.5 text-amber-600" /> Đang xử lý đóng gói ({processingOrders.length})
-                        </span>
-                        <span style={{ color: "#d97706", fontWeight: 800 }}>
-                          {processingOrders.length} đơn hàng ({orders.length > 0 ? Math.round((processingOrders.length / orders.length) * 100) : 0}%)
-                        </span>
-                      </div>
-                      <div style={{ background: "#f1f5f9", height: "10px", borderRadius: "5px", overflow: "hidden" }}>
-                        <div style={{ background: "#f59e0b", height: "100%", width: `${orders.length > 0 ? (processingOrders.length / orders.length) * 100 : 0}%` }} />
-                      </div>
-                    </div>
-
-                    {/* Progress Bar 4: Pending */}
-                    <div>
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", fontWeight: 700, marginBottom: "4px" }}>
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                          <Clock className="w-3.5 h-3.5 text-slate-500" /> Chờ duyệt mới ({pendingOrders.length})
-                        </span>
-                        <span style={{ color: "#64748b", fontWeight: 800 }}>
-                          {pendingOrders.length} đơn hàng ({orders.length > 0 ? Math.round((pendingOrders.length / orders.length) * 100) : 0}%)
-                        </span>
-                      </div>
-                      <div style={{ background: "#f1f5f9", height: "10px", borderRadius: "5px", overflow: "hidden" }}>
-                        <div style={{ background: "#94a3b8", height: "100%", width: `${orders.length > 0 ? (pendingOrders.length / orders.length) * 100 : 0}%` }} />
-                      </div>
-                    </div>
-
-                    {/* Progress Bar 5: Cancelled */}
-                    <div>
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", fontWeight: 700, marginBottom: "4px" }}>
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                          <XCircle className="w-3.5 h-3.5 text-red-600" /> Đã hủy ({cancelledOrders.length})
-                        </span>
-                        <span style={{ color: "#dc2626", fontWeight: 800 }}>
-                          {cancelledOrders.length} đơn hàng ({orders.length > 0 ? Math.round((cancelledOrders.length / orders.length) * 100) : 0}%)
-                        </span>
-                      </div>
-                      <div style={{ background: "#f1f5f9", height: "10px", borderRadius: "5px", overflow: "hidden" }}>
-                        <div style={{ background: "#ef4444", height: "100%", width: `${orders.length > 0 ? (cancelledOrders.length / orders.length) * 100 : 0}%` }} />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 2B. CATEGORY REVENUE MATRIX */}
-                <div className="dashboard-card">
-                  <div className="card-header-row" style={{ marginBottom: "16px" }}>
-                    <div>
-                      <h3 className="card-header-title">Đóng Góp Doanh Thu Theo Danh Mục</h3>
-                      <p style={{ fontSize: "12px", color: "var(--text-muted)", margin: 0 }}>
-                        Phân tích hiệu quả kinh doanh của <strong>{categories.length} nhóm sản phẩm chính</strong>
-                      </p>
-                    </div>
-                  </div>
-
-                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                    {categoryStats.map((c) => (
-                      <div
-                        key={c.code}
-                        style={{
-                          padding: "10px 12px",
-                          borderRadius: "var(--radius-md)",
-                          border: "1px solid var(--border-color)",
-                          background: "#fff",
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            fontSize: "13px",
-                            fontWeight: 700,
-                            marginBottom: "4px",
-                          }}
-                        >
-                          <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                            <span style={{ fontSize: "16px" }}>{c.icon}</span> {c.name}{" "}
-                            <code style={{ fontSize: "11px", color: "var(--text-muted)", background: "#f1f5f9", padding: "1px 5px", borderRadius: "4px" }}>
-                              {c.code}
-                            </code>
-                          </span>
-                          <span style={{ color: "var(--primary-color)", fontWeight: 800 }}>
-                            {formatVND(c.revenue)} ({c.percentage}%)
-                          </span>
+                  return (
+                    <div className="dashboard-card" style={{ display: "flex", flexDirection: "column", background: "#ffffff", borderRadius: "18px", padding: "20px", boxShadow: "0 4px 20px rgba(0,0,0,0.04)" }}>
+                      <div className="card-header-row" style={{ marginBottom: "16px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                        <div>
+                          <h3 className="card-header-title" style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "16px", fontWeight: 800, color: "#0f172a", margin: 0 }}>
+                            <PieChart className="w-5 h-5 text-emerald-600" /> Phễu Xử Lý Đơn Hàng
+                          </h3>
+                          <p style={{ fontSize: "12px", color: "var(--text-muted)", margin: "4px 0 0" }}>
+                            Phân bổ trực quan <strong>{orders.length} đơn hàng</strong> theo trạng thái
+                          </p>
                         </div>
+                        <span style={{ fontSize: "11px", fontWeight: 800, background: "#f0fdf4", color: "#166534", padding: "4px 10px", borderRadius: "20px", border: "1px solid #bbf7d0" }}>
+                          Live Supabase
+                        </span>
+                      </div>
 
-                        <div style={{ background: "#f1f5f9", height: "8px", borderRadius: "4px", overflow: "hidden" }}>
+                      {/* Donut Chart Display */}
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-around", flexWrap: "wrap", gap: "16px", margin: "auto 0" }}>
+                        {/* SVG Donut */}
+                        <div style={{ position: "relative", width: "180px", height: "180px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <svg width="180" height="180" viewBox="0 0 180 180" style={{ transform: "rotate(-90deg)", filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.06))" }}>
+                            {/* Background Track */}
+                            <circle
+                              cx="90"
+                              cy="90"
+                              r={radius}
+                              fill="transparent"
+                              stroke="#f1f5f9"
+                              strokeWidth="24"
+                            />
+                            {/* Data Segments */}
+                            {orders.length > 0 ? (
+                              funnelSegments.map((seg, idx) => {
+                                if (seg.count === 0) return null;
+                                const percent = seg.count / totalCount;
+                                const strokeDasharray = `${percent * circumference} ${circumference}`;
+                                const strokeDashoffset = -accumulatedPercent * circumference;
+                                accumulatedPercent += percent;
+                                const isHovered = hoveredDonutIndex === idx;
+
+                                return (
+                                  <circle
+                                    key={seg.key}
+                                    cx="90"
+                                    cy="90"
+                                    r={radius}
+                                    fill="transparent"
+                                    stroke={seg.color}
+                                    strokeWidth={isHovered ? 30 : 24}
+                                    strokeDasharray={strokeDasharray}
+                                    strokeDashoffset={strokeDashoffset}
+                                    strokeLinecap="round"
+                                    style={{
+                                      cursor: "pointer",
+                                      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                                      filter: isHovered ? `drop-shadow(0 0 8px ${seg.color})` : "none",
+                                    }}
+                                    onMouseEnter={() => setHoveredDonutIndex(idx)}
+                                    onMouseLeave={() => setHoveredDonutIndex(null)}
+                                  />
+                                );
+                              })
+                            ) : (
+                              <circle
+                                cx="90"
+                                cy="90"
+                                r={radius}
+                                fill="transparent"
+                                stroke="#e2e8f0"
+                                strokeWidth="24"
+                              />
+                            )}
+                          </svg>
+
+                          {/* Center Text inside Donut */}
                           <div
                             style={{
-                              background: "var(--primary-color)",
-                              height: "100%",
-                              width: `${c.percentage || 5}%`,
+                              position: "absolute",
+                              textAlign: "center",
+                              pointerEvents: "none",
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              width: "100px",
                             }}
-                          />
+                          >
+                            {activeSegment ? (
+                              <>
+                                <span style={{ fontSize: "10.5px", fontWeight: 800, color: activeSegment.color, textTransform: "uppercase", letterSpacing: "0.02em" }}>
+                                  {activeSegment.label}
+                                </span>
+                                <span style={{ fontSize: "20px", fontWeight: 900, color: "#0f172a", lineHeight: 1.1 }}>
+                                  {activeSegment.count}
+                                </span>
+                                <span style={{ fontSize: "11px", fontWeight: 700, color: "#64748b" }}>
+                                  {Math.round((activeSegment.count / (orders.length || 1)) * 100)}%
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <span style={{ fontSize: "11px", fontWeight: 700, color: "#64748b" }}>Tổng đơn</span>
+                                <span style={{ fontSize: "22px", fontWeight: 900, color: "#0f172a", lineHeight: 1.1 }}>
+                                  {orders.length}
+                                </span>
+                                <span style={{ fontSize: "10px", fontWeight: 700, color: "#16a34a" }}>100% CSDL</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Interactive Legend Grid */}
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "6px", flex: 1, minWidth: "160px" }}>
+                          {funnelSegments.map((seg, idx) => {
+                            const IconComponent = seg.icon;
+                            const isHovered = hoveredDonutIndex === idx;
+                            const pct = orders.length > 0 ? Math.round((seg.count / orders.length) * 100) : 0;
+
+                            return (
+                              <div
+                                key={seg.key}
+                                onMouseEnter={() => setHoveredDonutIndex(idx)}
+                                onMouseLeave={() => setHoveredDonutIndex(null)}
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "space-between",
+                                  padding: "6px 10px",
+                                  borderRadius: "10px",
+                                  background: isHovered ? seg.lightBg : "#f8fafc",
+                                  border: isHovered ? `1.5px solid ${seg.color}` : "1px solid #f1f5f9",
+                                  cursor: "pointer",
+                                  transition: "all 0.2s ease",
+                                  transform: isHovered ? "translateX(4px)" : "none",
+                                }}
+                              >
+                                <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", fontWeight: 700, color: isHovered ? seg.color : "#334155" }}>
+                                  <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: seg.color, flexShrink: 0 }} />
+                                  <IconComponent className="w-3.5 h-3.5" style={{ color: seg.color }} />
+                                  <span>{seg.label}</span>
+                                </div>
+                                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                  <strong style={{ fontSize: "12px", color: isHovered ? seg.color : "#0f172a" }}>{seg.count}</strong>
+                                  <span style={{ fontSize: "10.5px", fontWeight: 800, color: isHovered ? "#ffffff" : "#64748b", background: isHovered ? seg.color : "#e2e8f0", padding: "1px 6px", borderRadius: "8px" }}>
+                                    {pct}%
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
+                    </div>
+                  );
+                })()}
+
+                {/* 2B. CATEGORY REVENUE: ANIMATED COLUMN BAR CHART */}
+                {(() => {
+                  const maxCatRevenue = Math.max(...categoryStats.map((c) => c.revenue), 1000000);
+                  const barGradients = [
+                    "linear-gradient(180deg, #10b981 0%, #047857 100%)",
+                    "linear-gradient(180deg, #0284c7 0%, #0369a1 100%)",
+                    "linear-gradient(180deg, #8b5cf6 0%, #6d28d9 100%)",
+                    "linear-gradient(180deg, #f59e0b 0%, #b45309 100%)",
+                    "linear-gradient(180deg, #06b6d4 0%, #0891b2 100%)",
+                    "linear-gradient(180deg, #ec4899 0%, #be185d 100%)",
+                    "linear-gradient(180deg, #6366f1 0%, #4338ca 100%)",
+                    "linear-gradient(180deg, #14b8a6 0%, #0f766e 100%)",
+                  ];
+
+                  const hoveredCat = categoryStats.find((c) => c.code === hoveredCategoryCode);
+
+                  return (
+                    <div className="dashboard-card" style={{ display: "flex", flexDirection: "column", background: "#ffffff", borderRadius: "18px", padding: "20px", boxShadow: "0 4px 20px rgba(0,0,0,0.04)" }}>
+                      <div className="card-header-row" style={{ marginBottom: "12px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                        <div>
+                          <h3 className="card-header-title" style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "16px", fontWeight: 800, color: "#0f172a", margin: 0 }}>
+                            <BarChart3 className="w-5 h-5 text-sky-600" /> Đóng Góp Doanh Thu Theo Danh Mục
+                          </h3>
+                          <p style={{ fontSize: "12px", color: "var(--text-muted)", margin: "4px 0 0" }}>
+                            Hiệu quả kinh doanh thực tế của <strong>{categories.length} nhóm sản phẩm</strong>
+                          </p>
+                        </div>
+                        {hoveredCat ? (
+                          <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "4px 12px", borderRadius: "12px", textAlign: "right" }}>
+                            <span style={{ fontSize: "11px", fontWeight: 700, color: "#166534" }}>{hoveredCat.name}: </span>
+                            <strong style={{ fontSize: "13px", color: "#15803d" }}>{formatVND(hoveredCat.revenue)}</strong>
+                            <span style={{ fontSize: "11px", color: "#64748b", marginLeft: "4px" }}>({hoveredCat.percentage}%)</span>
+                          </div>
+                        ) : (
+                          <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", padding: "4px 12px", borderRadius: "12px", textAlign: "right" }}>
+                            <span style={{ fontSize: "11px", fontWeight: 700, color: "#64748b" }}>Tổng DT hoàn thành: </span>
+                            <strong style={{ fontSize: "13px", color: "var(--primary-color)" }}>{formatVND(netRevenue)}</strong>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Bar Chart Canvas with Gridlines */}
+                      <div style={{ position: "relative", flex: 1, minHeight: "190px", display: "flex", flexDirection: "column", justifyContent: "flex-end", marginTop: "10px" }}>
+                        {/* Background Horizontal Grid Lines */}
+                        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "space-between", pointerEvents: "none", zIndex: 0 }}>
+                          {[1, 0.75, 0.5, 0.25, 0].map((step, i) => (
+                            <div key={i} style={{ display: "flex", alignItems: "center", width: "100%", opacity: 0.6 }}>
+                              <span style={{ fontSize: "9.5px", fontWeight: 700, color: "#94a3b8", width: "42px", textAlign: "right", paddingRight: "6px" }}>
+                                {step === 0 ? "0đ" : `${((maxCatRevenue * step) / 1000000).toFixed(1)}M`}
+                              </span>
+                              <div style={{ flex: 1, borderBottom: "1px dashed #e2e8f0" }} />
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Bars Container */}
+                        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-around", height: "150px", marginLeft: "46px", zIndex: 1, paddingBottom: "4px" }}>
+                          {categoryStats.map((cat, idx) => {
+                            const isHovered = hoveredCategoryCode === cat.code;
+                            const heightPct = Math.max(cat.revenue > 0 ? 12 : 5, Math.round((cat.revenue / maxCatRevenue) * 100));
+                            const grad = barGradients[idx % barGradients.length];
+
+                            return (
+                              <div
+                                key={cat.code}
+                                onMouseEnter={() => setHoveredCategoryCode(cat.code)}
+                                onMouseLeave={() => setHoveredCategoryCode(null)}
+                                style={{
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  alignItems: "center",
+                                  width: `${100 / categoryStats.length}%`,
+                                  maxWidth: "54px",
+                                  height: "100%",
+                                  justifyContent: "flex-end",
+                                  cursor: "pointer",
+                                  position: "relative",
+                                }}
+                              >
+                                {/* Value Label above Bar */}
+                                <div
+                                  style={{
+                                    fontSize: "10px",
+                                    fontWeight: 800,
+                                    color: isHovered ? "#0f172a" : cat.revenue > 0 ? "#15803d" : "#94a3b8",
+                                    marginBottom: "4px",
+                                    whiteSpace: "nowrap",
+                                    transform: isHovered ? "scale(1.15) translateY(-2px)" : "none",
+                                    transition: "all 0.2s ease",
+                                  }}
+                                >
+                                  {cat.revenue > 0 ? `${(cat.revenue / 1000000).toFixed(1)}M` : "0đ"}
+                                </div>
+
+                                {/* Animated Column Bar */}
+                                <div
+                                  style={{
+                                    width: isHovered ? "32px" : "24px",
+                                    height: `${heightPct}%`,
+                                    background: cat.revenue > 0 ? grad : "#e2e8f0",
+                                    borderRadius: "8px 8px 3px 3px",
+                                    boxShadow: isHovered
+                                      ? "0 8px 20px rgba(16, 185, 129, 0.4)"
+                                      : cat.revenue > 0
+                                      ? "0 4px 10px rgba(0,0,0,0.08)"
+                                      : "none",
+                                    transition: "all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                                    border: isHovered ? "2px solid #ffffff" : "none",
+                                  }}
+                                />
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* X-Axis Category Labels */}
+                        <div style={{ display: "flex", justifyContent: "space-around", marginLeft: "46px", paddingTop: "8px", borderTop: "1.5px solid #cbd5e1", zIndex: 1 }}>
+                          {categoryStats.map((cat, idx) => {
+                            const isHovered = hoveredCategoryCode === cat.code;
+                            return (
+                              <div
+                                key={cat.code}
+                                onMouseEnter={() => setHoveredCategoryCode(cat.code)}
+                                onMouseLeave={() => setHoveredCategoryCode(null)}
+                                title={`${cat.name} (${cat.code}): ${formatVND(cat.revenue)} - ${cat.orderCount} đơn`}
+                                style={{
+                                  width: `${100 / categoryStats.length}%`,
+                                  maxWidth: "54px",
+                                  textAlign: "center",
+                                  cursor: "pointer",
+                                  transition: "all 0.2s ease",
+                                  transform: isHovered ? "translateY(-2px)" : "none",
+                                }}
+                              >
+                                <span style={{ fontSize: "14px", display: "block" }}>{cat.icon}</span>
+                                <span
+                                  style={{
+                                    fontSize: "10.5px",
+                                    fontWeight: isHovered ? 800 : 700,
+                                    color: isHovered ? "#0f172a" : "#475569",
+                                    display: "block",
+                                    whiteSpace: "nowrap",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    maxWidth: "50px",
+                                    margin: "0 auto",
+                                  }}
+                                >
+                                  {cat.name.split(" ")[0]}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* 3. INVENTORY ALERT & PENDING ACTION CENTER */}
