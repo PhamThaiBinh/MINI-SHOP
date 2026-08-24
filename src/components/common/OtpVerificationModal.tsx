@@ -199,9 +199,14 @@ export const OtpVerificationModal: React.FC<OtpVerificationModalProps> = ({
 
         {/* Body */}
         <div style={{ padding: "24px" }}>
-          <p style={{ fontSize: "13.5px", color: "#475569", lineHeight: "1.6", margin: "0 0 20px 0" }}>
-            Mã xác thực gồm 6 chữ số đã được gửi trực tiếp đến địa chỉ Gmail: <strong style={{ color: "#0f172a" }}>{email}</strong>. Vui lòng mở hộp thư Gmail hoặc thư mục Spam/Hộp thư rác để kiểm tra.
+          <p style={{ fontSize: "13.5px", color: "#475569", lineHeight: "1.6", margin: "0 0 14px 0" }}>
+            Mã xác thực gồm 6 chữ số đã được gửi trực tiếp đến địa chỉ Gmail: <strong style={{ color: "#0f172a" }}>{email}</strong>. Vui lòng mở <strong>Hộp thư đến (Inbox)</strong> để lấy mã.
           </p>
+
+          <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "10px 14px", fontSize: "12px", color: "#64748b", marginBottom: "20px", display: "flex", alignItems: "flex-start", gap: "8px", lineHeight: "1.5" }}>
+            <span style={{ fontSize: "14px", flexShrink: 0 }}>💡</span>
+            <span>Nếu chưa thấy thư sau vài giây, vui lòng làm mới hộp thư hoặc kiểm tra thêm mục <strong>Thư rác (Spam) / Quảng cáo</strong>.</span>
+          </div>
 
           {/* 6 Digit Input Boxes */}
           <div style={{ display: "flex", gap: "8px", justifyContent: "center", marginBottom: "20px" }}>
