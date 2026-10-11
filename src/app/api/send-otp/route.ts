@@ -10,8 +10,13 @@ export async function POST(request: Request) {
     }
 
     const targetEmail = String(email).trim().toLowerCase();
-    const smtpUser = process.env.SMTP_USER || "binhpham.1512202@gmail.com";
-    const smtpPass = process.env.SMTP_PASS || "xdpjjxuaajocvplc";
+    const smtpUser = process.env.SMTP_USER;
+    const smtpPass = process.env.SMTP_PASS;
+
+    if (!smtpUser || !smtpPass) {
+      console.error("[SMTP ERROR] Missing SMTP_USER or SMTP_PASS environment variables.");
+      return NextResponse.json({ success: false, error: "Dịch vụ gửi email chưa được cấu hình biến môi trường SMTP" }, { status: 500 });
+    }
 
     // Configure authentic Gmail SMTP transport with App Password
     const transporter = nodemailer.createTransport({
